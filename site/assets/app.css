@@ -37,6 +37,11 @@ table.spec th{width:34%;background:#f2f5fa;color:#3a4757;font-weight:600;white-s
 .rel-links ul{margin:.2em 0;padding-left:1.1em}.rel-links li{margin:2px 0}
 .site-footer{max-width:920px;margin:30px auto;padding:16px 18px;color:#7a838f;font-size:.8rem;border-top:1px solid #e6e9ef}
 .hub-grp{font-size:1.0rem;margin:1.1em 0 .3em;color:#0d47a1;border-bottom:1px solid #e6e9ef;padding-bottom:3px}
+.vs-table{width:100%;border-collapse:collapse;margin:14px 0;font-size:.94rem}
+.vs-table th,.vs-table td{border:1px solid #e1e8f2;padding:8px 10px;text-align:left;vertical-align:top}
+.vs-table thead th{background:#0d47a1;color:#fff;text-align:center}
+.vs-table tbody th{background:#f2f5fa;white-space:nowrap;width:7.5em}
+.vs-cta{margin:14px 0;display:flex;gap:10px;flex-wrap:wrap}
 .feature-nav{margin-top:28px;border-top:1px solid #e6e9ef;padding-top:14px}
 .feature-nav h2{font-size:1.05rem;margin:.6em 0 .3em}
 .feature-nav ul{margin:.2em 0 .6em;padding-left:1.1em}
