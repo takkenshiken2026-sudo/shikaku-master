@@ -20,6 +20,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 CSV = ROOT / "data" / "certifications.csv"
 CAREERS_CSV = ROOT / "data" / "careers.csv"
+EXAM_CSV = ROOT / "data" / "exam_details.csv"
 SITE = ROOT / "site"
 BRAND = ROOT / "brand"
 
@@ -63,6 +64,36 @@ def load_careers():
 
 
 CAREERS = load_careers()
+
+
+def load_exam_details():
+    """slug → {exam_subjects, applicants, source}。公式の一次情報に基づく試験科目・受験者数。"""
+    if not EXAM_CSV.exists():
+        return {}
+    out = {}
+    with EXAM_CSV.open(encoding="utf-8") as f:
+        for r in csv.DictReader(f):
+            s = (r.get("slug") or "").strip()
+            if not s:
+                continue
+            out[s] = {
+                "exam_subjects": (r.get("exam_subjects") or "").strip(),
+                "applicants": (r.get("applicants") or "").strip(),
+                "source": (r.get("source") or "").strip(),
+            }
+    return out
+
+
+EXAM = load_exam_details()
+
+
+def applicants_num(r):
+    """受験者数の文字列から代表数（最初の「N人/N名」）を整数で。なければ None。"""
+    ed = EXAM.get(r.get("slug", ""))
+    if not ed or not ed.get("applicants"):
+        return None
+    m = re.search(r"([0-9][0-9,]*)\s*[人名]", ed["applicants"])
+    return int(m.group(1).replace(",", "")) if m else None
 
 
 def page_shell(title: str, body: str, depth: int, noindex: bool = True,
@@ -139,12 +170,17 @@ def build_detail(row) -> str:
         ("実施頻度", field(row["frequency"])),
         ("ハローワークコード", esc(row["hellowork_code"])),
     ]
+    ed = EXAM.get(row["slug"], {})
+    if ed.get("applicants"):
+        spec.append(("受験者数", esc(ed["applicants"])))
     diff = difficulty(row)
     if diff:
         dlabel, dcls = diff
         spec.append(("難易度の目安",
                      f'<span class="diff-badge {dcls}">{esc(dlabel)}</span>'
                      f' <span class="muted">（公表合格率 {esc(row["pass_rate"])} に基づく簡易目安）</span>'))
+    if ed.get("exam_subjects"):
+        spec.append(("試験科目・出題範囲", esc(ed["exam_subjects"])))
     src = row.get("source_checked_at", "")
     if src:
         spec.append(("情報確認日", esc(src) + ' <span class="muted">（公式の一次情報に基づき確認）</span>'))
@@ -253,6 +289,10 @@ def build_detail(row) -> str:
         qa.append((f"{name}の試験はどのような形式ですか？", row["exam_format"]))
     if row["pass_rate"]:
         qa.append((f"{name}の合格率はどのくらいですか？", row["pass_rate"]))
+    if ed.get("exam_subjects"):
+        qa.append((f"{name}の試験科目・出題範囲は？", ed["exam_subjects"]))
+    if ed.get("applicants"):
+        qa.append((f"{name}の受験者数はどのくらいですか？", ed["applicants"]))
     if row["frequency"]:
         qa.append((f"{name}はいつ実施されますか？", row["frequency"]))
     if row["authority"]:
@@ -443,6 +483,7 @@ def build_category_pages(indexable):
 
 # 特集・ランキングページの定義（トップのナビとも共有）
 FEATURE_NAV = [
+    ("popular", "受験者数が多い人気資格ランキング"),
     ("cheap", "受験料が安い資格ランキング"),
     ("high-pass", "合格率が高い資格"),
     ("hard", "合格率が低い難関資格"),
@@ -769,6 +810,16 @@ def build_feature_pages(indexable):
                                  noindex=False, desc=desc,
                                  path=f"feature/{slug}.html")
 
+    # 受験者数が多い順（公式統計のある資格）
+    popular = sorted((r for r in pub if applicants_num(r) is not None),
+                     key=lambda r: (-applicants_num(r), r["name"]))[:120]
+    if popular:
+        page("popular", "受験者数が多い人気資格ランキング", "受験者数が多い人気資格ランキング",
+             f"公式が公表する直近の受験者数が多い順に並べた資格ランキング（データ掲載分の"
+             f"上位 {len(popular)} 件）。受験者数は実施回・年度により変動します。",
+             popular, "受験者数が多い人気資格を受験者数の多い順にランキング。"
+             "受験料・合格率・受験者数・公式情報を掲載。")
+
     # 受験料が安い順（代表額のあるものを昇順・上位120）
     cheap = sorted((r for r in pub if fee_yen(r) is not None),
                    key=lambda r: (fee_yen(r), r["name"]))[:120]
@@ -1068,7 +1119,8 @@ def build_index(rows) -> str:
         for m in majors)
     feat_links = "".join(
         f'<li><a href="feature/{slug}.html">{esc(label)}</a></li>'
-        for slug, label in FEATURE_NAV)
+        for slug, label in FEATURE_NAV
+        if slug != "popular" or any(applicants_num(r) is not None for r in rows))
     hub_links = "".join(
         f'<li><a href="feature/{slug}.html">{esc(label)}</a></li>'
         for slug, label in INTENT_HUB_NAV)
