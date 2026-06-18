@@ -19,8 +19,12 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 CSV = ROOT / "data" / "certifications.csv"
+CAREERS_CSV = ROOT / "data" / "careers.csv"
 SITE = ROOT / "site"
 BRAND = ROOT / "brand"
+
+# 厚労省 職業情報提供サイト（job tag）— 関連職業の公式ディスカバリ導線
+JOBTAG_URL = "https://shigoto.mhlw.go.jp/User/Search/Top"
 
 SITE_NAME = "資格カタログ"
 SITE_DESC = "日本の資格を「探せる・絞れる・比べられる」資格データベース。受験料・試験形式・受験資格・合格率・実施団体・公式サイトを公式の一次情報に基づき掲載。"
@@ -42,6 +46,23 @@ def esc(s: str) -> str:
 def load_rows():
     with CSV.open(encoding="utf-8") as f:
         return list(csv.DictReader(f))
+
+
+def load_careers():
+    """slug → {careers, source} の辞書。出典付きで個別キュレーションした関連職業。"""
+    if not CAREERS_CSV.exists():
+        return {}
+    out = {}
+    with CAREERS_CSV.open(encoding="utf-8") as f:
+        for r in csv.DictReader(f):
+            s = (r.get("slug") or "").strip()
+            careers = (r.get("careers") or "").strip()
+            if s and careers:
+                out[s] = {"careers": careers, "source": (r.get("source") or "").strip()}
+    return out
+
+
+CAREERS = load_careers()
 
 
 def page_shell(title: str, body: str, depth: int, noindex: bool = True,
@@ -118,6 +139,12 @@ def build_detail(row) -> str:
         ("実施頻度", field(row["frequency"])),
         ("ハローワークコード", esc(row["hellowork_code"])),
     ]
+    diff = difficulty(row)
+    if diff:
+        dlabel, dcls = diff
+        spec.append(("難易度の目安",
+                     f'<span class="diff-badge {dcls}">{esc(dlabel)}</span>'
+                     f' <span class="muted">（公表合格率 {esc(row["pass_rate"])} に基づく簡易目安）</span>'))
     src = row.get("source_checked_at", "")
     if src:
         spec.append(("情報確認日", esc(src) + ' <span class="muted">（公式の一次情報に基づき確認）</span>'))
@@ -152,6 +179,27 @@ def build_detail(row) -> str:
         fact.append(f"実施頻度は{esc(row['frequency'])}")
     fact_p = (f"<p>{name}の概要: " + "、".join(fact)
               + "。最新の金額・日程・合格率は公式サイトで必ずご確認ください。</p>") if fact else ""
+
+    # 活かせる仕事・キャリア（ハイブリッド: キュレーション + job tag 導線）
+    cur = CAREERS.get(row["slug"])
+    if cur:
+        jobs = [c.strip() for c in cur["careers"].split("、") if c.strip()]
+        jobs_html = "".join(f"<li>{esc(j)}</li>" for j in jobs)
+        src_html = ""
+        if cur["source"]:
+            src_html = (f'<p class="muted careers-src">出典: '
+                        f'<a href="{esc(cur["source"])}" rel="nofollow noopener" target="_blank">'
+                        f'公式・job tag 等</a></p>')
+        careers_body = f'<ul class="careers">{jobs_html}</ul>{src_html}'
+    else:
+        careers_body = ('<p class="muted">この資格を要件・推奨とする職業は個別に精査中です。'
+                        '関連する職業は、厚生労働省の職業情報提供サイト（job tag）で'
+                        '資格名から検索できます。</p>')
+    careers_section = (
+        '<section class="careers-sec"><h2>活かせる仕事・キャリア</h2>'
+        + careers_body
+        + f'<p class="jobtag"><a href="{JOBTAG_URL}" rel="nofollow noopener" '
+          f'target="_blank">厚生労働省 job tag で関連職業を調べる ↗</a></p></section>')
 
     # 関連内部リンク
     bslug = MAJOR_SLUGS.get(major, "other")
@@ -195,6 +243,7 @@ def build_detail(row) -> str:
 {fact_p}
 <table class="spec">{rows_html}</table>
 {cta}{provenance}
+{careers_section}
 {rel_links}
 <section class="related"><h2>同じカテゴリの資格</h2><ul id="related"></ul></section>
 <script>
@@ -240,6 +289,26 @@ def pass_pct(r):
     """合格率文字列から最初の「N%」を float で。なければ None。"""
     m = re.search(r"([0-9]+(?:\.[0-9]+)?)\s*%", r.get("pass_rate", ""))
     return float(m.group(1)) if m else None
+
+
+def difficulty(r):
+    """公表合格率から難易度バンドを推定。(ラベル, CSSクラス) を返す。なければ None。
+
+    合格率は資格ごとに母集団（受験者層）が大きく異なるため厳密な難易度ではなく、
+    あくまで公表合格率に基づく簡易的な目安。確証のため pass_rate がある時のみ表示。
+    """
+    p = pass_pct(r)
+    if p is None:
+        return None
+    if p < 10:
+        return ("難関", "diff-veryhard")
+    if p < 30:
+        return ("やや難関", "diff-hard")
+    if p < 60:
+        return ("標準", "diff-mid")
+    if p < 80:
+        return ("比較的やさしい", "diff-easy")
+    return ("入門〜標準", "diff-veryeasy")
 
 
 def is_cbt(r):
@@ -630,6 +699,14 @@ table.spec th{width:34%;background:#f2f5fa;color:#3a4757;font-weight:600;white-s
 .btn-official:hover{background:#0b3c8a;text-decoration:none}
 .provenance{font-size:.82rem;color:#6b7682;background:#f2f5fa;border:1px solid #e1e8f2;border-radius:8px;padding:11px 14px;margin:10px 0 0}
 .feat-list{margin:.2em 0 .6em;padding-left:1.1em}.feat-list li{margin:2px 0}
+.diff-badge{display:inline-block;font-weight:700;font-size:.82rem;padding:2px 9px;border-radius:11px;color:#fff}
+.diff-veryhard{background:#b71c1c}.diff-hard{background:#e65100}.diff-mid{background:#f9a825;color:#3a2c00}
+.diff-easy{background:#388e3c}.diff-veryeasy{background:#1565c0}
+.careers-sec{margin:18px 0 0;border-top:1px solid #e6e9ef;padding-top:12px}
+.careers-sec h2{font-size:1.05rem;margin:.2em 0 .4em}
+.careers{margin:.2em 0;padding-left:1.1em}.careers li{margin:2px 0}
+.careers-src{font-size:.8rem;margin:.3em 0 0}
+.jobtag{margin:.5em 0 0;font-size:.92rem}
 .rel-links{margin:18px 0 0;border-top:1px solid #e6e9ef;padding-top:12px}
 .rel-links h2{font-size:1.05rem;margin:.2em 0 .3em}
 .rel-links ul{margin:.2em 0;padding-left:1.1em}.rel-links li{margin:2px 0}
