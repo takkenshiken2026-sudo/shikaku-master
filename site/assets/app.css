@@ -23,6 +23,9 @@ table.spec th{width:34%;background:#f2f5fa;color:#3a4757;font-weight:600;white-s
 .btn-official:hover{background:#0b3c8a;text-decoration:none}
 .provenance{font-size:.82rem;color:#6b7682;background:#f2f5fa;border:1px solid #e1e8f2;border-radius:8px;padding:11px 14px;margin:10px 0 0}
 .feat-list{margin:.2em 0 .6em;padding-left:1.1em}.feat-list li{margin:2px 0}
+.rel-links{margin:18px 0 0;border-top:1px solid #e6e9ef;padding-top:12px}
+.rel-links h2{font-size:1.05rem;margin:.2em 0 .3em}
+.rel-links ul{margin:.2em 0;padding-left:1.1em}.rel-links li{margin:2px 0}
 .site-footer{max-width:920px;margin:30px auto;padding:16px 18px;color:#7a838f;font-size:.8rem;border-top:1px solid #e6e9ef}
 .feature-nav{margin-top:28px;border-top:1px solid #e6e9ef;padding-top:14px}
 .feature-nav h2{font-size:1.05rem;margin:.6em 0 .3em}

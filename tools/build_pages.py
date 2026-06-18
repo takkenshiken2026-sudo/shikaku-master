@@ -56,14 +56,18 @@ def page_shell(title: str, body: str, depth: int, noindex: bool = True,
           f'<meta property="og:title" content="{esc(title)}">\n'
           f'<meta property="og:description" content="{esc(desc)}">\n'
           f'<meta property="og:url" content="{esc(canon)}">\n'
+          f'<meta property="og:locale" content="ja_JP">\n'
           f'<meta name="twitter:card" content="summary">\n')
-    ld = (f'<script type="application/ld+json">{json.dumps(jsonld, ensure_ascii=False)}</script>\n'
-          if jsonld else "")
+    ld = ""
+    if jsonld:
+        for obj in (jsonld if isinstance(jsonld, list) else [jsonld]):
+            ld += f'<script type="application/ld+json">{json.dumps(obj, ensure_ascii=False)}</script>\n'
     return f"""<!doctype html>
 <html lang="ja">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0d47a1">
 {robots}<title>{esc(title)}</title>
 <meta name="description" content="{esc(desc)}">
 {og}<link rel="icon" href="{base}assets/favicon.ico" sizes="32x32">
@@ -132,12 +136,66 @@ def build_detail(row) -> str:
         '制度・金額・日程は改定されることがあるため、出願前に必ず公式サイトで'
         'ご確認ください。空欄の項目は公式で確認のうえ追記します。</p>')
 
+    # ユニーク本文（概要）
+    lead = f"{esc(name)}は、{esc(major)}分野の{esc(label)}です。"
+    if row["authority"]:
+        lead += f"実施団体は{esc(row['authority'])}。"
+    lead += "このページでは受験料・試験形式・受験資格・合格率・実施頻度・公式サイトをまとめています。"
+    fact = []
+    if row["fee"]:
+        fact.append(f"受験料は{esc(row['fee'])}")
+    if row["pass_rate"]:
+        fact.append(f"合格率は{esc(row['pass_rate'])}")
+    if row["exam_format"]:
+        fact.append(f"試験形式は{esc(row['exam_format'])}")
+    if row["frequency"]:
+        fact.append(f"実施頻度は{esc(row['frequency'])}")
+    fact_p = (f"<p>{name}の概要: " + "、".join(fact)
+              + "。最新の金額・日程・合格率は公式サイトで必ずご確認ください。</p>") if fact else ""
+
+    # 関連内部リンク
+    bslug = MAJOR_SLUGS.get(major, "other")
+    rel = [(f"../bunya/{bslug}.html", f"{major}の資格一覧")]
+    tslug = {"国家": "national", "公的": "public"}.get(row["type"])
+    if tslug:
+        rel.append((f"../feature/{tslug}.html", f"{label}の一覧"))
+    if is_noreq(row):
+        rel.append(("../feature/no-requirement.html", "受験資格なしで受けられる資格"))
+    if is_cbt(row):
+        rel.append(("../feature/cbt.html", "在宅・CBTで受けられる資格"))
+    rel += [("../feature/cheap.html", "受験料が安い資格ランキング"),
+            ("../feature/high-pass.html", "合格率が高い資格")]
+    rel_links = ('<nav class="rel-links"><h2>関連リンク</h2><ul>'
+                 + "".join(f'<li><a href="{u}">{esc(t)}</a></li>' for u, t in rel)
+                 + "</ul></nav>")
+
+    # FAQ 構造化データ
+    qa = []
+    if row["fee"]:
+        qa.append((f"{name}の受験料はいくらですか？", row["fee"]))
+    if row["eligibility"]:
+        qa.append((f"{name}に受験資格はありますか？", row["eligibility"]))
+    if row["exam_format"]:
+        qa.append((f"{name}の試験はどのような形式ですか？", row["exam_format"]))
+    if row["pass_rate"]:
+        qa.append((f"{name}の合格率はどのくらいですか？", row["pass_rate"]))
+    if row["frequency"]:
+        qa.append((f"{name}はいつ実施されますか？", row["frequency"]))
+    if row["authority"]:
+        qa.append((f"{name}の実施団体はどこですか？", row["authority"]))
+    faq = ({"@context": "https://schema.org", "@type": "FAQPage",
+            "mainEntity": [{"@type": "Question", "name": q,
+                            "acceptedAnswer": {"@type": "Answer", "text": a}}
+                           for q, a in qa]} if qa else None)
+
     body = f"""<nav class="crumbs"><a href="../index.html">トップ</a> ›
 <a href="../index.html?major={esc(major)}">{esc(major)}</a> › {esc(name)}</nav>
 <h1>{esc(name)}</h1>
-<p class="lead">{esc(name)}は「{esc(major)}」分野の資格です。最新の受験料・日程・合格率は公式情報でご確認ください。</p>
+<p class="lead">{lead}</p>
+{fact_p}
 <table class="spec">{rows_html}</table>
 {cta}{provenance}
+{rel_links}
 <section class="related"><h2>同じカテゴリの資格</h2><ul id="related"></ul></section>
 <script>
 fetch("../data/certifications.json").then(r=>r.json()).then(all=>{{
@@ -152,14 +210,12 @@ fetch("../data/certifications.json").then(r=>r.json()).then(all=>{{
 }});
 </script>
 """
-    type_label = TYPE_BADGE.get(row["type"], ("区分要確認", ""))[0]
     bits = [b for b in (("受験料" + row["fee"]) if row["fee"] else "",
                         ("合格率" + row["pass_rate"]) if row["pass_rate"] else "") if b]
-    desc = (f"{name}（{major}分野・{type_label}）の試験情報。"
+    desc = (f"{name}（{major}分野・{label}）の試験情報。"
             + ("／".join(bits) + "。" if bits else "")
             + "受験料・試験形式・受験資格・合格率・実施団体・公式サイトを掲載。")
-    bslug = MAJOR_SLUGS.get(major, "other")
-    jsonld = {
+    breadcrumb = {
         "@context": "https://schema.org", "@type": "BreadcrumbList",
         "itemListElement": [
             {"@type": "ListItem", "position": 1, "name": "トップ", "item": BASE_URL + "/"},
@@ -168,9 +224,10 @@ fetch("../data/certifications.json").then(r=>r.json()).then(all=>{{
             {"@type": "ListItem", "position": 3, "name": name},
         ],
     }
+    ld = [breadcrumb] + ([faq] if faq else [])
     return page_shell(f"{name}｜{SITE_NAME}", body, depth=1,
                       noindex=(row.get("status") != "published"),
-                      desc=desc, path=f'c/{row["slug"]}.html', jsonld=jsonld)
+                      desc=desc, path=f'c/{row["slug"]}.html', jsonld=ld)
 
 
 def fee_yen(r):
@@ -401,8 +458,19 @@ def build_index(rows) -> str:
 </section>
 <script src="assets/search.js"></script>
 """
+    site_ld = [
+        {"@context": "https://schema.org", "@type": "WebSite",
+         "name": SITE_NAME, "url": BASE_URL + "/",
+         "potentialAction": {"@type": "SearchAction",
+                             "target": {"@type": "EntryPoint",
+                                        "urlTemplate": BASE_URL + "/?q={search_term_string}"},
+                             "query-input": "required name=search_term_string"}},
+        {"@context": "https://schema.org", "@type": "Organization",
+         "name": SITE_NAME, "url": BASE_URL + "/",
+         "logo": BASE_URL + "/assets/favicon.svg"},
+    ]
     return page_shell(SITE_NAME, body, depth=0, noindex=False,
-                      desc=SITE_DESC, path="")
+                      desc=SITE_DESC, path="", jsonld=site_ld)
 
 
 def build_compare() -> str:
@@ -491,6 +559,7 @@ SEARCH_JS = """(function(){
     Object.keys(majors).sort().forEach(function(v){opt(majorSel,v);});
     ['国家','公的','民間','要確認'].forEach(function(v){if(types[v])opt(typeSel,v);});
     var p=new URLSearchParams(location.search);
+    if(p.get('q'))q.value=p.get('q');
     if(p.get('major'))majorSel.value=p.get('major');
     render();updateBar();
   });
@@ -561,6 +630,9 @@ table.spec th{width:34%;background:#f2f5fa;color:#3a4757;font-weight:600;white-s
 .btn-official:hover{background:#0b3c8a;text-decoration:none}
 .provenance{font-size:.82rem;color:#6b7682;background:#f2f5fa;border:1px solid #e1e8f2;border-radius:8px;padding:11px 14px;margin:10px 0 0}
 .feat-list{margin:.2em 0 .6em;padding-left:1.1em}.feat-list li{margin:2px 0}
+.rel-links{margin:18px 0 0;border-top:1px solid #e6e9ef;padding-top:12px}
+.rel-links h2{font-size:1.05rem;margin:.2em 0 .3em}
+.rel-links ul{margin:.2em 0;padding-left:1.1em}.rel-links li{margin:2px 0}
 .site-footer{max-width:920px;margin:30px auto;padding:16px 18px;color:#7a838f;font-size:.8rem;border-top:1px solid #e6e9ef}
 .feature-nav{margin-top:28px;border-top:1px solid #e6e9ef;padding-top:14px}
 .feature-nav h2{font-size:1.05rem;margin:.6em 0 .3em}
@@ -661,6 +733,16 @@ def main() -> int:
     # GitHub Pages 独自ドメイン（毎回 site/ を作り直すため、ビルドで必ず出力）
     if CUSTOM_DOMAIN:
         (SITE / "CNAME").write_text(CUSTOM_DOMAIN + "\n", encoding="utf-8")
+
+    # カスタム 404（GitHub Pages が未検出時に配信）
+    nf_body = ('<h1>ページが見つかりません（404）</h1>'
+               '<p class="lead">お探しのページは移動または削除された可能性があります。'
+               'トップから資格名で検索してください。</p>'
+               '<p><a href="/">▶ トップページへ</a></p>')
+    (SITE / "404.html").write_text(
+        page_shell(f"404 ページが見つかりません｜{SITE_NAME}", nf_body, depth=0,
+                   noindex=True, desc="ページが見つかりません。", path="404.html"),
+        encoding="utf-8")
 
     print(f"built site at {SITE.relative_to(ROOT)}")
     print(f"  index + {len(indexable)} detail pages")

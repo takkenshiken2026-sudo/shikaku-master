@@ -71,6 +71,7 @@
     Object.keys(majors).sort().forEach(function(v){opt(majorSel,v);});
     ['国家','公的','民間','要確認'].forEach(function(v){if(types[v])opt(typeSel,v);});
     var p=new URLSearchParams(location.search);
+    if(p.get('q'))q.value=p.get('q');
     if(p.get('major'))majorSel.value=p.get('major');
     render();updateBar();
   });
