@@ -216,6 +216,18 @@ def build_detail(row) -> str:
         rel.append(("../feature/no-requirement.html", "受験資格なしで受けられる資格"))
     if is_cbt(row):
         rel.append(("../feature/cbt.html", "在宅・CBTで受けられる資格"))
+    # 意図ハブへの相互リンク（属するガイドのみ）
+    s = row["slug"]
+    if s in HUB_INDEPENDENCE_SET:
+        rel.append(("../feature/independence.html", "独立・開業を目指せる資格"))
+    if s in HUB_JOB_SET:
+        rel.append(("../feature/job-hunting.html", "就職・転職に役立つ資格"))
+    if s in HUB_REMOTE_SET:
+        rel.append(("../feature/remote-work.html", "在宅・リモートワークに活かせる資格"))
+    if s in HUB_TRADE_SET:
+        rel.append(("../feature/skilled-trade.html", "手に職をつけられる資格"))
+    if is_working_adult(row):
+        rel.append(("../feature/working-adults.html", "働きながら取りやすい資格"))
     rel += [("../feature/cheap.html", "受験料が安い資格ランキング"),
             ("../feature/high-pass.html", "合格率が高い資格")]
     rel_links = ('<nav class="rel-links"><h2>関連リンク</h2><ul>'
@@ -433,6 +445,48 @@ FEATURE_NAV = [
     ("data-available", "公式データ掲載資格の一覧"),
 ]
 
+# 意図ベースのハブ（検索意図に当てる集約ページ）。掲載 slug は資格の性質に基づく編集上の選定。
+HUB_INDEPENDENCE = [
+    "c-3701", "c-2510", "c-2503", "c-2501", "c-2402", "c-2403", "c-2511", "c-3201",
+    "c-3203", "c-2405", "c-3207", "c-3209", "c-1301", "c-1302", "c-4303", "c-4301",
+    "c-4401", "c-6004", "c-2104", "c-2101", "c-2102", "c-2103", "c-2515",
+]
+HUB_JOB = [
+    "c-3207", "c-2517", "c-3625", "c-3624", "c-1505", "c-1538", "c-4115", "c-2302",
+    "c-3710", "c-3815", "c-3816", "c-3322", "c-2510", "c-3701", "c-1803", "c-2001",
+    "c-2405", "c-2202",
+]
+HUB_REMOTE = [
+    "c-1505", "c-1504", "c-1502", "c-1565", "c-1555", "c-3815", "c-3816", "c-3817",
+    "c-3818", "c-3625", "c-3624", "c-2517", "c-3322", "c-2813", "c-1538",
+]
+HUB_TRADE = [
+    "c-6809", "c-6808", "c-5818", "c-4401", "c-4303", "c-4301", "c-6004", "c-5206",
+    "c-5207", "c-6702", "c-6703", "c-1315", "c-1404", "c-4115", "c-2302", "c-1907",
+    "c-7110", "c-1313",
+]
+HUB_INDEPENDENCE_SET = set(HUB_INDEPENDENCE)
+HUB_JOB_SET = set(HUB_JOB)
+HUB_REMOTE_SET = set(HUB_REMOTE)
+HUB_TRADE_SET = set(HUB_TRADE)
+
+# 意図ハブのナビ（トップ・各ハブの相互リンク用）
+INTENT_HUB_NAV = [
+    ("independence", "独立・開業を目指せる資格"),
+    ("job-hunting", "就職・転職に役立つ資格"),
+    ("remote-work", "在宅・リモートワークに活かせる資格"),
+    ("skilled-trade", "手に職をつけられる資格"),
+    ("working-adults", "働きながら取りやすい資格"),
+]
+
+
+def is_working_adult(r):
+    """働きながら取りやすい資格の目安: 受験資格なし かつ（CBT/ネット試験 または 合格率40%以上）。"""
+    if r.get("status") != "published" or not is_noreq(r):
+        return False
+    p = pass_pct(r)
+    return is_cbt(r) or (p is not None and p >= 40)
+
 
 def build_feature_pages(indexable):
     """特集・ランキングページ（site/feature/<slug>.html）。"""
@@ -515,6 +569,110 @@ def build_feature_pages(indexable):
          f"受験料・合格率・公式情報などを公式の一次情報で整備済みの {len(pub)} 件。",
          sorted(pub, key=lambda r: (r["major_category"], r["name"])),
          f"受験料・試験形式・受験資格・合格率を整備済みの資格 {len(pub)} 件の一覧。")
+
+    # ── 意図ベースのハブページ（検索意図に当てる集約） ──
+    by_slug = {r["slug"]: r for r in indexable}
+
+    def curated(slugs):
+        out = []
+        for s in slugs:
+            r = by_slug.get(s)
+            if r and is_indexable_detail(r) and r not in out:
+                out.append(r)
+        return out
+
+    def hub_nav(current):
+        lis = "".join(
+            f'<li><a href="{s}.html">{esc(l)}</a></li>'
+            for s, l in INTENT_HUB_NAV if s != current)
+        return ('<nav class="rel-links"><h2>関連ガイド</h2><ul>' + lis + "</ul></nav>")
+
+    def hub(slug, title, h1, intro_html, items, desc, group=False):
+        if group:
+            from collections import OrderedDict
+            by_major = OrderedDict()
+            for r in sorted(items, key=lambda r: (r["major_category"], r["name"])):
+                by_major.setdefault(r["major_category"], []).append(r)
+            listing = ""
+            for major, its in by_major.items():
+                listing += (f'<h2 class="hub-grp">{esc(major)}</h2>'
+                            + _list_items(its, depth=1))
+        else:
+            listing = _list_items(items, depth=1)
+        body = (
+            f'<nav class="crumbs"><a href="../index.html">トップ</a> › ガイド</nav>'
+            f"<h1>{esc(h1)}</h1>"
+            f'<div class="lead">{intro_html}</div>'
+            + listing
+            + '<p class="muted" style="margin-top:14px">※掲載は各資格の性質に基づく編集上の選定です。'
+              '個々の制度・受験料・合格率・独立開業や就職の条件は、各資格の公式サイトで'
+              '必ずご確認ください。</p>'
+            + hub_nav(slug)
+        )
+        pages[slug] = page_shell(f"{title}｜{SITE_NAME}", body, depth=1,
+                                 noindex=False, desc=desc,
+                                 path=f"feature/{slug}.html")
+
+    ind = curated(HUB_INDEPENDENCE)
+    hub("independence", "独立・開業を目指せる資格", "独立・開業を目指せる資格",
+        "<p>将来の独立や開業を視野に入れて資格を選びたい人向けのガイドです。"
+        "ここでは、<strong>業務独占の士業</strong>（行政書士・社会保険労務士・税理士・"
+        "司法書士など）や、<strong>施術所・店舗を構えて開業できる資格</strong>"
+        "（美容師・調理師・柔道整復師・あん摩マッサージ指圧師など）を中心に取り上げます。</p>"
+        "<p>独立のしやすさは、資格そのものに加えて実務経験・顧客基盤・初期投資によって"
+        "大きく変わります。まずは各資格の受験資格・難易度・受験料を比較し、現実的な"
+        "ロードマップを描く出発点にしてください。</p>",
+        ind, "独立・開業を目指せる資格の一覧。士業や手に職系を中心に、受験資格・難易度・"
+        "受験料・公式情報を比較できます。", group=True)
+
+    job = curated(HUB_JOB)
+    hub("job-hunting", "就職・転職に役立つ資格", "就職・転職に役立つ資格",
+        "<p>就職・転職で評価されやすい、実務に直結する定番資格をまとめたガイドです。"
+        "事務・経理（簿記）、IT（基本情報技術者・ITパスポート）、不動産（宅地建物取引士）、"
+        "金融（FP）、医療・介護・販売など、<strong>求人で歓迎・必須にされやすい資格</strong>"
+        "を中心に取り上げます。</p>"
+        "<p>資格は「持っているだけ」より、応募職種との関連が明確なときに効きます。"
+        "志望業界を決めてから、関連の深い資格を選ぶのがおすすめです。各ページの"
+        "「活かせる仕事」も参考にしてください。</p>",
+        job, "就職・転職に役立つ定番資格の一覧。事務・IT・不動産・金融・医療など、"
+        "求人で評価されやすい資格を比較できます。", group=True)
+
+    rem = curated(HUB_REMOTE)
+    hub("remote-work", "在宅・リモートワークに活かせる資格", "在宅・リモートワークに活かせる資格",
+        "<p>在宅・リモートワークやフリーランスで働く際に役立つスキル系の資格をまとめました。"
+        "IT・Web（基本情報技術者・ウェブデザイン技能士）、オフィス（MOS）、会計（簿記）、"
+        "金融（FP）、語学（TOEIC・日本語教育）など、<strong>パソコンとネット環境で"
+        "完結しやすい仕事</strong>に結びつく資格を中心に取り上げます。</p>"
+        "<p>多くがCBT・ネット試験に対応し、独学やオンライン学習でも取得を目指せます。"
+        "在宅案件は実績やポートフォリオも重視されるため、資格取得と並行した実務経験の"
+        "積み上げが近道です。</p>",
+        rem, "在宅・リモートワークに活かせる資格の一覧。IT・Web・会計・語学など、"
+        "パソコン中心の仕事に役立つ資格を比較できます。", group=True)
+
+    trade = curated(HUB_TRADE)
+    hub("skilled-trade", "手に職をつけられる資格", "手に職をつけられる資格",
+        "<p>景気や年齢に左右されにくい「手に職」を身につけたい人向けの技術・技能系資格の"
+        "ガイドです。電気工事士・自動車整備士・調理師・美容師・施工管理技士・登録販売者・"
+        "介護福祉士など、<strong>専門スキルが現場で長く活きる資格</strong>を中心に"
+        "取り上げます。</p>"
+        "<p>これらは実務に直結し、慢性的な人手不足の分野も多いのが特徴です。"
+        "受験資格や実務経験の要件がある資格も含まれるため、各ページで取得ルートを"
+        "確認してください。</p>",
+        trade, "手に職をつけられる技術・技能系資格の一覧。電気・整備・調理・美容・"
+        "建設・医療など、専門スキルが長く活きる資格を比較できます。", group=True)
+
+    wa = sorted((r for r in pub if is_working_adult(r)),
+                key=lambda r: (r["major_category"], r["name"]))
+    hub("working-adults", "働きながら取りやすい資格", "社会人が働きながら取りやすい資格",
+        "<p>仕事を続けながら無理なく挑戦しやすい資格をまとめたガイドです。"
+        "<strong>受験資格がなく</strong>（学歴・実務経験を問わない）、かつ"
+        "<strong>CBT・ネット試験で受けやすい、または合格率が比較的高め（目安40%以上）</strong>"
+        f"の資格 {len(wa)} 件を、公式データから自動的に抽出しています。</p>"
+        "<p>通年・随時実施やネット試験対応の資格は、自分のペースで受験日を選びやすいのが"
+        "利点です。合格率は受験者層によって変わるため、難易度の目安としてご覧ください。</p>",
+        wa, "社会人が働きながら取りやすい資格の一覧。受験資格なし＋CBTまたは高めの合格率で"
+        "抽出。受験料・合格率・公式情報を掲載。", group=True)
+
     return pages
 
 
@@ -527,6 +685,9 @@ def build_index(rows) -> str:
     feat_links = "".join(
         f'<li><a href="feature/{slug}.html">{esc(label)}</a></li>'
         for slug, label in FEATURE_NAV)
+    hub_links = "".join(
+        f'<li><a href="feature/{slug}.html">{esc(label)}</a></li>'
+        for slug, label in INTENT_HUB_NAV)
     body = f"""<h1>日本の資格カタログ</h1>
 <p class="lead">資格名で検索、または分野・区分で絞り込み・並び替えできます。現在 <strong id="count">-</strong> 件を収録（うち公式データ掲載 {pub} 件）。受験料・試験形式・受験資格・合格率・公式サイトを掲載しています。</p>
 <div class="controls">
@@ -551,6 +712,8 @@ def build_index(rows) -> str:
 <ul id="results" class="results"></ul>
 <div id="cmpbar" class="cmpbar"></div>
 <section class="feature-nav">
+  <h2>目的から探す</h2>
+  <ul class="feat-list">{hub_links}</ul>
   <h2>特集・ランキング</h2>
   <ul class="feat-list">{feat_links}</ul>
   <h2>分野から探す</h2>
@@ -743,6 +906,7 @@ table.spec th{width:34%;background:#f2f5fa;color:#3a4757;font-weight:600;white-s
 .rel-links h2{font-size:1.05rem;margin:.2em 0 .3em}
 .rel-links ul{margin:.2em 0;padding-left:1.1em}.rel-links li{margin:2px 0}
 .site-footer{max-width:920px;margin:30px auto;padding:16px 18px;color:#7a838f;font-size:.8rem;border-top:1px solid #e6e9ef}
+.hub-grp{font-size:1.0rem;margin:1.1em 0 .3em;color:#0d47a1;border-bottom:1px solid #e6e9ef;padding-bottom:3px}
 .feature-nav{margin-top:28px;border-top:1px solid #e6e9ef;padding-top:14px}
 .feature-nav h2{font-size:1.05rem;margin:.6em 0 .3em}
 .feature-nav ul{margin:.2em 0 .6em;padding-left:1.1em}
