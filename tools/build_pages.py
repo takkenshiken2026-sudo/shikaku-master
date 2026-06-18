@@ -223,7 +223,9 @@ def build_index(rows) -> str:
   <select id="type"><option value="">区分（すべて）</option></select>
 </div>
 <p id="status" class="muted"></p>
+<p class="muted hint">行頭のチェックを入れて資格を選ぶと、最大4件まで並べて比較できます。</p>
 <ul id="results" class="results"></ul>
+<div id="cmpbar" class="cmpbar"></div>
 <section class="feature-nav">
   <h2>特集</h2>
   <ul>
@@ -238,11 +240,26 @@ def build_index(rows) -> str:
     return page_shell(SITE_NAME, body, depth=0, noindex=False)
 
 
+def build_compare() -> str:
+    body = """<nav class="crumbs"><a href="index.html">トップ</a> › 比較</nav>
+<h1>資格を比較</h1>
+<p class="lead">選択した資格を並べて比較します（最大4件）。数値・制度は各資格の公式情報で必ずご確認ください。</p>
+<div id="cmp" class="cmp-wrap"></div>
+<p style="margin-top:18px"><a href="index.html">← 検索に戻って選び直す</a></p>
+<script src="assets/compare.js"></script>
+"""
+    return page_shell(f"資格を比較｜{SITE_NAME}", body, depth=0, noindex=False)
+
+
 SEARCH_JS = """(function(){
   var q=document.getElementById('q'),majorSel=document.getElementById('major'),
       typeSel=document.getElementById('type'),results=document.getElementById('results'),
-      status=document.getElementById('status'),count=document.getElementById('count');
-  var DATA=[];
+      status=document.getElementById('status'),count=document.getElementById('count'),
+      bar=document.getElementById('cmpbar');
+  var DATA=[], MAX=4, selected=loadSel();
+  function loadSel(){try{return new Set(JSON.parse(localStorage.getItem('cmp')||'[]'));}catch(e){return new Set();}}
+  function saveSel(){try{localStorage.setItem('cmp',JSON.stringify([].slice.call(selected)));}catch(e){}}
+  function esc(s){return (s||'').replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
   function opt(sel,v){var o=document.createElement('option');o.value=v;o.textContent=v;sel.appendChild(o);}
   function render(){
     var t=(q.value||'').trim().toLowerCase(),mj=majorSel.value,tp=typeSel.value;
@@ -254,11 +271,33 @@ SEARCH_JS = """(function(){
     });
     status.textContent=out.length+' 件';
     results.innerHTML=out.slice(0,300).map(function(x){
-      return '<li><a href="c/'+x.slug+'.html">'+x.name+'</a>'+
-        '<span class="meta"><span class="badge b-'+x.type+'">'+x.type+'</span> '+x.major+' / '+x.category+'</span></li>';
+      var ck=selected.has(x.slug)?' checked':'';
+      return '<li><label class="cmp-add" title="比較に追加"><input type="checkbox" data-slug="'+x.slug+'"'+ck+'></label>'+
+        '<a href="c/'+x.slug+'.html">'+esc(x.name)+'</a>'+
+        '<span class="meta"><span class="badge b-'+x.type+'">'+x.type+'</span> '+esc(x.major)+' / '+esc(x.category)+'</span></li>';
     }).join('')||'<li class="muted">該当なし</li>';
     if(out.length>300) results.innerHTML+='<li class="muted">…他 '+(out.length-300)+' 件（絞り込んでください）</li>';
   }
+  function updateBar(){
+    if(!bar)return;
+    var n=selected.size;
+    if(!n){bar.classList.remove('on');bar.innerHTML='';return;}
+    bar.classList.add('on');
+    bar.innerHTML='<span>'+n+' 件を選択中（最大'+MAX+'）</span>'+
+      '<a class="btn" href="compare.html?ids='+[].slice.call(selected).join(',')+'">比較する</a>'+
+      '<button type="button" id="cmpclear" class="btn-ghost">クリア</button>';
+    document.getElementById('cmpclear').onclick=function(){selected.clear();saveSel();render();updateBar();};
+  }
+  results.addEventListener('change',function(e){
+    var cb=e.target;
+    if(!cb||cb.tagName!=='INPUT')return;
+    var slug=cb.getAttribute('data-slug');
+    if(cb.checked){
+      if(selected.size>=MAX&&!selected.has(slug)){cb.checked=false;alert('比較は最大'+MAX+'件までです');return;}
+      selected.add(slug);
+    } else selected.delete(slug);
+    saveSel();updateBar();
+  });
   fetch('data/certifications.json').then(function(r){return r.json();}).then(function(all){
     DATA=all; count.textContent=all.length;
     var majors={},types={};
@@ -267,13 +306,50 @@ SEARCH_JS = """(function(){
     ['国家','公的','民間','要確認'].forEach(function(v){if(types[v])opt(typeSel,v);});
     var p=new URLSearchParams(location.search);
     if(p.get('major'))majorSel.value=p.get('major');
-    render();
+    render();updateBar();
   });
   [q,majorSel,typeSel].forEach(function(el){el.addEventListener('input',render);});
 })();
 """
 
-APP_CSS = """*{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,"Hiragino Kaku Gothic ProN",Meiryo,sans-serif;color:#1b2430;line-height:1.7;background:#f7f8fa}
+
+COMPARE_JS = """(function(){
+  var p=new URLSearchParams(location.search);
+  var ids=(p.get('ids')||'').split(',').filter(Boolean);
+  var root=document.getElementById('cmp');
+  function esc(s){return (s||'').replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+  if(!ids.length){root.innerHTML='<p class="muted">比較する資格が選択されていません。<a href="index.html">トップ</a>で資格にチェックを入れて選んでください。</p>';return;}
+  var FIELDS=[['区分','type'],['分野','major'],['カテゴリ','category'],
+    ['実施団体','authority'],['受験資格','eligibility'],['試験形式','exam_format'],
+    ['受験料','fee'],['合格率','pass_rate'],['実施頻度','frequency']];
+  fetch('data/certifications.json').then(function(r){return r.json();}).then(function(all){
+    var map={};all.forEach(function(x){map[x.slug]=x;});
+    var items=ids.map(function(s){return map[s];}).filter(Boolean);
+    if(!items.length){root.innerHTML='<p class="muted">該当する資格データが見つかりませんでした。</p>';return;}
+    var h='<table class="cmp"><thead><tr><th></th>';
+    items.forEach(function(x){h+='<th><a href="c/'+x.slug+'.html">'+esc(x.name)+'</a></th>';});
+    h+='</tr></thead><tbody>';
+    FIELDS.forEach(function(f){
+      h+='<tr><th>'+f[0]+'</th>';
+      items.forEach(function(x){
+        var v;
+        if(f[1]==='type')v='<span class="badge b-'+x.type+'">'+esc(x.type)+'</span>';
+        else v=x[f[1]]?esc(x[f[1]]):'<span class="muted">公式で確認</span>';
+        h+='<td>'+v+'</td>';
+      });
+      h+='</tr>';
+    });
+    h+='<tr><th>公式サイト</th>';
+    items.forEach(function(x){
+      h+='<td>'+(x.official_url?'<a href="'+esc(x.official_url)+'" target="_blank" rel="nofollow noopener">公式サイト</a>':'<span class="muted">未登録</span>')+'</td>';
+    });
+    h+='</tr></tbody></table>';
+    root.innerHTML=h;
+  });
+})();
+"""
+
+APP_CSS = """*{box-sizing:border-box}body{margin:0;padding-bottom:64px;font-family:system-ui,-apple-system,"Hiragino Kaku Gothic ProN",Meiryo,sans-serif;color:#1b2430;line-height:1.7;background:#f7f8fa}
 a{color:#1565c0;text-decoration:none}a:hover{text-decoration:underline}
 .site-header{background:#0d47a1;color:#fff;padding:14px 20px;display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
 .site-header .logo{color:#fff;font-weight:700;font-size:1.15rem}.tagline{color:#cfe0fb;font-size:.85rem}
@@ -300,6 +376,19 @@ table.spec th{width:34%;background:#f2f5fa;color:#3a4757;font-weight:600;white-s
 .chips{display:flex;flex-wrap:wrap;gap:8px}
 .chip{display:inline-block;padding:5px 11px;border:1px solid #c5d3ea;background:#eef4fc;border-radius:999px;font-size:.85rem}
 .chip:hover{background:#dce9fb;text-decoration:none}
+.hint{font-size:.82rem;margin:4px 0 10px}
+.cmp-add{margin-right:9px;cursor:pointer}.cmp-add input{width:16px;height:16px;vertical-align:middle;cursor:pointer}
+.cmpbar{position:fixed;left:0;right:0;bottom:0;background:#0d47a1;color:#fff;padding:11px 18px;display:none;align-items:center;gap:14px;flex-wrap:wrap;box-shadow:0 -2px 10px rgba(0,0,0,.18);z-index:20}
+.cmpbar.on{display:flex}
+.cmpbar .btn{background:#fff;color:#0d47a1;font-weight:700;padding:7px 16px;border-radius:8px}
+.cmpbar .btn:hover{background:#e8f0fe;text-decoration:none}
+.cmpbar .btn-ghost{background:transparent;color:#cfe0fb;border:1px solid #4f7ec4;padding:6px 13px;border-radius:8px;cursor:pointer;font:inherit;font-size:.9rem}
+.cmpbar .btn-ghost:hover{background:#1257b8}
+.cmp-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table.cmp{border-collapse:collapse;background:#fff;border:1px solid #e6e9ef;border-radius:10px;min-width:100%}
+table.cmp th,table.cmp td{text-align:left;padding:10px 14px;border-bottom:1px solid #eef1f5;border-right:1px solid #eef1f5;vertical-align:top;font-size:.9rem;min-width:150px}
+table.cmp thead th{background:#f2f5fa;color:#1b2430;font-weight:700}
+table.cmp tbody th{background:#f7f9fc;color:#3a4757;white-space:nowrap;min-width:110px;width:110px}
 """
 
 
@@ -315,10 +404,14 @@ def main() -> int:
     (SITE / "data").mkdir()
     (SITE / "assets").mkdir()
 
-    # JSON（検索用に必要列のみ）
+    # JSON（検索＋比較用。比較で使う事実値も含める）
     payload = [{
         "slug": r["slug"], "name": r["name"], "major": r["major_category"],
         "category": r["category"], "type": r["type"],
+        "authority": r["authority"], "official_url": r["official_url"],
+        "eligibility": r["eligibility"], "exam_format": r["exam_format"],
+        "fee": r["fee"], "pass_rate": r["pass_rate"], "frequency": r["frequency"],
+        "status": r.get("status", ""),
     } for r in indexable]
     payload.sort(key=lambda x: (x["major"], x["category"], x["name"]))
     (SITE / "data" / "certifications.json").write_text(
@@ -326,7 +419,9 @@ def main() -> int:
 
     (SITE / "assets" / "app.css").write_text(APP_CSS, encoding="utf-8")
     (SITE / "assets" / "search.js").write_text(SEARCH_JS, encoding="utf-8")
+    (SITE / "assets" / "compare.js").write_text(COMPARE_JS, encoding="utf-8")
     (SITE / "index.html").write_text(build_index(indexable), encoding="utf-8")
+    (SITE / "compare.html").write_text(build_compare(), encoding="utf-8")
 
     for r in indexable:
         (SITE / "c" / f'{r["slug"]}.html').write_text(build_detail(r), encoding="utf-8")
