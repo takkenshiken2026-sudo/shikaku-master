@@ -23,7 +23,8 @@ BRAND = ROOT / "brand"
 
 SITE_NAME = "資格カタログ"
 SITE_DESC = "日本の資格を「探せる・絞れる・比べられる」資格データベース。受験料・試験形式・受験資格・合格率・実施団体・公式サイトを公式の一次情報に基づき掲載。"
-BASE_URL = "https://takkenshiken2026-sudo.github.io/shikaku-master"
+BASE_URL = "https://shikaku-master.jp"
+CUSTOM_DOMAIN = "shikaku-master.jp"
 TYPE_BADGE = {
     "国家": ("国家資格", "badge-national"),
     "公的": ("公的資格", "badge-public"),
@@ -543,6 +544,10 @@ def main() -> int:
     (SITE / "sitemap.xml").write_text("\n".join(sm), encoding="utf-8")
     (SITE / "robots.txt").write_text(
         f"User-agent: *\nAllow: /\nSitemap: {BASE_URL}/sitemap.xml\n", encoding="utf-8")
+
+    # GitHub Pages 独自ドメイン（毎回 site/ を作り直すため、ビルドで必ず出力）
+    if CUSTOM_DOMAIN:
+        (SITE / "CNAME").write_text(CUSTOM_DOMAIN + "\n", encoding="utf-8")
 
     print(f"built site at {SITE.relative_to(ROOT)}")
     print(f"  index + {len(indexable)} detail pages")
