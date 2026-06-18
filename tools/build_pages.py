@@ -163,6 +163,11 @@ def build_detail(row) -> str:
         '制度・金額・日程は改定されることがあるため、出願前に必ず公式サイトで'
         'ご確認ください。空欄の項目は公式で確認のうえ追記します。</p>')
 
+    # 鮮度シグナル（最終更新日の可視表示）
+    jd = jp_date(src)
+    updated_html = (f'<p class="updated">最終更新: {esc(jd)}'
+                    f'<span class="muted">（公式の一次情報に基づき確認）</span></p>\n') if jd else ""
+
     # ユニーク本文（概要）
     lead = f"{esc(name)}は、{esc(major)}分野の{esc(label)}です。"
     if row["authority"]:
@@ -239,7 +244,7 @@ def build_detail(row) -> str:
     body = f"""<nav class="crumbs"><a href="../index.html">トップ</a> ›
 <a href="../index.html?major={esc(major)}">{esc(major)}</a> › {esc(name)}</nav>
 <h1>{esc(name)}</h1>
-<p class="lead">{lead}</p>
+{updated_html}<p class="lead">{lead}</p>
 {fact_p}
 <table class="spec">{rows_html}</table>
 {cta}{provenance}
@@ -275,7 +280,7 @@ fetch("../data/certifications.json").then(r=>r.json()).then(all=>{{
     }
     ld = [breadcrumb] + ([faq] if faq else [])
     return page_shell(f"{name}｜{SITE_NAME}", body, depth=1,
-                      noindex=(row.get("status") != "published"),
+                      noindex=(not is_indexable_detail(row)),
                       desc=desc, path=f'c/{row["slug"]}.html', jsonld=ld)
 
 
@@ -309,6 +314,32 @@ def difficulty(r):
     if p < 80:
         return ("比較的やさしい", "diff-easy")
     return ("入門〜標準", "diff-veryeasy")
+
+
+def n_facts(r):
+    """受験料・合格率・受験資格・試験形式・実施頻度のうち、値が入っている数。"""
+    return sum(1 for k in ("fee", "pass_rate", "eligibility", "exam_format", "frequency")
+               if r.get(k, "").strip())
+
+
+def is_indexable_detail(r):
+    """SEOインデックス対象の詳細ページか（インデックス衛生）。
+
+    published かつ実データが十分なページのみインデックスし、薄いページ
+    （廃止・旧制度・データほぼ無し）は noindex にしてサイト全体の評価希釈を防ぐ。
+    条件: published かつ 受験料/合格率/受験資格のいずれかがあり、実データ2項目以上。
+    """
+    if r.get("status") != "published":
+        return False
+    has_key = bool(r.get("fee", "").strip() or r.get("pass_rate", "").strip()
+                   or r.get("eligibility", "").strip())
+    return has_key and n_facts(r) >= 2
+
+
+def jp_date(iso):
+    """'2026-06-18' → '2026年6月18日'。不正・空なら空文字。"""
+    m = re.match(r"^(\d{4})-(\d{2})-(\d{2})$", iso or "")
+    return f"{int(m.group(1))}年{int(m.group(2))}月{int(m.group(3))}日" if m else ""
 
 
 def is_cbt(r):
@@ -699,6 +730,7 @@ table.spec th{width:34%;background:#f2f5fa;color:#3a4757;font-weight:600;white-s
 .btn-official:hover{background:#0b3c8a;text-decoration:none}
 .provenance{font-size:.82rem;color:#6b7682;background:#f2f5fa;border:1px solid #e1e8f2;border-radius:8px;padding:11px 14px;margin:10px 0 0}
 .feat-list{margin:.2em 0 .6em;padding-left:1.1em}.feat-list li{margin:2px 0}
+.updated{font-size:.82rem;color:#6b7682;margin:.1em 0 .6em}.updated .muted{margin-left:.4em}
 .diff-badge{display:inline-block;font-weight:700;font-size:.82rem;padding:2px 9px;border-radius:11px;color:#fff}
 .diff-veryhard{background:#b71c1c}.diff-hard{background:#e65100}.diff-mid{background:#f9a825;color:#3a2c00}
 .diff-easy{background:#388e3c}.diff-veryeasy{background:#1565c0}
@@ -788,19 +820,22 @@ def main() -> int:
     for slug, htmlc in feat_pages.items():
         (SITE / "feature" / f"{slug}.html").write_text(htmlc, encoding="utf-8")
 
-    # sitemap.xml（index対象 = トップ・比較・分野別・特集・published詳細）
+    # sitemap.xml（index対象 = トップ・比較・分野別・特集・インデックス対象の詳細のみ）
+    # noindex のページは sitemap に入れない（インデックス衛生・整合性）。
     from datetime import date
     today = date.today().isoformat()
-    urls = ["", "compare.html"]
-    urls += [f"bunya/{s}.html" for s in cat_pages]
-    urls += [f"feature/{s}.html" for s in feat_pages]
-    urls += [f'c/{r["slug"]}.html' for r in indexable if r.get("status") == "published"]
+    # (path, lastmod, priority)
+    entries = [("", today, "1.0"), ("compare.html", today, "0.7")]
+    entries += [(f"bunya/{s}.html", today, "0.8") for s in cat_pages]
+    entries += [(f"feature/{s}.html", today, "0.8") for s in feat_pages]
+    idx_details = [r for r in indexable if is_indexable_detail(r)]
+    entries += [(f'c/{r["slug"]}.html',
+                 (r.get("source_checked_at") or today), "0.6") for r in idx_details]
     sm = ['<?xml version="1.0" encoding="UTF-8"?>',
           '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">']
-    for u in urls:
+    for u, lm, pr in entries:
         loc = esc(BASE_URL + "/" + u)
-        pr = "1.0" if u == "" else ("0.8" if u.startswith(("bunya", "feature")) else "0.6")
-        sm.append(f"<url><loc>{loc}</loc><lastmod>{today}</lastmod>"
+        sm.append(f"<url><loc>{loc}</loc><lastmod>{esc(lm)}</lastmod>"
                   f"<priority>{pr}</priority></url>")
     sm.append("</urlset>")
     (SITE / "sitemap.xml").write_text("\n".join(sm), encoding="utf-8")
@@ -823,7 +858,7 @@ def main() -> int:
 
     print(f"built site at {SITE.relative_to(ROOT)}")
     print(f"  index + {len(indexable)} detail pages")
-    print(f"  sitemap urls: {len(urls)}")
+    print(f"  sitemap urls: {len(entries)} (index対象詳細: {len(idx_details)})")
     print(f"  分野別一覧: {len(cat_pages)}  特集: {len(feat_pages)}")
     print(f"  excluded: bucket/duplicate/overseas = {len(rows)-len(indexable)}")
     return 0
