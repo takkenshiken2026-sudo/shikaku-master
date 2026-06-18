@@ -100,29 +100,44 @@ def build_detail(row) -> str:
     else:
         official = '<span class="muted">未登録（一次情報で確認予定）</span>'
 
-    rows_html = "".join(
-        f"<tr><th>{esc(k)}</th><td>{v}</td></tr>"
-        for k, v in [
-            ("資格区分", f'<span class="badge {cls}">{esc(label)}</span>'
-                        f' <span class="muted">（{esc(row["type_reason"])}）</span>'),
-            ("分野（大分類）", esc(major)),
-            ("カテゴリ", esc(cat)),
-            ("実施団体", field(row["authority"])),
-            ("公式サイト", official),
-            ("受験資格", field(row["eligibility"])),
-            ("試験形式", field(row["exam_format"])),
-            ("受験料", field(row["fee"])),
-            ("合格率", field(row["pass_rate"])),
-            ("実施頻度", field(row["frequency"])),
-            ("ハローワークコード", esc(row["hellowork_code"])),
-        ]
-    )
+    spec = [
+        ("資格区分", f'<span class="badge {cls}">{esc(label)}</span>'
+                    f' <span class="muted">（{esc(row["type_reason"])}）</span>'),
+        ("分野（大分類）", esc(major)),
+        ("カテゴリ", esc(cat)),
+        ("実施団体", field(row["authority"])),
+        ("公式サイト", official),
+        ("受験資格", field(row["eligibility"])),
+        ("試験形式", field(row["exam_format"])),
+        ("受験料", field(row["fee"])),
+        ("合格率", field(row["pass_rate"])),
+        ("実施頻度", field(row["frequency"])),
+        ("ハローワークコード", esc(row["hellowork_code"])),
+    ]
+    src = row.get("source_checked_at", "")
+    if src:
+        spec.append(("情報確認日", esc(src) + ' <span class="muted">（公式の一次情報に基づき確認）</span>'))
+    rows_html = "".join(f"<tr><th>{esc(k)}</th><td>{v}</td></tr>" for k, v in spec)
+
+    # 公式サイトへの導線（CTA）と出典・注意書き
+    if row["official_url"]:
+        u = esc(row["official_url"])
+        cta = (f'<p class="official-cta"><a class="btn-official" href="{u}" '
+               f'rel="nofollow noopener" target="_blank">公式サイトで最新情報を確認 ↗</a></p>')
+    else:
+        cta = ""
+    provenance = (
+        '<p class="provenance">受験料・試験形式・受験資格・合格率・実施団体は、'
+        '各資格の<strong>公式の一次情報</strong>に基づいて整備しています。'
+        '制度・金額・日程は改定されることがあるため、出願前に必ず公式サイトで'
+        'ご確認ください。空欄の項目は公式で確認のうえ追記します。</p>')
 
     body = f"""<nav class="crumbs"><a href="../index.html">トップ</a> ›
 <a href="../index.html?major={esc(major)}">{esc(major)}</a> › {esc(name)}</nav>
 <h1>{esc(name)}</h1>
 <p class="lead">{esc(name)}は「{esc(major)}」分野の資格です。最新の受験料・日程・合格率は公式情報でご確認ください。</p>
 <table class="spec">{rows_html}</table>
+{cta}{provenance}
 <section class="related"><h2>同じカテゴリの資格</h2><ul id="related"></ul></section>
 <script>
 fetch("../data/certifications.json").then(r=>r.json()).then(all=>{{
@@ -541,6 +556,11 @@ table.spec{width:100%;border-collapse:collapse;background:#fff;border:1px solid 
 table.spec th,table.spec td{text-align:left;padding:10px 14px;border-bottom:1px solid #eef1f5;vertical-align:top}
 table.spec th{width:34%;background:#f2f5fa;color:#3a4757;font-weight:600;white-space:nowrap}
 .muted{color:#98a1ad}.related{margin-top:24px}.related ul{padding-left:1.1em}
+.official-cta{margin:16px 0 6px}
+.btn-official{display:inline-block;background:#0d47a1;color:#fff;font-weight:700;padding:11px 20px;border-radius:8px}
+.btn-official:hover{background:#0b3c8a;text-decoration:none}
+.provenance{font-size:.82rem;color:#6b7682;background:#f2f5fa;border:1px solid #e1e8f2;border-radius:8px;padding:11px 14px;margin:10px 0 0}
+.feat-list{margin:.2em 0 .6em;padding-left:1.1em}.feat-list li{margin:2px 0}
 .site-footer{max-width:920px;margin:30px auto;padding:16px 18px;color:#7a838f;font-size:.8rem;border-top:1px solid #e6e9ef}
 .feature-nav{margin-top:28px;border-top:1px solid #e6e9ef;padding-top:14px}
 .feature-nav h2{font-size:1.05rem;margin:.6em 0 .3em}
