@@ -22,10 +22,12 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.x'
-      - name: Build dataset and site
-        run: |
-          python3 tools/build_seed.py
-          python3 tools/build_pages.py
+      - name: Build dataset
+        run: python3 tools/build_seed.py
+      - name: Validate data integrity
+        run: python3 tools/validate.py
+      - name: Build site
+        run: python3 tools/build_pages.py
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

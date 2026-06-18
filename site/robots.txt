@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://takkenshiken2026-sudo.github.io/shikaku-master/sitemap.xml

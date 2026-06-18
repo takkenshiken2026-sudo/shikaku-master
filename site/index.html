@@ -3,22 +3,42 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>資格カタログ（仮）</title>
+<title>資格カタログ</title>
+<meta name="description" content="日本の資格を「探せる・絞れる・比べられる」資格データベース。受験料・試験形式・受験資格・合格率・実施団体・公式サイトを公式の一次情報に基づき掲載。">
+<link rel="canonical" href="https://takkenshiken2026-sudo.github.io/shikaku-master/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="資格カタログ">
+<meta property="og:title" content="資格カタログ">
+<meta property="og:description" content="日本の資格を「探せる・絞れる・比べられる」資格データベース。受験料・試験形式・受験資格・合格率・実施団体・公式サイトを公式の一次情報に基づき掲載。">
+<meta property="og:url" content="https://takkenshiken2026-sudo.github.io/shikaku-master/">
+<meta name="twitter:card" content="summary">
 <link rel="icon" href="assets/favicon.ico" sizes="32x32">
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
 <link rel="stylesheet" href="assets/app.css">
 </head>
 <body>
-<header class="site-header"><a href="index.html" class="logo">資格カタログ（仮）</a>
+<header class="site-header"><a href="index.html" class="logo">資格カタログ</a>
 <span class="tagline">日本の資格を探せる・絞れる・比べられる</span></header>
 <main class="container">
 <h1>日本の資格カタログ</h1>
-<p class="lead">資格名で検索、または分野・区分で絞り込めます。現在 <strong id="count">-</strong> 件を収録（うち公式データ掲載 862 件・プロトタイプ）。</p>
+<p class="lead">資格名で検索、または分野・区分で絞り込み・並び替えできます。現在 <strong id="count">-</strong> 件を収録（うち公式データ掲載 862 件）。受験料・試験形式・受験資格・合格率・公式サイトを掲載しています。</p>
 <div class="controls">
   <input id="q" type="search" placeholder="資格名で検索（例: 簿記, 電気, ボイラー）">
   <select id="major"><option value="">分野（すべて）</option></select>
   <select id="type"><option value="">区分（すべて）</option></select>
+  <select id="sort">
+    <option value="">並び順（標準）</option>
+    <option value="fee-asc">受験料が安い順</option>
+    <option value="fee-desc">受験料が高い順</option>
+    <option value="pass-desc">合格率が高い順</option>
+    <option value="pass-asc">合格率が低い順</option>
+  </select>
+</div>
+<div class="filters">
+  <label><input type="checkbox" id="f-pub"> データ掲載のみ</label>
+  <label><input type="checkbox" id="f-noreq"> 受験資格なし</label>
+  <label><input type="checkbox" id="f-cbt"> CBT・ネット試験</label>
 </div>
 <p id="status" class="muted"></p>
 <p class="muted hint">行頭のチェックを入れて資格を選ぶと、最大4件まで並べて比較できます。</p>
@@ -36,7 +56,7 @@
 <script src="assets/search.js"></script>
 
 </main>
-<footer class="site-footer">出典: 厚生労働省 ハローワーク 免許・資格コード一覧をシードに作成（プロトタイプ）。
-数値・制度は各資格の公式情報で必ずご確認ください。</footer>
+<footer class="site-footer">出典: 厚生労働省 ハローワーク「免許・資格コード一覧」を正本シードに、各資格の公式の一次情報に基づき整備。
+最新の制度・受験料・日程・合格率は各資格の公式サイトで必ずご確認ください。</footer>
 </body>
 </html>

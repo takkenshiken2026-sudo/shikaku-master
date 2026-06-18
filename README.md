@@ -1,8 +1,15 @@
-# 資格カタログ（仮）/ shikaku-catalog
+# 資格カタログ / shikaku-master
 
 日本の資格を「探せる・絞れる・比べられる」資格データベース・メディア。
 厚生労働省 ハローワークの「免許・資格コード一覧（小分類）」を正本シードに、
 CSV → Python ジェネレータ → 静的HTML を生成する量産型サイト。
+
+公開サイト: https://takkenshiken2026-sudo.github.io/shikaku-master/
+
+- 検索・分野/区分での絞り込み・**受験料/合格率での並び替え**・**比較（最大4件）**
+- 受験料・試験形式・受験資格・合格率・実施団体・公式URLを**公式の一次情報**に基づき掲載（約862件）
+- SEO対応（メタ説明・OGP・canonical・sitemap.xml・robots.txt・パンくずJSON-LD）
+- データ方針と出典は `data/SOURCES.md`、整合性検査は `python3 tools/validate.py`
 
 ## 構成
 

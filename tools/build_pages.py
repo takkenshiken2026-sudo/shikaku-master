@@ -21,7 +21,9 @@ CSV = ROOT / "data" / "certifications.csv"
 SITE = ROOT / "site"
 BRAND = ROOT / "brand"
 
-SITE_NAME = "資格カタログ（仮）"
+SITE_NAME = "資格カタログ"
+SITE_DESC = "日本の資格を「探せる・絞れる・比べられる」資格データベース。受験料・試験形式・受験資格・合格率・実施団体・公式サイトを公式の一次情報に基づき掲載。"
+BASE_URL = "https://takkenshiken2026-sudo.github.io/shikaku-master"
 TYPE_BADGE = {
     "国家": ("国家資格", "badge-national"),
     "公的": ("公的資格", "badge-public"),
@@ -40,29 +42,41 @@ def load_rows():
         return list(csv.DictReader(f))
 
 
-def page_shell(title: str, body: str, depth: int, noindex: bool = True) -> str:
+def page_shell(title: str, body: str, depth: int, noindex: bool = True,
+               desc: str = "", path: str = "", jsonld=None) -> str:
     base = "../" * depth
-    robots = ('<meta name="robots" content="noindex"><!-- 未検証/プロトタイプ -->\n'
-              if noindex else "")
+    robots = ('<meta name="robots" content="noindex">\n' if noindex else "")
+    desc = desc or SITE_DESC
+    canon = BASE_URL + "/" + path
+    og = (f'<link rel="canonical" href="{esc(canon)}">\n'
+          f'<meta property="og:type" content="website">\n'
+          f'<meta property="og:site_name" content="{esc(SITE_NAME)}">\n'
+          f'<meta property="og:title" content="{esc(title)}">\n'
+          f'<meta property="og:description" content="{esc(desc)}">\n'
+          f'<meta property="og:url" content="{esc(canon)}">\n'
+          f'<meta name="twitter:card" content="summary">\n')
+    ld = (f'<script type="application/ld+json">{json.dumps(jsonld, ensure_ascii=False)}</script>\n'
+          if jsonld else "")
     return f"""<!doctype html>
 <html lang="ja">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 {robots}<title>{esc(title)}</title>
-<link rel="icon" href="{base}assets/favicon.ico" sizes="32x32">
+<meta name="description" content="{esc(desc)}">
+{og}<link rel="icon" href="{base}assets/favicon.ico" sizes="32x32">
 <link rel="icon" href="{base}assets/favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="{base}assets/apple-touch-icon.png">
 <link rel="stylesheet" href="{base}assets/app.css">
-</head>
+{ld}</head>
 <body>
 <header class="site-header"><a href="{base}index.html" class="logo">{esc(SITE_NAME)}</a>
 <span class="tagline">日本の資格を探せる・絞れる・比べられる</span></header>
 <main class="container">
 {body}
 </main>
-<footer class="site-footer">出典: 厚生労働省 ハローワーク 免許・資格コード一覧をシードに作成（プロトタイプ）。
-数値・制度は各資格の公式情報で必ずご確認ください。</footer>
+<footer class="site-footer">出典: 厚生労働省 ハローワーク「免許・資格コード一覧」を正本シードに、各資格の公式の一次情報に基づき整備。
+最新の制度・受験料・日程・合格率は各資格の公式サイトで必ずご確認ください。</footer>
 </body>
 </html>
 """
@@ -121,8 +135,25 @@ fetch("../data/certifications.json").then(r=>r.json()).then(all=>{{
 }});
 </script>
 """
+    type_label = TYPE_BADGE.get(row["type"], ("区分要確認", ""))[0]
+    bits = [b for b in (("受験料" + row["fee"]) if row["fee"] else "",
+                        ("合格率" + row["pass_rate"]) if row["pass_rate"] else "") if b]
+    desc = (f"{name}（{major}分野・{type_label}）の試験情報。"
+            + ("／".join(bits) + "。" if bits else "")
+            + "受験料・試験形式・受験資格・合格率・実施団体・公式サイトを掲載。")
+    bslug = MAJOR_SLUGS.get(major, "other")
+    jsonld = {
+        "@context": "https://schema.org", "@type": "BreadcrumbList",
+        "itemListElement": [
+            {"@type": "ListItem", "position": 1, "name": "トップ", "item": BASE_URL + "/"},
+            {"@type": "ListItem", "position": 2, "name": major,
+             "item": f"{BASE_URL}/bunya/{bslug}.html"},
+            {"@type": "ListItem", "position": 3, "name": name},
+        ],
+    }
     return page_shell(f"{name}｜{SITE_NAME}", body, depth=1,
-                      noindex=(row.get("status") != "published"))
+                      noindex=(row.get("status") != "published"),
+                      desc=desc, path=f'c/{row["slug"]}.html', jsonld=jsonld)
 
 
 def _badge(t):
@@ -179,7 +210,11 @@ def build_category_pages(indexable):
             f"各資格の受験料・合格率・公式情報は詳細ページで確認できます。</p>"
             + _list_items(items, depth=1)
         )
-        pages[slug] = page_shell(f"{major}の資格一覧｜{SITE_NAME}", body, depth=1, noindex=False)
+        pages[slug] = page_shell(
+            f"{major}の資格一覧｜{SITE_NAME}", body, depth=1, noindex=False,
+            desc=f"「{major}」分野の資格 {len(items)} 件（うち公式データ掲載 {npub} 件）。"
+                 f"受験料・試験形式・受験資格・合格率を一覧・比較できます。",
+            path=f"bunya/{slug}.html")
     return pages
 
 
@@ -199,7 +234,9 @@ def build_feature_pages(indexable):
         f'<p class="lead">学歴・実務経験を問わず、誰でも受験できる国家資格。'
         f"データ掲載分から {len(no_req)} 件を紹介します（受験資格は出願時に必ず公式で確認してください）。</p>"
         + _list_items(no_req, depth=1),
-        depth=1, noindex=False)
+        depth=1, noindex=False,
+        desc="学歴・実務経験を問わず誰でも受験できる国家資格の一覧。受験料・合格率・公式情報を掲載。",
+        path="feature/no-requirement-national.html")
 
     # 2) データ掲載資格一覧（分野別）
     pub_sorted = sorted(pub, key=lambda r: (r["major_category"], r["name"]))
@@ -209,7 +246,9 @@ def build_feature_pages(indexable):
         f"<h1>データ掲載資格の一覧</h1>"
         f'<p class="lead">受験料・合格率・公式情報などを公式の一次情報で整備済みの {len(pub)} 件。</p>'
         + _list_items(pub_sorted, depth=1),
-        depth=1, noindex=False)
+        depth=1, noindex=False,
+        desc=f"受験料・試験形式・受験資格・合格率・公式情報を整備済みの資格 {len(pub)} 件の一覧。",
+        path="feature/data-available.html")
     return pages
 
 
@@ -220,11 +259,23 @@ def build_index(rows) -> str:
         f'<a class="chip" href="bunya/{MAJOR_SLUGS.get(m, "other")}.html">{esc(m)}</a>'
         for m in majors)
     body = f"""<h1>日本の資格カタログ</h1>
-<p class="lead">資格名で検索、または分野・区分で絞り込めます。現在 <strong id="count">-</strong> 件を収録（うち公式データ掲載 {pub} 件・プロトタイプ）。</p>
+<p class="lead">資格名で検索、または分野・区分で絞り込み・並び替えできます。現在 <strong id="count">-</strong> 件を収録（うち公式データ掲載 {pub} 件）。受験料・試験形式・受験資格・合格率・公式サイトを掲載しています。</p>
 <div class="controls">
   <input id="q" type="search" placeholder="資格名で検索（例: 簿記, 電気, ボイラー）">
   <select id="major"><option value="">分野（すべて）</option></select>
   <select id="type"><option value="">区分（すべて）</option></select>
+  <select id="sort">
+    <option value="">並び順（標準）</option>
+    <option value="fee-asc">受験料が安い順</option>
+    <option value="fee-desc">受験料が高い順</option>
+    <option value="pass-desc">合格率が高い順</option>
+    <option value="pass-asc">合格率が低い順</option>
+  </select>
+</div>
+<div class="filters">
+  <label><input type="checkbox" id="f-pub"> データ掲載のみ</label>
+  <label><input type="checkbox" id="f-noreq"> 受験資格なし</label>
+  <label><input type="checkbox" id="f-cbt"> CBT・ネット試験</label>
 </div>
 <p id="status" class="muted"></p>
 <p class="muted hint">行頭のチェックを入れて資格を選ぶと、最大4件まで並べて比較できます。</p>
@@ -241,7 +292,8 @@ def build_index(rows) -> str:
 </section>
 <script src="assets/search.js"></script>
 """
-    return page_shell(SITE_NAME, body, depth=0, noindex=False)
+    return page_shell(SITE_NAME, body, depth=0, noindex=False,
+                      desc=SITE_DESC, path="")
 
 
 def build_compare() -> str:
@@ -252,12 +304,16 @@ def build_compare() -> str:
 <p style="margin-top:18px"><a href="index.html">← 検索に戻って選び直す</a></p>
 <script src="assets/compare.js"></script>
 """
-    return page_shell(f"資格を比較｜{SITE_NAME}", body, depth=0, noindex=False)
+    return page_shell(f"資格を比較｜{SITE_NAME}", body, depth=0, noindex=False,
+                      desc="選んだ資格を受験料・試験形式・受験資格・合格率などで横並びに比較できます。",
+                      path="compare.html")
 
 
 SEARCH_JS = """(function(){
   var q=document.getElementById('q'),majorSel=document.getElementById('major'),
-      typeSel=document.getElementById('type'),results=document.getElementById('results'),
+      typeSel=document.getElementById('type'),sortSel=document.getElementById('sort'),
+      fPub=document.getElementById('f-pub'),fNoreq=document.getElementById('f-noreq'),
+      fCbt=document.getElementById('f-cbt'),results=document.getElementById('results'),
       status=document.getElementById('status'),count=document.getElementById('count'),
       bar=document.getElementById('cmpbar');
   var DATA=[], MAX=4, selected=loadSel();
@@ -265,20 +321,37 @@ SEARCH_JS = """(function(){
   function saveSel(){try{localStorage.setItem('cmp',JSON.stringify([].slice.call(selected)));}catch(e){}}
   function esc(s){return (s||'').replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
   function opt(sel,v){var o=document.createElement('option');o.value=v;o.textContent=v;sel.appendChild(o);}
+  function feeNum(x){var m=(x.fee||'').replace(/,/g,'').match(/([0-9]+)\\s*円/);return m?parseInt(m[1],10):null;}
+  function passNum(x){var m=(x.pass_rate||'').replace(/,/g,'').match(/([0-9]+(?:\\.[0-9]+)?)\\s*%/);return m?parseFloat(m[1]):null;}
+  function isNoreq(x){return /受験資格なし|受験(資格)?(の)?制限なし|誰でも|制限なし/.test(x.eligibility||'');}
+  function isCbt(x){return /CBT|ネット試験|IBT/.test(x.exam_format||'');}
   function render(){
-    var t=(q.value||'').trim().toLowerCase(),mj=majorSel.value,tp=typeSel.value;
+    var t=(q.value||'').trim().toLowerCase(),mj=majorSel.value,tp=typeSel.value,sk=sortSel.value;
     var out=DATA.filter(function(x){
       if(mj&&x.major!==mj)return false;
       if(tp&&x.type!==tp)return false;
       if(t&&x.name.toLowerCase().indexOf(t)<0)return false;
+      if(fPub.checked&&x.status!=='published')return false;
+      if(fNoreq.checked&&!isNoreq(x))return false;
+      if(fCbt.checked&&!isCbt(x))return false;
       return true;
     });
+    if(sk){
+      var key=sk.indexOf('fee')===0?feeNum:passNum, asc=sk.indexOf('asc')>=0;
+      out=out.slice().sort(function(a,b){
+        var va=key(a),vb=key(b);
+        if(va===null&&vb===null)return 0;
+        if(va===null)return 1; if(vb===null)return -1;
+        return asc?va-vb:vb-va;
+      });
+    }
     status.textContent=out.length+' 件';
     results.innerHTML=out.slice(0,300).map(function(x){
       var ck=selected.has(x.slug)?' checked':'';
+      var extra=x.status==='published'?[feeNum(x)!==null?esc(x.fee):'',passNum(x)!==null?'合格率'+esc(x.pass_rate):''].filter(Boolean).join(' / '):'';
       return '<li><label class="cmp-add" title="比較に追加"><input type="checkbox" data-slug="'+x.slug+'"'+ck+'></label>'+
         '<a href="c/'+x.slug+'.html">'+esc(x.name)+'</a>'+
-        '<span class="meta"><span class="badge b-'+x.type+'">'+x.type+'</span> '+esc(x.major)+' / '+esc(x.category)+'</span></li>';
+        '<span class="meta"><span class="badge b-'+x.type+'">'+x.type+'</span> '+esc(x.major)+' / '+esc(x.category)+(extra?' ・ '+extra:'')+'</span></li>';
     }).join('')||'<li class="muted">該当なし</li>';
     if(out.length>300) results.innerHTML+='<li class="muted">…他 '+(out.length-300)+' 件（絞り込んでください）</li>';
   }
@@ -312,7 +385,8 @@ SEARCH_JS = """(function(){
     if(p.get('major'))majorSel.value=p.get('major');
     render();updateBar();
   });
-  [q,majorSel,typeSel].forEach(function(el){el.addEventListener('input',render);});
+  [q,majorSel,typeSel,sortSel].forEach(function(el){el.addEventListener('input',render);});
+  [fPub,fNoreq,fCbt].forEach(function(el){el.addEventListener('change',render);});
 })();
 """
 
@@ -381,6 +455,9 @@ table.spec th{width:34%;background:#f2f5fa;color:#3a4757;font-weight:600;white-s
 .chip{display:inline-block;padding:5px 11px;border:1px solid #c5d3ea;background:#eef4fc;border-radius:999px;font-size:.85rem}
 .chip:hover{background:#dce9fb;text-decoration:none}
 .hint{font-size:.82rem;margin:4px 0 10px}
+.filters{display:flex;flex-wrap:wrap;gap:14px;margin:-6px 0 6px;font-size:.9rem;color:#43505f}
+.filters label{display:inline-flex;align-items:center;gap:5px;cursor:pointer}
+.controls select{cursor:pointer}
 .cmp-add{margin-right:9px;cursor:pointer}.cmp-add input{width:16px;height:16px;vertical-align:middle;cursor:pointer}
 .cmpbar{position:fixed;left:0;right:0;bottom:0;background:#0d47a1;color:#fff;padding:11px 18px;display:none;align-items:center;gap:14px;flex-wrap:wrap;box-shadow:0 -2px 10px rgba(0,0,0,.18);z-index:20}
 .cmpbar.on{display:flex}
@@ -448,8 +525,28 @@ def main() -> int:
     for slug, htmlc in feat_pages.items():
         (SITE / "feature" / f"{slug}.html").write_text(htmlc, encoding="utf-8")
 
+    # sitemap.xml（index対象 = トップ・比較・分野別・特集・published詳細）
+    from datetime import date
+    today = date.today().isoformat()
+    urls = ["", "compare.html"]
+    urls += [f"bunya/{s}.html" for s in cat_pages]
+    urls += [f"feature/{s}.html" for s in feat_pages]
+    urls += [f'c/{r["slug"]}.html' for r in indexable if r.get("status") == "published"]
+    sm = ['<?xml version="1.0" encoding="UTF-8"?>',
+          '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">']
+    for u in urls:
+        loc = esc(BASE_URL + "/" + u)
+        pr = "1.0" if u == "" else ("0.8" if u.startswith(("bunya", "feature")) else "0.6")
+        sm.append(f"<url><loc>{loc}</loc><lastmod>{today}</lastmod>"
+                  f"<priority>{pr}</priority></url>")
+    sm.append("</urlset>")
+    (SITE / "sitemap.xml").write_text("\n".join(sm), encoding="utf-8")
+    (SITE / "robots.txt").write_text(
+        f"User-agent: *\nAllow: /\nSitemap: {BASE_URL}/sitemap.xml\n", encoding="utf-8")
+
     print(f"built site at {SITE.relative_to(ROOT)}")
     print(f"  index + {len(indexable)} detail pages")
+    print(f"  sitemap urls: {len(urls)}")
     print(f"  分野別一覧: {len(cat_pages)}  特集: {len(feat_pages)}")
     print(f"  excluded: bucket/duplicate/overseas = {len(rows)-len(indexable)}")
     return 0
