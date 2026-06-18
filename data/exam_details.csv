@@ -54,3 +54,19 @@ c-3201,短答式（不動産に関する行政法規／不動産の鑑定評価�
 c-3512,"常用漢字2,136字を対象に、読み・書き取り、部首、四字熟語、対義語・類義語、同音同訓異字、誤字訂正、送り仮名等から出題（高校卒業・大学・一般程度）",,https://www.kanken.or.jp/kanken/grades/overview/
 c-3402,理論領域（必要とされる資質／職務知識／一般知識）と実技領域（マナー・接遇／技能）。2級はマークシート＋記述で面接なし,,https://jitsumu-kentei.jp/HS/guidelines/contents
 c-1502,午前I・午前II（多肢選択式）、午後I・午後II（記述式）の4試験。各60点で全て基準到達が合格条件。ネットワークの企画・要件定義・開発・運用・保守等の実務的課題,,https://www.ipa.go.jp/shiken/kubun/nw.html
+c-1701,必修の基本的事項・医学総論・医学各論（必修100題・一般50題・臨床実地50題、総論150題・各論150題）,"10,282人（第119回・2025年）",https://www.mhlw.go.jp/general/sikaku/successlist/2025/siken01/about.html
+c-1702,必修の基本的事項・歯科医学総論・歯科医学各論（ブループリントで出題割合を規定）,"3,039人（第118回・2025年）",https://www.mhlw.go.jp/general/sikaku/successlist/2025/siken02/about.html
+c-1703,獣医師国家試験出題基準に基づく基礎的事項・衛生に関する事項・臨床に関する事項（必須問題＋学説試験の多肢選択）,"1,433人（第77回・令和7年度）",https://www.maff.go.jp/j/syouan/tikusui/zyui/shiken/shiken.html
+c-1801,公衆衛生看護学／疫学／保健統計学／保健医療福祉行政論,,https://www.mhlw.go.jp/kouseiroudoushou/shikaku_shiken/hokenshi/
+c-1802,基礎助産学／助産診断・技術学／地域母子保健／助産管理,,https://www.mhlw.go.jp/kouseiroudoushou/shikaku_shiken/josanpu/
+c-1901,医用工学概論／公衆衛生学（関係法規を含む）／臨床検査医学総論／臨床検査総論／病理組織細胞学／臨床生理学／臨床化学／臨床血液学／臨床微生物学／臨床免疫学,,https://www.mhlw.go.jp/kouseiroudoushou/shikaku_shiken/rinshoukensagishi/
+c-2104,筆記（四肢択一250問: 必修50＋一般200）。解剖学・生理学・運動学・病理学概論・衛生学公衆衛生学・一般臨床医学・外科学概論・整形外科学・リハビリテーション医学・柔道整復理論・関係法規,"4,513人（第33回・令和7年）",https://www.mhlw.go.jp/general/sikaku/successlist/2025/siken16/about.html
+c-2102,筆記（四肢択一180問）。医療概論・衛生学公衆衛生学・関係法規・解剖学・生理学・病理学概論・臨床医学総論・臨床医学各論・リハビリテーション医学・東洋医学概論・経絡経穴概論・東洋医学臨床論・はり理論,"3,920人（第34回・令和8年）",https://ahaki.or.jp/exam/outline/
+c-2103,筆記（四肢択一180問）。共通の医学系科目（はり師と同一）＋きゅう理論,"3,858人（第34回・令和8年）",https://ahaki.or.jp/exam/outline/
+c-2101,筆記（四肢択一160問）。共通の医学系科目＋あん摩マッサージ指圧理論,"1,070人（第34回・令和8年）",https://ahaki.or.jp/exam/outline/
+c-1906,学説試験（歯科理工学・歯の解剖学・顎口腔機能学・有床義歯技工学・歯冠修復技工学・矯正歯科技工学・小児歯科技工学・関係法規）＋実地試験（歯型彫刻・ワイヤー屈曲等）,792人（第11回・令和7年度）,https://www.mhlw.go.jp/general/sikaku/successlist/2026/siken22/about.html
+c-6702,学科のみ（五肢択一・4時間）。ボイラーの構造／取扱い／燃料及び燃焼／関係法令。各40%以上かつ合計60%以上で合格,"4,340人（令和6年度）",https://www.exam.or.jp/h_gokakuritsu/
+c-6809,学科試験（四肢択一・筆記またはCBT・50問: 一般問題＋配線図）＋技能試験（公表候補問題から1問の配線図作品を実技で完成）,,https://www.shiken.or.jp/construction/second/
+c-6808,学科試験（第二種範囲＋自家用電気工作物〈高圧受電設備等〉の設計施工・検査保安・法令・配線図）＋技能試験（公表候補問題からの配線図作品）,,https://www.shiken.or.jp/construction/first/
+c-5818,学科試験（四肢択一40問: 構造機能取扱法、点検修理調整・完成検査の方法、機械器具等の取扱い、保安基準等関係法規）＋実技試験（認定養成施設修了者等は実技免除）,,https://www.jaspa.or.jp/mechanic/test/
+c-4303,筆記試験（関係法規・制度及び運営管理、衛生管理、保健、香粧品化学、文化論及び美容技術理論）＋実技試験（カッティング・オールウェーブセッティング等）,"19,776人（第51回・令和7年）",https://www.rbc.or.jp/exam/
