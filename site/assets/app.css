@@ -23,6 +23,7 @@ table.spec th{width:34%;background:#f2f5fa;color:#3a4757;font-weight:600;white-s
 .btn-official:hover{background:#0b3c8a;text-decoration:none}
 .provenance{font-size:.82rem;color:#6b7682;background:#f2f5fa;border:1px solid #e1e8f2;border-radius:8px;padding:11px 14px;margin:10px 0 0}
 .feat-list{margin:.2em 0 .6em;padding-left:1.1em}.feat-list li{margin:2px 0}
+.updated{font-size:.82rem;color:#6b7682;margin:.1em 0 .6em}.updated .muted{margin-left:.4em}
 .diff-badge{display:inline-block;font-weight:700;font-size:.82rem;padding:2px 9px;border-radius:11px;color:#fff}
 .diff-veryhard{background:#b71c1c}.diff-hard{background:#e65100}.diff-mid{background:#f9a825;color:#3a2c00}
 .diff-easy{background:#388e3c}.diff-veryeasy{background:#1565c0}
