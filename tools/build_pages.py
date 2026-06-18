@@ -226,8 +226,17 @@ def build_detail(row) -> str:
         rel.append(("../feature/remote-work.html", "在宅・リモートワークに活かせる資格"))
     if s in HUB_TRADE_SET:
         rel.append(("../feature/skilled-trade.html", "手に職をつけられる資格"))
+    if s in HUB_IT_BEGINNER_SET:
+        rel.append(("../feature/it-beginner.html", "未経験からITエンジニアを目指す資格"))
+    if s in HUB_SENIOR_SET:
+        rel.append(("../feature/senior.html", "定年後・シニアに役立つ資格"))
     if is_working_adult(row):
         rel.append(("../feature/working-adults.html", "働きながら取りやすい資格"))
+    # 比較ページへの相互リンク（この資格が含まれる人気ペア）
+    for ps, other in COMPARE_INDEX.get(s, []):
+        if other in INDEXABLE_SLUGS:
+            on = re.sub(r"[（(].*?[）)]", "", NAME_BY_SLUG.get(other, other)).strip()
+            rel.append((f"../vs/{ps}.html", f"{on or other}との違い・比較"))
     rel += [("../feature/cheap.html", "受験料が安い資格ランキング"),
             ("../feature/high-pass.html", "合格率が高い資格")]
     rel_links = ('<nav class="rel-links"><h2>関連リンク</h2><ul>'
@@ -465,10 +474,19 @@ HUB_TRADE = [
     "c-5207", "c-6702", "c-6703", "c-1315", "c-1404", "c-4115", "c-2302", "c-1907",
     "c-7110", "c-1313",
 ]
+HUB_IT_BEGINNER = [
+    "c-1538", "c-1505", "c-1504", "c-1565", "c-1502", "c-1510", "c-1503", "c-1555",
+]
+HUB_SENIOR = [
+    "c-3207", "c-3209", "c-3210", "c-5207", "c-6703", "c-6809", "c-4401", "c-2517",
+    "c-3701", "c-2510", "c-1622",
+]
 HUB_INDEPENDENCE_SET = set(HUB_INDEPENDENCE)
 HUB_JOB_SET = set(HUB_JOB)
 HUB_REMOTE_SET = set(HUB_REMOTE)
 HUB_TRADE_SET = set(HUB_TRADE)
+HUB_IT_BEGINNER_SET = set(HUB_IT_BEGINNER)
+HUB_SENIOR_SET = set(HUB_SENIOR)
 
 # 意図ハブのナビ（トップ・各ハブの相互リンク用）
 INTENT_HUB_NAV = [
@@ -477,6 +495,8 @@ INTENT_HUB_NAV = [
     ("remote-work", "在宅・リモートワークに活かせる資格"),
     ("skilled-trade", "手に職をつけられる資格"),
     ("working-adults", "働きながら取りやすい資格"),
+    ("it-beginner", "未経験からITエンジニアを目指す資格"),
+    ("senior", "定年後・シニアに役立つ資格"),
 ]
 
 
@@ -486,6 +506,122 @@ def is_working_adult(r):
         return False
     p = pass_pct(r)
     return is_cbt(r) or (p is not None and p >= 40)
+
+
+# 比較ページの人気ペア（「A vs B」「A B どっち」「違い」系クエリに当てる）。
+# (pair_slug, certA_slug, certB_slug, 固有の比較・選び方の導入文HTML)
+COMPARE_PAIRS = [
+    ("takken-gyoseishoshi", "c-3207", "c-3701",
+     "どちらも受験資格のない人気の国家資格ですが、活かす分野が異なります。"
+     "宅地建物取引士は<strong>不動産取引</strong>に特化し求人も多いのが強み、"
+     "行政書士は<strong>官公庁への許認可申請など幅広い書類業務</strong>を扱い"
+     "独立開業を見据えやすい資格です。難易度は一般に行政書士の方が高めです。"),
+    ("gyoseishoshi-sharoshi", "c-3701", "c-2510",
+     "ともに独立開業を狙える法律系国家資格です。行政書士は"
+     "<strong>許認可・各種書類作成</strong>と業務範囲が広く、社会保険労務士は"
+     "<strong>労働・社会保険・人事労務</strong>に専門特化します。"
+     "社労士は受験資格があり、行政書士は誰でも受験できます。"),
+    ("boki-2-3", "c-3624", "c-3625",
+     "日商簿記の2級と3級の比較です。3級は<strong>商業簿記の基礎</strong>で"
+     "経理の入門に、2級は<strong>商業簿記＋工業簿記</strong>まで広がり"
+     "就職・転職で評価されやすくなります。まず3級から段階的に狙うのが定番です。"),
+    ("kihonjoho-ojoho", "c-1505", "c-1504",
+     "情報処理技術者試験の基本情報と応用情報の比較です。基本情報は"
+     "<strong>IT基礎・開発の登竜門</strong>、応用情報は"
+     "<strong>応用力・管理寄りの知識</strong>まで問う中級者向けで、"
+     "難易度・評価ともに応用情報が一段上です。"),
+    ("fp-2-3", "c-2516", "c-2517",
+     "FP技能士の2級と3級の比較です。3級は<strong>家計・お金の基礎</strong>を"
+     "学ぶ入門、2級は<strong>実務・相談業務で評価される</strong>水準で、"
+     "金融・保険・不動産の仕事で活かすなら2級が目安です。"),
+    ("takken-mankanshi", "c-3207", "c-3209",
+     "不動産系国家資格同士の比較です。宅地建物取引士は"
+     "<strong>不動産の売買・仲介</strong>に必須で求人が豊富、"
+     "マンション管理士は<strong>マンション管理組合へのコンサル</strong>が中心です。"
+     "求人数・汎用性では宅建が優勢です。"),
+    ("mankanshi-kanrigyomu", "c-3209", "c-3210",
+     "マンション管理士と管理業務主任者は試験範囲が近く同時受験も多い資格です。"
+     "管理業務主任者は<strong>管理会社側で必置</strong>の実務資格、"
+     "マンション管理士は<strong>管理組合側を支援</strong>するコンサル資格という違いがあります。"),
+    ("shihoshoshi-gyoseishoshi", "c-2402", "c-3701",
+     "司法書士と行政書士はどちらも独立できる法律系国家資格ですが、"
+     "司法書士は<strong>登記・供託や簡裁訴訟代理</strong>が独占業務で難易度が高く、"
+     "行政書士は<strong>許認可など官公庁書類</strong>が中心です。"),
+    ("zeirishi-koninkaikeishi", "c-2503", "c-2501",
+     "税理士と公認会計士はともに会計系の最高峰資格です。税理士は"
+     "<strong>税務</strong>に特化し科目合格制で働きながら目指しやすく、"
+     "公認会計士は<strong>監査</strong>が独占業務で大企業・監査法人が主戦場です。"),
+    ("denki-2shu-1shu", "c-6809", "c-6808",
+     "電気工事士の第二種と第一種の比較です。第二種は"
+     "<strong>一般住宅・小規模設備</strong>、第一種は"
+     "<strong>大規模なビル・工場の高圧設備</strong>まで扱えます。"
+     "まず第二種から取得するのが一般的です。"),
+    ("kaigofukushishi-caremane", "c-2302", "c-2308",
+     "介護福祉士とケアマネジャー（介護支援専門員）の比較です。介護福祉士は"
+     "<strong>現場の介護のプロ</strong>、ケアマネは"
+     "<strong>ケアプラン作成・調整</strong>を担います。"
+     "ケアマネは介護福祉士など実務経験を経て受験するのが一般的です。"),
+    ("shakaifukushi-seishinhoken", "c-2301", "c-2307",
+     "社会福祉士と精神保健福祉士はともに相談援助の国家資格です。社会福祉士は"
+     "<strong>福祉全般</strong>を幅広く、精神保健福祉士は"
+     "<strong>精神保健・精神障害分野</strong>に特化します。共通科目もあり"
+     "ダブル取得を目指す人もいます。"),
+    ("kanrieiyoshi-eiyoshi", "c-2001", "c-2002",
+     "管理栄養士と栄養士の比較です。栄養士は<strong>養成施設の卒業</strong>で"
+     "取得でき、管理栄養士は<strong>国家試験合格</strong>が必要な上位資格で、"
+     "病院・行政・特定保健指導など活躍の幅が広がります。"),
+    ("itpassport-kihonjoho", "c-1538", "c-1505",
+     "ITパスポートと基本情報技術者の比較です。ITパスポートは"
+     "<strong>社会人全般のITリテラシー</strong>を問う入門、基本情報は"
+     "<strong>IT技術者の登竜門</strong>でより専門的です。"
+     "IT職を目指すなら基本情報が目標になります。"),
+    ("torokuhanbai-yakuzaishi", "c-4115", "c-1704",
+     "登録販売者と薬剤師の比較です。登録販売者は"
+     "<strong>第2類・第3類医薬品</strong>を扱える実務資格で受験資格がなく挑戦しやすい一方、"
+     "薬剤師は<strong>6年制大学＋国家試験</strong>が必要ですべての医薬品を扱えます。"),
+    ("shindanshi-sharoshi", "c-2511", "c-2510",
+     "中小企業診断士と社会保険労務士の比較です。診断士は"
+     "<strong>経営全般のコンサル</strong>、社労士は"
+     "<strong>労務・社会保険の専門</strong>です。"
+     "独占業務がある社労士に対し、診断士は名称独占で活かし方の自由度が高いのが特徴です。"),
+    ("boki2-fp2", "c-3624", "c-2516",
+     "就職・転職で人気の簿記2級とFP2級の比較です。簿記2級は"
+     "<strong>企業の経理・会計</strong>に直結、FP2級は"
+     "<strong>個人のお金・金融商品</strong>に強くなります。"
+     "目指す職種（経理系か金融・保険系か）で選ぶのがおすすめです。"),
+    ("sokuryoshi-sokuryoshiho", "c-1408", "c-1409",
+     "測量士と測量士補の比較です。測量士補は<strong>測量の補助</strong>を行う入門、"
+     "測量士は<strong>測量計画の作成</strong>まで担える上位資格です。"
+     "測量士補は土地家屋調査士試験の一部免除にもつながります。"),
+    ("denken3-denkikoji", "c-1205", "c-6808",
+     "第三種電気主任技術者（電験三種）と第一種電気工事士の比較です。電験三種は"
+     "<strong>電気設備の保安・監督</strong>、電気工事士は"
+     "<strong>電気工事の施工</strong>と役割が異なります。"
+     "電験三種の方が難易度は高めで、設備管理・ビルメンテで重宝されます。"),
+    ("toeic-eiken", "c-3322", "c-3308",
+     "TOEICと実用英語技能検定（英検）の比較です。TOEICは"
+     "<strong>ビジネス英語のスコア</strong>で就職・昇進の指標に、"
+     "英検は<strong>4技能の級認定</strong>で進学・教育分野に強いのが特徴です。"
+     "用途に合わせて使い分けましょう。"),
+    ("kangoshi-junkangoshi", "c-1803", "c-1804",
+     "看護師と准看護師の比較です。看護師は<strong>国家資格</strong>、"
+     "准看護師は<strong>都道府県知事免許</strong>で、養成期間や業務上の位置づけが"
+     "異なります。准看護師から看護師を目指すルートもあります。"),
+    ("biyoshi-riyoshi", "c-4303", "c-4301",
+     "美容師と理容師の比較です。理容師は<strong>カット・顔そり（シェービング）</strong>、"
+     "美容師は<strong>パーマ・カラー・セット</strong>を中心に扱います。"
+     "どちらも養成施設での課程修了と国家試験合格が必要です。"),
+]
+
+# slug → [(pair_slug, 相手slug)]（詳細ページから比較ページへの相互リンク用）
+COMPARE_INDEX = {}
+for _ps, _a, _b, _ in COMPARE_PAIRS:
+    COMPARE_INDEX.setdefault(_a, []).append((_ps, _b))
+    COMPARE_INDEX.setdefault(_b, []).append((_ps, _a))
+
+# main() で設定（詳細→比較リンクの表示名・存在判定に使用）
+NAME_BY_SLUG = {}
+INDEXABLE_SLUGS = set()
 
 
 def build_feature_pages(indexable):
@@ -673,6 +809,127 @@ def build_feature_pages(indexable):
         wa, "社会人が働きながら取りやすい資格の一覧。受験資格なし＋CBTまたは高めの合格率で"
         "抽出。受験料・合格率・公式情報を掲載。", group=True)
 
+    itb = curated(HUB_IT_BEGINNER)
+    hub("it-beginner", "未経験からITエンジニアを目指す資格", "未経験からITエンジニアを目指す資格",
+        "<p>プログラミングやインフラの実務未経験から、IT業界への就職・転職を目指す人向けの"
+        "資格ガイドです。<strong>ITパスポート</strong>でIT全般の基礎を押さえ、"
+        "<strong>基本情報技術者</strong>で開発・アルゴリズムの土台を作り、"
+        "<strong>応用情報技術者</strong>や各高度区分（ネットワーク・データベース・"
+        "情報処理安全確保支援士など）で専門性を深める、という段階設計が王道です。</p>"
+        "<p>資格は「採用で足切りされない・学習の指針になる」点で有効ですが、IT職は"
+        "成果物やスキルそのものも重視されます。資格学習と並行して、手を動かす学習を"
+        "進めるのが近道です。</p>",
+        itb, "未経験からITエンジニアを目指すための資格の一覧。ITパスポート・基本情報・"
+        "応用情報・高度区分まで段階的に比較できます。", group=False)
+
+    sen = curated(HUB_SENIOR)
+    hub("senior", "定年後・シニアに役立つ資格", "定年後・シニアに再就職・独立で役立つ資格",
+        "<p>定年後の再就職・再雇用や、セカンドキャリアでの独立を見据えて取りたい資格を"
+        "まとめたガイドです。<strong>年齢に関係なく働きやすい分野</strong>"
+        "（マンション管理・ビル設備・不動産・危険物・電気工事など）や、"
+        "<strong>経験を活かして独立しやすい資格</strong>（行政書士・社会保険労務士・"
+        "ファイナンシャルプランナーなど）を中心に取り上げます。</p>"
+        "<p>受験に年齢制限のない資格がほとんどで、これまでの職務経験と組み合わせると"
+        "強みになります。需要のある分野・働き方から逆算して選ぶのがおすすめです。</p>",
+        sen, "定年後・シニアの再就職や独立に役立つ資格の一覧。マンション管理・設備・"
+        "不動産・士業など、経験を活かせる資格を比較できます。", group=True)
+
+    return pages
+
+
+def build_comparison_pages(indexable):
+    """人気ペアの比較ページ（site/vs/<pair>.html）。「A vs B」「違い」系クエリ向け。"""
+    by_slug = {r["slug"]: r for r in indexable}
+    pages = {}
+
+    def shortname(r):
+        # 区分や旧称の括弧書きを落として比較表を読みやすく
+        return re.sub(r"[（(].*?[）)]", "", r["name"]).strip() or r["name"]
+
+    def cell(r, key, fallback="公式情報で確認"):
+        v = r.get(key, "")
+        return esc(v) if v else f'<span class="muted">{fallback}</span>'
+
+    def diff_cell(r):
+        d = difficulty(r)
+        if not d:
+            return '<span class="muted">―</span>'
+        label, cls = d
+        return f'<span class="diff-badge {cls}">{esc(label)}</span>'
+
+    for pslug, sa, sb, intro in COMPARE_PAIRS:
+        ra, rb = by_slug.get(sa), by_slug.get(sb)
+        if not (ra and rb and is_indexable_detail(ra) and is_indexable_detail(rb)):
+            continue
+        na, nb = shortname(ra), shortname(rb)
+        la = TYPE_BADGE.get(ra["type"], ("", ""))[0]
+        lb = TYPE_BADGE.get(rb["type"], ("", ""))[0]
+
+        rows_spec = [
+            ("資格区分", esc(la), esc(lb)),
+            ("分野", esc(ra["major_category"]), esc(rb["major_category"])),
+            ("受験料", cell(ra, "fee"), cell(rb, "fee")),
+            ("合格率", cell(ra, "pass_rate"), cell(rb, "pass_rate")),
+            ("難易度の目安", diff_cell(ra), diff_cell(rb)),
+            ("受験資格", cell(ra, "eligibility"), cell(rb, "eligibility")),
+            ("試験形式", cell(ra, "exam_format"), cell(rb, "exam_format")),
+            ("実施頻度", cell(ra, "frequency"), cell(rb, "frequency")),
+            ("実施団体", cell(ra, "authority"), cell(rb, "authority")),
+        ]
+        tbody = "".join(
+            f"<tr><th>{esc(k)}</th><td>{va}</td><td>{vb}</td></tr>"
+            for k, va, vb in rows_spec)
+        table = (f'<table class="vs-table"><thead><tr><th></th>'
+                 f'<th>{esc(na)}</th><th>{esc(nb)}</th></tr></thead>'
+                 f"<tbody>{tbody}</tbody></table>")
+
+        cards = (
+            '<div class="vs-cta">'
+            f'<a class="btn-official" href="../c/{esc(ra["slug"])}.html">{esc(na)}の詳細</a> '
+            f'<a class="btn-official" href="../c/{esc(rb["slug"])}.html">{esc(nb)}の詳細</a>'
+            "</div>")
+
+        # 比較 FAQ（違い・難易度）
+        qa = [(f"{na}と{nb}の違いは何ですか？",
+               re.sub("<[^>]+>", "", intro))]
+        if ra.get("pass_rate") and rb.get("pass_rate"):
+            qa.append((f"{na}と{nb}はどちらが難しいですか？",
+                       f"公表合格率は{na}が{ra['pass_rate']}、{nb}が{rb['pass_rate']}です。"
+                       "合格率は受験者層により変わるため難易度の目安としてご覧ください。"))
+        faq = {"@context": "https://schema.org", "@type": "FAQPage",
+               "mainEntity": [{"@type": "Question", "name": q,
+                               "acceptedAnswer": {"@type": "Answer", "text": a}}
+                              for q, a in qa]}
+        breadcrumb = {
+            "@context": "https://schema.org", "@type": "BreadcrumbList",
+            "itemListElement": [
+                {"@type": "ListItem", "position": 1, "name": "トップ",
+                 "item": BASE_URL + "/"},
+                {"@type": "ListItem", "position": 2, "name": "比較",
+                 "item": BASE_URL + "/compare.html"},
+                {"@type": "ListItem", "position": 3, "name": f"{na}と{nb}"},
+            ]}
+
+        h1 = f"{na}と{nb}の違い・比較"
+        body = (
+            f'<nav class="crumbs"><a href="../index.html">トップ</a> › 比較</nav>'
+            f"<h1>{esc(h1)}</h1>"
+            f'<div class="lead"><p>{intro}</p></div>'
+            f"{table}{cards}"
+            '<p class="muted" style="margin-top:14px">※受験料・合格率・受験資格は公式の'
+            '一次情報に基づきますが、最新の制度・金額・日程は各資格の公式サイトで必ず'
+            'ご確認ください。難易度は公表合格率に基づく簡易目安です。</p>'
+            '<nav class="rel-links"><h2>関連リンク</h2><ul>'
+            f'<li><a href="../c/{esc(ra["slug"])}.html">{esc(na)}の詳細</a></li>'
+            f'<li><a href="../c/{esc(rb["slug"])}.html">{esc(nb)}の詳細</a></li>'
+            '<li><a href="../compare.html">資格を自分で比較する（最大4件）</a></li>'
+            "</ul></nav>")
+        desc = (f"{na}と{nb}の違いを比較。受験料・合格率・難易度の目安・受験資格・"
+                f"試験形式を一覧で比べ、どちらを取るべきか選ぶ参考にできます。")
+        pages[pslug] = page_shell(
+            f"{na}と{nb}の違い・比較｜どっちを取る？｜{SITE_NAME}", body, depth=1,
+            noindex=False, desc=desc, path=f"vs/{pslug}.html",
+            jsonld=[breadcrumb, faq])
     return pages
 
 
@@ -688,6 +945,16 @@ def build_index(rows) -> str:
     hub_links = "".join(
         f'<li><a href="feature/{slug}.html">{esc(label)}</a></li>'
         for slug, label in INTENT_HUB_NAV)
+    by_slug = {r["slug"]: r for r in rows}
+
+    def _short(r):
+        return re.sub(r"[（(].*?[）)]", "", r["name"]).strip() or r["name"]
+    vs_links = ""
+    for pslug, sa, sb, _ in COMPARE_PAIRS:
+        ra, rb = by_slug.get(sa), by_slug.get(sb)
+        if ra and rb and is_indexable_detail(ra) and is_indexable_detail(rb):
+            vs_links += (f'<li><a href="vs/{pslug}.html">'
+                         f'{esc(_short(ra))} と {esc(_short(rb))} の違い</a></li>')
     body = f"""<h1>日本の資格カタログ</h1>
 <p class="lead">資格名で検索、または分野・区分で絞り込み・並び替えできます。現在 <strong id="count">-</strong> 件を収録（うち公式データ掲載 {pub} 件）。受験料・試験形式・受験資格・合格率・公式サイトを掲載しています。</p>
 <div class="controls">
@@ -714,6 +981,8 @@ def build_index(rows) -> str:
 <section class="feature-nav">
   <h2>目的から探す</h2>
   <ul class="feat-list">{hub_links}</ul>
+  <h2>資格を比べる（人気の比較）</h2>
+  <ul class="feat-list">{vs_links}</ul>
   <h2>特集・ランキング</h2>
   <ul class="feat-list">{feat_links}</ul>
   <h2>分野から探す</h2>
@@ -907,6 +1176,11 @@ table.spec th{width:34%;background:#f2f5fa;color:#3a4757;font-weight:600;white-s
 .rel-links ul{margin:.2em 0;padding-left:1.1em}.rel-links li{margin:2px 0}
 .site-footer{max-width:920px;margin:30px auto;padding:16px 18px;color:#7a838f;font-size:.8rem;border-top:1px solid #e6e9ef}
 .hub-grp{font-size:1.0rem;margin:1.1em 0 .3em;color:#0d47a1;border-bottom:1px solid #e6e9ef;padding-bottom:3px}
+.vs-table{width:100%;border-collapse:collapse;margin:14px 0;font-size:.94rem}
+.vs-table th,.vs-table td{border:1px solid #e1e8f2;padding:8px 10px;text-align:left;vertical-align:top}
+.vs-table thead th{background:#0d47a1;color:#fff;text-align:center}
+.vs-table tbody th{background:#f2f5fa;white-space:nowrap;width:7.5em}
+.vs-cta{margin:14px 0;display:flex;gap:10px;flex-wrap:wrap}
 .feature-nav{margin-top:28px;border-top:1px solid #e6e9ef;padding-top:14px}
 .feature-nav h2{font-size:1.05rem;margin:.6em 0 .3em}
 .feature-nav ul{margin:.2em 0 .6em;padding-left:1.1em}
@@ -937,6 +1211,10 @@ def main() -> int:
     indexable = [r for r in rows
                  if r["is_bucket"] == "0" and r["is_duplicate"] == "0"
                  and r["scope"] == "domestic"]
+
+    # 詳細→比較ページの相互リンク用グローバルを設定
+    NAME_BY_SLUG.update({r["slug"]: r["name"] for r in rows})
+    INDEXABLE_SLUGS.update(r["slug"] for r in indexable if is_indexable_detail(r))
 
     if SITE.exists():
         shutil.rmtree(SITE)
@@ -984,6 +1262,12 @@ def main() -> int:
     for slug, htmlc in feat_pages.items():
         (SITE / "feature" / f"{slug}.html").write_text(htmlc, encoding="utf-8")
 
+    # 比較（人気ペア）
+    (SITE / "vs").mkdir()
+    vs_pages = build_comparison_pages(indexable)
+    for slug, htmlc in vs_pages.items():
+        (SITE / "vs" / f"{slug}.html").write_text(htmlc, encoding="utf-8")
+
     # sitemap.xml（index対象 = トップ・比較・分野別・特集・インデックス対象の詳細のみ）
     # noindex のページは sitemap に入れない（インデックス衛生・整合性）。
     from datetime import date
@@ -992,6 +1276,7 @@ def main() -> int:
     entries = [("", today, "1.0"), ("compare.html", today, "0.7")]
     entries += [(f"bunya/{s}.html", today, "0.8") for s in cat_pages]
     entries += [(f"feature/{s}.html", today, "0.8") for s in feat_pages]
+    entries += [(f"vs/{s}.html", today, "0.7") for s in vs_pages]
     idx_details = [r for r in indexable if is_indexable_detail(r)]
     entries += [(f'c/{r["slug"]}.html',
                  (r.get("source_checked_at") or today), "0.6") for r in idx_details]
