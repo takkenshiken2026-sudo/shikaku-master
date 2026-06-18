@@ -19,6 +19,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 CSV = ROOT / "data" / "certifications.csv"
 SITE = ROOT / "site"
+BRAND = ROOT / "brand"
 
 SITE_NAME = "資格カタログ（仮）"
 TYPE_BADGE = {
@@ -49,6 +50,9 @@ def page_shell(title: str, body: str, depth: int, noindex: bool = True) -> str:
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 {robots}<title>{esc(title)}</title>
+<link rel="icon" href="{base}assets/favicon.ico" sizes="32x32">
+<link rel="icon" href="{base}assets/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="{base}assets/apple-touch-icon.png">
 <link rel="stylesheet" href="{base}assets/app.css">
 </head>
 <body>
@@ -420,6 +424,12 @@ def main() -> int:
     (SITE / "assets" / "app.css").write_text(APP_CSS, encoding="utf-8")
     (SITE / "assets" / "search.js").write_text(SEARCH_JS, encoding="utf-8")
     (SITE / "assets" / "compare.js").write_text(COMPARE_JS, encoding="utf-8")
+    for name in ("favicon.svg", "favicon.ico", "favicon-16.png", "favicon-32.png", "apple-touch-icon.png"):
+        src = BRAND / name
+        if src.exists():
+            shutil.copy2(src, SITE / "assets" / name)
+    if (BRAND / "favicon.ico").exists():
+        shutil.copy2(BRAND / "favicon.ico", SITE / "favicon.ico")
     (SITE / "index.html").write_text(build_index(indexable), encoding="utf-8")
     (SITE / "compare.html").write_text(build_compare(), encoding="utf-8")
 
