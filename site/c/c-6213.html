@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex"><!-- 未検証/プロトタイプ -->
+<title>2級紙器・段ボール箱製造技能士｜資格カタログ（仮）</title>
+<link rel="stylesheet" href="../assets/app.css">
+</head>
+<body>
+<header class="site-header"><a href="../index.html" class="logo">資格カタログ（仮）</a>
+<span class="tagline">日本の資格を探せる・絞れる・比べられる</span></header>
+<main class="container">
+<nav class="crumbs"><a href="../index.html">トップ</a> ›
+<a href="../index.html?major=機械・電気・ものづくり">機械・電気・ものづくり</a> › 2級紙器・段ボール箱製造技能士</nav>
+<h1>2級紙器・段ボール箱製造技能士</h1>
+<p class="lead">2級紙器・段ボール箱製造技能士は「機械・電気・ものづくり」分野の資格です。最新の受験料・日程・合格率は公式情報でご確認ください。</p>
+<table class="spec"><tr><th>資格区分</th><td><span class="badge badge-national">国家資格</span> <span class="muted">（技能検定(国家資格・職業能力開発促進法)）</span></td></tr><tr><th>分野（大分類）</th><td>機械・電気・ものづくり</td></tr><tr><th>カテゴリ</th><td>木・紙製品製造</td></tr><tr><th>実施団体</th><td><span class="muted">公式情報で確認</span></td></tr><tr><th>公式サイト</th><td><span class="muted">未登録（一次情報で確認予定）</span></td></tr><tr><th>受験資格</th><td><span class="muted">公式情報で確認</span></td></tr><tr><th>試験形式</th><td><span class="muted">公式情報で確認</span></td></tr><tr><th>受験料</th><td><span class="muted">公式情報で確認</span></td></tr><tr><th>合格率</th><td><span class="muted">公式情報で確認</span></td></tr><tr><th>実施頻度</th><td><span class="muted">公式情報で確認</span></td></tr><tr><th>ハローワークコード</th><td>6213</td></tr></table>
+<section class="related"><h2>同じカテゴリの資格</h2><ul id="related"></ul></section>
+<script>
+fetch("../data/certifications.json").then(r=>r.json()).then(all=>{
+  const cat="木・紙製品製造", me="c-6213";
+  const ul=document.getElementById("related");
+  all.filter(x=>x.category===cat&&x.slug!==me).slice(0,12).forEach(x=>{
+    const li=document.createElement("li");
+    li.innerHTML='<a href="'+x.slug+'.html">'+x.name+'</a>';
+    ul.appendChild(li);
+  });
+  if(!ul.children.length) ul.innerHTML='<li class="muted">なし</li>';
+});
+</script>
+
+</main>
+<footer class="site-footer">出典: 厚生労働省 ハローワーク 免許・資格コード一覧をシードに作成（プロトタイプ）。
+数値・制度は各資格の公式情報で必ずご確認ください。</footer>
+</body>
+</html>

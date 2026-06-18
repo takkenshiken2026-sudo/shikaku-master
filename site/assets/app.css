@@ -1,0 +1,27 @@
+*{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,"Hiragino Kaku Gothic ProN",Meiryo,sans-serif;color:#1b2430;line-height:1.7;background:#f7f8fa}
+a{color:#1565c0;text-decoration:none}a:hover{text-decoration:underline}
+.site-header{background:#0d47a1;color:#fff;padding:14px 20px;display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
+.site-header .logo{color:#fff;font-weight:700;font-size:1.15rem}.tagline{color:#cfe0fb;font-size:.85rem}
+.container{max-width:920px;margin:0 auto;padding:22px 18px}
+h1{font-size:1.5rem;margin:.2em 0 .4em}.lead{color:#43505f}
+.controls{display:flex;gap:10px;flex-wrap:wrap;margin:16px 0}
+.controls input,.controls select{padding:10px 12px;border:1px solid #c5ccd6;border-radius:8px;font-size:1rem}
+.controls input{flex:1 1 260px}
+.results{list-style:none;padding:0;margin:0}
+.results li{background:#fff;border:1px solid #e6e9ef;border-radius:10px;padding:12px 14px;margin-bottom:8px}
+.results li a{font-weight:600}.results .meta{display:block;color:#6b7682;font-size:.82rem;margin-top:3px}
+.badge{display:inline-block;padding:1px 8px;border-radius:999px;font-size:.75rem;font-weight:700;color:#fff;vertical-align:middle}
+.badge-national,.b-国家{background:#c62828}.badge-public,.b-公的{background:#1565c0}
+.badge-private,.b-民間{background:#2e7d32}.badge-unknown,.b-要確認{background:#8a939e}.badge-overseas{background:#6a1b9a}
+.crumbs{font-size:.85rem;color:#6b7682;margin-bottom:8px}
+table.spec{width:100%;border-collapse:collapse;background:#fff;border:1px solid #e6e9ef;border-radius:10px;overflow:hidden}
+table.spec th,table.spec td{text-align:left;padding:10px 14px;border-bottom:1px solid #eef1f5;vertical-align:top}
+table.spec th{width:34%;background:#f2f5fa;color:#3a4757;font-weight:600;white-space:nowrap}
+.muted{color:#98a1ad}.related{margin-top:24px}.related ul{padding-left:1.1em}
+.site-footer{max-width:920px;margin:30px auto;padding:16px 18px;color:#7a838f;font-size:.8rem;border-top:1px solid #e6e9ef}
+.feature-nav{margin-top:28px;border-top:1px solid #e6e9ef;padding-top:14px}
+.feature-nav h2{font-size:1.05rem;margin:.6em 0 .3em}
+.feature-nav ul{margin:.2em 0 .6em;padding-left:1.1em}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{display:inline-block;padding:5px 11px;border:1px solid #c5d3ea;background:#eef4fc;border-radius:999px;font-size:.85rem}
+.chip:hover{background:#dce9fb;text-decoration:none}

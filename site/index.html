@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>資格カタログ（仮）</title>
+<link rel="stylesheet" href="assets/app.css">
+</head>
+<body>
+<header class="site-header"><a href="index.html" class="logo">資格カタログ（仮）</a>
+<span class="tagline">日本の資格を探せる・絞れる・比べられる</span></header>
+<main class="container">
+<h1>日本の資格カタログ</h1>
+<p class="lead">資格名で検索、または分野・区分で絞り込めます。現在 <strong id="count">-</strong> 件を収録（うち公式データ掲載 58 件・プロトタイプ）。</p>
+<div class="controls">
+  <input id="q" type="search" placeholder="資格名で検索（例: 簿記, 電気, ボイラー）">
+  <select id="major"><option value="">分野（すべて）</option></select>
+  <select id="type"><option value="">区分（すべて）</option></select>
+</div>
+<p id="status" class="muted"></p>
+<ul id="results" class="results"></ul>
+<section class="feature-nav">
+  <h2>特集</h2>
+  <ul>
+    <li><a href="feature/no-requirement-national.html">受験資格なしで取れる国家資格</a></li>
+    <li><a href="feature/data-available.html">公式データ掲載資格の一覧</a></li>
+  </ul>
+  <h2>分野から探す</h2>
+  <div class="chips"><a class="chip" href="bunya/it.html">IT・情報処理</a> <a class="chip" href="bunya/design.html">デザイン・美術・文化</a> <a class="chip" href="bunya/realestate.html">不動産</a> <a class="chip" href="bunya/finance.html">会計・金融・経営</a> <a class="chip" href="bunya/medical.html">医療・看護・薬</a> <a class="chip" href="bunya/business.html">商業・販売・事務</a> <a class="chip" href="bunya/civil.html">土木・測量・建設</a> <a class="chip" href="bunya/safety.html">安全・環境・危険物</a> <a class="chip" href="bunya/architecture.html">建築・設備</a> <a class="chip" href="bunya/education.html">教育・保育・学術</a> <a class="chip" href="bunya/manufacturing.html">機械・電気・ものづくり</a> <a class="chip" href="bunya/law.html">法律・法務・知財</a> <a class="chip" href="bunya/welfare.html">福祉・介護・心理</a> <a class="chip" href="bunya/service.html">美容・サービス・スポーツ</a> <a class="chip" href="bunya/plant.html">設備・プラント・機械運転</a> <a class="chip" href="bunya/language.html">語学・コミュニケーション</a> <a class="chip" href="bunya/agriculture.html">農林水産・動物</a> <a class="chip" href="bunya/transport.html">運輸・運転・航空</a> <a class="chip" href="bunya/electric.html">電気・通信</a> <a class="chip" href="bunya/food.html">食品・調理・栄養</a></div>
+</section>
+<script src="assets/search.js"></script>
+
+</main>
+<footer class="site-footer">出典: 厚生労働省 ハローワーク 免許・資格コード一覧をシードに作成（プロトタイプ）。
+数値・制度は各資格の公式情報で必ずご確認ください。</footer>
+</body>
+</html>
