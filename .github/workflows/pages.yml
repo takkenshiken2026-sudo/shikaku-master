@@ -25,7 +25,6 @@ jobs:
       - name: Build dataset and site
         run: |
           python3 tools/build_seed.py
-          python3 tools/build_favicon.py
           python3 tools/build_pages.py
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
