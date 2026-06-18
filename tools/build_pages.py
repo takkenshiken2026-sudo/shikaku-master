@@ -13,6 +13,7 @@
 import csv
 import html
 import json
+import re
 import shutil
 from pathlib import Path
 
@@ -157,6 +158,26 @@ fetch("../data/certifications.json").then(r=>r.json()).then(all=>{{
                       desc=desc, path=f'c/{row["slug"]}.html', jsonld=jsonld)
 
 
+def fee_yen(r):
+    """受験料文字列から代表額（最初の「N円」）を整数で。なければ None。"""
+    m = re.search(r"([0-9][0-9,]*)\s*円", r.get("fee", ""))
+    return int(m.group(1).replace(",", "")) if m else None
+
+
+def pass_pct(r):
+    """合格率文字列から最初の「N%」を float で。なければ None。"""
+    m = re.search(r"([0-9]+(?:\.[0-9]+)?)\s*%", r.get("pass_rate", ""))
+    return float(m.group(1)) if m else None
+
+
+def is_cbt(r):
+    return bool(re.search(r"CBT|ネット試験|IBT", r.get("exam_format", "")))
+
+
+def is_noreq(r):
+    return bool(re.search(r"受験資格なし|受検資格なし|制限なし|誰でも", r.get("eligibility", "")))
+
+
 def _badge(t):
     label, cls = TYPE_BADGE.get(t, ("区分要確認", "badge-unknown"))
     return f'<span class="badge {cls}">{esc(label)}</span>'
@@ -204,11 +225,19 @@ def build_category_pages(indexable):
         slug = MAJOR_SLUGS.get(major, "other")
         items.sort(key=lambda r: (r["status"] != "published", r["category"], r["name"]))
         npub = sum(1 for r in items if r["status"] == "published")
+        from collections import Counter
+        tc = Counter(r["type"] for r in items)
+        tparts = "・".join(f"{t} {tc[t]}件" for t in ("国家", "公的", "民間", "要確認")
+                          if tc.get(t))
+        cats = sorted({r["category"] for r in items})
         body = (
             f'<nav class="crumbs"><a href="../index.html">トップ</a> › {esc(major)}</nav>'
             f"<h1>{esc(major)}の資格一覧</h1>"
-            f'<p class="lead">「{esc(major)}」分野の資格 {len(items)} 件（うち★データ掲載 {npub} 件）。'
-            f"各資格の受験料・合格率・公式情報は詳細ページで確認できます。</p>"
+            f'<p class="lead">「{esc(major)}」分野の資格 {len(items)} 件'
+            f"（うち公式データ掲載 {npub} 件）。各資格の受験料・試験形式・受験資格・"
+            f"合格率・実施団体・公式サイトを詳細ページで確認できます。</p>"
+            f'<p class="muted">区分の内訳: {esc(tparts)}。'
+            f"主なカテゴリ: {esc('、'.join(cats[:12]))}{'ほか' if len(cats) > 12 else ''}。</p>"
             + _list_items(items, depth=1)
         )
         pages[slug] = page_shell(
@@ -219,37 +248,101 @@ def build_category_pages(indexable):
     return pages
 
 
+# 特集・ランキングページの定義（トップのナビとも共有）
+FEATURE_NAV = [
+    ("cheap", "受験料が安い資格ランキング"),
+    ("high-pass", "合格率が高い資格"),
+    ("hard", "合格率が低い難関資格"),
+    ("cbt", "在宅・CBTで受けられる資格"),
+    ("no-requirement", "受験資格なしで受けられる資格"),
+    ("no-requirement-national", "受験資格なしで取れる国家資格"),
+    ("national", "国家資格の一覧"),
+    ("public", "公的資格の一覧"),
+    ("data-available", "公式データ掲載資格の一覧"),
+]
+
+
 def build_feature_pages(indexable):
-    """特集ページ（site/feature/<slug>.html）。publishedデータを使った切り口。"""
+    """特集・ランキングページ（site/feature/<slug>.html）。"""
     pub = [r for r in indexable if r["status"] == "published"]
     pages = {}
 
-    # 1) 受験資格なしで取れる国家資格
-    no_req = [r for r in pub if r["type"] == "国家"
-              and r.get("eligibility", "").startswith("受験資格なし")]
-    no_req.sort(key=lambda r: (r["major_category"], r["name"]))
-    pages["no-requirement-national"] = page_shell(
-        f"受験資格なしで取れる国家資格｜{SITE_NAME}",
-        f'<nav class="crumbs"><a href="../index.html">トップ</a> › 特集</nav>'
-        f"<h1>受験資格なしで取れる国家資格</h1>"
-        f'<p class="lead">学歴・実務経験を問わず、誰でも受験できる国家資格。'
-        f"データ掲載分から {len(no_req)} 件を紹介します（受験資格は出願時に必ず公式で確認してください）。</p>"
-        + _list_items(no_req, depth=1),
-        depth=1, noindex=False,
-        desc="学歴・実務経験を問わず誰でも受験できる国家資格の一覧。受験料・合格率・公式情報を掲載。",
-        path="feature/no-requirement-national.html")
+    def page(slug, title, h1, intro, items, desc):
+        body = (
+            f'<nav class="crumbs"><a href="../index.html">トップ</a> › 特集</nav>'
+            f"<h1>{esc(h1)}</h1>"
+            f'<p class="lead">{intro}</p>'
+            + _list_items(items, depth=1)
+            + '<p class="muted" style="margin-top:14px">※受験料・合格率は公式の一次情報に基づきますが、'
+              '最新の金額・制度・日程は各資格の公式サイトで必ずご確認ください。</p>'
+        )
+        pages[slug] = page_shell(f"{title}｜{SITE_NAME}", body, depth=1,
+                                 noindex=False, desc=desc,
+                                 path=f"feature/{slug}.html")
 
-    # 2) データ掲載資格一覧（分野別）
-    pub_sorted = sorted(pub, key=lambda r: (r["major_category"], r["name"]))
-    pages["data-available"] = page_shell(
-        f"データ掲載資格の一覧｜{SITE_NAME}",
-        f'<nav class="crumbs"><a href="../index.html">トップ</a> › 特集</nav>'
-        f"<h1>データ掲載資格の一覧</h1>"
-        f'<p class="lead">受験料・合格率・公式情報などを公式の一次情報で整備済みの {len(pub)} 件。</p>'
-        + _list_items(pub_sorted, depth=1),
-        depth=1, noindex=False,
-        desc=f"受験料・試験形式・受験資格・合格率・公式情報を整備済みの資格 {len(pub)} 件の一覧。",
-        path="feature/data-available.html")
+    # 受験料が安い順（代表額のあるものを昇順・上位120）
+    cheap = sorted((r for r in pub if fee_yen(r) is not None),
+                   key=lambda r: (fee_yen(r), r["name"]))[:120]
+    page("cheap", "受験料が安い資格ランキング", "受験料が安い資格ランキング",
+         f"受験料（代表額）が安い順に並べた資格ランキング。データ掲載分の上位 {len(cheap)} 件。"
+         "受験料は級・方式で異なる場合があります。",
+         cheap, "受験料が安い資格を安い順にランキング。受験料・合格率・公式情報を掲載。")
+
+    # 合格率が高い順
+    hi = sorted((r for r in pub if pass_pct(r) is not None),
+                key=lambda r: (-pass_pct(r), r["name"]))[:120]
+    page("high-pass", "合格率が高い資格", "合格率が高い資格",
+         f"公表されている合格率が高い順に並べた資格一覧（上位 {len(hi)} 件）。"
+         "合格率は実施回・年度により変動します。",
+         hi, "合格率が高い資格を高い順に一覧。受験料・合格率・公式情報を掲載。")
+
+    # 合格率が低い順（難関）
+    lo = sorted((r for r in pub if pass_pct(r) is not None),
+                key=lambda r: (pass_pct(r), r["name"]))[:120]
+    page("hard", "合格率が低い難関資格", "合格率が低い難関資格",
+         f"公表されている合格率が低い（難易度が高い）順に並べた資格一覧（上位 {len(lo)} 件）。",
+         lo, "合格率が低い難関資格を一覧。受験料・合格率・公式情報を掲載。")
+
+    # 在宅・CBT
+    cbt = sorted((r for r in pub if is_cbt(r)),
+                 key=lambda r: (r["major_category"], r["name"]))
+    page("cbt", "在宅・CBTで受けられる資格", "在宅・CBT（ネット試験）で受けられる資格",
+         f"CBT・ネット試験など、テストセンターや在宅で受験できる資格 {len(cbt)} 件。",
+         cbt, "CBT・ネット試験で受けられる資格の一覧。受験料・試験形式・公式情報を掲載。")
+
+    # 受験資格なし（全区分）
+    noreq = sorted((r for r in pub if is_noreq(r)),
+                   key=lambda r: (r["major_category"], r["name"]))
+    page("no-requirement", "受験資格なしで受けられる資格", "受験資格なしで受けられる資格",
+         f"学歴・実務経験を問わず誰でも受験できる資格 {len(noreq)} 件（全区分）。"
+         "受験資格は出願時に必ず公式でご確認ください。",
+         noreq, "学歴・実務経験を問わず誰でも受験できる資格の一覧（全区分）。")
+
+    # 受験資格なし × 国家資格
+    noreq_n = [r for r in noreq if r["type"] == "国家"]
+    page("no-requirement-national", "受験資格なしで取れる国家資格",
+         "受験資格なしで取れる国家資格",
+         f"誰でも受験できる国家資格 {len(noreq_n)} 件。"
+         "受験資格は出願時に必ず公式で確認してください。",
+         noreq_n, "学歴・実務経験を問わず誰でも受験できる国家資格の一覧。")
+
+    # 国家資格・公的資格の一覧（全件・名称リンク）
+    for typ, slug, label in (("国家", "national", "国家資格"),
+                             ("公的", "public", "公的資格")):
+        items = sorted((r for r in indexable if r["type"] == typ),
+                       key=lambda r: (r["major_category"], r["status"] != "published",
+                                      r["category"], r["name"]))
+        npub = sum(1 for r in items if r["status"] == "published")
+        page(slug, f"{label}の一覧", f"{label}の一覧",
+             f"日本の{label} {len(items)} 件（うち公式データ掲載 {npub} 件）。"
+             "分野・カテゴリ別に名称から詳細（受験料・合格率・公式情報）を確認できます。",
+             items, f"日本の{label}の一覧（{len(items)}件）。受験料・合格率・公式情報を掲載。")
+
+    # データ掲載一覧
+    page("data-available", "公式データ掲載資格の一覧", "公式データ掲載資格の一覧",
+         f"受験料・合格率・公式情報などを公式の一次情報で整備済みの {len(pub)} 件。",
+         sorted(pub, key=lambda r: (r["major_category"], r["name"])),
+         f"受験料・試験形式・受験資格・合格率を整備済みの資格 {len(pub)} 件の一覧。")
     return pages
 
 
@@ -259,6 +352,9 @@ def build_index(rows) -> str:
     cat_links = " ".join(
         f'<a class="chip" href="bunya/{MAJOR_SLUGS.get(m, "other")}.html">{esc(m)}</a>'
         for m in majors)
+    feat_links = "".join(
+        f'<li><a href="feature/{slug}.html">{esc(label)}</a></li>'
+        for slug, label in FEATURE_NAV)
     body = f"""<h1>日本の資格カタログ</h1>
 <p class="lead">資格名で検索、または分野・区分で絞り込み・並び替えできます。現在 <strong id="count">-</strong> 件を収録（うち公式データ掲載 {pub} 件）。受験料・試験形式・受験資格・合格率・公式サイトを掲載しています。</p>
 <div class="controls">
@@ -283,11 +379,8 @@ def build_index(rows) -> str:
 <ul id="results" class="results"></ul>
 <div id="cmpbar" class="cmpbar"></div>
 <section class="feature-nav">
-  <h2>特集</h2>
-  <ul>
-    <li><a href="feature/no-requirement-national.html">受験資格なしで取れる国家資格</a></li>
-    <li><a href="feature/data-available.html">公式データ掲載資格の一覧</a></li>
-  </ul>
+  <h2>特集・ランキング</h2>
+  <ul class="feat-list">{feat_links}</ul>
   <h2>分野から探す</h2>
   <div class="chips">{cat_links}</div>
 </section>
