@@ -204,6 +204,10 @@ def build_detail(row) -> str:
         spec.append(("学習時間の目安",
                      esc(st["study_hours"])
                      + ' <span class="muted">（編集部調べの目安。個人差があり、公式の数値ではありません）</span>'))
+    inds = industry_tags(row)
+    if inds:
+        chips = "".join(f'<span class="tag-chip tag-ind">{esc(t)}</span>' for t in inds)
+        spec.append(("活かせる業界", chips))
     tags = cert_tags(row)
     if tags:
         chips = "".join(f'<span class="tag-chip">{esc(t)}</span>' for t in tags)
@@ -474,6 +478,44 @@ MAJOR_SLUGS = {
     "運輸・運転・航空": "transport", "農林水産・動物": "agriculture", "海外資格": "overseas",
 }
 
+# 業界レイヤー（分野とは別軸）。分野→業界の対応＋全業界で通用する汎用資格。
+MAJOR_INDUSTRY = {
+    "IT・情報処理": "IT・通信", "法律・法務・知財": "法律・士業",
+    "会計・金融・経営": "金融・会計", "不動産": "不動産",
+    "建築・設備": "建設・不動産", "設備・プラント・機械運転": "建設・設備",
+    "土木・測量・建設": "建設・土木", "電気・通信": "電気・通信",
+    "機械・電気・ものづくり": "製造・ものづくり", "食品・調理・栄養": "食品・飲食",
+    "医療・看護・薬": "医療・ヘルスケア", "福祉・介護・心理": "福祉・介護",
+    "教育・保育・学術": "教育・保育", "語学・コミュニケーション": "語学・国際",
+    "デザイン・美術・文化": "デザイン・クリエイティブ", "美容・サービス・スポーツ": "美容・サービス",
+    "商業・販売・事務": "商業・販売・事務", "安全・環境・危険物": "安全・環境",
+    "運輸・運転・航空": "運輸・物流", "農林水産・動物": "農林水産", "海外資格": "海外",
+}
+# 業種を問わず通用する汎用資格（事務・会計・労務・PC・語学・法務など）→「全業界で活かせる」
+GENERIC_INDUSTRY_SLUGS = {
+    "c-3623", "c-3624", "c-3625", "c-3626", "c-3627", "c-3628", "c-3629",  # 簿記
+    "c-2515", "c-2516", "c-2517",  # FP
+    "c-2510", "c-2202", "c-2203", "c-2204",  # 社労士・衛生管理者
+    "c-2511", "c-3112",  # 中小企業診断士・キャリコン
+    "c-2406", "c-2407", "c-2408", "c-2409",  # ビジ法務・知財管理
+    "c-1538", "c-3815", "c-3816", "c-3817", "c-3818", "c-3838", "c-3839", "c-3840",  # ITパスポート・MOS
+    "c-3841", "c-3842", "c-3843", "c-3844", "c-3845", "c-3846", "c-3879", "c-3880", "c-3881",  # 日商PC
+    "c-3322", "c-3323", "c-3324", "c-3307", "c-3308", "c-3309",  # TOEIC・英検
+    "c-3401", "c-3402", "c-3403", "c-3513", "c-3514", "c-3515",  # 秘書・ビジネス文書
+    "c-4001", "c-4002", "c-4003", "c-4004", "c-4005", "c-4007", "c-4011", "c-4012",  # ビジキャリ
+}
+
+
+def industry_tags(r):
+    """業界タグ（分野→業界の対応＋汎用資格の『全業界で活かせる』）。"""
+    out = []
+    ind = MAJOR_INDUSTRY.get(r["major_category"])
+    if ind:
+        out.append(ind)
+    if r["slug"] in GENERIC_INDUSTRY_SLUGS:
+        out.append("全業界で活かせる")
+    return out
+
 
 def build_category_pages(indexable):
     """大分類ごとの一覧ページ（site/bunya/<slug>.html）。"""
@@ -584,7 +626,8 @@ def cert_tags(r):
     # 目的（意図ハブのキュレーション集合から）
     if s in HUB_INDEPENDENCE_SET:
         tags.append("独立・開業")
-    if s in HUB_JOB_SET:
+    if s in HUB_JOB_SET or s in CAREERS:
+        # 「活かせる仕事」が整備済み＝就職・転職に直結する資格
         tags.append("就職・転職")
     if s in HUB_REMOTE_SET:
         tags.append("在宅ワーク")
@@ -1398,6 +1441,7 @@ table.spec th{width:34%;background:#f2f5fa;color:#3a4757;font-weight:600;white-s
 .feat-list{margin:.2em 0 .6em;padding-left:1.1em}.feat-list li{margin:2px 0}
 .updated{font-size:.82rem;color:#6b7682;margin:.1em 0 .6em}.updated .muted{margin-left:.4em}
 .tag-chip{display:inline-block;background:#eef4ff;color:#0d47a1;border:1px solid #cfe0fb;border-radius:12px;padding:2px 10px;margin:2px 4px 2px 0;font-size:.82rem}
+.tag-ind{background:#eafaf1;color:#1b6e3c;border-color:#bfe6cf}
 .diff-badge{display:inline-block;font-weight:700;font-size:.82rem;padding:2px 9px;border-radius:11px;color:#fff}
 .diff-veryhard{background:#b71c1c}.diff-hard{background:#e65100}.diff-mid{background:#f9a825;color:#3a2c00}
 .diff-easy{background:#388e3c}.diff-veryeasy{background:#1565c0}
@@ -1469,6 +1513,7 @@ def main() -> int:
         "fee": r["fee"], "pass_rate": r["pass_rate"], "frequency": r["frequency"],
         "status": r.get("status", ""),
         "tags": cert_tags(r),
+        "industries": industry_tags(r),
         "difficulty": _diff_label(r),
         "applicants": (EXAM.get(r["slug"], {}) or {}).get("applicants", ""),
         "study_hours": (STUDY.get(r["slug"], {}) or {}).get("study_hours", ""),
