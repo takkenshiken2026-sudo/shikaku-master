@@ -21,6 +21,7 @@ ROOT = Path(__file__).resolve().parent.parent
 CSV = ROOT / "data" / "certifications.csv"
 CAREERS_CSV = ROOT / "data" / "careers.csv"
 EXAM_CSV = ROOT / "data" / "exam_details.csv"
+STUDY_CSV = ROOT / "data" / "study_time.csv"
 SITE = ROOT / "site"
 BRAND = ROOT / "brand"
 
@@ -85,6 +86,23 @@ def load_exam_details():
 
 
 EXAM = load_exam_details()
+
+
+def load_study_time():
+    """slug → {study_hours, source}。学習時間の目安（編集値・公式の一次情報ではない）。"""
+    if not STUDY_CSV.exists():
+        return {}
+    out = {}
+    with STUDY_CSV.open(encoding="utf-8") as f:
+        for r in csv.DictReader(f):
+            s = (r.get("slug") or "").strip()
+            h = (r.get("study_hours") or "").strip()
+            if s and h:
+                out[s] = {"study_hours": h, "source": (r.get("source") or "").strip()}
+    return out
+
+
+STUDY = load_study_time()
 
 
 def applicants_num(r):
@@ -181,6 +199,15 @@ def build_detail(row) -> str:
                      f' <span class="muted">（公表合格率 {esc(row["pass_rate"])} に基づく簡易目安）</span>'))
     if ed.get("exam_subjects"):
         spec.append(("試験科目・出題範囲", esc(ed["exam_subjects"])))
+    st = STUDY.get(row["slug"], {})
+    if st.get("study_hours"):
+        spec.append(("学習時間の目安",
+                     esc(st["study_hours"])
+                     + ' <span class="muted">（編集部調べの目安。個人差があり、公式の数値ではありません）</span>'))
+    tags = cert_tags(row)
+    if tags:
+        chips = "".join(f'<span class="tag-chip">{esc(t)}</span>' for t in tags)
+        spec.append(("特徴・目的タグ", chips))
     src = row.get("source_checked_at", "")
     if src:
         spec.append(("情報確認日", esc(src) + ' <span class="muted">（公式の一次情報に基づき確認）</span>'))
@@ -547,6 +574,34 @@ def is_working_adult(r):
         return False
     p = pass_pct(r)
     return is_cbt(r) or (p is not None and p >= 40)
+
+
+def cert_tags(r):
+    """目的別検索のための構造化タグ（クライアント検索JSONに搭載）。
+    既存のキュレーション（意図ハブ）や客観データから機械的に導出する。"""
+    s = r["slug"]
+    tags = []
+    # 目的（意図ハブのキュレーション集合から）
+    if s in HUB_INDEPENDENCE_SET:
+        tags.append("独立・開業")
+    if s in HUB_JOB_SET:
+        tags.append("就職・転職")
+    if s in HUB_REMOTE_SET:
+        tags.append("在宅ワーク")
+    if s in HUB_TRADE_SET:
+        tags.append("手に職")
+    if s in HUB_IT_BEGINNER_SET:
+        tags.append("未経験からIT")
+    if s in HUB_SENIOR_SET:
+        tags.append("定年後・シニア")
+    # 働き方・受験のしやすさ（客観データから）
+    if is_noreq(r):
+        tags.append("受験資格なし")
+    if is_cbt(r):
+        tags.append("CBT・ネット試験")
+    if is_working_adult(r):
+        tags.append("働きながら")
+    return tags
 
 
 # 比較ページの人気ペア（「A vs B」「A B どっち」「違い」系クエリに当てる）。
@@ -1342,6 +1397,7 @@ table.spec th{width:34%;background:#f2f5fa;color:#3a4757;font-weight:600;white-s
 .provenance{font-size:.82rem;color:#6b7682;background:#f2f5fa;border:1px solid #e1e8f2;border-radius:8px;padding:11px 14px;margin:10px 0 0}
 .feat-list{margin:.2em 0 .6em;padding-left:1.1em}.feat-list li{margin:2px 0}
 .updated{font-size:.82rem;color:#6b7682;margin:.1em 0 .6em}.updated .muted{margin-left:.4em}
+.tag-chip{display:inline-block;background:#eef4ff;color:#0d47a1;border:1px solid #cfe0fb;border-radius:12px;padding:2px 10px;margin:2px 4px 2px 0;font-size:.82rem}
 .diff-badge{display:inline-block;font-weight:700;font-size:.82rem;padding:2px 9px;border-radius:11px;color:#fff}
 .diff-veryhard{background:#b71c1c}.diff-hard{background:#e65100}.diff-mid{background:#f9a825;color:#3a2c00}
 .diff-easy{background:#388e3c}.diff-veryeasy{background:#1565c0}
@@ -1401,7 +1457,10 @@ def main() -> int:
     (SITE / "data").mkdir()
     (SITE / "assets").mkdir()
 
-    # JSON（検索＋比較用。比較で使う事実値も含める）
+    # JSON（検索＋比較用。比較で使う事実値＋目的別検索のタグ等も含める）
+    def _diff_label(r):
+        d = difficulty(r)
+        return d[0] if d else ""
     payload = [{
         "slug": r["slug"], "name": r["name"], "major": r["major_category"],
         "category": r["category"], "type": r["type"],
@@ -1409,6 +1468,10 @@ def main() -> int:
         "eligibility": r["eligibility"], "exam_format": r["exam_format"],
         "fee": r["fee"], "pass_rate": r["pass_rate"], "frequency": r["frequency"],
         "status": r.get("status", ""),
+        "tags": cert_tags(r),
+        "difficulty": _diff_label(r),
+        "applicants": (EXAM.get(r["slug"], {}) or {}).get("applicants", ""),
+        "study_hours": (STUDY.get(r["slug"], {}) or {}).get("study_hours", ""),
     } for r in indexable]
     payload.sort(key=lambda x: (x["major"], x["category"], x["name"]))
     (SITE / "data" / "certifications.json").write_text(
