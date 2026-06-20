@@ -31,6 +31,15 @@
   <input id="q" type="search" placeholder="資格名で検索（例: 簿記, 電気, ボイラー）">
   <select id="major"><option value="">分野（すべて）</option></select>
   <select id="type"><option value="">区分（すべて）</option></select>
+  <select id="industry"><option value="">活かせる業界（すべて）</option></select>
+  <select id="study">
+    <option value="">学習時間の目安（すべて）</option>
+    <option value="0-50">〜50時間</option>
+    <option value="50-100">50〜100時間</option>
+    <option value="100-300">100〜300時間</option>
+    <option value="300-1000">300〜1000時間</option>
+    <option value="1000-">1000時間以上</option>
+  </select>
   <select id="sort">
     <option value="">並び順（標準）</option>
     <option value="fee-asc">受験料が安い順</option>
@@ -41,9 +50,9 @@
 </div>
 <div class="filters">
   <label><input type="checkbox" id="f-pub"> データ掲載のみ</label>
-  <label><input type="checkbox" id="f-noreq"> 受験資格なし</label>
-  <label><input type="checkbox" id="f-cbt"> CBT・ネット試験</label>
+  <span class="muted" id="studynote" style="display:none">学習時間は編集部調べの目安（非公式）</span>
 </div>
+<div id="tagfilter" class="tagfilter"><span class="tf-label">目的・特徴で絞り込み：</span></div>
 <p id="status" class="muted"></p>
 <p class="muted hint">行頭のチェックを入れて資格を選ぶと、最大4件まで並べて比較できます。</p>
 <ul id="results" class="results"></ul>

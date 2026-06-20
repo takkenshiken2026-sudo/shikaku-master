@@ -1238,6 +1238,15 @@ def build_index(rows) -> str:
   <input id="q" type="search" placeholder="資格名で検索（例: 簿記, 電気, ボイラー）">
   <select id="major"><option value="">分野（すべて）</option></select>
   <select id="type"><option value="">区分（すべて）</option></select>
+  <select id="industry"><option value="">活かせる業界（すべて）</option></select>
+  <select id="study">
+    <option value="">学習時間の目安（すべて）</option>
+    <option value="0-50">〜50時間</option>
+    <option value="50-100">50〜100時間</option>
+    <option value="100-300">100〜300時間</option>
+    <option value="300-1000">300〜1000時間</option>
+    <option value="1000-">1000時間以上</option>
+  </select>
   <select id="sort">
     <option value="">並び順（標準）</option>
     <option value="fee-asc">受験料が安い順</option>
@@ -1248,9 +1257,9 @@ def build_index(rows) -> str:
 </div>
 <div class="filters">
   <label><input type="checkbox" id="f-pub"> データ掲載のみ</label>
-  <label><input type="checkbox" id="f-noreq"> 受験資格なし</label>
-  <label><input type="checkbox" id="f-cbt"> CBT・ネット試験</label>
+  <span class="muted" id="studynote" style="display:none">学習時間は編集部調べの目安（非公式）</span>
 </div>
+<div id="tagfilter" class="tagfilter"><span class="tf-label">目的・特徴で絞り込み：</span></div>
 <p id="status" class="muted"></p>
 <p class="muted hint">行頭のチェックを入れて資格を選ぶと、最大4件まで並べて比較できます。</p>
 <ul id="results" class="results"></ul>
@@ -1298,28 +1307,43 @@ def build_compare() -> str:
 SEARCH_JS = """(function(){
   var q=document.getElementById('q'),majorSel=document.getElementById('major'),
       typeSel=document.getElementById('type'),sortSel=document.getElementById('sort'),
-      fPub=document.getElementById('f-pub'),fNoreq=document.getElementById('f-noreq'),
-      fCbt=document.getElementById('f-cbt'),results=document.getElementById('results'),
+      industrySel=document.getElementById('industry'),studySel=document.getElementById('study'),
+      fPub=document.getElementById('f-pub'),tagFilter=document.getElementById('tagfilter'),
+      studyNote=document.getElementById('studynote'),
+      results=document.getElementById('results'),
       status=document.getElementById('status'),count=document.getElementById('count'),
       bar=document.getElementById('cmpbar');
-  var DATA=[], MAX=4, selected=loadSel();
+  var DATA=[], MAX=4, selected=loadSel(), activeTags=new Set();
+  // 目的・特徴チップの表示順（存在するものだけ描画）
+  var TAG_ORDER=['就職・転職','独立・開業','在宅ワーク','手に職','未経験からIT','定年後・シニア','受験資格なし','CBT・ネット試験','働きながら'];
   function loadSel(){try{return new Set(JSON.parse(localStorage.getItem('cmp')||'[]'));}catch(e){return new Set();}}
   function saveSel(){try{localStorage.setItem('cmp',JSON.stringify([].slice.call(selected)));}catch(e){}}
   function esc(s){return (s||'').replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
   function opt(sel,v){var o=document.createElement('option');o.value=v;o.textContent=v;sel.appendChild(o);}
   function feeNum(x){var m=(x.fee||'').replace(/,/g,'').match(/([0-9]+)\\s*円/);return m?parseInt(m[1],10):null;}
   function passNum(x){var m=(x.pass_rate||'').replace(/,/g,'').match(/([0-9]+(?:\\.[0-9]+)?)\\s*%/);return m?parseFloat(m[1]):null;}
-  function isNoreq(x){return /受験資格なし|受験(資格)?(の)?制限なし|誰でも|制限なし/.test(x.eligibility||'');}
-  function isCbt(x){return /CBT|ネット試験|IBT/.test(x.exam_format||'');}
+  function studyLow(x){var m=(x.study_hours||'').replace(/,/g,'').match(/([0-9]+)/);return m?parseInt(m[1],10):null;}
+  function studyHit(x,band){
+    var v=studyLow(x); if(v===null)return false;
+    var p=band.split('-'),lo=parseInt(p[0],10),hi=p[1]===''?Infinity:parseInt(p[1],10);
+    return v>=lo&&v<hi;
+  }
   function render(){
-    var t=(q.value||'').trim().toLowerCase(),mj=majorSel.value,tp=typeSel.value,sk=sortSel.value;
+    var t=(q.value||'').trim().toLowerCase(),mj=majorSel.value,tp=typeSel.value,sk=sortSel.value,
+        ind=industrySel.value,band=studySel.value;
+    studyNote.style.display=band?'inline':'none';
     var out=DATA.filter(function(x){
       if(mj&&x.major!==mj)return false;
       if(tp&&x.type!==tp)return false;
       if(t&&x.name.toLowerCase().indexOf(t)<0)return false;
       if(fPub.checked&&x.status!=='published')return false;
-      if(fNoreq.checked&&!isNoreq(x))return false;
-      if(fCbt.checked&&!isCbt(x))return false;
+      if(ind&&(x.industries||[]).indexOf(ind)<0)return false;
+      if(band&&!studyHit(x,band))return false;
+      if(activeTags.size){
+        var tg=x.tags||[],ok=true;
+        activeTags.forEach(function(a){if(tg.indexOf(a)<0)ok=false;});
+        if(!ok)return false;
+      }
       return true;
     });
     if(sk){
@@ -1361,19 +1385,42 @@ SEARCH_JS = """(function(){
     } else selected.delete(slug);
     saveSel();updateBar();
   });
+  function buildTagChips(all){
+    var present={},counts={};
+    all.forEach(function(x){(x.tags||[]).forEach(function(tg){present[tg]=1;counts[tg]=(counts[tg]||0)+1;});});
+    TAG_ORDER.forEach(function(tg){
+      if(!present[tg])return;
+      var b=document.createElement('button');
+      b.type='button';b.className='tf-chip';b.setAttribute('data-tag',tg);
+      b.textContent=tg+'（'+counts[tg]+'）';
+      b.onclick=function(){
+        if(activeTags.has(tg)){activeTags.delete(tg);b.classList.remove('on');}
+        else{activeTags.add(tg);b.classList.add('on');}
+        render();
+      };
+      tagFilter.appendChild(b);
+    });
+  }
   fetch('data/certifications.json').then(function(r){return r.json();}).then(function(all){
     DATA=all; count.textContent=all.length;
-    var majors={},types={};
-    all.forEach(function(x){majors[x.major]=1;types[x.type]=1;});
+    var majors={},types={},inds={};
+    all.forEach(function(x){majors[x.major]=1;types[x.type]=1;(x.industries||[]).forEach(function(i){inds[i]=(inds[i]||0)+1;});});
     Object.keys(majors).sort().forEach(function(v){opt(majorSel,v);});
     ['国家','公的','民間','要確認'].forEach(function(v){if(types[v])opt(typeSel,v);});
+    Object.keys(inds).sort(function(a,b){return inds[b]-inds[a];}).forEach(function(v){
+      var o=document.createElement('option');o.value=v;o.textContent=v+'（'+inds[v]+'）';industrySel.appendChild(o);});
+    buildTagChips(all);
     var p=new URLSearchParams(location.search);
     if(p.get('q'))q.value=p.get('q');
     if(p.get('major'))majorSel.value=p.get('major');
+    if(p.get('industry'))industrySel.value=p.get('industry');
+    if(p.get('tag')){p.get('tag').split(',').forEach(function(tg){
+      activeTags.add(tg);
+      var c=tagFilter.querySelector('[data-tag="'+tg+'"]'); if(c)c.classList.add('on');});}
     render();updateBar();
   });
-  [q,majorSel,typeSel,sortSel].forEach(function(el){el.addEventListener('input',render);});
-  [fPub,fNoreq,fCbt].forEach(function(el){el.addEventListener('change',render);});
+  [q,majorSel,typeSel,sortSel,industrySel,studySel].forEach(function(el){el.addEventListener('input',render);});
+  fPub.addEventListener('change',render);
 })();
 """
 
@@ -1442,6 +1489,11 @@ table.spec th{width:34%;background:#f2f5fa;color:#3a4757;font-weight:600;white-s
 .updated{font-size:.82rem;color:#6b7682;margin:.1em 0 .6em}.updated .muted{margin-left:.4em}
 .tag-chip{display:inline-block;background:#eef4ff;color:#0d47a1;border:1px solid #cfe0fb;border-radius:12px;padding:2px 10px;margin:2px 4px 2px 0;font-size:.82rem}
 .tag-ind{background:#eafaf1;color:#1b6e3c;border-color:#bfe6cf}
+.tagfilter{display:flex;flex-wrap:wrap;align-items:center;gap:7px;margin:2px 0 10px}
+.tagfilter .tf-label{font-size:.85rem;color:#43505f;margin-right:2px}
+.tf-chip{background:#fff;color:#0d47a1;border:1px solid #cfe0fb;border-radius:999px;padding:5px 13px;font-size:.85rem;cursor:pointer;transition:.12s}
+.tf-chip:hover{background:#eef4ff}
+.tf-chip.on{background:#0d47a1;color:#fff;border-color:#0d47a1}
 .diff-badge{display:inline-block;font-weight:700;font-size:.82rem;padding:2px 9px;border-radius:11px;color:#fff}
 .diff-veryhard{background:#b71c1c}.diff-hard{background:#e65100}.diff-mid{background:#f9a825;color:#3a2c00}
 .diff-easy{background:#388e3c}.diff-veryeasy{background:#1565c0}
