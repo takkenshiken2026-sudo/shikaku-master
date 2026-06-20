@@ -40,6 +40,20 @@ SYNONYMS = {
     "経理・財務": "経理・財務担当",
 }
 
+# 分野(major_category)の補正。派生値（ひも付く資格の最頻分野）が明白に誤るものだけを
+# 手動上書きする（保守的）。事務系がIT・語学に寄る等の誤分類を是正。
+MAJOR_OVERRIDE = {
+    "一般事務": "商業・販売・事務",
+    "営業事務": "商業・販売・事務",
+    "オフィスワーク": "商業・販売・事務",
+    "データ入力・集計スタッフ": "商業・販売・事務",
+    "事務職": "商業・販売・事務",
+    "貿易事務": "商業・販売・事務",
+    "秘書": "商業・販売・事務",
+    "営業職": "商業・販売・事務",
+    "経理事務": "会計・金融・経営",
+}
+
 PAREN_RE = re.compile(r"[（(]\s*(.*?)\s*[）)]\s*$")
 
 
@@ -139,7 +153,8 @@ def main():
     occ_rows = []
     for name in sorted(occ_slugs, key=lambda n: (-len(occ_slugs[n]), n)):
         oid = name_to_id[name]
-        mc = occ_majors[name].most_common(1)[0][0] if occ_majors[name] else ""
+        mc = MAJOR_OVERRIDE.get(name) or (
+            occ_majors[name].most_common(1)[0][0] if occ_majors[name] else "")
         occ_rows.append({
             "occ_id": oid,
             "name": name,

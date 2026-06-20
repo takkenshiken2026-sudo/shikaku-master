@@ -1400,8 +1400,11 @@ def build_occupation_pages(indexable):
             '推奨かは職種・求人により異なります。詳細は各資格・求人の公式情報でご確認ください。</p>'
         )
         noindex = not occ_is_indexable(occ_id, shown)
-        desc = (f"{name}に活かせる資格を{shown}件まとめました。"
-                f"{name}を目指すうえで役立つ資格の受験料・合格率・受験資格・公式情報を一覧で確認できます。")
+        if desc_txt:
+            desc = desc_txt[:118]
+        else:
+            desc = (f"{name}に活かせる資格を{shown}件まとめました。"
+                    f"{name}を目指すうえで役立つ資格の受験料・合格率・受験資格・公式情報を一覧で確認できます。")
         breadcrumb = {
             "@context": "https://schema.org", "@type": "BreadcrumbList",
             "itemListElement": [
