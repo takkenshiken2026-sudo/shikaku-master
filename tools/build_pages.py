@@ -191,6 +191,69 @@ def load_occupation_descriptions():
 OCC_DESC = load_occupation_descriptions()
 
 
+# ── おすすめ教材・講座（アフィリエイト対応。本体DBとは分離）──
+MATERIALS_CSV = ROOT / "data" / "materials.csv"
+
+
+def load_materials():
+    """slug → [教材dict]。編集部選定の学習教材・講座。affiliate列があれば収益リンク。"""
+    if not MATERIALS_CSV.exists():
+        return {}
+    out = {}
+    with MATERIALS_CSV.open(encoding="utf-8") as f:
+        for r in csv.DictReader(f):
+            s = (r.get("slug") or "").strip()
+            title = (r.get("title") or "").strip()
+            if not s or not title:
+                continue
+            out.setdefault(s, []).append({
+                "kind": (r.get("kind") or "教材").strip(),
+                "title": title,
+                "provider": (r.get("provider") or "").strip(),
+                "url": (r.get("url") or "").strip(),
+                "affiliate": (r.get("affiliate") or "").strip(),
+                "note": (r.get("note") or "").strip(),
+            })
+    return out
+
+
+MATERIALS = load_materials()
+
+
+def materials_section_html(slug):
+    """おすすめ教材・講座セクション。アフィリンクがある場合は広告表示(景表法/ステマ規制)と
+    rel=sponsored を自動付与する。教材が無ければ空文字。"""
+    mats = MATERIALS.get(slug) or []
+    if not mats:
+        return ""
+    has_aff = any(m["affiliate"] for m in mats)
+    items = []
+    for m in mats:
+        link = m["affiliate"] or m["url"]
+        rel = "sponsored nofollow noopener" if m["affiliate"] else "nofollow noopener"
+        if link:
+            title_html = (f'<a href="{esc(link)}" rel="{rel}" target="_blank">'
+                          f'{esc(m["title"])} ↗</a>')
+        else:
+            title_html = esc(m["title"])
+        prov = f' <span class="muted">／{esc(m["provider"])}</span>' if m["provider"] else ""
+        note = f'<span class="mat-note">{esc(m["note"])}</span>' if m["note"] else ""
+        items.append(f'<li><span class="mat-kind">{esc(m["kind"])}</span>'
+                     f'<span class="mat-body">{title_html}{prov}{note}</span></li>')
+    pr = '<span class="pr-badge">PR</span>' if has_aff else ""
+    disclosure = (
+        '<p class="ad-disclosure">本セクションには広告（アフィリエイトリンク）を含みます。'
+        'リンクを経由して購入・申込みされた場合、当サイトが収益を得ることがあります。'
+        '掲載は編集部の選定によるもので、内容の正確性・価格は各提供元の公式情報をご確認ください。</p>'
+        if has_aff else "")
+    return (
+        f'<section class="materials-sec"><h2>おすすめテキスト・講座{pr}</h2>'
+        f'{disclosure}'
+        f'<ul class="materials">{"".join(items)}</ul>'
+        '<p class="muted mat-foot">編集部が選んだ学習教材・講座の例です。最新の価格・改訂版・'
+        '開講状況は各販売元・提供元の公式情報で必ずご確認ください。</p></section>')
+
+
 def applicants_num(r):
     """受験者数の文字列から代表数（最初の「N人/N名」）を整数で。なければ None。"""
     ed = EXAM.get(r.get("slug", ""))
@@ -435,6 +498,8 @@ def build_detail(row) -> str:
                             "acceptedAnswer": {"@type": "Answer", "text": a}}
                            for q, a in qa]} if qa else None)
 
+    _mat = materials_section_html(row["slug"])
+    _mat_block = ("\n" + _mat) if _mat else ""
     body = f"""<nav class="crumbs"><a href="../index.html">トップ</a> ›
 <a href="../index.html?major={esc(major)}">{esc(major)}</a> › {esc(name)}</nav>
 <h1>{esc(name)}</h1>
@@ -442,7 +507,7 @@ def build_detail(row) -> str:
 {fact_p}
 <table class="spec">{rows_html}</table>
 {cta}{provenance}
-{careers_section}
+{careers_section}{_mat_block}
 {rel_links}
 <section class="related"><h2>同じカテゴリの資格</h2><ul id="related"></ul></section>
 <script>
@@ -1332,8 +1397,9 @@ def related_occupations(occ_id):
         for oid in SLUG_OCC_IDS.get(s, ()):
             if oid != occ_id:
                 c[oid] += 1
+    # 同点時は occ_id を最終キーにして決定的に（set反復順に依存させない）
     ranked = sorted(c.items(),
-                    key=lambda kv: (-kv[1], -OCC.get(kv[0], {}).get("cert_count", 0)))
+                    key=lambda kv: (-kv[1], -OCC.get(kv[0], {}).get("cert_count", 0), kv[0]))
     return [(oid, n) for oid, n in ranked[:8]]
 
 
@@ -1748,6 +1814,15 @@ table.spec th{width:34%;background:#f2f5fa;color:#3a4757;font-weight:600;white-s
 .occ-list{columns:2;column-gap:22px}.occ-list li{break-inside:avoid;background:#fff;border:1px solid #e6e9ef;border-radius:8px;padding:8px 11px;margin-bottom:7px}
 @media(max-width:560px){.occ-list{columns:1}}
 .jobtag{margin:.5em 0 0;font-size:.92rem}
+.materials-sec{margin:18px 0 0;border-top:1px solid #e6e9ef;padding-top:12px}
+.materials-sec h2{font-size:1.05rem;margin:.2em 0 .4em}
+.pr-badge{display:inline-block;background:#8a939e;color:#fff;font-size:.62rem;font-weight:700;padding:1px 6px;border-radius:4px;margin-left:8px;vertical-align:middle;letter-spacing:.05em}
+.ad-disclosure{font-size:.78rem;color:#6b7682;background:#fbf6ee;border:1px solid #efe1c8;border-radius:8px;padding:9px 12px;margin:0 0 10px}
+.materials{list-style:none;padding:0;margin:.2em 0}
+.materials li{display:flex;gap:10px;align-items:flex-start;background:#fff;border:1px solid #e6e9ef;border-radius:8px;padding:9px 12px;margin-bottom:7px}
+.mat-kind{flex:0 0 auto;background:#eef4ff;color:#0d47a1;border:1px solid #cfe0fb;border-radius:6px;font-size:.74rem;font-weight:700;padding:2px 8px;margin-top:2px}
+.mat-body{flex:1}.mat-note{display:block;color:#6b7682;font-size:.82rem;margin-top:2px}
+.mat-foot{font-size:.78rem;margin:.4em 0 0}
 .rel-links{margin:18px 0 0;border-top:1px solid #e6e9ef;padding-top:12px}
 .rel-links h2{font-size:1.05rem;margin:.2em 0 .3em}
 .rel-links ul{margin:.2em 0;padding-left:1.1em}.rel-links li{margin:2px 0}

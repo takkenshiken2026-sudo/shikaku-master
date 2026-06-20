@@ -41,6 +41,15 @@ table.spec th{width:34%;background:#f2f5fa;color:#3a4757;font-weight:600;white-s
 .occ-list{columns:2;column-gap:22px}.occ-list li{break-inside:avoid;background:#fff;border:1px solid #e6e9ef;border-radius:8px;padding:8px 11px;margin-bottom:7px}
 @media(max-width:560px){.occ-list{columns:1}}
 .jobtag{margin:.5em 0 0;font-size:.92rem}
+.materials-sec{margin:18px 0 0;border-top:1px solid #e6e9ef;padding-top:12px}
+.materials-sec h2{font-size:1.05rem;margin:.2em 0 .4em}
+.pr-badge{display:inline-block;background:#8a939e;color:#fff;font-size:.62rem;font-weight:700;padding:1px 6px;border-radius:4px;margin-left:8px;vertical-align:middle;letter-spacing:.05em}
+.ad-disclosure{font-size:.78rem;color:#6b7682;background:#fbf6ee;border:1px solid #efe1c8;border-radius:8px;padding:9px 12px;margin:0 0 10px}
+.materials{list-style:none;padding:0;margin:.2em 0}
+.materials li{display:flex;gap:10px;align-items:flex-start;background:#fff;border:1px solid #e6e9ef;border-radius:8px;padding:9px 12px;margin-bottom:7px}
+.mat-kind{flex:0 0 auto;background:#eef4ff;color:#0d47a1;border:1px solid #cfe0fb;border-radius:6px;font-size:.74rem;font-weight:700;padding:2px 8px;margin-top:2px}
+.mat-body{flex:1}.mat-note{display:block;color:#6b7682;font-size:.82rem;margin-top:2px}
+.mat-foot{font-size:.78rem;margin:.4em 0 0}
 .rel-links{margin:18px 0 0;border-top:1px solid #e6e9ef;padding-top:12px}
 .rel-links h2{font-size:1.05rem;margin:.2em 0 .3em}
 .rel-links ul{margin:.2em 0;padding-left:1.1em}.rel-links li{margin:2px 0}
