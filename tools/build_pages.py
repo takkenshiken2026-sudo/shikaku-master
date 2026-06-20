@@ -175,7 +175,7 @@ OCC_CERTS, SLUG_OCC_IDS = load_cert_occ()
 
 
 def load_occupation_descriptions():
-    """occ_id → 手書きの独自解説（任意・Phase3でキュレーション）。"""
+    """occ_id → {summary, work, skills}（手書きのキュレーション。work/skillsは任意）。"""
     if not OCC_DESC_CSV.exists():
         return {}
     out = {}
@@ -184,7 +184,9 @@ def load_occupation_descriptions():
             oid = (r.get("occ_id") or "").strip()
             d = (r.get("summary") or "").strip()
             if oid and d:
-                out[oid] = d
+                out[oid] = {"summary": d,
+                            "work": (r.get("work") or "").strip(),
+                            "skills": (r.get("skills") or "").strip()}
     return out
 
 
@@ -1420,13 +1422,26 @@ def build_occupation_pages(indexable):
         certs.sort(key=lambda r: (r["status"] != "published", r["major_category"], r["name"]))
         shown = len(certs)
 
-        desc_txt = OCC_DESC.get(occ_id, "")
+        dinfo = OCC_DESC.get(occ_id) or {}
+        desc_txt = dinfo.get("summary", "")
         if desc_txt:
             lead = esc(desc_txt)
         else:
             lead = (f"{esc(name)}は、関連資格の取得が役立つ職種です。"
                     f"このページでは{esc(name)}に活かせる資格を{shown}件まとめ、"
                     "各資格の受験料・合格率・受験資格・公式情報を確認できます。")
+
+        # 仕事内容・活かせるスキル（あれば。事実ベースの編集コンテンツ）
+        work_html = ""
+        if dinfo.get("work"):
+            work_html = ('<section class="occ-work"><h2>仕事内容</h2>'
+                         f'<p>{esc(dinfo["work"])}</p></section>')
+        if dinfo.get("skills"):
+            chips = "".join(
+                f'<span class="tag-chip">{esc(s.strip())}</span>'
+                for s in dinfo["skills"].split("、") if s.strip())
+            work_html += ('<section class="occ-work"><h2>活かせるスキル・知識</h2>'
+                          f'<p class="occ-skills">{chips}</p></section>')
 
         listing = (_list_items(certs, depth=1) if certs
                    else '<p class="muted">この職種に直接ひも付く掲載資格は精査中です。</p>')
@@ -1490,7 +1505,7 @@ def build_occupation_pages(indexable):
             f'<a href="index.html">職種から探す</a> › {esc(name)}</nav>'
             f"<h1>{esc(name)}に活かせる資格</h1>"
             f'<p class="lead">{lead}</p>'
-            f"{stat_html}"
+            f"{work_html}{stat_html}"
             f'<section class="careers-sec"><h2>この職種に活かせる資格（{shown}件）</h2>'
             f"{listing}</section>"
             f"{rel_html}{more_nav}"
@@ -1902,6 +1917,8 @@ table.spec th{width:34%;background:#f2f5fa;color:#3a4757;font-weight:600;white-s
 .occ-stats{margin:0 0 6px}.occ-fields{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px}
 .occ-stats-label{font-size:.84rem;color:#43505f;font-weight:600;margin-right:4px}
 .occ-stat{display:inline-block;background:#eef4ff;color:#0d47a1;border:1px solid #cfe0fb;border-radius:6px;font-size:.8rem;padding:1px 8px;margin-right:6px}
+.occ-work{margin:14px 0 0}.occ-work h2{font-size:1.05rem;margin:.2em 0 .3em}.occ-work p{margin:.2em 0}
+.occ-skills{display:flex;flex-wrap:wrap;gap:2px 0}
 .rel-links{margin:18px 0 0;border-top:1px solid #e6e9ef;padding-top:12px}
 .rel-links h2{font-size:1.05rem;margin:.2em 0 .3em}
 .rel-links ul{margin:.2em 0;padding-left:1.1em}.rel-links li{margin:2px 0}
