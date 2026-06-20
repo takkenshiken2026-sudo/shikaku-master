@@ -54,6 +54,8 @@ table.spec th{width:34%;background:#f2f5fa;color:#3a4757;font-weight:600;white-s
 .occ-stats{margin:0 0 6px}.occ-fields{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px}
 .occ-stats-label{font-size:.84rem;color:#43505f;font-weight:600;margin-right:4px}
 .occ-stat{display:inline-block;background:#eef4ff;color:#0d47a1;border:1px solid #cfe0fb;border-radius:6px;font-size:.8rem;padding:1px 8px;margin-right:6px}
+.occ-work{margin:14px 0 0}.occ-work h2{font-size:1.05rem;margin:.2em 0 .3em}.occ-work p{margin:.2em 0}
+.occ-skills{display:flex;flex-wrap:wrap;gap:2px 0}
 .rel-links{margin:18px 0 0;border-top:1px solid #e6e9ef;padding-top:12px}
 .rel-links h2{font-size:1.05rem;margin:.2em 0 .3em}
 .rel-links ul{margin:.2em 0;padding-left:1.1em}.rel-links li{margin:2px 0}
