@@ -1537,11 +1537,19 @@ def build_occupation_pages(indexable):
         f'<nav class="crumbs"><a href="../index.html">トップ</a> › 職種から探す</nav>'
         f"<h1>職種から資格を探す</h1>"
         f'<p class="lead">資格を取得して目指せる職種から、その職種に<strong>活かせる資格を逆引き</strong>'
-        f'できます。資格ごとの「活かせる仕事」を正規化した職種データベース（全{total_occ}職種）の'
-        f'うち、関連資格が複数ある{len(index_items)}職種を分野別に掲載しています。</p>'
-        f"{blocks}"
+        f'できます。資格ごとの「活かせる仕事」を正規化した職種データベース（全{total_occ}職種）。'
+        f'検索・分野で絞り込めます（下の一覧は関連資格が複数ある{len(index_items)}職種）。</p>'
+        '<div class="controls">'
+        '<input id="occ-q" type="search" placeholder="職種名で検索（例: エンジニア, 整備, 事務）">'
+        '<select id="occ-major"><option value="">分野（すべて）</option></select>'
+        '</div>'
+        '<p id="occ-status" class="muted"></p>'
+        '<ul id="occ-results" class="results occ-list" hidden></ul>'
+        f'<div id="occ-static">{blocks}</div>'
         '<p class="muted" style="margin-top:14px">※職種データは厚生労働省の職業情報提供サイト'
-        '（job tag）等を出所に各資格の関連職業を整理・正規化したものです。</p>'
+        '（job tag）等を出所に各資格の関連職業を整理・正規化したものです。'
+        '検索は全職種が対象です（関連資格1件のみの職種も含みます）。</p>'
+        '<script src="../assets/occ-search.js"></script>'
     )
     index_html = page_shell(f"職種から資格を探す｜{SITE_NAME}", idx_body, depth=1,
                             noindex=False,
@@ -1805,6 +1813,39 @@ COMPARE_JS = """(function(){
 })();
 """
 
+
+OCC_SEARCH_JS = """(function(){
+  var q=document.getElementById('occ-q'),mj=document.getElementById('occ-major'),
+      res=document.getElementById('occ-results'),stat=document.getElementById('occ-status'),
+      stat0=document.getElementById('occ-static');
+  if(!q)return;
+  var DATA=[];
+  function esc(s){return (s||'').replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+  function render(){
+    var t=(q.value||'').trim().toLowerCase(),m=mj.value;
+    if(!t&&!m){res.hidden=true;stat0.hidden=false;stat.textContent='';return;}
+    var out=DATA.filter(function(x){
+      if(m&&x.m!==m)return false;
+      if(t&&x.n.toLowerCase().indexOf(t)<0)return false;
+      return true;
+    });
+    stat0.hidden=true;res.hidden=false;
+    stat.textContent=out.length+' 件';
+    res.innerHTML=out.slice(0,400).map(function(x){
+      return '<li><a href="'+x.id+'.html">'+esc(x.n)+'</a> <span class="muted">（'+x.c+'資格）</span></li>';
+    }).join('')||'<li class="muted">該当なし</li>';
+    if(out.length>400)res.innerHTML+='<li class="muted">…他 '+(out.length-400)+' 件（絞り込んでください）</li>';
+  }
+  fetch('../data/occupations.json').then(function(r){return r.json();}).then(function(all){
+    DATA=all.slice().sort(function(a,b){return b.c-a.c||(a.n<b.n?-1:1);});
+    var mset={};all.forEach(function(x){if(x.m)mset[x.m]=1;});
+    Object.keys(mset).sort().forEach(function(v){var o=document.createElement('option');o.value=v;o.textContent=v;mj.appendChild(o);});
+    render();
+  });
+  q.addEventListener('input',render);mj.addEventListener('change',render);
+})();
+"""
+
 APP_CSS = """*{box-sizing:border-box}body{margin:0;padding-bottom:64px;font-family:system-ui,-apple-system,"Hiragino Kaku Gothic ProN",Meiryo,sans-serif;color:#1b2430;line-height:1.7;background:#f7f8fa}
 a{color:#1565c0;text-decoration:none}a:hover{text-decoration:underline}
 .site-header{background:#0d47a1;color:#fff;padding:14px 20px;display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
@@ -1974,6 +2015,14 @@ def main() -> int:
         for oid, htmlc in occ_pages.items():
             (SITE / "shoku" / f"{oid}.html").write_text(htmlc, encoding="utf-8")
         (SITE / "shoku" / "index.html").write_text(occ_index_html, encoding="utf-8")
+        # 職種の検索用JSON（全職種。索引ページのクライアント検索・分野フィルタで使用）
+        occ_payload = sorted(
+            ({"id": oid, "n": info["name"], "m": info["major_category"],
+              "c": info["cert_count"]} for oid, info in OCC.items()),
+            key=lambda x: (-x["c"], x["n"]))
+        (SITE / "data" / "occupations.json").write_text(
+            json.dumps(occ_payload, ensure_ascii=False), encoding="utf-8")
+        (SITE / "assets" / "occ-search.js").write_text(OCC_SEARCH_JS, encoding="utf-8")
 
     # sitemap.xml（index対象 = トップ・比較・分野別・特集・インデックス対象の詳細のみ）
     # noindex のページは sitemap に入れない（インデックス衛生・整合性）。
