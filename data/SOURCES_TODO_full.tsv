@@ -1,0 +1,878 @@
+slug	name	missing	official_url	authority
+c-1001	家畜人工授精師	pass_rate|applicants	https://www.maff.go.jp/j/chikusan/kikaku/230213.html	各都道府県知事(家畜改良増殖法)。所管:農林水産省
+c-1002	総括畜産コンサルタント	pass_rate|applicants	https://jlia.lin.gr.jp/next-chikusan/guide/chikusan_consul/	公益社団法人 中央畜産会
+c-1003	初生雛鑑別師	pass_rate|applicants	http://jlta.lin.gr.jp/chick/admission.html	公益社団法人 畜産技術協会
+c-1004	林業技士	pass_rate|applicants	https://www.jafta.or.jp/contents/gishi/	一般社団法人 日本森林技術協会(JAFTA)
+c-1005	技術士(農業部門)	pass_rate|applicants	https://www.engineer.or.jp/	文部科学省所管(指定試験機関:公益社団法人 日本技術士会)
+c-1006	技術士(森林部門)	pass_rate|applicants	https://www.engineer.or.jp/	文部科学省所管(指定試験機関:公益社団法人 日本技術士会)
+c-1007	技術士(水産部門)	pass_rate|applicants	https://www.engineer.or.jp/	文部科学省所管(指定試験機関:公益社団法人 日本技術士会)
+c-1101	食品衛生管理者	pass_rate|applicants	https://www.mhlw.go.jp/stf/seisakunitsuite/bunya/0000049348.html	厚生労働省(食品衛生法。登録講習会は日本食品衛生協会等)
+c-1102	食品冷凍技士	pass_rate|applicants	https://www.jsrae.or.jp/site/certificate/	公益社団法人 日本冷凍空調学会
+c-1103	食品衛生責任者	pass_rate|applicants	https://www.toshoku.or.jp/training/	各都道府県知事(保健所)。養成講習会は各都道府県の食品衛生協会等
+c-1201	ボイラー・タービン主任技術者	pass_rate|applicants	https://www.meti.go.jp/information/license/c_text30.html	経済産業省(産業保安監督部)
+c-1202	航空工場検査員	pass_rate|applicants	https://www.meti.go.jp/information/license/c_text15.html	経済産業省(航空機製造事業法)。※国家試験は2019年7月廃止
+c-1207	2級電気工事施工管理技士	applicants	https://www.fcip-shiken.jp/den2/	一般財団法人 建設業振興基金
+c-1210	電気通信主任技術者(線路)	pass_rate|applicants	https://www.dekyo.or.jp/shiken/chief/	一般財団法人 日本データ通信協会 電気通信国家試験センター
+c-1212	2級計装士	pass_rate|applicants	https://www.keiso.or.jp/sikenn/	一般社団法人 日本計装工業会
+c-1214	医薬部外品責任技術者	pass_rate|applicants	https://www.tmiph.metro.tokyo.lg.jp/k_yakuji/i-sinsa/cosmetics/sekinin/	厚生労働省/都道府県
+c-1215	医療機器責任技術者	pass_rate|applicants	https://www.mhlw.go.jp/stf/seisakunitsuite/bunya/kenkou_iryou/iyakuhin/seizou/index.html	厚生労働省(薬機法に基づく任用資格。講習は公益財団法人 医療機器センター(JAAME))
+c-1216	原子炉主任技術者	applicants	https://www.nra.go.jp/procedure/examination/index.html	原子力規制委員会
+c-1217	核燃料取扱主任者	applicants	https://www.nra.go.jp/procedure/examination/index.html	原子力規制委員会
+c-1218	第1種放射線取扱主任者	applicants	https://www.nustec.or.jp/syunin/syunin01.html	公益財団法人 原子力安全技術センター(原子力規制委員会登録試験機関)
+c-1219	第2種放射線取扱主任者	applicants	https://www.nustec.or.jp/syunin/syunin01.html	公益財団法人 原子力安全技術センター(原子力規制委員会登録試験機関)
+c-1222	甲種火薬類製造保安責任者	pass_rate|applicants	https://www.zenkakyo-ex.or.jp/hoansekininsha2.html	都道府県知事(免許交付)/試験事務:公益社団法人 全国火薬類保安協会
+c-1223	乙種火薬類製造保安責任者	pass_rate|applicants	https://www.zenkakyo-ex.or.jp/hoansekininsha2.html	都道府県知事(免許交付)/試験事務:公益社団法人 全国火薬類保安協会
+c-1224	丙種火薬類製造保安責任者	pass_rate|applicants	https://www.zenkakyo-ex.or.jp/hoansekininsha.html	都道府県知事(免許交付)/試験事務:公益社団法人 全国火薬類保安協会
+c-1225	高圧ガス製造保安責任者(甲種化学)	applicants	https://www.khk.or.jp/qualification/national_qualification/examination/examination_about.html	高圧ガス保安協会(KHK)
+c-1226	高圧ガス製造保安責任者(甲種機械)	applicants	https://www.khk.or.jp/qualification/national_qualification/examination/examination_about.html	高圧ガス保安協会(KHK)
+c-1227	高圧ガス製造保安責任者(第一種冷凍機械)	applicants	https://www.khk.or.jp/qualification/national_qualification/examination/examination_about.html	高圧ガス保安協会(KHK)
+c-1232	技術士(電気電子部門)	applicants	https://www.engineer.or.jp/	文部科学省所管(指定試験機関:公益社団法人 日本技術士会)
+c-1233	技術士(金属部門)	pass_rate	https://www.engineer.or.jp/	文部科学省所管(指定試験機関:公益社団法人 日本技術士会)
+c-1235	技術士(生物工学部門)	pass_rate|applicants	https://www.engineer.or.jp/	文部科学省所管(指定試験機関:公益社団法人 日本技術士会)
+c-1236	技術士(資源工学部門)	pass_rate|applicants	https://www.engineer.or.jp/	文部科学省所管(指定試験機関:公益社団法人 日本技術士会)
+c-1237	発破技士	pass_rate|applicants	https://www.exam.or.jp/introduction/h_shokai341/	公益財団法人 安全衛生技術試験協会(免許交付は都道府県労働局長)
+c-1238	1級電気通信工事施工管理技士	applicants	https://www.jctc.jp/exam/dentsu-1/	一般財団法人 全国建設研修センター
+c-1239	2級電気通信工事施工管理技士	applicants	https://www.jctc.jp/exam/dentsu-2/	一般財団法人 全国建設研修センター
+c-1303	木造建築士	applicants	https://www.jaeic.or.jp/shiken/mk/	公益財団法人 建築技術教育普及センター
+c-1304	建築設備士	applicants	https://www.jaeic.or.jp/shiken/bmee/index.html	公益財団法人 建築技術教育普及センター
+c-1306	2級建設機械施工技士	pass_rate|applicants	https://jcmanet-shiken.jp/	一般社団法人 日本建設機械施工協会(国土交通省所管)
+c-1307	インテリアプランナー	applicants	https://www.jaeic.or.jp/shiken/ip/	公益財団法人 建築技術教育普及センター(JAEIC)
+c-1309	商業施設士	pass_rate|applicants	http://www.jtocs.or.jp/pages/cmspace_d/cmspace_d02-04.html	公益社団法人 商業施設技術団体連合会(JTOCS)
+c-1310	建築設備検査員	pass_rate	https://www.beec.or.jp/course/mlit_course1/	国土交通大臣登録講習機関(一般財団法人 日本建築設備・昇降機センター 等)
+c-1311	昇降機等検査員	pass_rate|applicants	https://www.beec.or.jp/course/mlit_course2/	国土交通大臣登録講習機関(一般財団法人 日本建築設備・昇降機センター 等)
+c-1312	特定建築物調査員	pass_rate|applicants	https://www.mlit.go.jp/jutakukentiku/build/jutakukentiku_house_tk_000060.html	国土交通大臣登録講習機関(一般財団法人 日本建築防災協会 等)
+c-1314	設備管理士	pass_rate|applicants		
+c-1316	2級建築施工管理技士	applicants	https://www.fcip-shiken.jp/ken2/	一般財団法人 建設業振興基金
+c-1319	鉄骨製作管理技術者	pass_rate	https://www.seec.or.jp/management/overview/	一般社団法人 鉄骨技術者教育センター
+c-1320	建築CAD検定試験准1級	applicants	https://www.aacl.gr.jp/22jisshi-youkou01.html	一般社団法人 全国建築CAD連盟(AACL)
+c-1321	建築CAD検定試験2級	applicants	https://www.aacl.gr.jp/22jisshi-youkou01.html	一般社団法人 全国建築CAD連盟(AACL)
+c-1322	建築CAD検定試験3級	applicants	https://www.aacl.gr.jp/22jisshi-youkou01.html	一般社団法人 全国建築CAD連盟(AACL)
+c-1323	建設業経理士1級	applicants	https://www.keiri-kentei.jp/exam/	一般財団法人 建設業振興基金
+c-1324	建設業経理士2級	applicants	https://www.keiri-kentei.jp/exam/	一般財団法人 建設業振興基金
+c-1325	建設業経理事務士3級	applicants	https://www.keiri-kentei.jp/exam/	一般財団法人 建設業振興基金
+c-1326	建設業経理事務士4級	applicants	https://www.keiri-kentei.jp/exam/	一般財団法人 建設業振興基金
+c-1401	第1種ダム水路主任技術者	pass_rate|applicants	https://www.meti.go.jp/information/license/c_text22.html	経済産業省(産業保安監督部)
+c-1402	第2種ダム水路主任技術者	pass_rate|applicants	https://www.meti.go.jp/information/license/c_text22.html	経済産業省(産業保安監督部)
+c-1403	ダム管理主任技術者	pass_rate|applicants	https://www.meti.go.jp/information/license/c_text22.html	経済産業省(産業保安監督部)
+c-1405	2級土木施工管理技士	applicants	https://www.jctc.jp/exam/guide/dbk-2/	一般財団法人 全国建設研修センター
+c-1406	1級造園施工管理技士	applicants	https://www.jctc.jp/exam/zouen-1/	一般財団法人 全国建設研修センター(国土交通大臣指定試験機関)
+c-1501	システム監査技術者	applicants	https://www.ipa.go.jp/shiken/kubun/au.html	独立行政法人 情報処理推進機構(IPA)
+c-1502	ネットワークスペシャリスト	applicants	https://www.ipa.go.jp/shiken/kubun/nw.html	独立行政法人 情報処理推進機構(IPA)
+c-1503	システムアーキテクト	applicants	https://www.ipa.go.jp/shiken/kubun/sa.html	独立行政法人 情報処理推進機構(IPA)
+c-1506	技術士(情報工学部門)	applicants	https://www.engineer.or.jp/	文部科学省所管(指定試験機関:公益社団法人 日本技術士会)
+c-1508	プロジェクトマネージャ	applicants	https://www.ipa.go.jp/shiken/kubun/pm.html	独立行政法人 情報処理推進機構(IPA)
+c-1510	データベーススペシャリスト	applicants	https://www.ipa.go.jp/shiken/kubun/db.html	独立行政法人 情報処理推進機構(IPA)
+c-1511	ITサービスマネージャ	applicants	https://www.ipa.go.jp/shiken/kubun/sm.html	独立行政法人 情報処理推進機構(IPA)
+c-1512	エンベデッドシステムスペシャリスト	pass_rate|applicants	https://www.ipa.go.jp/shiken/kubun/es.html	独立行政法人 情報処理推進機構(IPA)
+c-1516	マイクロソフト認定プロフェッショナル(MCP)	pass_rate|applicants	https://learn.microsoft.com/ja-jp/credentials/	日本マイクロソフト株式会社
+c-1517	マイクロソフト認定ソリューションエキスパート(MCSE)	pass_rate|applicants	https://learn.microsoft.com/ja-jp/credentials/	日本マイクロソフト株式会社
+c-1518	シスコ技術者認定	pass_rate|applicants	https://www.cisco.com/c/ja_jp/training-events/training-certifications/exams.html	シスコシステムズ合同会社
+c-1519	オラクルマスター	pass_rate|applicants	https://www.oracle.com/jp/education/certification/	日本オラクル株式会社(Oracle University)
+c-1520	Java認定資格	pass_rate|applicants	https://www.oracle.com/jp/education/certification/	日本オラクル株式会社(Oracle University)
+c-1527	ITコーディネータ	pass_rate|applicants	https://www.itc.or.jp/	特定非営利活動法人 ITコーディネータ協会
+c-1539	ITストラテジスト(ST)	applicants	https://www.ipa.go.jp/shiken/kubun/st.html	独立行政法人 情報処理推進機構(IPA)
+c-1541	Linux技術者認定資格	pass_rate|applicants	https://linuc.org/	特定非営利活動法人 LPI-Japan
+c-1544	VBAエキスパート	pass_rate|applicants	https://vbae.odyssey-com.co.jp/	株式会社オデッセイコミュニケーションズ
+c-1545	JavaTMプログラミング能力認定1級	pass_rate|applicants	https://www.sikaku.gr.jp/js/cpjv/jv/	株式会社サーティファイ
+c-1546	JavaTMプログラミング能力認定2級	pass_rate|applicants	https://www.sikaku.gr.jp/js/cpjv/jv/	株式会社サーティファイ
+c-1547	JavaTMプログラミング能力認定3級	pass_rate|applicants	https://www.sikaku.gr.jp/js/cpjv/jv/	株式会社サーティファイ
+c-1548	C言語プログラミング能力認定試験1級	applicants	https://www.sikaku.gr.jp/js/cpjv/cp/	株式会社サーティファイ
+c-1549	C言語プログラミング能力認定試験2級	applicants	https://www.sikaku.gr.jp/js/cpjv/cp/	株式会社サーティファイ
+c-1550	C言語プログラミング能力認定試験3級	applicants	https://www.sikaku.gr.jp/js/cpjv/cp/	株式会社サーティファイ
+c-1551	Webデザイナー検定(ベーシック)	applicants	https://www.cgarts.or.jp/kentei/wd/	公益財団法人 画像情報教育振興協会(CG-ARTS)
+c-1552	Webデザイナー検定(エキスパート)	applicants	https://www.cgarts.or.jp/kentei/wd/	公益財団法人 画像情報教育振興協会(CG-ARTS)
+c-1553	Webクリエイター能力認定試験(上級)	pass_rate|applicants	https://www.sikaku.gr.jp/web/wc/	株式会社サーティファイ
+c-1554	Webクリエイター能力認定試験(初級)	pass_rate|applicants	https://www.sikaku.gr.jp/web/wc/	株式会社サーティファイ
+c-1555	ウェブデザイン技能士	pass_rate|applicants	https://www.webdesign.gr.jp/	特定非営利活動法人 インターネットスキル認定普及協会
+c-1556	ホームページ作成検定	pass_rate|applicants	https://www.goukaku.ne.jp/test_home.html	日本情報処理検定協会(日検)
+c-1557	CGクリエイター検定	pass_rate|applicants	https://www.cgarts.or.jp/kentei/cg/	公益財団法人 画像情報教育振興協会(CG-ARTS)
+c-1558	DTP検定	pass_rate|applicants	https://dtpkentei.jp/	株式会社ボーンデジタル(全日本能率連盟登録資格)
+c-1563	Webクリエイター能力認定エキスパート	applicants	https://www.sikaku.gr.jp/web/wc/	株式会社サーティファイ
+c-1564	Webクリエイター能力認定スタンダード	applicants	https://www.sikaku.gr.jp/web/wc/	株式会社サーティファイ
+c-1603	エネルギー管理士	applicants	https://www.eccj.or.jp/mgr1/test_guide/index.html	一般財団法人 省エネルギーセンター(ECCJ)
+c-1607	エックス線作業主任者	pass_rate|applicants	https://www.exam.or.jp/	公益財団法人 安全衛生技術試験協会(免許交付は都道府県労働局長)
+c-1608	ガンマ線透過写真撮影作業主任者	pass_rate|applicants	https://www.exam.or.jp/	公益財団法人 安全衛生技術試験協会(免許交付は都道府県労働局長)
+c-1609	毒物劇物取扱責任者	applicants	https://www.hokeniryo.metro.tokyo.lg.jp/anzen/iyaku/sonota/d_g/shiken	各都道府県(知事)。例:東京都(保健医療局)/大阪は関西広域連合
+c-1610	甲種火薬類取扱保安責任者	pass_rate|applicants	https://www.zenkakyo-ex.or.jp/hoansekininsha.html	都道府県知事(免許交付)/試験事務:公益社団法人 全国火薬類保安協会
+c-1611	乙種火薬類取扱保安責任者	pass_rate|applicants	https://www.zenkakyo-ex.or.jp/hoansekininsha.html	都道府県知事(免許交付)/試験事務:公益社団法人 全国火薬類保安協会
+c-1612	下水道管理技術認定(処理施設)	pass_rate|applicants		
+c-1614	一般廃棄物処理施設技術管理士	pass_rate|applicants	https://www.jesc.or.jp/training/tabid/121/Default.aspx	廃棄物処理法第21条。講習は一般財団法人 日本環境衛生センター(JESC)
+c-1615	産業廃棄物処理施設技術管理士	pass_rate|applicants	https://www.jesc.or.jp/training/tabid/121/Default.aspx	廃棄物処理法第21条。講習は日本環境衛生センター(JESC)/日本産業廃棄物処理振興センター(JWセンター)等
+c-1616	地質調査技士(区分なし又は旧「土質」)	pass_rate|applicants	https://www.zenchiren.or.jp/geo_comp/	一般社団法人 全国地質調査業協会連合会(全地連)
+c-1617	地質調査技士(区分なし又は旧「岩盤」)	pass_rate|applicants	https://www.zenchiren.or.jp/geo_comp/	一般社団法人 全国地質調査業協会連合会(全地連)
+c-1618	技術士(経営工学部門)	pass_rate|applicants	https://www.engineer.or.jp/	文部科学省所管(指定試験機関:公益社団法人 日本技術士会)
+c-1619	技術士(衛生工学部門)	pass_rate|applicants	https://www.engineer.or.jp/	文部科学省所管(指定試験機関:公益社団法人 日本技術士会)
+c-1620	技術士(環境部門)	applicants	https://www.engineer.or.jp/	文部科学省所管(指定試験機関:公益社団法人 日本技術士会)
+c-1621	技術士(応用理学部門)	pass_rate|applicants	https://www.engineer.or.jp/	文部科学省所管(指定試験機関:公益社団法人 日本技術士会)
+c-1625	下水道第2種技術検定	applicants	https://www.jswa.go.jp/kentei/shikengaiyo.html	地方共同法人 日本下水道事業団(JS)
+c-1801	保健師	applicants	https://www.mhlw.go.jp/kouseiroudoushou/shikaku_shiken/hokenshi/	厚生労働省
+c-1802	助産師	applicants	https://www.mhlw.go.jp/kouseiroudoushou/shikaku_shiken/josanpu/	厚生労働省
+c-1901	臨床検査技師	applicants	https://www.mhlw.go.jp/kouseiroudoushou/shikaku_shiken/rinshoukensagishi/	厚生労働省
+c-1902	衛生検査技師	pass_rate|applicants	https://www.mhlw.go.jp/	厚生労働省
+c-1908	診療放射線技師	applicants	https://www.mhlw.go.jp/kouseiroudoushou/shikaku_shiken/shinryouhoushasengishi/	厚生労働省
+c-1909	視能訓練士	applicants	https://www.mhlw.go.jp/kouseiroudoushou/shikaku_shiken/shinoukunrenshi/	厚生労働省
+c-1910	言語聴覚士	applicants	https://www.mhlw.go.jp/kouseiroudoushou/shikaku_shiken/gengochoukakushi/	厚生労働省(試験事務:医療研修推進財団)
+c-2002	栄養士	pass_rate|applicants	https://laws.e-gov.go.jp/law/322AC0000000245	都道府県知事(免許交付)/養成施設指定は厚生労働大臣
+c-2105	整体師	pass_rate|applicants		
+c-2107	リフレクソロジスト資格	pass_rate|applicants		
+c-2108	カイロプラクティック資格	pass_rate|applicants		
+c-2204	衛生工学衛生管理者	pass_rate|applicants	https://www.jisha.or.jp/edu/course/list/8220_eiko.html	中央労働災害防止協会(都道府県労働局長登録教習機関)
+c-2304	ホームヘルパー1級	pass_rate|applicants		
+c-2305	ホームヘルパー2級	pass_rate|applicants		
+c-2306	ホームヘルパー3級	pass_rate|applicants		
+c-2310	福祉住環境コーディネーター検定	applicants	https://kentei.tokyo-cci.or.jp/fukushi/exam-info/	東京商工会議所
+c-2311	介護職員基礎研修修了者	pass_rate|applicants		
+c-2312	福祉用具専門相談員	pass_rate|applicants	https://www.mhlw.go.jp/	都道府県知事指定の講習事業者(制度所管:厚生労働省)
+c-2313	介護職員初任者研修修了者	pass_rate|applicants	https://www.mhlw.go.jp/file/06-Seisakujouhou-12300000-Roukenkyoku/kaigoinnyouseikennsyuu.pdf	厚生労働省(都道府県指定の研修事業者が実施)
+c-2314	介護職員実務者研修修了者	pass_rate|applicants	https://www.mhlw.go.jp/	厚生労働省(都道府県指定の研修事業者が実施)
+c-2401	司法試験	applicants	https://www.moj.go.jp/jinji/shihoushiken/jinji08_00286.html	法務省 司法試験委員会
+c-2407	知的財産管理技能士1級	pass_rate	https://www.kentei-info-ip-edu.org/exam/	知的財産教育協会
+c-2504	証券アナリスト(CMA)	pass_rate|applicants	https://www.saa.or.jp/	公益社団法人 日本証券アナリスト協会
+c-2505	ファイナンシャルプランナー(CFP/AFP)	pass_rate|applicants		
+c-2512	アクチュアリー	pass_rate|applicants	https://www.actuaries.jp/	公益社団法人 日本アクチュアリー会
+c-2513	経営労務コンサルタント	pass_rate|applicants		
+c-2514	経営コンサルタント(日本生産性本部認定)	pass_rate|applicants		
+c-2515	1級ファイナンシャル・プランニング技能士	pass_rate|applicants	https://www.kinzai.or.jp/ginou/fp/1kyu/index.html	一般社団法人 金融財政事情研究会(きんざい)/NPO法人 日本FP協会
+c-2517	3級ファイナンシャル・プランニング技能士	applicants	https://www.jafp.or.jp/exam/	日本FP協会／金融財政事情研究会(きんざい)・国家検定(厚労大臣指定)
+c-2601	幼稚園教諭免許(専修・1種・2種)	pass_rate|applicants	https://www.mext.go.jp/a_menu/shotou/kyoin/index.htm	文部科学省/都道府県教育委員会
+c-2602	小学校教諭免許(専修・1種・2種)	pass_rate|applicants	https://www.mext.go.jp/a_menu/shotou/kyoin/index.htm	文部科学省/都道府県教育委員会
+c-2603	中学校教諭免許(専修・1種・2種)	pass_rate|applicants	https://www.mext.go.jp/a_menu/shotou/kyoin/index.htm	文部科学省/都道府県教育委員会
+c-2604	高等学校教諭免許(専修・1種)	pass_rate|applicants	https://www.mext.go.jp/a_menu/shotou/kyoin/index.htm	文部科学省/都道府県教育委員会
+c-2608	養護教諭免許(専修・1種・2種)	pass_rate|applicants	https://www.mext.go.jp/a_menu/shotou/kyoin/index.htm	文部科学省/都道府県教育委員会
+c-2609	特別支援学校教諭免許(専修・1種・2種)	pass_rate|applicants	https://www.mext.go.jp/a_menu/shotou/kyoin/index.htm	文部科学省/都道府県教育委員会
+c-2610	社会教育主事	pass_rate|applicants	https://www.mext.go.jp/a_menu/01_l/08052911/1346119.htm	文部科学省
+c-2701	司書	pass_rate|applicants	https://www.mext.go.jp/a_menu/shougai/gakugei/shisho/index.html	文部科学省
+c-2702	司書補	pass_rate|applicants	https://www.mext.go.jp/a_menu/shougai/gakugei/shisho/index.html	文部科学省
+c-2703	学芸員	pass_rate|applicants	https://www.mext.go.jp/a_menu/01_l/08052911/1346118.htm	文部科学省
+c-2704	学芸員補	pass_rate|applicants	https://www.mext.go.jp/a_menu/01_l/08052911/1346118.htm	文部科学省
+c-2801	看護教員	pass_rate|applicants		
+c-2802	職業訓練指導員免許	pass_rate|applicants	https://www.mhlw.go.jp/stf/seisakunitsuite/bunya/koyou_roudou/jinzaikaihatsu/shidoin-rute.html	都道府県知事が免許交付(制度所管:厚生労働省。職業能力開発促進法)
+c-2803	指定自動車教習所指導員	pass_rate|applicants		
+c-2804	専修学校教員認定	pass_rate|applicants	https://www.mext.go.jp/a_menu/shougai/senshuu/1380250.htm	文部科学省
+c-2805	専修学校准教員認定	pass_rate|applicants	https://www.mext.go.jp/a_menu/shougai/senshuu/1380250.htm	文部科学省
+c-2811	日本語教師養成講座修了(420時間)	pass_rate|applicants		
+c-2813	日本語教育能力検定試験	applicants	https://www.jees.or.jp/jltct/	公益財団法人 日本国際教育支援協会(JEES)
+c-2901	社会体育指導者(地域スポーツ指導者)(初級)	pass_rate|applicants		
+c-2902	社会体育指導者(地域スポーツ指導者)(中級)	pass_rate|applicants		
+c-2903	社会体育指導者(地域スポーツ指導者)(上級)	pass_rate|applicants		
+c-2904	社会体育指導者(競争力向上指導者)(初級)	pass_rate|applicants		
+c-2905	社会体育指導者(競争力向上指導者)(中級)	pass_rate|applicants		
+c-2906	社会体育指導者(競争力向上指導者)(上級)	pass_rate|applicants		
+c-2907	社会体育指導者(商業スポーツ指導)(初級)	pass_rate|applicants		
+c-2908	社会体育指導者(商業スポーツ指導)(中級)	pass_rate|applicants		
+c-2909	社会体育指導者(商業スポーツ指導)(上級)	pass_rate|applicants		
+c-2910	スポーツプログラマー	pass_rate|applicants		
+c-2911	フィットネストレーナー	pass_rate|applicants		
+c-2912	健康運動指導士	pass_rate|applicants	https://www.health-net.or.jp/shikaku/shidoushi/annai.html	公益財団法人 健康・体力づくり事業財団
+c-2913	健康運動実践指導者	pass_rate|applicants	https://www.health-net.or.jp/shikaku/shidousya/youryou.html	公益財団法人 健康・体力づくり事業財団
+c-2914	レクリエーション・インストラクター/コーディネーター	pass_rate|applicants	https://shikaku.recreation.or.jp/	公益財団法人 日本レクリエーション協会
+c-2915	エアロビエクササイズインストラクター	pass_rate|applicants		
+c-2916	健康管理士一般指導員	pass_rate|applicants	https://www.healthcare.or.jp/test/	特定非営利活動法人 日本成人病予防協会
+c-2917	健康管理士上級指導員	pass_rate|applicants	https://www.japa.org/kkkai/upper/	特定非営利活動法人 日本成人病予防協会
+c-3001	1級フラワー装飾技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-3002	2級フラワー装飾技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-3003	カラーコーディネーター(1~2級)	applicants	https://kentei.tokyo-cci.or.jp/color/	東京商工会議所
+c-3005	POP検定(等級なし又は旧1級)	pass_rate|applicants	https://www.jcinet.or.jp/examination/pop/	公益財団法人 公開経営指導協会
+c-3006	POP検定(等級なし又は旧2級)	pass_rate|applicants	https://www.jcinet.or.jp/examination/pop/	公益財団法人 公開経営指導協会
+c-3007	POP検定(等級なし又は旧3級)	pass_rate|applicants	https://www.jcinet.or.jp/examination/pop/	公益財団法人 公開経営指導協会
+c-3009	CGクリエイター検定エキスパート	pass_rate|applicants	https://www.cgarts.or.jp/kentei/cg/	公益財団法人 画像情報教育振興協会(CG-ARTS)
+c-3010	CGクリエイター検定ベーシック	pass_rate|applicants	https://www.cgarts.or.jp/kentei/cg/	公益財団法人 画像情報教育振興協会(CG-ARTS)
+c-3012	1級園芸装飾技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-3013	2級園芸装飾技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-3014	3級園芸装飾技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-3015	MIDI検定1級	pass_rate|applicants	https://www.midilicense.com/	一般社団法人 音楽電子事業協会(AMEI)
+c-3016	MIDI検定2級	pass_rate|applicants	https://www.midilicense.com/	一般社団法人 音楽電子事業協会(AMEI)
+c-3017	MIDI検定3級	pass_rate|applicants	https://www.midilicense.com/	一般社団法人 音楽電子事業協会(AMEI)
+c-3104	キャリアカウンセラー/アドバイザー	pass_rate|applicants		
+c-3105	キッチンスペシャリスト	applicants	https://www.interior.or.jp/examination/ks/overview/	公益社団法人 インテリア産業協会
+c-3106	消費生活アドバイザー	pass_rate|applicants	https://www.nissankyo.or.jp/adviser/siken/test.html	一般財団法人 日本産業協会
+c-3107	1級キャリアコンサルティング技能士	pass_rate|applicants	https://www.career-kentei.org/about/	特定非営利活動法人 キャリアコンサルティング協議会
+c-3108	2級キャリアコンサルティング技能士	pass_rate|applicants	https://www.career-kentei.org/about/	特定非営利活動法人 キャリアコンサルティング協議会
+c-3109	心理カウンセラー	pass_rate|applicants		
+c-3111	シニア産業カウンセラー	pass_rate|applicants	https://www.counselor.or.jp/	一般社団法人 日本産業カウンセラー協会
+c-3112	キャリアコンサルタント	applicants	https://www.career-shiken.org/	国家資格(登録試験機関:キャリアコンサルティング協議会/日本キャリア開発協会(JCDA))
+c-3202	不動産鑑定士補	pass_rate|applicants		
+c-3204	土地改良換地士	pass_rate|applicants	https://www.maff.go.jp/j/nousin/kikaku/kantisi/index.html	農林水産省(農村振興局土地改良企画課)
+c-3205	土地区画整理士	applicants	https://www.jctc.jp/exam/tochikukaku/	国土交通省(指定検定機関:一般財団法人 全国建設研修センター)
+c-3206	不動産コンサルティング技能登録	pass_rate|applicants		
+c-3208	マンションリフォームマネジャー	pass_rate	https://www.chord.or.jp/course/reform_manager/	公益財団法人 住宅リフォーム・紛争処理支援センター
+c-3307	実用英語技能検定1級	pass_rate|applicants	https://www.eiken.or.jp/eiken/exam/grade_1/	公益財団法人 日本英語検定協会
+c-3308	実用英語技能検定準1級	pass_rate|applicants	https://www.eiken.or.jp/eiken/exam/grade_p1/	公益財団法人 日本英語検定協会
+c-3309	実用英語技能検定2級	pass_rate|applicants	https://www.eiken.or.jp/eiken/exam/grade_2/	公益財団法人 日本英語検定協会
+c-3313	工業英語能力検定1級	pass_rate|applicants	https://jstc.jma.or.jp/	一般社団法人 日本能率協会(技術英検・旧 日本工業英語協会)
+c-3314	工業英語能力検定2級	pass_rate|applicants	https://jstc.jma.or.jp/	一般社団法人 日本能率協会(技術英検・旧 日本工業英語協会)
+c-3315	工業英語能力検定3級	pass_rate|applicants	https://jstc.jma.or.jp/	一般社団法人 日本能率協会(技術英検・旧 日本工業英語協会)
+c-3316	工業英語能力検定4級	pass_rate|applicants	https://jstc.jma.or.jp/	一般社団法人 日本能率協会(技術英検・旧 日本工業英語協会)
+c-3322	TOEIC(730点~)	applicants	https://www.iibc-global.org/toeic/test/lr.html	一般財団法人 国際ビジネスコミュニケーション協会(IIBC)
+c-3323	TOEIC(600点~)	applicants	https://www.iibc-global.org/toeic/test/lr.html	一般財団法人 国際ビジネスコミュニケーション協会(IIBC)
+c-3324	TOEIC(470点~)	applicants	https://www.iibc-global.org/toeic/test/lr.html	一般財団法人 国際ビジネスコミュニケーション協会(IIBC)
+c-3325	実用フランス語技能検定1級	pass_rate|applicants	https://apefdapf.org/dapf/info/examens	公益財団法人 フランス語教育振興協会(APEF)
+c-3326	実用フランス語技能検定2級	applicants	https://apefdapf.org/dapf/info/examens	公益財団法人 フランス語教育振興協会(APEF)
+c-3329	中国語検定1級	applicants	https://www.chuken.gr.jp/	一般財団法人 日本中国語検定協会
+c-3330	中国語検定2級	pass_rate|applicants	https://www.chuken.gr.jp/	一般財団法人 日本中国語検定協会
+c-3331	ハングル能力検定1級	pass_rate|applicants	https://www.hangul.or.jp/	特定非営利活動法人 ハングル能力検定協会
+c-3332	ハングル能力検定2級	pass_rate|applicants	https://www.hangul.or.jp/	特定非営利活動法人 ハングル能力検定協会
+c-3333	ビジネス中国語検定(A・B)	pass_rate|applicants	https://www.bct-jp.com/	日本BCT・YCT事務局(中国教育部系)
+c-3334	HSK漢語水平考試	pass_rate|applicants	https://www.hskj.jp/	HSK日本実施委員会(中国教育部 中外語言交流合作中心)
+c-3335	日商ビジネス英語検定1級	pass_rate|applicants	https://www.kentei.ne.jp/english	日本商工会議所・各地商工会議所
+c-3336	日商ビジネス英語検定2級	pass_rate|applicants	https://www.kentei.ne.jp/english	日本商工会議所・各地商工会議所
+c-3337	日商ビジネス英語検定3級	pass_rate|applicants	https://www.kentei.ne.jp/english	日本商工会議所・各地商工会議所
+c-3338	全商英語検定1級	pass_rate	https://zensho.or.jp/examination/english/	公益財団法人 全国商業高等学校協会
+c-3339	全商英語検定2級	pass_rate|applicants	https://zensho.or.jp/examination/english/	公益財団法人 全国商業高等学校協会
+c-3401	秘書検定1級	applicants	https://jitsumu-ginou-kentei.jp/HS/guide	公益財団法人 実務技能検定協会
+c-3404	CBS(国際秘書)検定	pass_rate|applicants	https://www.hishokyokai.or.jp/cbs/	一般社団法人 日本秘書協会
+c-3405	医療秘書技能検定1級	pass_rate|applicants	https://www.medical-secretary.jp/	一般社団法人 医療秘書教育全国協議会
+c-3406	医療秘書技能検定2級	pass_rate|applicants	https://www.medical-secretary.jp/	一般社団法人 医療秘書教育全国協議会
+c-3407	医療秘書技能検定3級	pass_rate|applicants	https://www.medical-secretary.jp/	一般社団法人 医療秘書教育全国協議会
+c-3501	速記技能検定	pass_rate|applicants	https://sokki.or.jp/kentei/ginou/	公益社団法人 日本速記協会
+c-3503	毛筆書写技能検定1級	pass_rate|applicants	https://www.nihon-shosha.or.jp/brush.html	日本書写技能検定協会(文部科学省後援)
+c-3504	毛筆書写技能検定2級	pass_rate|applicants	https://www.nihon-shosha.or.jp/brush.html	日本書写技能検定協会(文部科学省後援)
+c-3505	毛筆書写技能検定3級	pass_rate|applicants	https://www.nihon-shosha.or.jp/brush.html	日本書写技能検定協会(文部科学省後援)
+c-3506	毛筆書写技能検定4級	pass_rate|applicants	https://www.nihon-shosha.or.jp/brush.html	日本書写技能検定協会(文部科学省後援)
+c-3507	硬筆書写技能検定1級	pass_rate|applicants	https://www.nihon-shosha.or.jp/pen.html	日本書写技能検定協会(文部科学省後援)
+c-3508	硬筆書写技能検定2級	pass_rate|applicants	https://www.nihon-shosha.or.jp/pen.html	日本書写技能検定協会(文部科学省後援)
+c-3509	硬筆書写技能検定3級	pass_rate|applicants	https://www.nihon-shosha.or.jp/pen.html	日本書写技能検定協会(文部科学省後援)
+c-3510	硬筆書写技能検定4級	pass_rate|applicants	https://www.nihon-shosha.or.jp/pen.html	日本書写技能検定協会(文部科学省後援)
+c-3511	日本漢字能力検定1級	applicants	https://www.kanken.or.jp/kanken/grades/overview/	公益財団法人 日本漢字能力検定協会
+c-3513	ビジネス文書検定1級	applicants	https://jitsumu-ginou-kentei.jp/BB/	公益財団法人 実務技能検定協会
+c-3514	ビジネス文書検定2級	applicants	https://jitsumu-ginou-kentei.jp/BB/	公益財団法人 実務技能検定協会
+c-3515	ビジネス文書検定3級	applicants	https://jitsumu-ginou-kentei.jp/BB/	公益財団法人 実務技能検定協会
+c-3521	ビジネス能力検定ジョブパス1級	pass_rate|applicants	https://bken.sgec.or.jp/	一般財団法人 職業教育・キャリア教育財団
+c-3522	ビジネス能力検定ジョブパス2級	pass_rate|applicants	https://bken.sgec.or.jp/	一般財団法人 職業教育・キャリア教育財団
+c-3523	ビジネス能力検定ジョブパス3級	pass_rate|applicants	https://bken.sgec.or.jp/	一般財団法人 職業教育・キャリア教育財団
+c-3524	日本語検定1級	pass_rate|applicants	https://www.nihongokentei.jp/exam/	特定非営利活動法人 日本語検定委員会
+c-3525	日本語検定準1級	pass_rate|applicants	https://www.nihongokentei.jp/exam/	特定非営利活動法人 日本語検定委員会
+c-3526	日本語検定2級	pass_rate|applicants	https://www.nihongokentei.jp/exam/	特定非営利活動法人 日本語検定委員会
+c-3527	日本語検定準2級	pass_rate|applicants	https://www.nihongokentei.jp/exam/	特定非営利活動法人 日本語検定委員会
+c-3528	日本語検定3級	pass_rate|applicants	https://www.nihongokentei.jp/exam/	特定非営利活動法人 日本語検定委員会
+c-3529	日本語検定準3級	pass_rate|applicants	https://www.nihongokentei.jp/exam/	特定非営利活動法人 日本語検定委員会
+c-3530	日本語検定4級	pass_rate|applicants	https://www.nihongokentei.jp/exam/	特定非営利活動法人 日本語検定委員会
+c-3531	日本語検定準4級	pass_rate|applicants	https://www.nihongokentei.jp/exam/	特定非営利活動法人 日本語検定委員会
+c-3532	日本語検定5級	pass_rate|applicants	https://www.nihongokentei.jp/exam/	特定非営利活動法人 日本語検定委員会
+c-3533	日本語検定準5級	pass_rate|applicants		
+c-3534	日本語検定6級	pass_rate|applicants		
+c-3535	日本語検定準6級	pass_rate|applicants		
+c-3536	日本語検定7級	pass_rate|applicants		
+c-3537	日本語検定準7級	pass_rate|applicants		
+c-3601	珠算能力検定10段	pass_rate|applicants	https://www.shuzan.jp/kentei/dani/	日本珠算連盟
+c-3602	珠算能力検定9段	pass_rate|applicants	https://www.shuzan.jp/kentei/dani/	日本珠算連盟
+c-3603	珠算能力検定8段	pass_rate|applicants	https://www.shuzan.jp/kentei/dani/	日本珠算連盟
+c-3604	珠算能力検定7段	pass_rate|applicants	https://www.shuzan.jp/kentei/dani/	日本珠算連盟
+c-3605	珠算能力検定6段	pass_rate|applicants	https://www.shuzan.jp/kentei/dani/	日本珠算連盟
+c-3606	珠算能力検定5段	pass_rate|applicants	https://www.shuzan.jp/kentei/dani/	日本珠算連盟
+c-3607	珠算能力検定4段	pass_rate|applicants	https://www.shuzan.jp/kentei/dani/	日本珠算連盟
+c-3608	珠算能力検定3段	pass_rate|applicants	https://www.shuzan.jp/kentei/dani/	日本珠算連盟
+c-3609	珠算能力検定2段	pass_rate|applicants	https://www.shuzan.jp/kentei/dani/	日本珠算連盟
+c-3610	珠算能力検定初段	pass_rate|applicants	https://www.shuzan.jp/kentei/dani/	日本珠算連盟
+c-3611	珠算能力検定1級	pass_rate|applicants	https://www.kentei.ne.jp/soroban	日本商工会議所・各地商工会議所
+c-3612	珠算能力検定2級	pass_rate|applicants	https://www.kentei.ne.jp/soroban	日本商工会議所・各地商工会議所
+c-3613	珠算能力検定3級	pass_rate|applicants	https://www.kentei.ne.jp/soroban	日本商工会議所・各地商工会議所
+c-3615	所得税法能力検定試験1級	pass_rate|applicants	https://zenkei.or.jp/exam/incometax	公益社団法人 全国経理教育協会
+c-3616	所得税法能力検定試験2級	pass_rate|applicants	https://zenkei.or.jp/exam/incometax	公益社団法人 全国経理教育協会
+c-3617	所得税法能力検定試験3級	pass_rate|applicants	https://zenkei.or.jp/exam/incometax	公益社団法人 全国経理教育協会
+c-3619	法人税法能力検定試験1級	pass_rate|applicants	https://zenkei.or.jp/exam/corptax	公益社団法人 全国経理教育協会
+c-3620	法人税法能力検定試験2級	pass_rate|applicants	https://zenkei.or.jp/exam/corptax	公益社団法人 全国経理教育協会
+c-3621	法人税法能力検定試験3級	pass_rate|applicants	https://zenkei.or.jp/exam/corptax	公益社団法人 全国経理教育協会
+c-3627	簿記能力検定(全経1級)	pass_rate|applicants	https://zenkei.or.jp/exam/bookkeeping	公益社団法人 全国経理教育協会
+c-3628	簿記能力検定(全経2級)	pass_rate|applicants	https://zenkei.or.jp/exam/bookkeeping	公益社団法人 全国経理教育協会
+c-3629	簿記能力検定(全経3級)	pass_rate|applicants	https://zenkei.or.jp/exam/bookkeeping	公益社団法人 全国経理教育協会
+c-3630	簿記実務検定1級	pass_rate|applicants		
+c-3631	簿記実務検定2級	pass_rate|applicants		
+c-3632	簿記実務検定3級	pass_rate|applicants		
+c-3634	消費税法能力検定試験1級	pass_rate|applicants	https://zenkei.or.jp/exam/consumption	公益社団法人 全国経理教育協会
+c-3635	消費税法能力検定試験2級	pass_rate|applicants	https://zenkei.or.jp/exam/consumption	公益社団法人 全国経理教育協会
+c-3636	消費税法能力検定試験3級	pass_rate|applicants	https://zenkei.or.jp/exam/consumption	公益社団法人 全国経理教育協会
+c-3707	医療保険請求事務者(医科・歯科)	pass_rate|applicants		
+c-3708	医療事務実務士1級	pass_rate|applicants		
+c-3709	医療事務実務士2級	pass_rate|applicants		
+c-3710	メディカルクラーク(医療事務技能審査)	pass_rate|applicants	https://www.jme.or.jp/	一般財団法人 日本医療教育財団
+c-3712	診療報酬請求事務能力認定試験(医科・歯科)	pass_rate|applicants	https://www.iryojimu.or.jp/	公益財団法人 日本医療保険事務協会
+c-3713	医療事務検定試験	pass_rate|applicants		
+c-3714	診療情報管理士	pass_rate|applicants		
+c-3715	医療事務資格	pass_rate|applicants		
+c-3716	医事管理士	pass_rate|applicants		
+c-3717	医療秘書士	pass_rate|applicants		
+c-3718	医療管理秘書士	pass_rate|applicants		
+c-3719	ドクターズクラーク(医師事務作業補助技能認定)	pass_rate|applicants		
+c-3720	医事コンピュータ技能検定準1級	pass_rate|applicants	https://www.medical-secretary.jp/iji/	一般社団法人 医療秘書教育全国協議会
+c-3721	医事コンピュータ技能検定2級	pass_rate|applicants	https://www.medical-secretary.jp/iji/	一般社団法人 医療秘書教育全国協議会
+c-3722	医事コンピュータ技能検定3級	pass_rate|applicants	https://www.medical-secretary.jp/iji/	一般社団法人 医療秘書教育全国協議会
+c-3723	ケアクラーク技能認定	pass_rate|applicants		
+c-3724	介護事務管理士	pass_rate|applicants	https://www.ginou.co.jp/	技能認定振興協会(JSMA)
+c-3725	介護保険事務管理士	pass_rate|applicants		
+c-3726	調剤事務管理士	pass_rate|applicants	https://www.ginou.co.jp/	技能認定振興協会(JSMA)
+c-3727	医療事務管理士(医科・歯科)	pass_rate|applicants	https://www.ginou.co.jp/	技能認定振興協会(JSMA)
+c-3728	1級金融窓口サービス技能士	applicants	https://www.kinzai.or.jp/ginou/teller/1kyu/index.html	一般社団法人 金融財政事情研究会(きんざい)
+c-3729	2級金融窓口サービス技能士	pass_rate|applicants	https://www.kinzai.or.jp/ginou/teller/index.html	一般社団法人 金融財政事情研究会(きんざい)
+c-3730	3級金融窓口サービス技能士	applicants	https://www.kinzai.or.jp/ginou/teller/3kyu/index.html	一般社団法人 金融財政事情研究会(きんざい)
+c-3801	日本語ワープロ検定1級	pass_rate|applicants		
+c-3802	日本語ワープロ検定2級	pass_rate|applicants		
+c-3803	日本語ワープロ検定3級	pass_rate|applicants		
+c-3804	日本語ワープロ検定4級	pass_rate|applicants		
+c-3812	ICTプロフィシエンシー検定(P検)1級	pass_rate|applicants	https://www.pken.com/	ICTプロフィシエンシー検定協会/ベネッセコーポレーション
+c-3813	ICTプロフィシエンシー検定(P検)2級	pass_rate|applicants	https://www.pken.com/	ICTプロフィシエンシー検定協会/ベネッセコーポレーション
+c-3814	ICTプロフィシエンシー検定(P検)3級	pass_rate|applicants	https://www.pken.com/	ICTプロフィシエンシー検定協会/ベネッセコーポレーション
+c-3815	MOS Excelエキスパート	pass_rate|applicants	https://mos.odyssey-com.co.jp/outline/mos365.html	株式会社オデッセイコミュニケーションズ(Microsoft公式認定資格)
+c-3816	MOS Excelスペシャリスト	pass_rate|applicants	https://mos.odyssey-com.co.jp/outline/mos365.html	株式会社オデッセイコミュニケーションズ(Microsoft公式認定資格)
+c-3817	MOS Wordエキスパート	pass_rate|applicants	https://mos.odyssey-com.co.jp/outline/mos365.html	株式会社オデッセイコミュニケーションズ(Microsoft公式認定資格)
+c-3818	MOS Wordスペシャリスト	pass_rate|applicants	https://mos.odyssey-com.co.jp/outline/mos365.html	株式会社オデッセイコミュニケーションズ(Microsoft公式認定資格)
+c-3819	マイクロソフト認定トレーナー(MCT)	pass_rate|applicants	https://learn.microsoft.com/ja-jp/credentials/certifications/mct-certification	日本マイクロソフト株式会社
+c-3820	電卓技能検定試験十段	pass_rate|applicants	https://www.dentaku.or.jp/	一般財団法人 日本電卓技能検定協会
+c-3821	電卓技能検定試験九段	pass_rate|applicants	https://www.dentaku.or.jp/	一般財団法人 日本電卓技能検定協会
+c-3822	電卓技能検定試験八段	pass_rate|applicants	https://www.dentaku.or.jp/	一般財団法人 日本電卓技能検定協会
+c-3823	電卓技能検定試験七段	pass_rate|applicants	https://www.dentaku.or.jp/	一般財団法人 日本電卓技能検定協会
+c-3824	電卓技能検定試験六段	pass_rate|applicants	https://www.dentaku.or.jp/	一般財団法人 日本電卓技能検定協会
+c-3825	電卓技能検定試験五段	pass_rate|applicants	https://www.dentaku.or.jp/	一般財団法人 日本電卓技能検定協会
+c-3826	電卓技能検定試験四段	pass_rate|applicants	https://www.dentaku.or.jp/	一般財団法人 日本電卓技能検定協会
+c-3827	電卓技能検定試験三段	pass_rate|applicants	https://www.dentaku.or.jp/	一般財団法人 日本電卓技能検定協会
+c-3828	電卓技能検定試験二段	pass_rate|applicants	https://www.dentaku.or.jp/	一般財団法人 日本電卓技能検定協会
+c-3829	電卓技能検定試験初段	pass_rate|applicants	https://www.dentaku.or.jp/	一般財団法人 日本電卓技能検定協会
+c-3830	電卓技能検定試験1級	pass_rate|applicants	https://www.dentaku.or.jp/	一般財団法人 日本電卓技能検定協会
+c-3831	電卓技能検定試験2級	pass_rate|applicants	https://www.dentaku.or.jp/	一般財団法人 日本電卓技能検定協会
+c-3832	電卓技能検定試験3級	pass_rate|applicants	https://www.dentaku.or.jp/	一般財団法人 日本電卓技能検定協会
+c-3836	パソコン[ワープロ・表計算]可	pass_rate|applicants		
+c-3837	パソコン[ワープロ]可	pass_rate|applicants		
+c-3838	MOS PowerPoint	pass_rate|applicants	https://mos.odyssey-com.co.jp/outline/mos365.html	株式会社オデッセイコミュニケーションズ(Microsoft公式認定資格)
+c-3839	MOS Access	pass_rate|applicants	https://mos.odyssey-com.co.jp/outline/mos365.html	株式会社オデッセイコミュニケーションズ(Microsoft公式認定資格)
+c-3840	MOS Outlook	pass_rate|applicants	https://mos.odyssey-com.co.jp/outline/mos365.html	株式会社オデッセイコミュニケーションズ(Microsoft公式認定資格)
+c-3847	PowerPointプレゼン技能認定試験	pass_rate|applicants		
+c-3848	Accessビジネスデータベース技能認定試験	pass_rate|applicants	https://www.sikaku.gr.jp/ns/ad/	株式会社サーティファイ
+c-3849	Excel表計算処理技能認定試験1級	pass_rate|applicants		
+c-3850	Excel表計算処理技能認定試験2級	pass_rate|applicants		
+c-3851	Excel表計算処理技能認定試験3級	pass_rate|applicants		
+c-3852	Word文書処理技能認定試験1級	pass_rate|applicants		
+c-3853	Word文書処理技能認定試験2級	pass_rate|applicants		
+c-3854	Word文書処理技能認定試験3級	pass_rate|applicants		
+c-3855	情報処理技能検定試験(表計算)初段~1級	pass_rate|applicants	https://www.goukaku.ne.jp/test_jyoho.html	日本情報処理検定協会(日検)
+c-3856	情報処理技能検定試験(表計算)準1~2級	pass_rate|applicants	https://www.goukaku.ne.jp/test_jyoho.html	日本情報処理検定協会(日検)
+c-3857	情報処理技能検定試験(表計算)準2~3級	pass_rate|applicants	https://www.goukaku.ne.jp/test_jyoho.html	日本情報処理検定協会(日検)
+c-3858	情報処理技能検定試験(表計算)4級	pass_rate|applicants	https://www.goukaku.ne.jp/test_jyoho.html	日本情報処理検定協会(日検)
+c-3859	情報処理技能検定試験(データベース)1級	pass_rate|applicants	https://www.goukaku.ne.jp/test_db.html	日本情報処理検定協会(日検)
+c-3860	情報処理技能検定試験(データベース)2級	pass_rate|applicants	https://www.goukaku.ne.jp/test_db.html	日本情報処理検定協会(日検)
+c-3861	情報処理技能検定試験(データベース)3級	pass_rate|applicants	https://www.goukaku.ne.jp/test_db.html	日本情報処理検定協会(日検)
+c-3862	情報処理技能検定試験(データベース)4級	pass_rate|applicants	https://www.goukaku.ne.jp/test_db.html	日本情報処理検定協会(日検)
+c-3863	ディジタル技術検定1級	pass_rate|applicants	https://digital-kentei.com/	一般社団法人 国際文化カレッジ(文部科学省後援)
+c-3864	ディジタル技術検定2級	pass_rate|applicants	https://digital-kentei.com/	一般社団法人 国際文化カレッジ(文部科学省後援)
+c-3865	ディジタル技術検定3級	pass_rate|applicants	https://digital-kentei.com/	一般社団法人 国際文化カレッジ(文部科学省後援)
+c-3866	ディジタル技術検定4級	pass_rate|applicants	https://digital-kentei.com/	一般社団法人 国際文化カレッジ(文部科学省後援)
+c-3873	情報処理検定1級	pass_rate|applicants		
+c-3874	情報処理検定2級	pass_rate|applicants		
+c-3875	情報処理検定3級	pass_rate|applicants		
+c-3882	検索技術者検定1級	pass_rate|applicants		
+c-3883	検索技術者検定2級	pass_rate|applicants		
+c-3884	検索技術者検定3級	pass_rate|applicants		
+c-3901	CS試験(ワープロ部門)1級	pass_rate|applicants		
+c-3902	CS試験(ワープロ部門)2級	pass_rate|applicants		
+c-3903	CS試験(ワープロ部門)3級	pass_rate|applicants		
+c-3904	CS試験(表計算部門)1級	pass_rate|applicants		
+c-3905	CS試験(表計算部門)2級	pass_rate|applicants		
+c-3906	CS試験(表計算部門)3級	pass_rate|applicants		
+c-3922	CS試験(情報セキュリティ部門)	pass_rate|applicants		
+c-4001	ビジキャリ(人事・人材開発・労務管理)	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/business/	中央職業能力開発協会(JAVADA)
+c-4002	ビジネス・キャリア検定(経理・財務管理)	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/business/	中央職業能力開発協会(JAVADA)
+c-4003	ビジキャリ(営業・マーケティング)	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/business/	中央職業能力開発協会(JAVADA)
+c-4004	ビジネス・キャリア検定(生産管理)	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/business/	中央職業能力開発協会(JAVADA)
+c-4005	ビジネス・キャリア検定(企業法務・総務)	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/business/	中央職業能力開発協会(JAVADA)
+c-4007	ビジネス・キャリア検定(ロジスティクス)	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/business/	中央職業能力開発協会(JAVADA)
+c-4011	ビジキャリ(経営情報システム)	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/business/	中央職業能力開発協会(JAVADA)
+c-4012	ビジネス・キャリア検定(経営戦略)	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/business/	中央職業能力開発協会(JAVADA)
+c-4105	高圧ガス販売主任者(第2種)	applicants	https://www.khk.or.jp/qualification/national_qualification/examination/examination_about.html	高圧ガス保安協会(KHK)
+c-4106	印刷営業士	pass_rate|applicants		
+c-4107	管理印刷営業士	pass_rate|applicants		
+c-4108	貿易実務検定	pass_rate|applicants	https://www.boujitsu.com/	日本貿易実務検定協会
+c-4109	中古自動車査定士	pass_rate|applicants		
+c-4110	衣料管理士1~2級	pass_rate|applicants		
+c-4111	1級商品装飾展示技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-4112	2級商品装飾展示技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-4113	3級商品装飾展示技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-4116	家電製品アドバイザー	pass_rate|applicants	https://www.aeha.or.jp/	一般財団法人 家電製品協会
+c-4117	DIYアドバイザー	pass_rate	https://www.diy.or.jp/	一般社団法人 日本DIY・ホームセンター協会
+c-4204	外務員登録資格(商品先物取引)	pass_rate|applicants	https://www.nisshokyo.or.jp/	日本商品先物取引協会(日商協)
+c-4206	生命保険業界共通教育制度一般課程試験	pass_rate|applicants		
+c-4301	理容師	applicants	https://www.rbc.or.jp/exam/	公益財団法人 理容師美容師試験研修センター
+c-4302	管理理容師	pass_rate|applicants	https://www.rbc.or.jp/workshop/	公益財団法人 理容師美容師試験研修センター(指定講習機関・厚生労働省所管)
+c-4304	管理美容師	pass_rate|applicants	https://www.rbc.or.jp/workshop/	公益財団法人 理容師美容師試験研修センター(指定講習機関・厚生労働省所管)
+c-4309	1級舞台機構調整技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-4310	2級舞台機構調整技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-4311	3級舞台機構調整技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-4312	きものコンサルタント	pass_rate|applicants		
+c-4313	認定エステティシャン	pass_rate|applicants		
+c-4314	総合旅程管理主任者	pass_rate|applicants		
+c-4315	国内旅程管理主任者	applicants	https://www.tcsa.or.jp/management/	観光庁長官登録研修機関(例:一般社団法人 日本添乗サービス協会(TCSA))
+c-4316	トリマー	pass_rate|applicants		
+c-4317	ネイリスト技能検定試験1級	applicants	https://www.nail-kentei.or.jp/	公益財団法人 日本ネイリスト検定試験センター(JNEC)
+c-4318	ネイリスト技能検定試験2級	applicants	https://www.nail-kentei.or.jp/	公益財団法人 日本ネイリスト検定試験センター(JNEC)
+c-4319	ネイリスト技能検定試験3級	applicants	https://www.nail-kentei.or.jp/	公益財団法人 日本ネイリスト検定試験センター(JNEC)
+c-4320	アロマテラピー検定1級	applicants	https://www.aromakankyo.or.jp/licences/aroma/	公益社団法人 日本アロマ環境協会(AEAJ)
+c-4321	アロマテラピー検定2級	applicants	https://www.aromakankyo.or.jp/licences/aroma/	公益社団法人 日本アロマ環境協会(AEAJ)
+c-4322	旧ブライダルコーディネーター検定	pass_rate|applicants		
+c-4323	ブライダルプランナー検定1級	pass_rate|applicants		
+c-4324	ブライダルプランナー検定2級	pass_rate|applicants		
+c-4325	葬祭ディレクター1級	pass_rate|applicants		
+c-4326	葬祭ディレクター2級	pass_rate|applicants		
+c-4327	フードコーディネーター	pass_rate|applicants		
+c-4328	1級レストランサービス技能士	pass_rate|applicants	https://hrs.or.jp/restaurant/certificate/index.html	一般社団法人 日本ホテル・レストランサービス技能協会(HRS)
+c-4329	2級レストランサービス技能士	pass_rate|applicants	https://hrs.or.jp/restaurant/certificate/index.html	一般社団法人 日本ホテル・レストランサービス技能協会(HRS)
+c-4330	3級レストランサービス技能士	pass_rate|applicants	https://hrs.or.jp/restaurant/certificate/index.html	一般社団法人 日本ホテル・レストランサービス技能協会(HRS)
+c-4331	1級ピアノ調律技能士	pass_rate|applicants	https://www.jpta.org/kentei/guideline.shtml	一般社団法人 日本ピアノ調律師協会(JPTA)
+c-4332	2級ピアノ調律技能士	pass_rate|applicants	https://www.jpta.org/kentei/guideline.shtml	一般社団法人 日本ピアノ調律師協会(JPTA)
+c-4333	3級ピアノ調律技能士	pass_rate|applicants	https://www.jpta.org/kentei/guideline.shtml	一般社団法人 日本ピアノ調律師協会(JPTA)
+c-4334	1級着付け技能士	pass_rate|applicants	https://www.kitsuke.or.jp/	一般社団法人 全日本着付け技能センター
+c-4335	2級着付け技能士	pass_rate|applicants	https://www.kitsuke.or.jp/	一般社団法人 全日本着付け技能センター
+c-4336	1級ブライダルコーディネート技能士	pass_rate|applicants	https://www.bia.or.jp/kentei2019-3/	公益社団法人 日本ブライダル文化振興協会(BIA)/国家検定
+c-4337	2級ブライダルコーディネート技能士	pass_rate|applicants	https://www.bia.or.jp/kentei2019-3/	公益社団法人 日本ブライダル文化振興協会(BIA)/国家検定
+c-4338	3級ブライダルコーディネート技能士	pass_rate|applicants		
+c-4402	専門調理師・調理技能士	pass_rate|applicants	https://chouri-ggc.or.jp/cgghshiken/about/	公益社団法人 調理技術技能センター(厚生労働大臣指定試験機関)
+c-4403	ふぐ調理師	pass_rate|applicants	https://www.hokeniryo.metro.tokyo.lg.jp/anzen/shikaku/csh_menkyo/hugu/index.html	各都道府県(名称・制度が都道府県で異なる)
+c-4404	鮮魚士(1級)	pass_rate|applicants		
+c-4405	鮮魚士(2級)	pass_rate|applicants		
+c-4406	鮮魚士(3級)	pass_rate|applicants		
+c-4410	一級惣菜管理士	pass_rate|applicants		
+c-4411	二級惣菜管理士	pass_rate|applicants		
+c-4412	三級惣菜管理士	pass_rate|applicants		
+c-4414	野菜ソムリエ	pass_rate|applicants	https://www.vege-fru.com/	一般社団法人 日本野菜ソムリエ協会
+c-4501	甲種消防設備士	pass_rate|applicants	https://www.shoubo-shiken.or.jp/shoubou/	一般財団法人 消防試験研究センター
+c-4502	乙種消防設備士	pass_rate|applicants	https://www.shoubo-shiken.or.jp/shoubou/	一般財団法人 消防試験研究センター
+c-4503	第1種消防設備点検資格者	pass_rate|applicants	https://www.fesc.or.jp/jukou/setsubi/	一般財団法人 日本消防設備安全センター(消防庁長官登録講習機関)
+c-4504	第2種消防設備点検資格者	pass_rate|applicants	https://www.fesc.or.jp/jukou/setsubi/	一般財団法人 日本消防設備安全センター(消防庁長官登録講習機関)
+c-4505	警備員検定試験(1級)	pass_rate|applicants	https://www.csst.jp/	都道府県公安委員会(直接検定、または登録講習機関の特別講習＋修了考査)
+c-4506	警備員検定試験(2級)	pass_rate|applicants	https://www.csst.jp/	都道府県公安委員会(直接検定、または登録講習機関の特別講習＋修了考査)
+c-4507	1級ビル設備管理技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-4508	2級ビル設備管理技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-4509	防火管理者(甲種・乙種)	pass_rate|applicants	https://www.bouka-bousai.jp/hp/lec_info/guide_bouka.html	一般財団法人 日本防火・防災協会(消防本部・都道府県等も実施)
+c-4510	施設警備業務検定1級	pass_rate|applicants	https://www.csst.jp/	都道府県公安委員会(直接検定、または登録講習機関の特別講習＋修了考査)
+c-4511	施設警備業務検定2級	pass_rate|applicants	https://www.csst.jp/	都道府県公安委員会(直接検定、または登録講習機関の特別講習＋修了考査)
+c-4512	空港保安警備業務検定1級	pass_rate|applicants	https://www.csst.jp/	都道府県公安委員会(直接検定、または登録講習機関の特別講習＋修了考査)
+c-4513	空港保安警備業務検定2級	pass_rate|applicants	https://www.csst.jp/	都道府県公安委員会(直接検定、または登録講習機関の特別講習＋修了考査)
+c-4514	雑踏警備業務検定1級	pass_rate|applicants	https://www.csst.jp/	都道府県公安委員会(直接検定、または登録講習機関の特別講習＋修了考査)
+c-4515	雑踏警備業務検定2級	pass_rate|applicants	https://www.csst.jp/	都道府県公安委員会(直接検定、または登録講習機関の特別講習＋修了考査)
+c-4516	交通誘導警備業務検定1級	pass_rate|applicants	https://www.csst.jp/	都道府県公安委員会(直接検定、または登録講習機関の特別講習＋修了考査)
+c-4517	交通誘導警備業務検定2級	pass_rate|applicants	https://www.csst.jp/	都道府県公安委員会(直接検定、または登録講習機関の特別講習＋修了考査)
+c-4518	核燃料物質等危険物運搬警備業務検定1級	pass_rate|applicants	https://www.csst.jp/	都道府県公安委員会(直接検定、または登録講習機関の特別講習＋修了考査)
+c-4519	核燃料物質等危険物運搬警備業務検定2級	pass_rate|applicants	https://www.csst.jp/	都道府県公安委員会(直接検定、または登録講習機関の特別講習＋修了考査)
+c-4520	貴重品運搬警備業務検定1級	pass_rate|applicants	https://www.csst.jp/	都道府県公安委員会(直接検定、または登録講習機関の特別講習＋修了考査)
+c-4521	貴重品運搬警備業務検定2級	pass_rate|applicants	https://www.csst.jp/	都道府県公安委員会(直接検定、または登録講習機関の特別講習＋修了考査)
+c-4601	1級造園技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-4602	2級造園技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-4603	3級造園技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-4701	動力車操縦者(鉄道)運転免許	pass_rate|applicants	https://www.mlit.go.jp/report/press/tetsudo08_hh_000109.html	国土交通省(各地方運輸局が施行)
+c-4801	大型自動車免許	pass_rate|applicants	https://www.keishicho.metro.tokyo.lg.jp/menkyo/menkyo/torikata/index.html	都道府県公安委員会(運転免許試験場で実施)
+c-4802	大型自動車第二種免許	pass_rate|applicants	https://www.keishicho.metro.tokyo.lg.jp/menkyo/menkyo/torikata/index.html	都道府県公安委員会(運転免許試験場で実施)
+c-4803	普通自動車免許	pass_rate|applicants	https://www.keishicho.metro.tokyo.lg.jp/menkyo/menkyo/torikata/index.html	都道府県公安委員会(運転免許試験場で実施)
+c-4804	普通自動車第二種免許	pass_rate|applicants	https://www.keishicho.metro.tokyo.lg.jp/menkyo/menkyo/torikata/index.html	都道府県公安委員会(運転免許試験場で実施)
+c-4805	普通自動車免許(AT限定)	pass_rate|applicants	https://www.keishicho.metro.tokyo.lg.jp/menkyo/menkyo/torikata/index.html	都道府県公安委員会(運転免許試験場で実施)
+c-4806	大型特殊自動車免許	pass_rate|applicants	https://www.keishicho.metro.tokyo.lg.jp/menkyo/menkyo/torikata/index.html	都道府県公安委員会(運転免許試験場で実施)
+c-4807	大型特殊自動車第二種免許	pass_rate|applicants	https://www.keishicho.metro.tokyo.lg.jp/menkyo/menkyo/torikata/index.html	都道府県公安委員会(運転免許試験場で実施)
+c-4808	自動二輪車免許	pass_rate|applicants	https://www.keishicho.metro.tokyo.lg.jp/menkyo/menkyo/torikata/index.html	都道府県公安委員会(運転免許試験場で実施)
+c-4809	小型特殊自動車免許	pass_rate|applicants	https://www.keishicho.metro.tokyo.lg.jp/menkyo/menkyo/torikata/index.html	都道府県公安委員会(運転免許試験場で実施)
+c-4810	原動機付自転車免許	pass_rate|applicants	https://www.keishicho.metro.tokyo.lg.jp/menkyo/menkyo/torikata/index.html	都道府県公安委員会(運転免許試験場で実施)
+c-4811	牽引免許	pass_rate|applicants	https://www.keishicho.metro.tokyo.lg.jp/menkyo/menkyo/torikata/index.html	都道府県公安委員会(運転免許試験場で実施)
+c-4812	牽引第二種免許	pass_rate|applicants	https://www.keishicho.metro.tokyo.lg.jp/menkyo/menkyo/torikata/index.html	都道府県公安委員会(運転免許試験場で実施)
+c-4813	フォークリフト運転技能者	pass_rate|applicants	https://www.jisha.or.jp/	都道府県労働局長登録教習機関(中央労働災害防止協会 等)
+c-4814	高所作業車運転技能者	pass_rate|applicants	https://www.jisha.or.jp/	都道府県労働局長登録教習機関(中央労働災害防止協会 等)
+c-4815	不整地運搬車運転技能者	pass_rate|applicants	https://www.jisha.or.jp/	都道府県労働局長登録教習機関(中央労働災害防止協会 等)
+c-4816	小型船舶操縦士	pass_rate|applicants	https://www.jmra.or.jp/license/license-examination	一般財団法人 日本海洋レジャー安全・振興協会(JMRA)/免許所管は国土交通省
+c-4817	中型自動車免許	pass_rate|applicants	https://www.keishicho.metro.tokyo.lg.jp/menkyo/menkyo/torikata/index.html	都道府県公安委員会(運転免許試験場で実施)
+c-4818	中型自動車第二種免許	pass_rate|applicants	https://www.keishicho.metro.tokyo.lg.jp/menkyo/menkyo/torikata/index.html	都道府県公安委員会(運転免許試験場で実施)
+c-4819	8トン限定中型自動車免許	pass_rate|applicants	https://www.keishicho.metro.tokyo.lg.jp/menkyo/menkyo/torikata/index.html	都道府県公安委員会(運転免許試験場で実施)
+c-4820	8トン限定中型自動車第二種免許	pass_rate|applicants	https://www.keishicho.metro.tokyo.lg.jp/menkyo/menkyo/torikata/index.html	都道府県公安委員会(運転免許試験場で実施)
+c-4821	5トン限定中型自動車第二種免許	pass_rate|applicants	https://www.keishicho.metro.tokyo.lg.jp/menkyo/menkyo/torikata/index.html	都道府県公安委員会(運転免許試験場で実施)
+c-4822	準中型自動車免許	pass_rate|applicants	https://www.keishicho.metro.tokyo.lg.jp/menkyo/menkyo/torikata/index.html	都道府県公安委員会(運転免許試験場で実施)
+c-4823	5トン限定準中型自動車免許	pass_rate|applicants	https://www.keishicho.metro.tokyo.lg.jp/menkyo/menkyo/torikata/index.html	都道府県公安委員会(運転免許試験場で実施)
+c-4901	定期運送用操縦士	pass_rate|applicants	https://www.mlit.go.jp/koku/koku_tk12_000005.html	国土交通省(航空局)
+c-4902	事業用操縦士(飛行機)	pass_rate|applicants	https://www.mlit.go.jp/koku/koku_tk12_000005.html	国土交通省(航空局)
+c-4903	事業用操縦士(回転翼航空機)	pass_rate|applicants	https://www.mlit.go.jp/koku/koku_tk12_000005.html	国土交通省(航空局)
+c-4904	自家用操縦士(飛行機)	pass_rate|applicants	https://www.mlit.go.jp/koku/koku_tk12_000005.html	国土交通省(航空局)
+c-4905	自家用操縦士(回転翼航空機)	pass_rate|applicants	https://www.mlit.go.jp/koku/koku_tk12_000005.html	国土交通省(航空局)
+c-4907	一等航空士	pass_rate|applicants	https://www.mlit.go.jp/koku/koku_tk12_000005.html	国土交通省(航空局)
+c-4908	二等航空士	pass_rate|applicants	https://www.mlit.go.jp/koku/koku_tk12_000005.html	国土交通省(航空局)
+c-4909	航空機関士	pass_rate|applicants	https://www.mlit.go.jp/koku/koku_tk12_000005.html	国土交通省(航空局)
+c-5001	第1級総合無線通信士	pass_rate|applicants	https://www.nichimu.or.jp/kshiken/	公益財団法人 日本無線協会
+c-5002	第2級総合無線通信士	pass_rate|applicants	https://www.nichimu.or.jp/kshiken/	公益財団法人 日本無線協会
+c-5003	第3級総合無線通信士	pass_rate|applicants	https://www.nichimu.or.jp/kshiken/	公益財団法人 日本無線協会
+c-5004	航空無線通信士	pass_rate|applicants	https://www.nichimu.or.jp/kshiken/	公益財団法人 日本無線協会
+c-5005	航空特殊無線技士	pass_rate|applicants	https://www.nichimu.or.jp/kshiken/	公益財団法人 日本無線協会
+c-5006	第一級陸上無線技術士	pass_rate|applicants	https://www.nichimu.or.jp/kshiken/	公益財団法人 日本無線協会
+c-5007	第二級陸上無線技術士	pass_rate|applicants	https://www.nichimu.or.jp/kshiken/	公益財団法人 日本無線協会
+c-5008	第一級陸上特殊無線技士	pass_rate|applicants	https://www.nichimu.or.jp/kshiken/	公益財団法人 日本無線協会
+c-5009	第二級陸上特殊無線技士	pass_rate|applicants	https://www.nichimu.or.jp/kshiken/	公益財団法人 日本無線協会
+c-5010	第三級陸上特殊無線技士	pass_rate|applicants	https://www.nichimu.or.jp/kshiken/	公益財団法人 日本無線協会
+c-5011	国内電信級陸上特殊無線技士	pass_rate|applicants	https://www.nichimu.or.jp/kshiken/	公益財団法人 日本無線協会
+c-5101	鉛作業主任者	pass_rate|applicants	https://www.jisha.or.jp/	都道府県労働局長登録教習機関(中央労働災害防止協会 等)
+c-5102	四アルキル鉛等作業主任者	pass_rate|applicants	https://www.jisha.or.jp/	都道府県労働局長登録教習機関(中央労働災害防止協会 等)
+c-5103	1級金属溶解技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-5104	2級金属溶解技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-5105	特級鋳造技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-5106	1級鋳造技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-5107	2級鋳造技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-5108	1級鍛造技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-5109	2級鍛造技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-5110	特級金属熱処理技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-5111	1級金属熱処理技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-5112	2級金属熱処理技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-5113	3級金属熱処理技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-5114	1級粉末冶金技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-5115	2級粉末冶金技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-5116	1級金属材料試験技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-5117	2級金属材料試験技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-5118	非破壊検査総合管理技術者	pass_rate|applicants		
+c-5119	非破壊試験技術者レベル1	pass_rate|applicants		
+c-5120	非破壊試験技術者レベル2	pass_rate|applicants		
+c-5121	非破壊試験技術者レベル3	pass_rate|applicants		
+c-5201	化学設備関係第一種圧力容器取扱作業主任者	pass_rate|applicants	https://www.jisha.or.jp/	都道府県労働局長登録教習機関(中央労働災害防止協会 等)
+c-5202	有機溶剤作業主任者	pass_rate|applicants	https://www.jisha.or.jp/	都道府県労働局長登録教習機関(中央労働災害防止協会 等)
+c-5203	特定化学物質作業主任者	pass_rate|applicants	https://www.jisha.or.jp/	都道府県労働局長登録教習機関(中央労働災害防止協会 等)
+c-5204	1級化学分析技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-5205	2級化学分析技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-5206	危険物取扱者(甲種)	pass_rate|applicants	https://www.shoubo-shiken.or.jp/kikenbutsu/	一般財団法人 消防試験研究センター
+c-5208	危険物取扱者(丙種)	pass_rate|applicants	https://www.shoubo-shiken.or.jp/kikenbutsu/	一般財団法人 消防試験研究センター
+c-5209	高圧ガス移動監視者	pass_rate|applicants	https://www.khk.or.jp/qualification/examination_course/course_b/course_trs_safetychf.html	高圧ガス保安協会(KHK)
+c-5211	高圧ガス移動監視者(液化天然ガス)	pass_rate|applicants	https://www.khk.or.jp/qualification/examination_course/course_b/course_trs_safetychf.html	高圧ガス保安協会(KHK)
+c-5303	1級陶磁器製造技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-5304	2級陶磁器製造技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-5307	1級石材施工技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-5308	2級石材施工技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-5401	特級機械加工技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-5402	1級機械加工技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-5403	2級機械加工技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-5404	3級機械加工技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-5405	特級放電加工技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-5406	1級放電加工技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-5407	2級放電加工技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-5408	1級鉄工技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-5409	2級鉄工技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-5410	特級工場板金技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-5411	1級工場板金技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-5412	2級工場板金技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-5413	1級建築板金技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-5414	2級建築板金技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-5415	溶射技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-5416	特級めっき技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-5417	1級めっき技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-5418	2級めっき技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-5419	3級めっき技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-5420	1級アルミニウム陽極酸化処理技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-5421	2級アルミニウム陽極酸化処理技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-5422	プレス機械作業主任者	pass_rate|applicants	https://www.jisha.or.jp/	都道府県労働局長登録教習機関(中央労働災害防止協会 等)
+c-5423	特級金属プレス加工技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-5424	1級金属プレス加工技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-5425	2級金属プレス加工技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-5426	1級金属ばね製造技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-5427	2級金属ばね製造技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-5428	1級ロープ加工技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-5429	2級ロープ加工技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-5431	特級仕上げ技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-5432	1級仕上げ技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-5433	2級仕上げ技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-5438	特級金型製作技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-5439	1級金型製作技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-5440	2級金型製作技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-5441	1級切削工具研削技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-5442	2級切削工具研削技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-5443	特級ダイカスト技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-5444	1級ダイカスト技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-5445	2級ダイカスト技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-5501	特別ボイラー溶接士	pass_rate|applicants	https://www.exam.or.jp/introduction/h_shokai132/	公益財団法人 安全衛生技術試験協会
+c-5502	普通ボイラ-溶接士	pass_rate|applicants	https://www.exam.or.jp/introduction/h_shokai142/	公益財団法人 安全衛生技術試験協会
+c-5503	ガス溶接作業主任者	pass_rate|applicants	https://www.exam.or.jp/introduction/h_shokai302/	公益財団法人 安全衛生技術試験協会(免許交付は都道府県労働局長)
+c-5504	溶接管理技術者1級	pass_rate|applicants		
+c-5505	溶接管理技術者2級	pass_rate|applicants		
+c-5506	溶接作業指導者	pass_rate|applicants		
+c-5507	溶接技能者	pass_rate|applicants		
+c-5510	ガス圧接技量検定1種	pass_rate|applicants		
+c-5511	ガス圧接技量検定2種	pass_rate|applicants		
+c-5512	ガス圧接技量検定3種	pass_rate|applicants		
+c-5513	ガス圧接技量検定4種	pass_rate|applicants		
+c-5514	ガス溶接技能者	pass_rate|applicants		
+c-5515	アーク溶接技能者(専門級)	pass_rate|applicants		
+c-5516	アーク溶接技能者(基本級)	pass_rate|applicants		
+c-5517	ステンレス鋼溶接技能者(専門級)	pass_rate|applicants		
+c-5518	ステンレス鋼溶接技能者(基本級)	pass_rate|applicants		
+c-5519	アルミニウム溶接技能者(専門級)	pass_rate|applicants		
+c-5520	アルミニウム溶接技能者(基本級)	pass_rate|applicants		
+c-5601	特級機械保全技能士	pass_rate|applicants	https://www.kikaihozenshi.jp/	公益社団法人 日本プラントメンテナンス協会(JIPM・厚生労働大臣指定試験機関)
+c-5602	1級機械保全技能士	pass_rate|applicants	https://www.kikaihozenshi.jp/	公益社団法人 日本プラントメンテナンス協会(JIPM・厚生労働大臣指定試験機関)
+c-5603	2級機械保全技能士	pass_rate|applicants	https://www.kikaihozenshi.jp/	公益社団法人 日本プラントメンテナンス協会(JIPM・厚生労働大臣指定試験機関)
+c-5604	特級機械検査技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-5605	1級機械検査技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-5606	2級機械検査技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-5607	3級機械検査技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-5608	特級内燃機関組立て技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-5609	1級内燃機関組立て技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-5610	2級内燃機関組立て技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-5611	3級内燃機関組立て技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-5612	特級空気圧装置組立て技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-5613	1級空気圧装置組立て技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-5614	2級空気圧装置組立て技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-5615	特級油圧装置調整技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-5616	1級油圧装置調整技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-5617	2級油圧装置調整技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-5618	1級縫製機械整備技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-5619	2級縫製機械整備技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-5620	特級建設機械整備技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-5621	1級建設機械整備技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-5622	2級建設機械整備技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-5623	1級農業機械整備技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-5624	2級農業機械整備技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-5701	特級電気機器組立て技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-5702	1級電気機器組立て技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-5703	2級電気機器組立て技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-5704	特級電子機器組立て技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-5705	1級電子機器組立て技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-5706	2級電子機器組立て技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-5707	3級電子機器組立て技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-5712	特級自動販売機調整技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-5713	1級自動販売機調整技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-5714	2級自動販売機調整技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-5715	特級半導体製品製造技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-5716	1級半導体製品製造技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-5717	2級半導体製品製造技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-5718	電子回路接続技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-5719	特級プリント配線板製造技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-5720	1級プリント配線板製造技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-5721	2級プリント配線板製造技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-5722	3級プリント配線板製造技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-5727	家電製品エンジニア(生活家電)	pass_rate|applicants		
+c-5728	家電製品エンジニア(AV情報家電)	pass_rate|applicants		
+c-5801	自動車タイヤ整備士	pass_rate|applicants	https://www.jaspa.or.jp/mechanic/	国土交通省(技能検定)/登録試験は日本自動車整備振興会連合会(JASPA)が実施
+c-5802	自動車電気装置整備士	pass_rate	https://www.jaspa.or.jp/mechanic/	国土交通省(技能検定)/登録試験は日本自動車整備振興会連合会(JASPA)が実施
+c-5803	自動車車体整備士	pass_rate|applicants	https://www.jaspa.or.jp/mechanic/	国土交通省(技能検定)/登録試験は日本自動車整備振興会連合会(JASPA)が実施
+c-5804	一等航空整備士	pass_rate|applicants	https://www.mlit.go.jp/koku/koku_tk12_000005.html	国土交通省(航空局)
+c-5805	二等航空整備士	pass_rate|applicants	https://www.mlit.go.jp/koku/koku_tk12_000005.html	国土交通省(航空局)
+c-5807	航空工場整備士	pass_rate|applicants	https://www.mlit.go.jp/koku/koku_tk12_000005.html	国土交通省(航空局)
+c-5808	1級産業車両整備技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-5809	2級産業車両整備技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-5810	1級鉄道車両製造・整備技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-5811	2級鉄道車両製造・整備技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-5812	自転車安全整備士	pass_rate|applicants		
+c-5813	二級ガソリン自動車整備士	pass_rate|applicants	https://www.jaspa.or.jp/mechanic/	国土交通省(技能検定)/登録試験は日本自動車整備振興会連合会(JASPA)が実施
+c-5814	二級ジーゼル自動車整備士	pass_rate|applicants	https://www.jaspa.or.jp/mechanic/	国土交通省(技能検定)/登録試験は日本自動車整備振興会連合会(JASPA)が実施
+c-5815	三級自動車ガソリン・エンジン整備士	pass_rate|applicants	https://www.jaspa.or.jp/mechanic/	国土交通省(技能検定)/登録試験は日本自動車整備振興会連合会(JASPA)が実施
+c-5816	三級自動車ジーゼル・エンジン整備士	pass_rate|applicants	https://www.jaspa.or.jp/mechanic/	国土交通省(技能検定)/登録試験は日本自動車整備振興会連合会(JASPA)が実施
+c-5817	三級自動車シャシ整備士	pass_rate|applicants	https://www.jaspa.or.jp/mechanic/	国土交通省(技能検定)/登録試験は日本自動車整備振興会連合会(JASPA)が実施
+c-5818	二級自動車整備士	pass_rate|applicants	https://www.jaspa.or.jp/mechanic/	国土交通省(技能検定)/登録試験は日本自動車整備振興会連合会(JASPA)が実施
+c-5819	三級自動車整備士	pass_rate|applicants	https://www.jaspa.or.jp/mechanic/	国土交通省(技能検定)/登録試験は日本自動車整備振興会連合会(JASPA)が実施
+c-5820	自動車整備士(二輪)	pass_rate|applicants	https://www.jaspa.or.jp/mechanic/	国土交通省(技能検定)/登録試験は日本自動車整備振興会連合会(JASPA)が実施
+c-5821	自転車技士(旧自転車組立整備士)	pass_rate|applicants		
+c-5822	自動車検査員	pass_rate|applicants		
+c-5823	整備管理者	pass_rate|applicants		
+c-5824	一級大型自動車整備士	pass_rate|applicants	https://www.jaspa.or.jp/mechanic/	国土交通省(技能検定)/登録試験は日本自動車整備振興会連合会(JASPA)が実施
+c-5825	一級小型自動車整備士	pass_rate|applicants	https://www.jaspa.or.jp/mechanic/	国土交通省(技能検定)/登録試験は日本自動車整備振興会連合会(JASPA)が実施
+c-5901	1級時計修理技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-5902	2級時計修理技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-5903	3級時計修理技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-5904	一般計量士	pass_rate|applicants	https://www.meti.go.jp/information/license/data/c250620aj.html	経済産業省(計量士国家試験)
+c-5905	環境計量士	pass_rate|applicants	https://www.meti.go.jp/information/license/data/c250620aj.html	経済産業省(計量士国家試験)
+c-5906	特級光学機器製造技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-5907	1級光学機器製造技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-5908	2級光学機器製造技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-6001	特級パン製造技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-6002	1級パン製造技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-6003	2級パン製造技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-6005	1級菓子製造技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-6006	2級菓子製造技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-6007	製麺技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-6008	1級ハム・ソーセージ・ベーコン製造技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-6009	2級ハム・ソーセージ・ベーコン製造技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-6010	1級水産練り製品製造技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-6011	2級水産練り製品製造技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-6012	1級みそ製造技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-6013	2級みそ製造技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-6014	1級酒造技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-6015	2級酒造技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-6101	1級染色技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-6102	2級染色技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-6103	1級ニット製品製造技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-6104	2級ニット製品製造技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-6105	特級婦人子供服製造技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-6106	1級婦人子供服製造技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-6107	2級婦人子供服製造技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-6108	特級紳士服製造技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-6109	1級紳士服製造技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-6110	2級紳士服製造技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-6111	1級和裁技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-6112	2級和裁技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-6113	3級和裁技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-6114	1級布はく縫製技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-6115	2級布はく縫製技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-6116	1級寝具製作技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-6117	2級寝具製作技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-6118	1級帆布製品製造技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-6119	2級帆布製品製造技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-6120	パターンメーキング技術検定	pass_rate|applicants		
+c-6201	木材加工用機械作業主任者	pass_rate|applicants	https://www.jisha.or.jp/	都道府県労働局長登録教習機関(中央労働災害防止協会 等)
+c-6202	1級機械木工技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-6203	2級機械木工技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-6206	1級家具製作技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-6207	2級家具製作技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-6208	1級建具製作技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-6209	2級建具製作技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-6212	1級紙器・段ボール箱製造技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-6213	2級紙器・段ボール箱製造技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-6214	1級畳製作技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-6215	2級畳製作技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-6301	1級プリプレス技能士(旧:製版技能士)	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-6302	2級プリプレス技能士(旧:製版技能士)	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-6303	1級印刷技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-6304	2級印刷技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-6305	1級製本技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-6306	2級製本技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-6307	DTPエキスパート	pass_rate	https://www.jagat.or.jp/cat5/dtp	公益社団法人 日本印刷技術協会(JAGAT)
+c-6401	特級プラスチック成形技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-6402	1級プラスチック成形技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-6403	2級プラスチック成形技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-6404	3級プラスチック成形技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-6405	1級強化プラスチック成形技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-6406	2級強化プラスチック成形技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-6503	1級貴金属装身具製作技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-6504	2級貴金属装身具製作技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-6507	1級印章彫刻技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-6508	2級印章彫刻技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-6509	1級義肢・装具製作技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-6510	2級義肢・装具製作技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-6511	伝統工芸士	pass_rate|applicants		
+c-6601	1級表装技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-6602	2級表装技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-6603	1級塗装技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-6604	2級塗装技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-6605	塗料調色技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-6606	1級広告美術仕上げ技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-6607	2級広告美術仕上げ技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-6608	3級広告美術仕上げ技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-6609	1級写真技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-6610	2級写真技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-6611	3級写真技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-6612	CAD利用技術者1級	pass_rate|applicants	https://www.acsp.jp/cad/2d.html	一般社団法人 コンピュータ教育振興協会(ACSP)
+c-6613	CAD利用技術者2級	pass_rate|applicants	https://www.acsp.jp/cad/2d.html	一般社団法人 コンピュータ教育振興協会(ACSP)
+c-6617	トレース技能検定1級	pass_rate|applicants		
+c-6618	トレース技能検定2級	pass_rate|applicants		
+c-6619	トレース技能検定3級	pass_rate|applicants		
+c-6620	トレース技能検定4級	pass_rate|applicants		
+c-6621	レタリング技能検定1級	pass_rate|applicants		
+c-6622	レタリング技能検定2級	pass_rate|applicants		
+c-6623	レタリング技能検定3級	pass_rate|applicants		
+c-6624	レタリング技能検定4級	pass_rate|applicants		
+c-6625	1級テクニカルイラストレーション技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-6626	2級テクニカルイラストレーション技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-6627	3級テクニカルイラストレーション技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-6630	1級機械・プラント製図技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-6631	2級機械・プラント製図技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-6632	1級電気製図技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-6633	2級電気製図技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-6634	3級電気製図技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-6635	1級工業包装技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-6636	2級工業包装技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-6637	防錆管理士	pass_rate|applicants		
+c-6704	ボイラー整備士	pass_rate|applicants	https://www.exam.or.jp/introduction/h_shokai151/	公益財団法人 安全衛生技術試験協会
+c-6705	ボイラー取扱作業主任者	pass_rate|applicants		
+c-6706	普通第一種圧力容器取扱作業主任者	pass_rate|applicants	https://www.jisha.or.jp/	都道府県労働局長登録教習機関(中央労働災害防止協会 等)
+c-6707	乾燥設備作業主任者	pass_rate|applicants	https://www.jisha.or.jp/	都道府県労働局長登録教習機関(中央労働災害防止協会 等)
+c-6708	クレーン・デリック運転士(クレーン限定)	applicants	https://www.exam.or.jp/introduction/h_shokai206/	公益財団法人 安全衛生技術試験協会
+c-6709	移動式クレーン運転士	applicants	https://www.exam.or.jp/introduction/h_shokai232/	公益財団法人 安全衛生技術試験協会
+c-6710	小型移動式クレーン運転技能者	pass_rate|applicants	https://www.jisha.or.jp/	都道府県労働局長登録教習機関(中央労働災害防止協会 等)
+c-6711	床上操作式クレーン運転技能者	pass_rate|applicants	https://www.jisha.or.jp/	都道府県労働局長登録教習機関(中央労働災害防止協会 等)
+c-6713	揚貨装置運転士	pass_rate|applicants	https://www.exam.or.jp/	公益財団法人 安全衛生技術試験協会
+c-6714	車両系建設機械(基礎工事用)運転技能者	pass_rate|applicants	https://www.jisha.or.jp/	都道府県労働局長登録教習機関(中央労働災害防止協会 等)
+c-6715	車両系建設機械(整地・運搬・積込用及び掘削用)運転技能者	pass_rate|applicants	https://www.jisha.or.jp/	都道府県労働局長登録教習機関(中央労働災害防止協会 等)
+c-6716	車両系建設機械(解体用)運転技能者	pass_rate|applicants	https://www.jisha.or.jp/	都道府県労働局長登録教習機関(中央労働災害防止協会 等)
+c-6717	ショベルローダー等運転技能者	pass_rate|applicants	https://www.jisha.or.jp/	都道府県労働局長登録教習機関(中央労働災害防止協会 等)
+c-6718	玉掛技能者	pass_rate|applicants	https://www.jisha.or.jp/	都道府県労働局長登録教習機関(中央労働災害防止協会 等)
+c-6720	床上運転式クレーン限定運転士	pass_rate|applicants	https://www.exam.or.jp/	公益財団法人 安全衛生技術試験協会
+c-6801	工事担任者AI第1種	pass_rate|applicants	https://www.dekyo.or.jp/shiken/charge/	一般財団法人 日本データ通信協会 電気通信国家試験センター
+c-6802	工事担任者AI第2種	pass_rate|applicants		
+c-6803	工事担任者AI第3種	pass_rate|applicants	https://www.dekyo.or.jp/shiken/charge/	一般財団法人 日本データ通信協会 電気通信国家試験センター
+c-6804	工事担任者DD第1種	pass_rate|applicants	https://www.dekyo.or.jp/shiken/charge/	一般財団法人 日本データ通信協会 電気通信国家試験センター
+c-6805	工事担任者DD第2種	pass_rate|applicants		
+c-6806	工事担任者DD第3種	pass_rate|applicants	https://www.dekyo.or.jp/shiken/charge/	一般財団法人 日本データ通信協会 電気通信国家試験センター
+c-6807	工事担任者AI・DD総合種	applicants	https://www.dekyo.or.jp/shiken/charge/	一般財団法人 日本データ通信協会 電気通信国家試験センター
+c-6810	CATV技術者	pass_rate|applicants		
+c-6811	配電制御システム検査技士(1~2級)	pass_rate|applicants		
+c-6812	1級情報配線施工技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-6813	2級情報配線施工技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-6814	3級情報配線施工技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-6901	採石のための掘削作業主任者	pass_rate|applicants	https://www.jisha.or.jp/	都道府県労働局長登録教習機関(中央労働災害防止協会 等)
+c-6902	採石業務管理者	pass_rate|applicants		
+c-6903	砂利採取業務主任者	pass_rate|applicants		
+c-6904	地山の掘削及び土止め支保工作業主任者	pass_rate|applicants	https://www.jisha.or.jp/	都道府県労働局長登録教習機関(中央労働災害防止協会 等)
+c-6906	ずい道等の掘削等作業主任者	pass_rate|applicants	https://www.jisha.or.jp/	都道府県労働局長登録教習機関(中央労働災害防止協会 等)
+c-6907	ずい道等の覆工作業主任者	pass_rate|applicants	https://www.jisha.or.jp/	都道府県労働局長登録教習機関(中央労働災害防止協会 等)
+c-6908	1級さく井技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-6909	2級さく井技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-7001	1級建築大工技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-7002	2級建築大工技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-7003	木造建築物の組立て等作業主任者	pass_rate|applicants	https://www.jisha.or.jp/	都道府県労働局長登録教習機関(中央労働災害防止協会 等)
+c-7004	枠組壁建築技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-7005	1級かわらぶき技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-7006	2級かわらぶき技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-7007	1級とび技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-7008	2級とび技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-7009	3級とび技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-7010	1級左官技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-7011	2級左官技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-7013	1級築炉技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-7014	2級築炉技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-7015	1級ブロック建築技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-7016	2級ブロック建築技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-7017	エーエルシーパネル施工技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-7018	1級タイル張り技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-7019	2級タイル張り技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-7020	1級型枠施工技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-7021	2級型枠施工技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-7022	型枠支保工の組立て等作業主任者	pass_rate|applicants	https://www.jisha.or.jp/	都道府県労働局長登録教習機関(中央労働災害防止協会 等)
+c-7023	1級鉄筋施工技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-7024	2級鉄筋施工技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-7025	建築物等の鉄骨の組立て等作業主任者	pass_rate|applicants	https://www.jisha.or.jp/	都道府県労働局長登録教習機関(中央労働災害防止協会 等)
+c-7026	足場の組立て等作業主任者	pass_rate|applicants	https://www.jisha.or.jp/	都道府県労働局長登録教習機関(中央労働災害防止協会 等)
+c-7029	コンクリート造の工作物の解体等作業主任者	pass_rate|applicants	https://www.jisha.or.jp/	都道府県労働局長登録教習機関(中央労働災害防止協会 等)
+c-7030	コンクリート橋架設等作業主任者	pass_rate|applicants	https://www.jisha.or.jp/	都道府県労働局長登録教習機関(中央労働災害防止協会 等)
+c-7031	鋼橋架設等作業主任者	pass_rate|applicants	https://www.jisha.or.jp/	都道府県労働局長登録教習機関(中央労働災害防止協会 等)
+c-7032	基礎施工士	pass_rate|applicants		
+c-7033	圧入施工技士(1~2級)	pass_rate|applicants		
+c-7034	解体工事施工技士	pass_rate|applicants		
+c-7102	空気調和・衛生工学会設備士	applicants	https://www.shasej.org/setsubishiweb/setubishi.html	公益社団法人 空気調和・衛生工学会
+c-7103	1級冷凍空気調和機器施工技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-7104	2級冷凍空気調和機器施工技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-7105	第一種冷凍空調技士	pass_rate|applicants	https://www.jsrae.or.jp/site/certificate/shikaku.php	公益社団法人 日本冷凍空調学会
+c-7106	第二種冷凍空調技士	pass_rate|applicants	https://www.jsrae.or.jp/site/certificate/shikaku.php	公益社団法人 日本冷凍空調学会
+c-7107	1級配管技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-7108	2級配管技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-7109	3級配管技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-7113	1級厨房設備施工技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-7114	2級厨房設備施工技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-7115	1級内装仕上げ施工技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-7116	2級内装仕上げ施工技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-7117	3級内装仕上げ施工技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-7118	1級熱絶縁施工技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-7119	2級熱絶縁施工技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-7120	1級カーテンウォール施工技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-7121	2級カーテンウォール施工技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-7122	1級サッシ施工技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-7123	2級サッシ施工技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-7124	1級自動ドア施工技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-7125	2級自動ドア施工技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-7126	バルコニー施工技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-7127	1級ガラス用フィルム施工技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-7128	2級ガラス用フィルム施工技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-7129	液化石油ガス設備士	applicants	https://www.khk.or.jp/qualification/qualification_application/	高圧ガス保安協会(KHK)
+c-7201	1級防水施工技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-7202	2級防水施工技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-7203	樹脂接着剤注入施行技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-7205	高圧室内作業主任者	pass_rate|applicants	https://www.exam.or.jp/	公益財団法人 安全衛生技術試験協会(免許交付は都道府県労働局長)
+c-7206	酸素欠乏危険作業主任者	pass_rate|applicants	https://www.jisha.or.jp/	都道府県労働局長登録教習機関(中央労働災害防止協会 等)
+c-7207	酸素欠乏・硫化水素危険作業主任者	pass_rate|applicants	https://www.jisha.or.jp/	都道府県労働局長登録教習機関(中央労働災害防止協会 等)
+c-7208	石綿作業主任者	pass_rate|applicants	https://www.jisha.or.jp/	都道府県労働局長登録教習機関(中央労働災害防止協会 等)
+c-7302	1級コンクリート圧送施工技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-7303	2級コンクリート圧送施工技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-7304	コンクリート破砕機作業主任者	pass_rate|applicants	https://www.jisha.or.jp/	都道府県労働局長登録教習機関(中央労働災害防止協会 等)
+c-7305	1級ウェルポイント施工技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-7306	2級ウェルポイント施工技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-7307	路面標示施工技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-7308	林業架線作業主任者	pass_rate|applicants	https://www.jisha.or.jp/	都道府県労働局長登録教習機関(中央労働災害防止協会 等)
+c-7309	コンクリート技士・コンクリート主任技士	pass_rate|applicants		
+c-7401	はい作業主任者	pass_rate|applicants	https://www.jisha.or.jp/	都道府県労働局長登録教習機関(中央労働災害防止協会 等)
+c-7402	船内荷役作業主任者	pass_rate|applicants	https://www.jisha.or.jp/	都道府県労働局長登録教習機関(中央労働災害防止協会 等)
+c-7403	ビルクリーニング技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-7404	産業洗浄技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
+c-7406	浄化槽技術管理者	pass_rate|applicants	https://www.jeces.or.jp/pages/412/	公益財団法人 日本環境整備教育センター
+c-7407	浄化槽清掃技術者	pass_rate|applicants	https://www.jeces.or.jp/pages/35/	公益財団法人 日本環境整備教育センター
+c-7408	ハウスクリーニング技能士	pass_rate|applicants	https://www.javada.or.jp/jigyou/gino/giken.html	中央職業能力開発協会(JAVADA)/都道府県職業能力開発協会
