@@ -26,6 +26,8 @@ jobs:
         run: python3 tools/build_seed.py
       - name: Validate data integrity
         run: python3 tools/validate.py
+      - name: Build occupation database
+        run: python3 tools/build_occupations.py
       - name: Build site
         run: python3 tools/build_pages.py
       - uses: actions/configure-pages@v5

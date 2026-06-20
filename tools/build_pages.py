@@ -123,6 +123,74 @@ def load_study_time():
 STUDY = load_study_time()
 
 
+# ── 職種データベース（occupations.csv / cert_occupations.csv）──
+import build_occupations as occlib  # 正規化ロジック（split_name_note / canonical）を共有
+
+OCC_CSV = ROOT / "data" / "occupations.csv"
+MAP_CSV = ROOT / "data" / "cert_occupations.csv"
+OCC_DESC_CSV = ROOT / "data" / "occupation_descriptions.csv"
+
+
+def load_occupations():
+    """occ_id → {name, major_category, cert_count}。職種マスタ。"""
+    if not OCC_CSV.exists():
+        return {}
+    out = {}
+    with OCC_CSV.open(encoding="utf-8") as f:
+        for r in csv.DictReader(f):
+            oid = (r.get("occ_id") or "").strip()
+            nm = (r.get("name") or "").strip()
+            if not oid or not nm:
+                continue
+            try:
+                cc = int(r.get("cert_count") or 0)
+            except ValueError:
+                cc = 0
+            out[oid] = {"name": nm, "major_category": (r.get("major_category") or "").strip(),
+                        "cert_count": cc}
+    return out
+
+
+OCC = load_occupations()
+OCC_ID_BY_NAME = {v["name"]: k for k, v in OCC.items()}
+
+
+def load_cert_occ():
+    """occ_id → [slug]（逆引き）と slug → set(occ_id) を返す。"""
+    occ_certs, slug_occs = {}, {}
+    if not MAP_CSV.exists():
+        return occ_certs, slug_occs
+    with MAP_CSV.open(encoding="utf-8") as f:
+        for r in csv.DictReader(f):
+            s = (r.get("slug") or "").strip()
+            oid = (r.get("occ_id") or "").strip()
+            if not s or not oid:
+                continue
+            occ_certs.setdefault(oid, []).append(s)
+            slug_occs.setdefault(s, set()).add(oid)
+    return occ_certs, slug_occs
+
+
+OCC_CERTS, SLUG_OCC_IDS = load_cert_occ()
+
+
+def load_occupation_descriptions():
+    """occ_id → 手書きの独自解説（任意・Phase3でキュレーション）。"""
+    if not OCC_DESC_CSV.exists():
+        return {}
+    out = {}
+    with OCC_DESC_CSV.open(encoding="utf-8") as f:
+        for r in csv.DictReader(f):
+            oid = (r.get("occ_id") or "").strip()
+            d = (r.get("summary") or "").strip()
+            if oid and d:
+                out[oid] = d
+    return out
+
+
+OCC_DESC = load_occupation_descriptions()
+
+
 def applicants_num(r):
     """受験者数の文字列から代表数（最初の「N人/N名」）を整数で。なければ None。"""
     ed = EXAM.get(r.get("slug", ""))
@@ -274,16 +342,28 @@ def build_detail(row) -> str:
     fact_p = (f"<p>{name}の概要: " + "、".join(fact)
               + "。最新の金額・日程・合格率は公式サイトで必ずご確認ください。</p>") if fact else ""
 
-    # 活かせる仕事・キャリア（ハイブリッド: キュレーション + job tag 導線）
+    # 活かせる仕事・キャリア（職種DBへの内部リンク化 + job tag 導線）
     cur = CAREERS.get(row["slug"])
     if cur:
-        jobs = [c.strip() for c in cur["careers"].split("、") if c.strip()]
-        jobs_html = "".join(f"<li>{esc(j)}</li>" for j in jobs)
+        items = []
+        for tok in cur["careers"].split("、"):
+            tok = tok.strip()
+            if not tok:
+                continue
+            nm, note = occlib.split_name_note(tok)
+            nm = occlib.canonical(nm)
+            note_html = f'<span class="muted">（{esc(note)}）</span>' if note else ""
+            oid = OCC_ID_BY_NAME.get(nm)
+            if oid:
+                items.append(f'<li><a href="../shoku/{oid}.html">{esc(nm)}</a>{note_html}</li>')
+            else:
+                items.append(f'<li>{esc(nm)}{note_html}</li>')
+        jobs_html = "".join(items)
         src_html = ""
         if cur["source"]:
             src_html = (f'<p class="muted careers-src">出典: '
                         f'<a href="{esc(cur["source"])}" rel="nofollow noopener" target="_blank">'
-                        f'公式・job tag 等</a></p>')
+                        f'公式・job tag 等</a>（職種名から各職種ページへ：その職種に活かせる資格を逆引きできます）</p>')
         careers_body = f'<ul class="careers">{jobs_html}</ul>{src_html}'
     else:
         careers_body = (f'<p class="muted">{esc(name)}（{esc(major)}分野）を要件・推奨とする'
@@ -1234,6 +1314,140 @@ def build_comparison_pages(indexable):
     return pages
 
 
+def _occ_short(name):
+    return re.sub(r"[（(].*?[）)]", "", name).strip() or name
+
+
+def occ_is_indexable(occ_id, shown_count):
+    """職種ページをSEOインデックス対象にするか（インデックス衛生）。
+    逆引きで十分な内部リンク（3資格以上）があるか、独自解説があるpage のみインデックス。"""
+    return shown_count >= 3 or bool(OCC_DESC.get(occ_id))
+
+
+def related_occupations(occ_id):
+    """同じ資格に共起する職種を関連度（共起資格数）順に最大8件返す。"""
+    from collections import Counter
+    c = Counter()
+    for s in OCC_CERTS.get(occ_id, []):
+        for oid in SLUG_OCC_IDS.get(s, ()):
+            if oid != occ_id:
+                c[oid] += 1
+    ranked = sorted(c.items(),
+                    key=lambda kv: (-kv[1], -OCC.get(kv[0], {}).get("cert_count", 0)))
+    return [(oid, n) for oid, n in ranked[:8]]
+
+
+def build_occupation_pages(indexable):
+    """職種ページ（site/shoku/<occ_id>.html）と職種インデックスを生成する。
+
+    各ページの主役は「この職種に活かせる資格」の逆引き一覧。資格→職種の自由記述
+    （careers）を正規化した occupations / cert_occupations をデータ源とする。
+    """
+    by_slug = {r["slug"]: r for r in indexable}
+    pages = {}
+    index_items = []  # (occ_id, name, major, shown) — インデックス対象のみ
+
+    for occ_id, info in OCC.items():
+        name = info["name"]
+        major = info["major_category"]
+        certs = [by_slug[s] for s in OCC_CERTS.get(occ_id, []) if s in by_slug]
+        certs.sort(key=lambda r: (r["status"] != "published", r["major_category"], r["name"]))
+        shown = len(certs)
+
+        desc_txt = OCC_DESC.get(occ_id, "")
+        if desc_txt:
+            lead = esc(desc_txt)
+        else:
+            lead = (f"{esc(name)}は、関連資格の取得が役立つ職種です。"
+                    f"このページでは{esc(name)}に活かせる資格を{shown}件まとめ、"
+                    "各資格の受験料・合格率・受験資格・公式情報を確認できます。")
+
+        listing = (_list_items(certs, depth=1) if certs
+                   else '<p class="muted">この職種に直接ひも付く掲載資格は精査中です。</p>')
+
+        # 関連職種（共起）
+        rels = related_occupations(occ_id)
+        rel_html = ""
+        if rels:
+            lis = "".join(
+                f'<li><a href="{oid}.html">{esc(_occ_short(OCC[oid]["name"]))}</a>'
+                f' <span class="muted">（{OCC[oid]["cert_count"]}資格）</span></li>'
+                for oid, _ in rels if oid in OCC)
+            rel_html = ('<nav class="rel-links"><h2>関連する職種</h2>'
+                        '<p class="muted">同じ資格から目指せる近い職種です。</p>'
+                        f'<ul>{lis}</ul></nav>')
+
+        # 分野一覧・職種トップへの導線
+        bslug = MAJOR_SLUGS.get(major, "other")
+        nav_links = ['<li><a href="index.html">職種の一覧から探す</a></li>']
+        if major:
+            nav_links.append(f'<li><a href="../bunya/{bslug}.html">{esc(major)}の資格一覧</a></li>')
+        nav_links.append(f'<li><a href="{JOBTAG_URL}" rel="nofollow noopener" target="_blank">'
+                         '厚生労働省 job tag でこの職業を調べる ↗</a></li>')
+        more_nav = ('<nav class="rel-links"><h2>関連リンク</h2><ul>'
+                    + "".join(nav_links) + "</ul></nav>")
+
+        body = (
+            f'<nav class="crumbs"><a href="../index.html">トップ</a> › '
+            f'<a href="index.html">職種から探す</a> › {esc(name)}</nav>'
+            f"<h1>{esc(name)}に活かせる資格</h1>"
+            f'<p class="lead">{lead}</p>'
+            f'<section class="careers-sec"><h2>この職種に活かせる資格（{shown}件）</h2>'
+            f"{listing}</section>"
+            f"{rel_html}{more_nav}"
+            '<p class="muted" style="margin-top:14px">※「活かせる資格」は厚生労働省の職業情報'
+            '提供サイト（job tag）等を出所に各資格の関連職業を整理したものです。資格が必須・'
+            '推奨かは職種・求人により異なります。詳細は各資格・求人の公式情報でご確認ください。</p>'
+        )
+        noindex = not occ_is_indexable(occ_id, shown)
+        desc = (f"{name}に活かせる資格を{shown}件まとめました。"
+                f"{name}を目指すうえで役立つ資格の受験料・合格率・受験資格・公式情報を一覧で確認できます。")
+        breadcrumb = {
+            "@context": "https://schema.org", "@type": "BreadcrumbList",
+            "itemListElement": [
+                {"@type": "ListItem", "position": 1, "name": "トップ", "item": BASE_URL + "/"},
+                {"@type": "ListItem", "position": 2, "name": "職種から探す",
+                 "item": f"{BASE_URL}/shoku/index.html"},
+                {"@type": "ListItem", "position": 3, "name": name},
+            ]}
+        pages[occ_id] = page_shell(f"{name}に活かせる資格｜{SITE_NAME}", body, depth=1,
+                                   noindex=noindex, desc=desc,
+                                   path=f"shoku/{occ_id}.html", jsonld=[breadcrumb])
+        if not noindex:
+            index_items.append((occ_id, name, major, shown))
+
+    # 職種インデックス（site/shoku/index.html）— 分野別に逆引きの太い職種から
+    from collections import OrderedDict
+    index_items.sort(key=lambda t: (t[2], -t[3], t[1]))
+    by_major = OrderedDict()
+    for occ_id, name, major, shown in index_items:
+        by_major.setdefault(major or "その他", []).append((occ_id, name, shown))
+    blocks = ""
+    for major, lst in by_major.items():
+        lis = "".join(
+            f'<li><a href="{oid}.html">{esc(_occ_short(nm))}</a>'
+            f' <span class="muted">（{sh}資格）</span></li>'
+            for oid, nm, sh in lst)
+        blocks += f'<h2 class="hub-grp">{esc(major)}</h2><ul class="results occ-list">{lis}</ul>'
+    total_occ = len(OCC)
+    idx_body = (
+        f'<nav class="crumbs"><a href="../index.html">トップ</a> › 職種から探す</nav>'
+        f"<h1>職種から資格を探す</h1>"
+        f'<p class="lead">資格を取得して目指せる職種から、その職種に<strong>活かせる資格を逆引き</strong>'
+        f'できます。資格ごとの「活かせる仕事」を正規化した職種データベース（全{total_occ}職種）の'
+        f'うち、関連資格が複数ある{len(index_items)}職種を分野別に掲載しています。</p>'
+        f"{blocks}"
+        '<p class="muted" style="margin-top:14px">※職種データは厚生労働省の職業情報提供サイト'
+        '（job tag）等を出所に各資格の関連職業を整理・正規化したものです。</p>'
+    )
+    index_html = page_shell(f"職種から資格を探す｜{SITE_NAME}", idx_body, depth=1,
+                            noindex=False,
+                            desc="資格を取得して目指せる職種から、その職種に活かせる資格を逆引きできます。"
+                                 "分野別に職種を一覧。",
+                            path="shoku/index.html")
+    return pages, index_html, index_items
+
+
 def build_index(rows) -> str:
     pub = sum(1 for r in rows if r.get("status") == "published")
     majors = sorted({r["major_category"] for r in rows})
@@ -1290,6 +1504,8 @@ def build_index(rows) -> str:
 <ul id="results" class="results"></ul>
 <div id="cmpbar" class="cmpbar"></div>
 <section class="feature-nav">
+  <h2>職種から探す</h2>
+  <ul class="feat-list"><li><a href="shoku/index.html">職種から資格を逆引きする（活かせる仕事から探す）</a></li></ul>
   <h2>目的から探す</h2>
   <ul class="feat-list">{hub_links}</ul>
   <h2>資格を比べる（人気の比較）</h2>
@@ -1526,6 +1742,8 @@ table.spec th{width:34%;background:#f2f5fa;color:#3a4757;font-weight:600;white-s
 .careers-sec h2{font-size:1.05rem;margin:.2em 0 .4em}
 .careers{margin:.2em 0;padding-left:1.1em}.careers li{margin:2px 0}
 .careers-src{font-size:.8rem;margin:.3em 0 0}
+.occ-list{columns:2;column-gap:22px}.occ-list li{break-inside:avoid;background:#fff;border:1px solid #e6e9ef;border-radius:8px;padding:8px 11px;margin-bottom:7px}
+@media(max-width:560px){.occ-list{columns:1}}
 .jobtag{margin:.5em 0 0;font-size:.92rem}
 .rel-links{margin:18px 0 0;border-top:1px solid #e6e9ef;padding-top:12px}
 .rel-links h2{font-size:1.05rem;margin:.2em 0 .3em}
@@ -1632,6 +1850,15 @@ def main() -> int:
     for slug, htmlc in vs_pages.items():
         (SITE / "vs" / f"{slug}.html").write_text(htmlc, encoding="utf-8")
 
+    # 職種DB（職種ページ＋「活かせる仕事」からの逆引きインデックス）
+    occ_index_items = []
+    if OCC:
+        (SITE / "shoku").mkdir()
+        occ_pages, occ_index_html, occ_index_items = build_occupation_pages(indexable)
+        for oid, htmlc in occ_pages.items():
+            (SITE / "shoku" / f"{oid}.html").write_text(htmlc, encoding="utf-8")
+        (SITE / "shoku" / "index.html").write_text(occ_index_html, encoding="utf-8")
+
     # sitemap.xml（index対象 = トップ・比較・分野別・特集・インデックス対象の詳細のみ）
     # noindex のページは sitemap に入れない（インデックス衛生・整合性）。
     from datetime import date
@@ -1641,6 +1868,10 @@ def main() -> int:
     entries += [(f"bunya/{s}.html", today, "0.8") for s in cat_pages]
     entries += [(f"feature/{s}.html", today, "0.8") for s in feat_pages]
     entries += [(f"vs/{s}.html", today, "0.7") for s in vs_pages]
+    if OCC:
+        entries.append(("shoku/index.html", today, "0.7"))
+        entries += [(f"shoku/{oid}.html", today, "0.6")
+                    for oid, _, _, _ in occ_index_items]
     idx_details = [r for r in indexable if is_indexable_detail(r)]
     entries += [(f'c/{r["slug"]}.html',
                  (r.get("source_checked_at") or today), "0.6") for r in idx_details]
@@ -1673,6 +1904,8 @@ def main() -> int:
     print(f"  index + {len(indexable)} detail pages")
     print(f"  sitemap urls: {len(entries)} (index対象詳細: {len(idx_details)})")
     print(f"  分野別一覧: {len(cat_pages)}  特集: {len(feat_pages)}")
+    if OCC:
+        print(f"  職種ページ: {len(OCC)}（うちindex対象 {len(occ_index_items)}）")
     print(f"  excluded: bucket/duplicate/overseas = {len(rows)-len(indexable)}")
     return 0
 

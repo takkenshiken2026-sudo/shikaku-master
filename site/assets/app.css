@@ -38,6 +38,8 @@ table.spec th{width:34%;background:#f2f5fa;color:#3a4757;font-weight:600;white-s
 .careers-sec h2{font-size:1.05rem;margin:.2em 0 .4em}
 .careers{margin:.2em 0;padding-left:1.1em}.careers li{margin:2px 0}
 .careers-src{font-size:.8rem;margin:.3em 0 0}
+.occ-list{columns:2;column-gap:22px}.occ-list li{break-inside:avoid;background:#fff;border:1px solid #e6e9ef;border-radius:8px;padding:8px 11px;margin-bottom:7px}
+@media(max-width:560px){.occ-list{columns:1}}
 .jobtag{margin:.5em 0 0;font-size:.92rem}
 .rel-links{margin:18px 0 0;border-top:1px solid #e6e9ef;padding-top:12px}
 .rel-links h2{font-size:1.05rem;margin:.2em 0 .3em}
