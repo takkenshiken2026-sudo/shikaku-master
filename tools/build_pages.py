@@ -88,6 +88,24 @@ def load_exam_details():
 EXAM = load_exam_details()
 
 
+def load_descriptions():
+    """slug → 手書きの独自解説文（編集部によるユニーク概要）。"""
+    path = ROOT / "data" / "descriptions.csv"
+    if not path.exists():
+        return {}
+    out = {}
+    with path.open(encoding="utf-8") as f:
+        for r in csv.DictReader(f):
+            s = (r.get("slug") or "").strip()
+            d = (r.get("description") or "").strip()
+            if s and d:
+                out[s] = d
+    return out
+
+
+DESC = load_descriptions()
+
+
 def load_study_time():
     """slug → {study_hours, source}。学習時間の目安（編集値・公式の一次情報ではない）。"""
     if not STUDY_CSV.exists():
@@ -235,11 +253,15 @@ def build_detail(row) -> str:
     updated_html = (f'<p class="updated">最終更新: {esc(jd)}'
                     f'<span class="muted">（公式の一次情報に基づき確認）</span></p>\n') if jd else ""
 
-    # ユニーク本文（概要）
-    lead = f"{esc(name)}は、{esc(major)}分野の{esc(label)}です。"
-    if row["authority"]:
-        lead += f"実施団体は{esc(row['authority'])}。"
-    lead += "このページでは受験料・試験形式・受験資格・合格率・実施頻度・公式サイトをまとめています。"
+    # ユニーク本文（概要）— 手書きの独自解説があれば優先、なければテンプレート生成
+    hand_desc = DESC.get(row["slug"], "")
+    if hand_desc:
+        lead = esc(hand_desc)
+    else:
+        lead = f"{esc(name)}は、{esc(major)}分野の{esc(label)}です。"
+        if row["authority"]:
+            lead += f"実施団体は{esc(row['authority'])}。"
+        lead += "このページでは受験料・試験形式・受験資格・合格率・実施頻度・公式サイトをまとめています。"
     fact = []
     if row["fee"]:
         fact.append(f"受験料は{esc(row['fee'])}")
@@ -358,9 +380,12 @@ fetch("../data/certifications.json").then(r=>r.json()).then(all=>{{
 """
     bits = [b for b in (("受験料" + row["fee"]) if row["fee"] else "",
                         ("合格率" + row["pass_rate"]) if row["pass_rate"] else "") if b]
-    desc = (f"{name}（{major}分野・{label}）の試験情報。"
-            + ("／".join(bits) + "。" if bits else "")
-            + "受験料・試験形式・受験資格・合格率・実施団体・公式サイトを掲載。")
+    if hand_desc:
+        desc = hand_desc[:118]
+    else:
+        desc = (f"{name}（{major}分野・{label}）の試験情報。"
+                + ("／".join(bits) + "。" if bits else "")
+                + "受験料・試験形式・受験資格・合格率・実施団体・公式サイトを掲載。")
     breadcrumb = {
         "@context": "https://schema.org", "@type": "BreadcrumbList",
         "itemListElement": [
