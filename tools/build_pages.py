@@ -1385,8 +1385,8 @@ def _occ_short(name):
 
 def occ_is_indexable(occ_id, shown_count):
     """職種ページをSEOインデックス対象にするか（インデックス衛生）。
-    逆引きで十分な内部リンク（3資格以上）があるか、独自解説があるpage のみインデックス。"""
-    return shown_count >= 3 or bool(OCC_DESC.get(occ_id))
+    逆引きで十分な内部リンク（2資格以上）があるか、独自解説があるpage のみインデックス。"""
+    return shown_count >= 2 or bool(OCC_DESC.get(occ_id))
 
 
 def related_occupations(occ_id):
@@ -1431,6 +1431,38 @@ def build_occupation_pages(indexable):
         listing = (_list_items(certs, depth=1) if certs
                    else '<p class="muted">この職種に直接ひも付く掲載資格は精査中です。</p>')
 
+        # 資格区分の内訳（国家/公的/民間/要確認）＋関連分野チップ（既存データから機械生成）
+        from collections import Counter
+        type_cnt = Counter(r["type"] for r in certs)
+        stat_html = ""
+        if certs:
+            parts = [f'<span class="occ-stat">{esc(t)} {type_cnt[t]}</span>'
+                     for t in ("国家", "公的", "民間", "要確認") if type_cnt.get(t)]
+            major_cnt = Counter(r["major_category"] for r in certs)
+            chips = "".join(
+                f'<a class="chip" href="../bunya/{MAJOR_SLUGS.get(m, "other")}.html">'
+                f'{esc(m)}<span class="muted"> {n}</span></a>'
+                for m, n in major_cnt.most_common(6))
+            stat_html = (
+                '<div class="occ-meta">'
+                f'<p class="occ-stats"><span class="occ-stats-label">資格区分の内訳：</span>'
+                f'{"".join(parts)}</p>'
+                f'<div class="occ-fields"><span class="occ-stats-label">関連する分野：</span>'
+                f'<span class="chips">{chips}</span></div></div>')
+
+        # 逆引き資格の ItemList 構造化データ
+        itemlist = None
+        if certs:
+            itemlist = {
+                "@context": "https://schema.org", "@type": "ItemList",
+                "name": f"{name}に活かせる資格",
+                "numberOfItems": len(certs),
+                "itemListElement": [
+                    {"@type": "ListItem", "position": i + 1, "name": r["name"],
+                     "url": f'{BASE_URL}/c/{r["slug"]}.html'}
+                    for i, r in enumerate(certs)],
+            }
+
         # 関連職種（共起）
         rels = related_occupations(occ_id)
         rel_html = ""
@@ -1458,6 +1490,7 @@ def build_occupation_pages(indexable):
             f'<a href="index.html">職種から探す</a> › {esc(name)}</nav>'
             f"<h1>{esc(name)}に活かせる資格</h1>"
             f'<p class="lead">{lead}</p>'
+            f"{stat_html}"
             f'<section class="careers-sec"><h2>この職種に活かせる資格（{shown}件）</h2>'
             f"{listing}</section>"
             f"{rel_html}{more_nav}"
@@ -1479,9 +1512,10 @@ def build_occupation_pages(indexable):
                  "item": f"{BASE_URL}/shoku/index.html"},
                 {"@type": "ListItem", "position": 3, "name": name},
             ]}
+        ld = [breadcrumb] + ([itemlist] if itemlist else [])
         pages[occ_id] = page_shell(f"{name}に活かせる資格｜{SITE_NAME}", body, depth=1,
                                    noindex=noindex, desc=desc,
-                                   path=f"shoku/{occ_id}.html", jsonld=[breadcrumb])
+                                   path=f"shoku/{occ_id}.html", jsonld=ld)
         if not noindex:
             index_items.append((occ_id, name, major, shown))
 
@@ -1823,6 +1857,10 @@ table.spec th{width:34%;background:#f2f5fa;color:#3a4757;font-weight:600;white-s
 .mat-kind{flex:0 0 auto;background:#eef4ff;color:#0d47a1;border:1px solid #cfe0fb;border-radius:6px;font-size:.74rem;font-weight:700;padding:2px 8px;margin-top:2px}
 .mat-body{flex:1}.mat-note{display:block;color:#6b7682;font-size:.82rem;margin-top:2px}
 .mat-foot{font-size:.78rem;margin:.4em 0 0}
+.occ-meta{background:#f7f9fc;border:1px solid #e6e9ef;border-radius:8px;padding:10px 13px;margin:10px 0}
+.occ-stats{margin:0 0 6px}.occ-fields{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px}
+.occ-stats-label{font-size:.84rem;color:#43505f;font-weight:600;margin-right:4px}
+.occ-stat{display:inline-block;background:#eef4ff;color:#0d47a1;border:1px solid #cfe0fb;border-radius:6px;font-size:.8rem;padding:1px 8px;margin-right:6px}
 .rel-links{margin:18px 0 0;border-top:1px solid #e6e9ef;padding-top:12px}
 .rel-links h2{font-size:1.05rem;margin:.2em 0 .3em}
 .rel-links ul{margin:.2em 0;padding-left:1.1em}.rel-links li{margin:2px 0}
