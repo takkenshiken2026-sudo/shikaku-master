@@ -869,14 +869,24 @@ fetch("../data/certifications.json").then(r=>r.json()).then(all=>{{
 </script>
 {recent_js}
 """
-    bits = [b for b in (("受験料" + row["fee"]) if row["fee"] else "",
-                        ("合格率" + row["pass_rate"]) if row["pass_rate"] else "") if b]
-    if hand_desc:
-        desc = hand_desc[:118]
-    else:
-        desc = (f"{name}（{major}分野・{label}）の試験情報。"
-                + ("／".join(bits) + "。" if bits else "")
-                + "受験料・試験形式・受験資格・合格率・実施団体・公式サイトを掲載。")
+    # meta description は各ページで一意になるよう、必ず固有の資格名で始め、
+    # 固有の事実（受験料・合格率・実施団体）を添える（家族で共通の説明文の重複を回避）。
+    _short = re.sub(r"[（(].*?[）)]", "", name).strip() or name
+    lead_txt = hand_desc or f"{name}は{major}分野の{label}です。"
+    if _short not in lead_txt:
+        lead_txt = f"{_short}は{label}。" + lead_txt
+    _facts = []
+    if row["fee"]:
+        _facts.append("受験料" + row["fee"])
+    if row["pass_rate"]:
+        _facts.append("合格率" + row["pass_rate"])
+    if not _facts and row["authority"]:
+        _facts.append("実施団体は" + row["authority"])
+    desc = lead_txt + ("（" + "／".join(_facts) + "）" if _facts else "")
+    desc = re.sub(r"\s+", " ", desc).strip()
+    if len(desc) < 90:
+        desc += " 受験資格・試験形式・公式サイトも掲載。"
+    desc = desc[:158]
     breadcrumb = {
         "@context": "https://schema.org", "@type": "BreadcrumbList",
         "itemListElement": [
