@@ -2207,6 +2207,7 @@ def build_index(rows) -> str:
       <option value="fee-desc">受験料が高い順</option>
       <option value="pass-desc">合格率が高い順</option>
       <option value="pass-asc">合格率が低い順</option>
+      <option value="app-desc">受験者数が多い順（人気）</option>
     </select>
   </div>
   <div class="filters">
@@ -2250,6 +2251,7 @@ def build_compare() -> str:
     body = """<nav class="crumbs"><a href="index.html">トップ</a> › 比較</nav>
 <h1>資格を比較</h1>
 <p class="lead">選択した資格を並べて比較します（最大4件）。数値・制度は各資格の公式情報で必ずご確認ください。</p>
+<div id="cmpVerdict"></div>
 <div id="cmp" class="cmp-wrap"></div>
 <p style="margin-top:18px"><a href="index.html">← 検索に戻って選び直す</a></p>
 <script src="assets/compare.js"></script>
@@ -2276,6 +2278,7 @@ SEARCH_JS = """(function(){
   function feeNum(x){var m=(x.fee||'').replace(/,/g,'').match(/([0-9]+)\s*円/);return m?parseInt(m[1],10):null;}
   function passNum(x){var m=(x.pass_rate||'').replace(/,/g,'').match(/([0-9]+(?:\.[0-9]+)?)\s*%/);return m?parseFloat(m[1]):null;}
   function studyLow(x){var m=(x.study_hours||'').replace(/,/g,'').match(/([0-9]+)/);return m?parseInt(m[1],10):null;}
+  function appNum(x){var m=(x.applicants||'').replace(/,/g,'').match(/([0-9]+)\s*[人名]/);return m?parseInt(m[1],10):null;}
   function studyHit(x,band){
     var v=studyLow(x); if(v===null)return false;
     var p=band.split('-'),lo=parseInt(p[0],10),hi=p[1]===''?Infinity:parseInt(p[1],10);
@@ -2300,7 +2303,7 @@ SEARCH_JS = """(function(){
       return true;
     });
     if(sk){
-      var key=sk.indexOf('fee')===0?feeNum:passNum, asc=sk.indexOf('asc')>=0;
+      var key=sk.indexOf('app')===0?appNum:(sk.indexOf('fee')===0?feeNum:passNum), asc=sk.indexOf('asc')>=0;
       out=out.slice().sort(function(a,b){
         var va=key(a),vb=key(b);
         if(va===null&&vb===null)return 0;
@@ -2451,7 +2454,8 @@ COMPARE_JS = """(function(){
       if(nr)card('誰でも受けたいなら',nr,'受験資格の制限なし');
     }
     var vhtml=v.length?('<section class="cmp-verdict"><h2 class="cmp-verdict-title">選び方の目安（掲載データに基づく簡易判定）</h2><div class="cmp-verdict-grid">'+v.join('')+'</div></section>'):'';
-    var h=vhtml+'<table class="cmp"><thead><tr><th></th>';
+    var vroot=document.getElementById('cmpVerdict'); if(vroot)vroot.innerHTML=vhtml;
+    var h='<table class="cmp"><thead><tr><th></th>';
     items.forEach(function(x){h+='<th><a href="c/'+x.slug+'.html">'+esc(x.name)+'</a></th>';});
     h+='</tr></thead><tbody>';
     FIELDS.forEach(function(f){
@@ -2555,7 +2559,7 @@ html{scroll-padding-top:64px}
 .header-menu-panel a{color:var(--gray-300);text-decoration:none;padding:12px 4px;border-bottom:1px solid var(--gray-800);font-size:var(--text-ui)}
 .header-menu-panel a:last-child{border-bottom:none}
 .header-menu-panel a:hover{color:#fff;text-decoration:none}
-@media(max-width:768px){.header-nav{display:none}.header-actions{display:flex}.header-inner{padding:10px 16px}}
+@media(max-width:768px){.header-nav{display:none}.header-actions{display:flex}.header-inner{padding:10px 16px}.site-tagline{display:none}.container{padding:20px 16px 36px}}
 
 .container{max-width:1200px;margin:0 auto;padding:24px 24px 40px;width:100%;flex:1 0 auto;min-width:0}
 
