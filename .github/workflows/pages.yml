@@ -30,6 +30,11 @@ jobs:
         run: python3 tools/build_occupations.py
       - name: Build site
         run: python3 tools/build_pages.py
+      - name: Build OG image (non-fatal)
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq fonts-noto-cjk || true
+          python3 -m pip install --quiet Pillow || true
+          python3 tools/build_og.py || echo "OG image generation skipped"
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

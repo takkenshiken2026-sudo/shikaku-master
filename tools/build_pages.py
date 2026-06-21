@@ -446,6 +446,7 @@ def page_shell(title: str, body: str, depth: int, noindex: bool = True,
     robots = ('<meta name="robots" content="noindex">\n' if noindex else "")
     desc = desc or SITE_DESC
     canon = BASE_URL + "/" + path
+    og_img = BASE_URL + "/assets/og.png"
     og = (f'<link rel="canonical" href="{esc(canon)}">\n'
           f'<meta property="og:type" content="website">\n'
           f'<meta property="og:site_name" content="{esc(SITE_NAME)}">\n'
@@ -453,7 +454,11 @@ def page_shell(title: str, body: str, depth: int, noindex: bool = True,
           f'<meta property="og:description" content="{esc(desc)}">\n'
           f'<meta property="og:url" content="{esc(canon)}">\n'
           f'<meta property="og:locale" content="ja_JP">\n'
-          f'<meta name="twitter:card" content="summary">\n')
+          f'<meta property="og:image" content="{esc(og_img)}">\n'
+          f'<meta property="og:image:width" content="1200">\n'
+          f'<meta property="og:image:height" content="630">\n'
+          f'<meta name="twitter:card" content="summary_large_image">\n'
+          f'<meta name="twitter:image" content="{esc(og_img)}">\n')
     ld = ""
     if jsonld:
         for obj in (jsonld if isinstance(jsonld, list) else [jsonld]):
