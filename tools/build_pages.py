@@ -468,7 +468,7 @@ def page_shell(title: str, body: str, depth: int, noindex: bool = True,
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#222222">
+<meta name="theme-color" content="#1a1a1a">
 {robots}<title>{esc(title)}</title>
 <meta name="description" content="{esc(desc)}">
 {og}<link rel="preconnect" href="https://fonts.googleapis.com">
@@ -2711,17 +2711,17 @@ OCC_SEARCH_JS = """(function(){
 """
 
 APP_CSS = """:root{
---ink:#2e2e2e;--ink-deep:#222;--gray-900:#383838;--gray-800:#4d4d4d;--gray-700:#5c5c5c;
---gray-600:#6a6a6a;--gray-500:#757575;--gray-400:#919191;--gray-300:#d0d0d0;--gray-200:#e8e8e8;
---gray-100:#f4f4f4;--gray-50:#fafafa;--white:#fff;
---accent:#2a7a6e;--accent-hover:#23685e;--accent-light:#e9f3f1;--accent-ring:rgba(42,122,110,.18);
+--ink:#222222;--ink-deep:#1a1a1a;--gray-900:#2f2f2f;--gray-800:#434343;--gray-700:#525252;
+--gray-600:#5a5a5a;--gray-500:#666666;--gray-400:#7f7f7f;--gray-300:#c4c4c4;--gray-200:#dcdcdc;
+--gray-100:#f0f0f0;--gray-50:#f7f7f7;--white:#fff;--page-bg:#e9ebec;
+--accent:#236f64;--accent-hover:#1c5a51;--accent-light:#e6f1ef;--accent-ring:rgba(35,111,100,.22);
 --radius:8px;
---text-hero:clamp(1.7rem,4vw,2.4rem);--text-page:1.45rem;--text-section:1.28rem;--text-section-sub:1.08rem;
---text-card-title:1.16rem;--text-lead:1.02rem;--text-input:1.05rem;--text-body:.98rem;--text-ui:.96rem;
---text-nav:.94rem;--text-sm:.88rem;--text-xs:.84rem;--text-2xs:.8rem;--text-chip:.78rem}
+--text-hero:clamp(1.75rem,4vw,2.45rem);--text-page:1.5rem;--text-section:1.3rem;--text-section-sub:1.12rem;
+--text-card-title:1.18rem;--text-lead:1.06rem;--text-input:1.06rem;--text-body:1.02rem;--text-ui:1rem;
+--text-nav:.95rem;--text-sm:.9rem;--text-xs:.86rem;--text-2xs:.82rem;--text-chip:.8rem}
 *{box-sizing:border-box}
 html{font-size:16px}
-body{margin:0;min-height:100vh;display:flex;flex-direction:column;font-family:"Noto Sans JP",system-ui,-apple-system,"Hiragino Kaku Gothic ProN",Meiryo,sans-serif;font-size:var(--text-ui);color:var(--ink);background:var(--gray-200);line-height:1.65;-webkit-font-smoothing:antialiased}
+body{margin:0;min-height:100vh;display:flex;flex-direction:column;font-family:"Noto Sans JP",system-ui,-apple-system,"Hiragino Kaku Gothic ProN",Meiryo,sans-serif;font-size:var(--text-ui);color:var(--ink);background:var(--page-bg);line-height:1.7;-webkit-font-smoothing:antialiased}
 a{color:var(--ink)}a:hover{text-decoration:underline}
 img{max-width:100%}
 :focus-visible{outline:3px solid var(--accent-ring);outline-offset:2px}
@@ -2877,7 +2877,8 @@ h2{color:var(--ink-deep)}
 .results-bar #status{margin:0}
 .clear-filters{background:none;border:none;color:var(--accent);font-family:inherit;font-size:var(--text-sm);font-weight:600;cursor:pointer;padding:0;text-decoration:underline;text-underline-offset:2px}
 .clear-filters:hover{color:var(--accent-hover)}
-.muted{color:var(--gray-400)}
+.muted{color:var(--gray-500)}
+.purpose-card,.pop-card,.field-card,.compare-card,.faq-item,table.spec,.results li,.occ-list li{box-shadow:0 1px 2px rgba(0,0,0,.05)}
 .crumbs{font-size:var(--text-nav);color:var(--gray-500);margin-bottom:10px}
 .crumbs a{color:var(--gray-700)}
 
