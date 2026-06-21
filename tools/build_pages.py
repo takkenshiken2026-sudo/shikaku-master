@@ -2162,6 +2162,7 @@ def build_index(rows) -> str:
     <input id="q" type="search" placeholder="資格名で検索（例: 簿記, 宅建, ITパスポート）" aria-label="資格名で検索">
   </div>
   <p class="hero-hint">または <a href="#purpose">目的から探す</a>・<a href="#fields">分野から探す</a></p>
+  <p class="hero-result" id="heroResult" hidden></p>
 </section>
 
 <section class="block block-primary" id="purpose">
@@ -2265,7 +2266,8 @@ SEARCH_JS = """(function(){
       fPub=document.getElementById('f-pub'),tagFilter=document.getElementById('tagfilter'),
       studyNote=document.getElementById('studynote'),
       results=document.getElementById('results'),
-      status=document.getElementById('status'),count=document.getElementById('count');
+      status=document.getElementById('status'),count=document.getElementById('count'),
+      heroResult=document.getElementById('heroResult');
   var DATA=[], activeTags=new Set();
   var TAG_ORDER=['就職・転職','独立・開業','在宅ワーク','手に職','未経験からIT','定年後・シニア','受験資格なし','CBT・ネット試験','働きながら'];
   function esc(s){return (s||'').replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
@@ -2307,10 +2309,18 @@ SEARCH_JS = """(function(){
       });
     }
     status.textContent=out.length+' 件';
+    if(heroResult){
+      var anyFilter=t||mj||tp||ind||band||activeTags.size||fPub.checked;
+      if(anyFilter){
+        heroResult.hidden=false;
+        heroResult.innerHTML=(t?'「<strong>'+esc(t)+'</strong>」を含む資格 ':'絞り込み結果 ')+
+          '<strong>'+out.length+'</strong> 件 <a href="#all">一覧へ ↓</a>';
+      } else { heroResult.hidden=true; heroResult.innerHTML=''; }
+    }
     results.innerHTML=out.slice(0,300).map(function(x){
       var extra=x.status==='published'?[feeNum(x)!==null?esc(x.fee):'',passNum(x)!==null?'合格率'+esc(x.pass_rate):''].filter(Boolean).join(' / '):'';
       return '<li><div class="result-main">'+
-        '<a href="c/'+x.slug+'.html">'+esc(x.name)+'</a>'+
+        '<a href="c/'+x.slug+'.html">'+esc(x.name)+'</a>'+(x.popular?' <span class="result-label">定番</span>':'')+
         '<span class="meta"><span class="badge b-'+x.type+'">'+x.type+'</span> '+esc(x.major)+' / '+esc(x.category)+(extra?' ・ '+extra:'')+'</span>'+
         '</div>'+
         '<button type="button" class="cmp-add-btn" data-slug="'+x.slug+'" data-name="'+esc(shortName(x.name))+'">＋ 比較</button>'+
@@ -2355,6 +2365,9 @@ SEARCH_JS = """(function(){
   });
   [q,majorSel,typeSel,sortSel,industrySel,studySel].forEach(function(el){el.addEventListener('input',render);});
   fPub.addEventListener('change',render);
+  q.addEventListener('keydown',function(e){
+    if(e.key==='Enter'){var a=document.getElementById('all');if(a){e.preventDefault();a.scrollIntoView();}}
+  });
 })();
 """
 
@@ -2512,7 +2525,9 @@ img{max-width:100%}
 .skip-link{position:absolute;left:-9999px}.skip-link:focus{left:8px;top:8px;background:#fff;padding:8px 12px;z-index:50;border-radius:6px}
 
 /* Header */
-.site-header{background:var(--ink-deep);color:#fff;border-bottom:1px solid var(--gray-800)}
+.site-header{background:var(--ink-deep);color:#fff;border-bottom:1px solid var(--gray-800);position:sticky;top:0;z-index:30}
+@media(prefers-reduced-motion:no-preference){html{scroll-behavior:smooth}}
+html{scroll-padding-top:64px}
 .header-inner{max-width:1200px;margin:0 auto;padding:12px 24px;display:flex;align-items:center;gap:16px;min-width:0}
 .header-brand{flex-shrink:0;display:flex;flex-direction:column;gap:2px}
 .logo{color:#fff;font-weight:700;font-size:1.24rem;text-decoration:none;letter-spacing:.02em}
@@ -2557,6 +2572,9 @@ img{max-width:100%}
 .hero-search .ico{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--gray-500);display:flex}
 .hero-hint{margin-top:10px;font-size:var(--text-sm);color:var(--gray-500)}
 .hero-hint a{color:var(--accent);font-weight:600;text-decoration:none}.hero-hint a:hover{text-decoration:underline}
+.hero-result{margin-top:12px;font-size:var(--text-sm);color:var(--gray-700)}
+.hero-result a{color:var(--accent);font-weight:600;text-decoration:underline;text-underline-offset:2px}
+.hero-result strong{color:var(--ink-deep)}
 
 /* Blocks */
 .block{margin-bottom:28px}.block-primary{margin-bottom:40px}.block-secondary{margin-bottom:34px}
@@ -2812,7 +2830,12 @@ def main() -> int:
     def _diff_label(r):
         d = difficulty(r)
         return d[0] if d else ""
+    # 「定番」マーク: 受験者数の多い上位80件（一覧で目印として表示）
+    _pop_ranked = sorted((r for r in indexable if applicants_num(r) is not None),
+                         key=lambda r: -(applicants_num(r) or 0))
+    POPULAR_SET = set(r["slug"] for r in _pop_ranked[:80])
     payload = [{
+        "popular": (r["slug"] in POPULAR_SET),
         "slug": r["slug"], "name": r["name"], "major": r["major_category"],
         "category": r["category"], "type": r["type"],
         "authority": r["authority"], "official_url": r["official_url"],

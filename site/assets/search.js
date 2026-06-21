@@ -5,7 +5,8 @@
       fPub=document.getElementById('f-pub'),tagFilter=document.getElementById('tagfilter'),
       studyNote=document.getElementById('studynote'),
       results=document.getElementById('results'),
-      status=document.getElementById('status'),count=document.getElementById('count');
+      status=document.getElementById('status'),count=document.getElementById('count'),
+      heroResult=document.getElementById('heroResult');
   var DATA=[], activeTags=new Set();
   var TAG_ORDER=['就職・転職','独立・開業','在宅ワーク','手に職','未経験からIT','定年後・シニア','受験資格なし','CBT・ネット試験','働きながら'];
   function esc(s){return (s||'').replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
@@ -47,10 +48,18 @@
       });
     }
     status.textContent=out.length+' 件';
+    if(heroResult){
+      var anyFilter=t||mj||tp||ind||band||activeTags.size||fPub.checked;
+      if(anyFilter){
+        heroResult.hidden=false;
+        heroResult.innerHTML=(t?'「<strong>'+esc(t)+'</strong>」を含む資格 ':'絞り込み結果 ')+
+          '<strong>'+out.length+'</strong> 件 <a href="#all">一覧へ ↓</a>';
+      } else { heroResult.hidden=true; heroResult.innerHTML=''; }
+    }
     results.innerHTML=out.slice(0,300).map(function(x){
       var extra=x.status==='published'?[feeNum(x)!==null?esc(x.fee):'',passNum(x)!==null?'合格率'+esc(x.pass_rate):''].filter(Boolean).join(' / '):'';
       return '<li><div class="result-main">'+
-        '<a href="c/'+x.slug+'.html">'+esc(x.name)+'</a>'+
+        '<a href="c/'+x.slug+'.html">'+esc(x.name)+'</a>'+(x.popular?' <span class="result-label">定番</span>':'')+
         '<span class="meta"><span class="badge b-'+x.type+'">'+x.type+'</span> '+esc(x.major)+' / '+esc(x.category)+(extra?' ・ '+extra:'')+'</span>'+
         '</div>'+
         '<button type="button" class="cmp-add-btn" data-slug="'+x.slug+'" data-name="'+esc(shortName(x.name))+'">＋ 比較</button>'+
@@ -95,4 +104,7 @@
   });
   [q,majorSel,typeSel,sortSel,industrySel,studySel].forEach(function(el){el.addEventListener('input',render);});
   fPub.addEventListener('change',render);
+  q.addEventListener('keydown',function(e){
+    if(e.key==='Enter'){var a=document.getElementById('all');if(a){e.preventDefault();a.scrollIntoView();}}
+  });
 })();
