@@ -506,6 +506,8 @@ def page_shell(title: str, body: str, depth: int, noindex: bool = True,
 <main class="container" id="main">
 {body}
 </main>
+<div id="cmpbar" class="cmpbar" data-base="{base}" aria-live="polite"></div>
+<script src="{base}assets/compare-bar.js"></script>
 <footer class="site-footer">
   <div class="site-footer-inner">
     <p class="site-footer-brand">{esc(SITE_NAME)}</p>
@@ -796,7 +798,7 @@ def build_detail(row) -> str:
 <h1 class="detail-title">{esc(name)}</h1>
 <p class="detail-audience">{lead}</p>
 {facts_grid}
-<div class="detail-actions">{cta}</div>
+<div class="detail-actions"><button type="button" class="cmp-add-btn" data-slug="{esc(row["slug"])}" data-name="{esc(re.sub(r"[（(].*?[）)]", "", name).strip() or name)}">＋ 比較</button>{cta}</div>
 {related_compare}
 <section class="detail-spec" aria-labelledby="ds-h">
 <h2 class="detail-section-title" id="ds-h">詳細情報</h2>
@@ -2212,9 +2214,8 @@ def build_index(rows) -> str:
   </div>
   <div id="tagfilter" class="tagfilter"><span class="tf-label">目的・特徴で絞り込み：</span></div>
   <p id="status" class="muted"></p>
-  <p class="muted hint">「＋比較」で資格を選ぶと、最大4件まで並べて比較できます。</p>
+  <p class="muted hint">各行の「＋比較」で資格を選ぶと、画面下の比較バーから最大4件まで並べて比較できます。</p>
   <ul id="results" class="results"></ul>
-  <div id="cmpbar" class="cmpbar"></div>
 </section>
 
 <section class="feature-nav">
@@ -2264,17 +2265,14 @@ SEARCH_JS = """(function(){
       fPub=document.getElementById('f-pub'),tagFilter=document.getElementById('tagfilter'),
       studyNote=document.getElementById('studynote'),
       results=document.getElementById('results'),
-      status=document.getElementById('status'),count=document.getElementById('count'),
-      bar=document.getElementById('cmpbar');
-  var DATA=[], MAX=4, selected=loadSel(), activeTags=new Set();
-  // 目的・特徴チップの表示順（存在するものだけ描画）
+      status=document.getElementById('status'),count=document.getElementById('count');
+  var DATA=[], activeTags=new Set();
   var TAG_ORDER=['就職・転職','独立・開業','在宅ワーク','手に職','未経験からIT','定年後・シニア','受験資格なし','CBT・ネット試験','働きながら'];
-  function loadSel(){try{return new Set(JSON.parse(localStorage.getItem('cmp')||'[]'));}catch(e){return new Set();}}
-  function saveSel(){try{localStorage.setItem('cmp',JSON.stringify([].slice.call(selected)));}catch(e){}}
   function esc(s){return (s||'').replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+  function shortName(n){return (n||'').replace(/[（(][^）)]*[）)]/g,'').trim()||n;}
   function opt(sel,v){var o=document.createElement('option');o.value=v;o.textContent=v;sel.appendChild(o);}
-  function feeNum(x){var m=(x.fee||'').replace(/,/g,'').match(/([0-9]+)\\s*円/);return m?parseInt(m[1],10):null;}
-  function passNum(x){var m=(x.pass_rate||'').replace(/,/g,'').match(/([0-9]+(?:\\.[0-9]+)?)\\s*%/);return m?parseFloat(m[1]):null;}
+  function feeNum(x){var m=(x.fee||'').replace(/,/g,'').match(/([0-9]+)\s*円/);return m?parseInt(m[1],10):null;}
+  function passNum(x){var m=(x.pass_rate||'').replace(/,/g,'').match(/([0-9]+(?:\.[0-9]+)?)\s*%/);return m?parseFloat(m[1]):null;}
   function studyLow(x){var m=(x.study_hours||'').replace(/,/g,'').match(/([0-9]+)/);return m?parseInt(m[1],10):null;}
   function studyHit(x,band){
     var v=studyLow(x); if(v===null)return false;
@@ -2310,34 +2308,17 @@ SEARCH_JS = """(function(){
     }
     status.textContent=out.length+' 件';
     results.innerHTML=out.slice(0,300).map(function(x){
-      var ck=selected.has(x.slug)?' checked':'';
       var extra=x.status==='published'?[feeNum(x)!==null?esc(x.fee):'',passNum(x)!==null?'合格率'+esc(x.pass_rate):''].filter(Boolean).join(' / '):'';
-      return '<li><label class="cmp-add" title="比較に追加"><input type="checkbox" data-slug="'+x.slug+'"'+ck+'></label>'+
+      return '<li><div class="result-main">'+
         '<a href="c/'+x.slug+'.html">'+esc(x.name)+'</a>'+
-        '<span class="meta"><span class="badge b-'+x.type+'">'+x.type+'</span> '+esc(x.major)+' / '+esc(x.category)+(extra?' ・ '+extra:'')+'</span></li>';
+        '<span class="meta"><span class="badge b-'+x.type+'">'+x.type+'</span> '+esc(x.major)+' / '+esc(x.category)+(extra?' ・ '+extra:'')+'</span>'+
+        '</div>'+
+        '<button type="button" class="cmp-add-btn" data-slug="'+x.slug+'" data-name="'+esc(shortName(x.name))+'">＋ 比較</button>'+
+        '</li>';
     }).join('')||'<li class="muted">該当なし</li>';
     if(out.length>300) results.innerHTML+='<li class="muted">…他 '+(out.length-300)+' 件（絞り込んでください）</li>';
+    if(window.CmpBar)window.CmpBar.refresh();
   }
-  function updateBar(){
-    if(!bar)return;
-    var n=selected.size;
-    if(!n){bar.classList.remove('on');bar.innerHTML='';return;}
-    bar.classList.add('on');
-    bar.innerHTML='<span>'+n+' 件を選択中（最大'+MAX+'）</span>'+
-      '<a class="btn" href="compare.html?ids='+[].slice.call(selected).join(',')+'">比較する</a>'+
-      '<button type="button" id="cmpclear" class="btn-ghost">クリア</button>';
-    document.getElementById('cmpclear').onclick=function(){selected.clear();saveSel();render();updateBar();};
-  }
-  results.addEventListener('change',function(e){
-    var cb=e.target;
-    if(!cb||cb.tagName!=='INPUT')return;
-    var slug=cb.getAttribute('data-slug');
-    if(cb.checked){
-      if(selected.size>=MAX&&!selected.has(slug)){cb.checked=false;alert('比較は最大'+MAX+'件までです');return;}
-      selected.add(slug);
-    } else selected.delete(slug);
-    saveSel();updateBar();
-  });
   function buildTagChips(all){
     var present={},counts={};
     all.forEach(function(x){(x.tags||[]).forEach(function(tg){present[tg]=1;counts[tg]=(counts[tg]||0)+1;});});
@@ -2355,7 +2336,7 @@ SEARCH_JS = """(function(){
     });
   }
   fetch('data/certifications.json').then(function(r){return r.json();}).then(function(all){
-    DATA=all; count.textContent=all.length;
+    DATA=all; if(count)count.textContent=all.length;
     var majors={},types={},inds={};
     all.forEach(function(x){majors[x.major]=1;types[x.type]=1;(x.industries||[]).forEach(function(i){inds[i]=(inds[i]||0)+1;});});
     Object.keys(majors).sort().forEach(function(v){opt(majorSel,v);});
@@ -2370,10 +2351,60 @@ SEARCH_JS = """(function(){
     if(p.get('tag')){p.get('tag').split(',').forEach(function(tg){
       activeTags.add(tg);
       var c=tagFilter.querySelector('[data-tag="'+tg+'"]'); if(c)c.classList.add('on');});}
-    render();updateBar();
+    render();
   });
   [q,majorSel,typeSel,sortSel,industrySel,studySel].forEach(function(el){el.addEventListener('input',render);});
   fPub.addEventListener('change',render);
+})();
+"""
+
+
+COMPARE_BAR_JS = """(function(){
+  var MAX=4;
+  function load(){try{return JSON.parse(localStorage.getItem('cmp')||'[]');}catch(e){return [];}}
+  function names(){try{return JSON.parse(localStorage.getItem('cmpNames')||'{}');}catch(e){return {};}}
+  function save(a,nm){try{localStorage.setItem('cmp',JSON.stringify(a));localStorage.setItem('cmpNames',JSON.stringify(nm));}catch(e){}}
+  function esc(s){return (s||'').replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+  function toggle(slug,name){
+    var a=load(),nm=names(),i=a.indexOf(slug);
+    if(i>=0){a.splice(i,1);delete nm[slug];}
+    else{if(a.length>=MAX){alert('比較は最大'+MAX+'件までです');return;}a.push(slug);if(name)nm[slug]=name;}
+    save(a,nm);refresh();
+  }
+  function remove(slug){var a=load(),nm=names(),i=a.indexOf(slug);if(i>=0){a.splice(i,1);delete nm[slug];save(a,nm);refresh();}}
+  function clear(){save([],{});refresh();}
+  function refresh(){
+    var a=load(),nm=names();
+    var sel={};a.forEach(function(s){sel[s]=1;});
+    var btns=document.querySelectorAll('.cmp-add-btn[data-slug]');
+    for(var i=0;i<btns.length;i++){
+      var b=btns[i],on=!!sel[b.getAttribute('data-slug')];
+      b.classList.toggle('is-active',on);
+      b.textContent=on?'✓ 比較中':'＋ 比較';
+      b.setAttribute('aria-pressed',on?'true':'false');
+    }
+    var bar=document.getElementById('cmpbar');
+    if(!bar)return;
+    if(!a.length){bar.className='cmpbar';bar.innerHTML='';document.body.classList.remove('cmp-open');return;}
+    var base=bar.getAttribute('data-base')||'';
+    var pills=a.map(function(s){return '<span class="pill">'+esc(nm[s]||s)+' <button type="button" data-rm="'+esc(s)+'" aria-label="比較から外す">×</button></span>';}).join('');
+    bar.className='cmpbar on';
+    bar.innerHTML='<div class="cmpbar-inner"><span class="cmpbar-lbl">比較リスト</span>'+pills+
+      '<a class="btn btn-sm" href="'+base+'compare.html?ids='+a.join(',')+'">'+a.length+'件を比較する →</a>'+
+      '<button type="button" class="btn-ghost" data-cmpclear>クリア</button></div>';
+    document.body.classList.add('cmp-open');
+  }
+  document.addEventListener('click',function(e){
+    var t=e.target;
+    var add=t.closest?t.closest('.cmp-add-btn[data-slug]'):null;
+    if(add){e.preventDefault();toggle(add.getAttribute('data-slug'),add.getAttribute('data-name'));return;}
+    var rm=t.closest?t.closest('[data-rm]'):null;
+    if(rm){e.preventDefault();remove(rm.getAttribute('data-rm'));return;}
+    if(t.closest&&t.closest('[data-cmpclear]')){clear();return;}
+  });
+  window.CmpBar={refresh:refresh,toggle:toggle,get:load};
+  if(document.readyState!=='loading')refresh();
+  else document.addEventListener('DOMContentLoaded',refresh);
 })();
 """
 
@@ -2383,7 +2414,9 @@ COMPARE_JS = """(function(){
   var ids=(p.get('ids')||'').split(',').filter(Boolean);
   var root=document.getElementById('cmp');
   function esc(s){return (s||'').replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
-  if(!ids.length){root.innerHTML='<p class="muted">比較する資格が選択されていません。<a href="index.html">トップ</a>で資格にチェックを入れて選んでください。</p>';return;}
+  if(!ids.length){root.innerHTML='<p class="muted">比較する資格が選択されていません。<a href="index.html">資格一覧</a>から各行の「＋比較」で資格を選んでください。</p>';return;}
+  function feeNum(x){var m=(x.fee||'').replace(/,/g,'').match(/([0-9]+)\\s*円/);return m?parseInt(m[1],10):null;}
+  function passNum(x){var m=(x.pass_rate||'').replace(/,/g,'').match(/([0-9]+(?:\\.[0-9]+)?)\\s*%/);return m?parseFloat(m[1]):null;}
   var FIELDS=[['区分','type'],['分野','major'],['カテゴリ','category'],
     ['実施団体','authority'],['受験資格','eligibility'],['試験形式','exam_format'],
     ['受験料','fee'],['合格率','pass_rate'],['実施頻度','frequency']];
@@ -2391,7 +2424,21 @@ COMPARE_JS = """(function(){
     var map={};all.forEach(function(x){map[x.slug]=x;});
     var items=ids.map(function(s){return map[s];}).filter(Boolean);
     if(!items.length){root.innerHTML='<p class="muted">該当する資格データが見つかりませんでした。</p>';return;}
-    var h='<table class="cmp"><thead><tr><th></th>';
+    var v=[],seen={};
+    function card(label,x,why){if(!x||seen[label+x.slug])return;seen[label+x.slug]=1;
+      v.push('<div class="cmp-verdict-card"><div class="pick">'+label+'</div>'+
+        '<div class="pickname"><a href="c/'+x.slug+'.html">'+esc(x.name)+'</a></div>'+
+        '<div class="why">'+why+'</div></div>');}
+    if(items.length>=2){
+      var cheap=items.filter(function(x){return feeNum(x)!==null;}).sort(function(a,b){return feeNum(a)-feeNum(b);})[0];
+      if(cheap)card('費用を抑えたいなら',cheap,'受験料が最も安い：'+esc(cheap.fee));
+      var hp=items.filter(function(x){return passNum(x)!==null;}).sort(function(a,b){return passNum(b)-passNum(a);})[0];
+      if(hp)card('合格しやすさなら',hp,'公表合格率が最も高い：'+esc(hp.pass_rate));
+      var nr=items.filter(function(x){return /(なし|不問|制限なし)/.test(x.eligibility||'');})[0];
+      if(nr)card('誰でも受けたいなら',nr,'受験資格の制限なし');
+    }
+    var vhtml=v.length?('<section class="cmp-verdict"><h2 class="cmp-verdict-title">選び方の目安（掲載データに基づく簡易判定）</h2><div class="cmp-verdict-grid">'+v.join('')+'</div></section>'):'';
+    var h=vhtml+'<table class="cmp"><thead><tr><th></th>';
     items.forEach(function(x){h+='<th><a href="c/'+x.slug+'.html">'+esc(x.name)+'</a></th>';});
     h+='</tr></thead><tbody>';
     FIELDS.forEach(function(f){
@@ -2676,8 +2723,15 @@ table.spec th{width:34%;background:var(--gray-100);color:var(--gray-800);font-we
 
 /* Compare bar + table */
 .cmp-add{margin-right:9px;cursor:pointer}.cmp-add input{width:16px;height:16px;vertical-align:middle;cursor:pointer}
-.cmpbar{position:fixed;left:0;right:0;bottom:0;background:var(--ink-deep);color:#fff;padding:11px 18px;display:none;align-items:center;gap:14px;flex-wrap:wrap;z-index:20;border-top:1px solid var(--gray-800)}
-.cmpbar.on{display:flex}
+.cmpbar{position:fixed;left:0;right:0;bottom:0;background:var(--ink-deep);color:#fff;display:none;z-index:20;border-top:1px solid var(--gray-800)}
+.cmpbar.on{display:block}
+.cmpbar-inner{max-width:1200px;margin:0 auto;padding:10px 20px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.cmpbar-lbl{font-size:var(--text-xs);color:var(--gray-400)}
+.cmpbar .pill{display:inline-flex;align-items:center;gap:5px;background:var(--gray-800);padding:4px 10px;border-radius:999px;font-size:var(--text-nav);border:1px solid var(--gray-700);color:#fff}
+.cmpbar .pill button{background:none;border:none;color:var(--gray-400);cursor:pointer;font:inherit;padding:0 0 0 2px;line-height:1}
+.cmpbar .pill button:hover{color:#fff}
+.cmpbar .btn{margin-left:auto}
+body.cmp-open{padding-bottom:76px}
 .cmpbar .btn{background:var(--accent);color:#fff;font-weight:700;padding:7px 16px;border-radius:var(--radius)}
 .cmpbar .btn:hover{background:var(--accent-hover)}
 .cmpbar .btn-ghost{background:transparent;color:var(--gray-300);border:1px solid var(--gray-600);padding:6px 13px;border-radius:var(--radius);cursor:pointer;font:inherit;font-size:.9rem}
@@ -2717,6 +2771,22 @@ table.cmp tbody th{background:var(--gray-50);color:var(--gray-800);white-space:n
 .detail-source a{color:var(--ink);text-decoration:underline;text-underline-offset:2px}
 .detail-source-note{margin-top:8px;color:var(--gray-500);font-size:var(--text-xs)}
 .btn-sm{padding:7px 14px;font-size:var(--text-nav)}
+/* 一覧の行＋比較ボタン */
+.results li{display:flex;gap:12px;align-items:center}
+.result-main{flex:1;min-width:0}
+.result-label{display:inline-block;font-size:var(--text-2xs);font-weight:600;color:var(--gray-600);background:var(--gray-100);border:1px solid var(--gray-300);border-radius:4px;padding:1px 6px;margin-left:6px;vertical-align:middle}
+.cmp-add-btn{flex-shrink:0;min-width:78px;padding:8px 10px;font-size:var(--text-xs);font-weight:600;line-height:1.2;border:1px solid var(--accent);border-radius:8px;background:var(--white);color:var(--accent);cursor:pointer;font-family:inherit;text-align:center;transition:border-color .15s,background .15s,color .15s}
+.cmp-add-btn:hover{background:var(--gray-50)}
+.cmp-add-btn.is-active{background:var(--accent);border-color:var(--accent);color:#fff}
+/* 比較ページの結論カード */
+.cmp-verdict{margin:2px 0 18px}
+.cmp-verdict-title{font-size:var(--text-nav);font-weight:600;color:var(--ink-deep);margin:0 0 10px}
+.cmp-verdict-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px}
+.cmp-verdict-card{border:1px solid var(--gray-200);border-radius:var(--radius);padding:12px 14px;background:var(--white)}
+.cmp-verdict-card .pick{font-size:var(--text-sm);font-weight:700;color:var(--accent-hover);margin-bottom:4px}
+.cmp-verdict-card .pickname{font-size:var(--text-body);font-weight:700;color:var(--ink-deep);line-height:1.4}
+.cmp-verdict-card .pickname a{color:var(--ink-deep);text-decoration:underline;text-underline-offset:2px}
+.cmp-verdict-card .why{font-size:var(--text-xs);color:var(--gray-600);margin-top:3px;line-height:1.5}
 """
 
 
@@ -2762,6 +2832,7 @@ def main() -> int:
     (SITE / "assets" / "app.css").write_text(APP_CSS, encoding="utf-8")
     (SITE / "assets" / "search.js").write_text(SEARCH_JS, encoding="utf-8")
     (SITE / "assets" / "compare.js").write_text(COMPARE_JS, encoding="utf-8")
+    (SITE / "assets" / "compare-bar.js").write_text(COMPARE_BAR_JS, encoding="utf-8")
     for name in ("favicon.svg", "favicon.ico", "favicon-16.png", "favicon-32.png", "apple-touch-icon.png"):
         src = BRAND / name
         if src.exists():
