@@ -222,6 +222,77 @@ def load_materials():
 MATERIALS = load_materials()
 
 
+# ── 資格間の関係（ステップアップ・免除/受験資格・ダブルライセンス）──
+RELATIONS_CSV = ROOT / "data" / "cert_relations.csv"
+
+
+def load_cert_relations():
+    """slug → {up, down, exempt_to, exempt_from, combo}（各 (相手slug, note) のリスト）。"""
+    rel = {}
+
+    def b(s):
+        return rel.setdefault(s, {"up": [], "down": [], "exempt_to": [],
+                                  "exempt_from": [], "combo": []})
+    if not RELATIONS_CSV.exists():
+        return rel
+    with RELATIONS_CSV.open(encoding="utf-8") as f:
+        for r in csv.DictReader(f):
+            a = (r.get("slug_a") or "").strip()
+            c = (r.get("slug_b") or "").strip()
+            t = (r.get("relation") or "").strip()
+            note = (r.get("note") or "").strip()
+            if not a or not c:
+                continue
+            if t == "step_up":
+                b(a)["up"].append((c, note))
+                b(c)["down"].append((a, note))
+            elif t == "exemption":
+                b(a)["exempt_to"].append((c, note))
+                b(c)["exempt_from"].append((a, note))
+            elif t == "combo":
+                b(a)["combo"].append((c, note))
+                b(c)["combo"].append((a, note))
+    return rel
+
+
+CERT_RELATIONS = load_cert_relations()
+
+
+def cert_relations_html(slug):
+    """資格ページの「関連資格・ステップアップ」セクション。なければ空文字。"""
+    rel = CERT_RELATIONS.get(slug)
+    if not rel:
+        return ""
+
+    def nm(s):
+        n = NAME_BY_SLUG.get(s, s)
+        return re.sub(r"[（(].*?[）)]", "", n).strip() or n
+
+    def li(s, note):
+        note_html = f' <span class="muted">— {esc(note)}</span>' if note else ""
+        return f'<li><a href="{esc(s)}.html">{esc(nm(s))}</a>{note_html}</li>'
+
+    subs = []
+    if rel["up"]:
+        subs.append("<h3>上位資格・次に目指す</h3><ul>"
+                    + "".join(li(s, n) for s, n in rel["up"]) + "</ul>")
+    if rel["down"]:
+        subs.append("<h3>前段階・入門となる資格</h3><ul>"
+                    + "".join(li(s, n) for s, n in rel["down"]) + "</ul>")
+    if rel["exempt_to"] or rel["exempt_from"]:
+        items = "".join(li(s, n) for s, n in rel["exempt_to"] + rel["exempt_from"])
+        subs.append("<h3>試験の免除・受験資格の優遇</h3><ul>" + items + "</ul>")
+    if rel["combo"]:
+        subs.append("<h3>あわせて取りたい資格（ダブルライセンス）</h3><ul>"
+                    + "".join(li(s, n) for s, n in rel["combo"]) + "</ul>")
+    if not subs:
+        return ""
+    return ('<section class="rel-certs"><h2>関連資格・ステップアップ</h2>'
+            + "".join(subs)
+            + '<p class="muted">※免除・受験資格の要件は変更されることがあります。'
+              '出願前に必ず各資格の公式情報でご確認ください。</p></section>')
+
+
 def materials_section_html(slug):
     """おすすめ教材・講座セクション。アフィリンクがある場合は広告表示(景表法/ステマ規制)と
     rel=sponsored を自動付与する。教材が無ければ空文字。"""
@@ -502,6 +573,8 @@ def build_detail(row) -> str:
 
     _mat = materials_section_html(row["slug"])
     _mat_block = ("\n" + _mat) if _mat else ""
+    _rel = cert_relations_html(row["slug"])
+    _rel_block = ("\n" + _rel) if _rel else ""
     body = f"""<nav class="crumbs"><a href="../index.html">トップ</a> ›
 <a href="../index.html?major={esc(major)}">{esc(major)}</a> › {esc(name)}</nav>
 <h1>{esc(name)}</h1>
@@ -509,7 +582,7 @@ def build_detail(row) -> str:
 {fact_p}
 <table class="spec">{rows_html}</table>
 {cta}{provenance}
-{careers_section}{_mat_block}
+{careers_section}{_mat_block}{_rel_block}
 {rel_links}
 <section class="related"><h2>同じカテゴリの資格</h2><ul id="related"></ul></section>
 <script>
@@ -1913,6 +1986,10 @@ table.spec th{width:34%;background:#f2f5fa;color:#3a4757;font-weight:600;white-s
 .mat-kind{flex:0 0 auto;background:#eef4ff;color:#0d47a1;border:1px solid #cfe0fb;border-radius:6px;font-size:.74rem;font-weight:700;padding:2px 8px;margin-top:2px}
 .mat-body{flex:1}.mat-note{display:block;color:#6b7682;font-size:.82rem;margin-top:2px}
 .mat-foot{font-size:.78rem;margin:.4em 0 0}
+.rel-certs{margin:18px 0 0;border-top:1px solid #e6e9ef;padding-top:12px}
+.rel-certs h2{font-size:1.05rem;margin:.2em 0 .4em}
+.rel-certs h3{font-size:.92rem;margin:.7em 0 .2em;color:#3a4757}
+.rel-certs ul{margin:.2em 0;padding-left:1.1em}.rel-certs li{margin:2px 0}
 .occ-meta{background:#f7f9fc;border:1px solid #e6e9ef;border-radius:8px;padding:10px 13px;margin:10px 0}
 .occ-stats{margin:0 0 6px}.occ-fields{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px}
 .occ-stats-label{font-size:.84rem;color:#43505f;font-weight:600;margin-right:4px}
