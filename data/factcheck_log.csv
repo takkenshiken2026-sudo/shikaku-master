@@ -1007,3 +1007,36 @@ c-6634,2026-06-21,type|authority|official_url|eligibility|pass_rate|fee|frequenc
 c-6635,2026-06-21,type|authority|official_url|eligibility|pass_rate|fee|frequency,ok,一次情報照合・誤りなし,
 c-6636,2026-06-21,type|authority|official_url|eligibility|pass_rate|fee|frequency,ok,一次情報照合・誤りなし,
 c-6637,2026-06-21,type|fill,type_set,防錆管理士=日本防錆技術協会,https://www.jacc1.or.jp/
+c-1202,2026-06-21,type|fill,type_set,航空工場検査員=航空機製造事業法に基づく国家(試験は2019廃止、現行は研修+実務選任),https://www.meti.go.jp/information/license/data/c190719aj.html
+c-1304,2026-06-21,pass_rate,corrected,建築設備士 合格率を二段階表記で確定(旧『26.1%総合』ラベルは不正確),https://www.jaeic.or.jp/shiken/bmee/bmee-data.html
+c-1314,2026-06-21,type,reviewed_unresolvable,設備管理士:実施団体を一意特定できず据置,
+c-1406,2026-06-21,fee,corrected,"造園施工管理 受験料を令和8改定後に確定(各17,200円)",https://www.jctc.jp/exam/zouen-1/
+c-2304,2026-06-21,type,reviewed_unresolvable,ホームヘルパー1級:2013年廃止・新規取得不可,
+c-2305,2026-06-21,type,reviewed_unresolvable,ホームヘルパー2級:2013年廃止,
+c-2306,2026-06-21,type,reviewed_unresolvable,ホームヘルパー3級:廃止,
+c-2311,2026-06-21,type,reviewed_unresolvable,介護職員基礎研修:2013年廃止・実務者研修へ統合,
+c-2312,2026-06-21,type|fill,type_set,福祉用具専門相談員=介護保険法施行令に基づく都道府県知事指定講習(53時間)修了,https://ja.wikipedia.org/wiki/福祉用具専門相談員
+c-2313,2026-06-21,type,type_set,介護職員初任者研修=厚労省制度・都道府県指定事業者実施,https://www.mhlw.go.jp/
+c-2314,2026-06-21,type,type_set,介護福祉士実務者研修=厚労省制度・都道府県指定事業者実施,https://www.mhlw.go.jp/
+c-2912,2026-06-21,type|fill,type_set,健康運動指導士=厚労大臣認定由来・健康増進施設配置基準資格,https://www.health-net.or.jp/shikaku/
+c-2913,2026-06-21,type,type_set,健康運動実践指導者=健康運動指導士と同財団・厚労省e-ヘルスネット掲載,https://www.health-net.or.jp/shikaku/
+c-2914,2026-06-21,type,type_set,レクリエーション・インストラクター=日本レクリエーション協会の認定,https://shikaku.recreation.or.jp/
+c-2915,2026-06-21,type,type_set,エアロビエクササイズインストラクター=フィットネス協会系の民間認定,https://www.jafanet.jp/license/
+c-2916,2026-06-21,type,type_set,健康管理士一般指導員=日本成人病予防協会の認定,https://www.healthcare.or.jp/test/
+c-2917,2026-06-21,type,type_set,健康管理士上級指導員=日本成人病予防協会の認定,https://www.japa.org/kkkai/upper/
+c-3104,2026-06-21,type,reviewed_unresolvable,キャリアカウンセラー/アドバイザー:一般職業名称で特定資格を指さず据置,
+c-3105,2026-06-21,type|fill,type_set,キッチンスペシャリスト=インテリア産業協会の認定,https://www.interior.or.jp/examination/ks/overview/
+c-3106,2026-06-21,type|fill,type_set,消費生活アドバイザー=内閣総理大臣・経産大臣事業認定(日本産業協会が登録試験機関),https://www.meti.go.jp/policy/economy/consumer/consumer/adviser.html
+c-3513,2026-06-21,type,type_set,ビジネス文書検定=実務技能検定協会・文科省後援,https://jitsumu-ginou-kentei.jp/BB/
+c-3514,2026-06-21,type,type_set,ビジネス文書検定=実務技能検定協会・文科省後援,https://jitsumu-ginou-kentei.jp/BB/
+c-3515,2026-06-21,type,type_set,ビジネス文書検定=実務技能検定協会・文科省後援,https://jitsumu-ginou-kentei.jp/BB/
+c-3712,2026-06-21,type,type_set,診療報酬請求事務能力認定試験=日本医療保険事務協会・厚労省後援(令和8年3月で試験終了予定),https://www.iryojimu.or.jp/exam/
+c-3836,2026-06-21,type,reviewed_unresolvable,『パソコン[ワープロ・表計算]可』は資格名でなく募集条件表記,
+c-3837,2026-06-21,type,reviewed_unresolvable,『パソコン[ワープロ]可』は募集条件表記,
+c-3847,2026-06-21,type|fill,type_set,PowerPointプレゼン技能認定試験=サーティファイ,https://www.sikaku.gr.jp/ns/pp/
+c-3873,2026-06-21,type,reviewed_unresolvable,情報処理検定1級:同名複数団体・主催不明で据置,
+c-3874,2026-06-21,type,reviewed_unresolvable,情報処理検定2級:主催不明,
+c-3875,2026-06-21,type,reviewed_unresolvable,情報処理検定3級:主催不明,
+c-4106,2026-06-21,type|fill,type_set,印刷営業士=全印工連実施・厚労大臣認定(技能審査。近年実施休止),https://www.aj-pia.or.jp/shitsumon10.html
+c-4107,2026-06-21,type|fill,type_set,管理印刷営業士=厚労大臣認定の上位資格(近年実施休止),https://www.aj-pia.or.jp/shitsumon10.html
+c-4816,2026-06-21,fee,flagged,"身体検査料は3,450円(証明書提出時2,450円)と判明も学科/実技額が二次情報間で不一致のため据置",https://www.jmra.or.jp/news/post6168
