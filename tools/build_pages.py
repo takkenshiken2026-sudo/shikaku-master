@@ -18,6 +18,7 @@ import re
 import shutil
 from collections import Counter
 from pathlib import Path
+from urllib.parse import quote
 
 ROOT = Path(__file__).resolve().parent.parent
 CSV = ROOT / "data" / "certifications.csv"
@@ -589,11 +590,15 @@ def build_detail(row) -> str:
                      + ' <span class="muted">（編集部調べの目安。個人差があり、公式の数値ではありません）</span>'))
     inds = industry_tags(row)
     if inds:
-        chips = "".join(f'<span class="tag-chip tag-ind">{esc(t)}</span>' for t in inds)
+        chips = "".join(
+            f'<a class="tag-chip tag-ind" href="../index.html?industry={quote(t)}#all"'
+            f' title="「{esc(t)}」で活かせる資格を探す">{esc(t)}</a>' for t in inds)
         spec.append(("活かせる業界", chips))
     tags = cert_tags(row)
     if tags:
-        chips = "".join(f'<span class="tag-chip">{esc(t)}</span>' for t in tags)
+        chips = "".join(
+            f'<a class="tag-chip" href="../index.html?tag={quote(t)}#all"'
+            f' title="「{esc(t)}」の資格を探す">{esc(t)}</a>' for t in tags)
         spec.append(("特徴・目的タグ", chips))
     src = row.get("source_checked_at", "")
     if src:
@@ -2734,6 +2739,8 @@ table.spec th{width:34%;background:var(--gray-100);color:var(--gray-800);font-we
 .updated{font-size:var(--text-sm);color:var(--gray-500);margin:.1em 0 .6em}.updated .muted{margin-left:.4em}
 .tag-chip{display:inline-block;background:var(--gray-100);color:var(--gray-700);border:1px solid var(--gray-200);border-radius:12px;padding:2px 10px;margin:2px 4px 2px 0;font-size:var(--text-xs)}
 .tag-ind{background:var(--accent-light);color:var(--accent-hover);border-color:rgba(42,122,110,.18)}
+a.tag-chip{text-decoration:none;cursor:pointer;transition:border-color .12s,background .12s}
+a.tag-chip:hover{border-color:var(--accent);background:var(--accent-light);text-decoration:none}
 .diff-badge{display:inline-block;font-weight:700;font-size:var(--text-xs);padding:2px 9px;border-radius:6px;color:#fff}
 .diff-veryhard{background:#9a3b32}.diff-hard{background:#b5642f}.diff-mid{background:#caa53c;color:#3a2c00}
 .diff-easy{background:#3a6b46}.diff-veryeasy{background:var(--accent)}
