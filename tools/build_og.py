@@ -30,7 +30,7 @@ REG_CANDIDATES = [
     "/System/Library/Fonts/ヒラギノ角ゴシック W3.ttc",
 ]
 
-SITE_NAME = "資格カタログ"
+SITE_NAME = "資格マスター"
 TAGLINE = "就職・転職・スキルアップの資格情報サイト"
 SUBLINE = "国内の資格を1,000件以上掲載。受験料・受験資格・合格率・公式サイトを横断検索・比較。"
 URL = "shikaku-master.jp"
