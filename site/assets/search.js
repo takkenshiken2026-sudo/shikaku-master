@@ -89,8 +89,8 @@
         '</div>'+
         '<button type="button" class="cmp-add-btn" data-slug="'+x.slug+'" data-name="'+esc(shortName(x.name))+'">＋ 比較</button>'+
         '</li>';
-    }).join('')||'<li class="muted">該当なし</li>';
-    if(out.length>300) results.innerHTML+='<li class="muted">…他 '+(out.length-300)+' 件（絞り込んでください）</li>';
+    }).join('')||'<li class="empty-state">条件に一致する資格が見つかりませんでした。<br>キーワードを短くするか、上の「× 条件をクリア」で絞り込みを解除してください。</li>';
+    if(out.length>300) results.innerHTML+='<li class="muted">…他 '+(out.length-300)+' 件。さらに絞り込むと見つけやすくなります。</li>';
     if(window.CmpBar)window.CmpBar.refresh();
     syncURL();
   }
