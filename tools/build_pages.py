@@ -646,7 +646,22 @@ fetch("../data/certifications.json").then(r=>r.json()).then(all=>{{
             {"@type": "ListItem", "position": 3, "name": name},
         ],
     }
-    ld = [breadcrumb] + ([faq] if faq else [])
+    # schema.org/EducationalOccupationalCredential（資格＝資格証明）
+    credential = {
+        "@context": "https://schema.org",
+        "@type": "EducationalOccupationalCredential",
+        "name": name,
+        "url": f'{BASE_URL}/c/{row["slug"]}.html',
+        "credentialCategory": label,
+    }
+    cred_desc = hand_desc or f"{name}は、{major}分野の{label}です。"
+    credential["description"] = cred_desc[:300]
+    if row["authority"]:
+        credential["recognizedBy"] = {"@type": "Organization",
+                                      "name": row["authority"]}
+    if ed.get("exam_subjects"):
+        credential["competencyRequired"] = ed["exam_subjects"][:300]
+    ld = [breadcrumb, credential] + ([faq] if faq else [])
     return page_shell(f"{name}｜{SITE_NAME}", body, depth=1,
                       noindex=(not is_indexable_detail(row)),
                       desc=desc, path=f'c/{row["slug"]}.html', jsonld=ld)
