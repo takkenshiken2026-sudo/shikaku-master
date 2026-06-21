@@ -211,6 +211,19 @@ def load_occupation_salary():
 OCC_SALARY = load_occupation_salary()
 
 
+def _salary_quantitative(sal):
+    """『約480〜560万円』等のレンジを schema.org の QuantitativeValue(円・年額) に変換。"""
+    if not sal:
+        return None
+    m = re.search(r"([0-9,]+)\s*[〜~～]\s*([0-9,]+)\s*万", sal)
+    if not m:
+        return None
+    lo = int(m.group(1).replace(",", "")) * 10000
+    hi = int(m.group(2).replace(",", "")) * 10000
+    return {"@type": "QuantitativeValue", "minValue": lo, "maxValue": hi,
+            "unitText": "YEAR"}
+
+
 # ── おすすめ教材・講座（アフィリエイト対応。本体DBとは分離）──
 MATERIALS_CSV = ROOT / "data" / "materials.csv"
 
@@ -1628,7 +1641,22 @@ def build_occupation_pages(indexable):
                  "item": f"{BASE_URL}/shoku/index.html"},
                 {"@type": "ListItem", "position": 3, "name": name},
             ]}
-        ld = [breadcrumb] + ([itemlist] if itemlist else [])
+        # schema.org/Occupation 構造化データ（保有データを活用）
+        occ_ld = {"@context": "https://schema.org", "@type": "Occupation",
+                  "name": name, "url": f"{BASE_URL}/shoku/{occ_id}.html"}
+        if major:
+            occ_ld["occupationalCategory"] = major
+        if desc_txt:
+            occ_ld["description"] = desc_txt
+        if dinfo.get("work"):
+            occ_ld["responsibilities"] = dinfo["work"]
+        if dinfo.get("skills"):
+            occ_ld["skills"] = dinfo["skills"]
+        qv = _salary_quantitative(OCC_SALARY.get(occ_id, ""))
+        if qv:
+            occ_ld["estimatedSalary"] = {"@type": "MonetaryAmount",
+                                         "currency": "JPY", "value": qv}
+        ld = [breadcrumb, occ_ld] + ([itemlist] if itemlist else [])
         pages[occ_id] = page_shell(f"{name}に活かせる資格｜{SITE_NAME}", body, depth=1,
                                    noindex=noindex, desc=desc,
                                    path=f"shoku/{occ_id}.html", jsonld=ld)
