@@ -391,7 +391,7 @@ def cert_relations_html(slug):
                     + "".join(li(s, n) for s, n in rel["combo"]) + "</ul>")
     if not rm and not subs:
         return ""
-    return ('<section class="rel-certs"><h2>関連資格・ステップアップ</h2>'
+    return ('<section class="rel-certs"><h2>ステップアップ・上位資格を目指す</h2>'
             + rm + "".join(subs)
             + '<p class="muted">※免除・受験資格の要件は変更されることがあります。'
               '出願前に必ず各資格の公式情報でご確認ください。</p></section>')
@@ -732,16 +732,12 @@ def build_detail(row) -> str:
         rel.append(("../feature/senior.html", "定年後・シニアに役立つ資格"))
     if is_working_adult(row):
         rel.append(("../feature/working-adults.html", "働きながら取りやすい資格"))
-    # 比較ページへの相互リンク（この資格が含まれる人気ペア）
-    for ps, other in COMPARE_INDEX.get(s, []):
-        if other in INDEXABLE_SLUGS:
-            on = re.sub(r"[（(].*?[）)]", "", NAME_BY_SLUG.get(other, other)).strip()
-            rel.append((f"../vs/{ps}.html", f"{on or other}との違い・比較"))
+    # 比較ペアは下の「よく比較される資格」で扱うため、ここでは一覧・特集への導線のみ
     rel += [("../feature/cheap.html", "受験料が安い資格ランキング"),
             ("../feature/high-pass.html", "合格率が高い資格")]
-    rel_links = ('<nav class="rel-links"><h2>関連リンク</h2><ul>'
-                 + "".join(f'<li><a href="{u}">{esc(t)}</a></li>' for u, t in rel)
-                 + "</ul></nav>")
+    more_links = ('<nav class="more-links" aria-label="もっと探す"><h3>もっと探す</h3><ul>'
+                  + "".join(f'<li><a href="{u}">{esc(t)}</a></li>' for u, t in rel)
+                  + "</ul></nav>")
 
     # FAQ 構造化データ
     qa = []
@@ -801,14 +797,12 @@ def build_detail(row) -> str:
         if other in INDEXABLE_SLUGS:
             on = re.sub(r"[（(].*?[）)]", "", NAME_BY_SLUG.get(other, other)).strip() or other
             vs_pairs.append((ps, on))
-    related_compare = ""
+    compare_block = ""
     if vs_pairs:
         links = " ・ ".join(f'<a href="../vs/{esc(ps)}.html">{esc(on)}との違い</a>'
                             for ps, on in vs_pairs[:5])
-        related_compare = (
-            '<section class="related-compare" aria-labelledby="rc-h">'
-            '<h2 class="detail-section-title" id="rc-h">関連資格との比較</h2>'
-            f'<p>よく一緒に比較されます： {links}</p></section>')
+        compare_block = ('<div class="more-compare"><h3>よく比較される資格</h3>'
+                         f'<p>よく一緒に比較されます： {links}</p></div>')
 
     # 出典・最終確認日（フッターだけでなく資格ごとに明示）
     if row["official_url"]:
@@ -872,15 +866,18 @@ def build_detail(row) -> str:
 {facts_grid}
 <div class="detail-actions"><button type="button" class="cmp-add-btn" data-slug="{esc(row["slug"])}" data-name="{esc(re.sub(r"[（(].*?[）)]", "", name).strip() or name)}">＋ 比較</button>{cta}</div>
 {points_html}
-{related_compare}
 <section class="detail-spec" aria-labelledby="ds-h">
 <h2 class="detail-section-title" id="ds-h">詳細情報</h2>
 <table class="spec">{rows_html}</table></section>
 {provenance}
-{careers_section}{_mat_block}{_rel_block}
-{rel_links}
 {faq_html}
-<section class="related"><h2>同じカテゴリの資格</h2><ul id="related"></ul></section>
+{careers_section}{_mat_block}{_rel_block}
+<section class="detail-related" aria-labelledby="dr2-h">
+<h2 class="detail-section-title" id="dr2-h">ほかの資格を見る・比較する</h2>
+<div class="more-same"><h3>同じ分野の他の資格</h3><ul id="related"></ul></div>
+{compare_block}
+{more_links}
+</section>
 {source_aside}
 <script>
 fetch("../data/certifications.json").then(r=>r.json()).then(all=>{{
@@ -2190,9 +2187,6 @@ def build_index(rows) -> str:
         f'<li><a href="feature/{slug}.html">{esc(label)}</a></li>'
         for slug, label in FEATURE_NAV
         if slug != "popular" or any(applicants_num(r) is not None for r in rows))
-    hub_links = "".join(
-        f'<li><a href="feature/{slug}.html">{esc(label)}</a></li>'
-        for slug, label in INTENT_HUB_NAV)
     by_slug = {r["slug"]: r for r in rows}
 
     def _short(r):
@@ -2262,14 +2256,29 @@ def build_index(rows) -> str:
         if _n >= 6:
             break
 
-    # --- 目的から探す（3カード） ---
+    # --- 目的から探す（3カード・具体導線つき。意図ハブ＋特集＋条件フィルタへ直接リンク） ---
     PURPOSE = [
-        ("就職", "feature/job-hunting.html", "就活・新卒・はじめて資格を選ぶ方",
-         ["事務・経理", "IT・情報", "営業・販売", "受験資格なし"]),
-        ("転職", "feature/working-adults.html", "働きながら取りやすい資格で職種を変えたい方",
-         ["事務・経理", "不動産", "医療・介護", "在宅OK"]),
-        ("スキルアップ", "feature/skilled-trade.html", "今の仕事に活かす・手に職をつけたい方",
-         ["IT・情報", "建築・設備", "技能士", "国家資格"]),
+        ("就職", "新卒・就活・はじめて資格を選ぶ方", [
+            ("就職・転職に役立つ資格", "feature/job-hunting.html"),
+            ("受験資格なしで受けられる資格", "feature/no-requirement.html"),
+            ("受験者数が多い人気資格", "feature/popular.html"),
+            ("未経験からITを目指す", "feature/it-beginner.html"),
+            ("「就職・転職」向けで絞り込む →", "index.html?tag=" + quote("就職・転職") + "#all"),
+        ]),
+        ("転職", "働きながら職種・キャリアを変えたい方", [
+            ("働きながら取りやすい資格", "feature/working-adults.html"),
+            ("在宅・リモートワークに活かせる", "feature/remote-work.html"),
+            ("独立・開業を目指せる資格", "feature/independence.html"),
+            ("国家資格の一覧", "feature/national.html"),
+            ("「働きながら」で絞り込む →", "index.html?tag=" + quote("働きながら") + "#all"),
+        ]),
+        ("スキルアップ", "今の仕事に活かす・手に職をつけたい方", [
+            ("手に職をつけられる資格", "feature/skilled-trade.html"),
+            ("未経験からITエンジニアを目指す", "feature/it-beginner.html"),
+            ("定年後・シニアに役立つ資格", "feature/senior.html"),
+            ("合格率が高い資格", "feature/high-pass.html"),
+            ("「手に職」で絞り込む →", "index.html?tag=" + quote("手に職") + "#all"),
+        ]),
     ]
     PURPOSE_ICONS = [
         '<path d="M12 3L2 8l10 5 10-5-10-5z"/><path d="M5 11v5c0 2.5 3.5 5 7 5s7-2.5 7-5v-5"/><path d="M22 8v6"/>',
@@ -2277,14 +2286,16 @@ def build_index(rows) -> str:
         '<path d="M4 18h16"/><path d="M7 15l4-6 3 3 5-7"/>',
     ]
     pur_html = ""
-    for (title, href, forwhom, exs), icon in zip(PURPOSE, PURPOSE_ICONS):
-        chips = "".join(f"<li>{esc(x)}</li>" for x in exs)
-        pur_html += (f'<a class="purpose-card card-link" href="{href}">'
-                     f'<div class="icon"><svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"'
-                     f' stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">{icon}</svg></div>'
-                     f'<div class="purpose-card-body"><h3>{esc(title)}</h3>'
-                     f'<p class="purpose-card-for">{esc(forwhom)}</p>'
-                     f'<ul class="purpose-card-examples">{chips}</ul></div></a>')
+    for (title, forwhom, links), icon in zip(PURPOSE, PURPOSE_ICONS):
+        lis = "".join(f'<li><a href="{esc(href)}">{esc(label)}</a></li>'
+                      for label, href in links)
+        pur_html += (
+            f'<div class="purpose-card">'
+            f'<div class="purpose-card-head">'
+            f'<div class="icon"><svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"'
+            f' stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">{icon}</svg></div>'
+            f'<div><h3>{esc(title)}</h3><p class="purpose-card-for">{esc(forwhom)}</p></div></div>'
+            f'<ul class="purpose-card-links">{lis}</ul></div>')
 
     body = f"""<section class="hero">
   <h1><span class="hero-h1-line">就職・転職・スキルアップの</span><span class="hero-h1-line">資格情報サイト</span></h1>
@@ -2303,7 +2314,7 @@ def build_index(rows) -> str:
 </section>
 
 <section class="block block-primary" id="purpose">
-  <div class="block-head"><h2>目的から探す</h2></div>
+  <div class="block-head"><h2>目的から探す</h2><p>就職・転職・スキルアップ — やりたいことから具体的に絞り込めます</p></div>
   <div class="purpose-grid">{pur_html}</div>
 </section>
 
@@ -2358,13 +2369,12 @@ def build_index(rows) -> str:
 </section>
 
 <section class="feature-nav">
-  <h2>特集・ランキングから探す</h2>
+  <div class="block-head"><h2>サイトの索引</h2><p>特集・職種・全分野の一覧</p></div>
+  <h3>特集・ランキングから探す</h3>
   <ul class="feat-list">{feat_links}</ul>
-  <h2>目的から探す</h2>
-  <ul class="feat-list">{hub_links}</ul>
-  <h2>職種から探す</h2>
+  <h3>職種から探す</h3>
   <ul class="feat-list"><li><a href="shoku/index.html">職種から資格を逆引きする（活かせる仕事から探す）</a></li></ul>
-  <h2>分野の一覧</h2>
+  <h3>すべての分野</h3>
   <div class="chips">{cat_links}</div>
 </section>
 <script src="assets/search.js"></script>
@@ -2784,14 +2794,19 @@ html{scroll-padding-top:64px}
 /* Purpose */
 .purpose-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
 @media(max-width:640px){.purpose-grid{grid-template-columns:1fr}}
-.purpose-card{display:flex;align-items:flex-start;gap:12px;background:#fff;border:1px solid var(--gray-200);border-radius:var(--radius);padding:16px 36px 16px 14px;text-decoration:none;color:inherit;transition:border-color .15s,background .15s}
+.purpose-card{display:flex;flex-direction:column;background:#fff;border:1px solid var(--gray-200);border-radius:var(--radius);padding:16px 14px;color:inherit}
+.purpose-card-head{display:flex;align-items:flex-start;gap:12px;margin-bottom:10px}
 .purpose-card .icon{flex-shrink:0;width:44px;height:44px;display:flex;align-items:center;justify-content:center;background:var(--gray-100);border-radius:var(--radius);color:var(--gray-700)}
 .purpose-card .icon-svg{width:26px;height:26px}
-.purpose-card-body{min-width:0;flex:1}
-.purpose-card h3{font-size:var(--text-card-title);font-weight:700;margin:0 0 4px;color:var(--ink-deep)}
-.purpose-card-for{font-size:var(--text-sm);color:var(--gray-600);line-height:1.5;margin:0 0 8px}
-.purpose-card-examples{display:flex;flex-wrap:wrap;gap:5px;list-style:none;margin:0;padding:0}
-.purpose-card-examples li{font-size:var(--text-chip);color:var(--gray-700);background:var(--accent-light);border:1px solid rgba(42,122,110,.15);border-radius:6px;padding:2px 7px;line-height:1.45}
+.purpose-card h3{font-size:var(--text-card-title);font-weight:700;margin:0 0 3px;color:var(--ink-deep)}
+.purpose-card-for{font-size:var(--text-sm);color:var(--gray-600);line-height:1.45;margin:0}
+.purpose-card-links{list-style:none;margin:0;padding:0;border-top:1px solid var(--gray-200)}
+.purpose-card-links li{border-bottom:1px solid var(--gray-100)}
+.purpose-card-links li:last-child{border-bottom:0}
+.purpose-card-links a{display:block;padding:9px 4px 9px 16px;font-size:var(--text-sm);color:var(--gray-800);text-decoration:none;position:relative;line-height:1.4}
+.purpose-card-links a::before{content:"›";position:absolute;left:3px;top:9px;color:var(--accent);font-weight:700}
+.purpose-card-links a:hover,.purpose-card-links a:focus-visible{color:var(--accent);background:var(--accent-light)}
+.purpose-card-links li:last-child a{font-weight:600;color:var(--accent)}
 
 /* Popular */
 .popular-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
@@ -2937,6 +2952,7 @@ a.tag-chip:hover{border-color:var(--accent);background:var(--accent-light);text-
 .vs-cta{margin:14px 0;display:flex;gap:10px;flex-wrap:wrap}
 .feature-nav{margin-top:28px;border-top:1px solid var(--gray-200);padding-top:14px}
 .feature-nav h2{font-size:1.05rem;margin:.6em 0 .3em}
+.feature-nav h3{font-size:.92rem;font-weight:600;color:var(--gray-800);margin:.9em 0 .3em}
 .feature-nav ul{margin:.2em 0 .6em;padding-left:1.1em}
 .chips{display:flex;flex-wrap:wrap;gap:8px}
 .chip{display:inline-block;padding:5px 11px;border:1px solid var(--gray-300);background:#fff;border-radius:999px;font-size:var(--text-sm);color:var(--gray-800)}
@@ -2983,9 +2999,15 @@ table.cmp tbody th{background:var(--gray-50);color:var(--gray-800);white-space:n
 .detail-actions{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:22px;align-items:center}
 .detail-actions .official-cta{margin:0}
 .detail-section-title{font-size:var(--text-nav);font-weight:600;color:var(--ink-deep);margin:0 0 10px}
-.related-compare{background:var(--gray-50);border:1px solid var(--gray-200);border-radius:var(--radius);padding:14px;margin-bottom:22px;font-size:var(--text-ui)}
-.related-compare p{margin:0 0 10px;line-height:1.55;color:var(--gray-700)}
-.related-compare a{color:var(--accent);font-weight:600}
+.detail-related{margin:18px 0 0;border-top:1px solid var(--gray-200);padding-top:14px}
+.detail-related h3{font-size:.95rem;margin:.9em 0 .35em;color:var(--gray-800)}
+.detail-related h3:first-of-type{margin-top:.2em}
+.detail-related ul{margin:.2em 0;padding-left:1.1em}
+.detail-related .more-compare p{margin:.2em 0;line-height:1.55;color:var(--gray-700);font-size:var(--text-ui)}
+.detail-related .more-compare a{color:var(--accent);font-weight:600}
+.detail-related .more-same ul{columns:2;column-gap:22px}
+.detail-related .more-same li{break-inside:avoid;margin:2px 0}
+@media(max-width:560px){.detail-related .more-same ul{columns:1}}
 .detail-spec{margin-bottom:4px}
 .detail-source{margin-top:22px;padding:14px 0 0;border-top:1px solid var(--gray-200);font-size:var(--text-sm);color:var(--gray-600);line-height:1.65}
 .detail-source p{margin:0 0 5px}.detail-source .k{font-weight:600;color:var(--gray-700)}
