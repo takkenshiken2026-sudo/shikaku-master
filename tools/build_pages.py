@@ -36,6 +36,80 @@ SITE_NAME = "資格マスター"
 SITE_DESC = "日本の資格を「探せる・絞れる・比べられる」資格データベース。受験料・試験形式・受験資格・合格率・実施団体・公式サイトを公式の一次情報に基づき掲載。"
 BASE_URL = "https://shikaku-master.jp"
 CUSTOM_DOMAIN = "shikaku-master.jp"
+
+# 運営者が制作する資格別の対策サイト（「おすすめの資格対策サイト」導線）。
+# 通常リンク（dofollow）・別タブ。certs に該当資格 slug を持つものは、その詳細ページにも出し分ける。
+PARTNER_SITES = [
+    {"name": "宅建マスター", "url": "https://takken-master.jp/",
+     "tagline": "宅地建物取引士（宅建）の対策サイト", "certs": ["c-3207"]},
+    {"name": "マン管マスター", "url": "https://mankan-master.jp/",
+     "tagline": "マンション管理士の対策サイト", "certs": ["c-3209"]},
+    {"name": "管業マスター", "url": "https://kangyou-master.jp/",
+     "tagline": "管理業務主任者の対策サイト", "certs": ["c-3210"]},
+    {"name": "賃管マスター", "url": "https://chintaikanrishi-master.jp/",
+     "tagline": "賃貸不動産経営管理士の対策サイト", "certs": []},
+    {"name": "FPマスター", "url": "https://fp-master.jp/",
+     "tagline": "FP（ファイナンシャル・プランニング技能士）の対策サイト",
+     "certs": ["c-2505", "c-2515", "c-2516", "c-2517"]},
+    {"name": "証外マスター", "url": "https://gaimuin-master.jp/",
+     "tagline": "証券外務員（一種・二種）の対策サイト", "certs": ["c-4201"]},
+    {"name": "危険物マスター", "url": "https://kikenbutsu-master.jp/",
+     "tagline": "危険物取扱者（甲種・乙種・丙種）の対策サイト",
+     "certs": ["c-5206", "c-5207", "c-5208"]},
+    {"name": "ボイラーマスター", "url": "https://boiler-master.jp/",
+     "tagline": "ボイラー技士の対策サイト", "certs": ["c-6701", "c-6702", "c-6703"]},
+    {"name": "衛生一種マスター", "url": "https://eisei1shu-master.jp/",
+     "tagline": "第一種衛生管理者の対策サイト", "certs": ["c-2202"]},
+    {"name": "衛生二種マスター", "url": "https://eisei2shu-master.jp/",
+     "tagline": "第二種衛生管理者の対策サイト", "certs": ["c-2203"]},
+    {"name": "運管マスター", "url": "https://unkan-master.jp/",
+     "tagline": "運行管理者（旅客・貨物）の対策サイト", "certs": ["c-3705", "c-3706"]},
+    {"name": "メンタルヘルスマスター", "url": "https://mentalhealth-master.jp/",
+     "tagline": "メンタルヘルス・マネジメント検定の対策サイト", "certs": []},
+    {"name": "AIマスター", "url": "https://ai-master.jp/",
+     "tagline": "AI・データサイエンス系資格の対策サイト", "certs": []},
+]
+PARTNER_BY_CERT = {}
+for _p in PARTNER_SITES:
+    for _c in _p["certs"]:
+        PARTNER_BY_CERT.setdefault(_c, []).append(_p)
+
+
+def partner_footer_html():
+    """フッター共通の運営者サイト導線（全ページ）。"""
+    items = "".join(
+        f'<a href="{esc(p["url"])}" target="_blank" rel="noopener">{esc(p["name"])}</a>'
+        for p in PARTNER_SITES)
+    return ('<nav class="site-footer-partners" aria-label="運営者の資格対策サイト">'
+            '<span class="sfp-label">運営者の資格対策サイト</span>'
+            f'<span class="sfp-links">{items}</span></nav>')
+
+
+def partner_cards_html():
+    """おすすめ対策サイトのカード一覧（トップ・aboutで使用）。"""
+    return "".join(
+        f'<a class="partner-card" href="{esc(p["url"])}" target="_blank" rel="noopener">'
+        f'<span class="partner-card-name">{esc(p["name"])}<span class="partner-ext" aria-hidden="true">↗</span></span>'
+        f'<span class="partner-card-tag">{esc(p["tagline"])}</span></a>'
+        for p in PARTNER_SITES)
+
+
+def partner_detail_html(slug):
+    """資格詳細ページに、その資格の対策サイトがあれば出し分けるボックス。"""
+    ps = PARTNER_BY_CERT.get(slug)
+    if not ps:
+        return ""
+    items = "".join(
+        f'<a class="partner-detail-card" href="{esc(p["url"])}" target="_blank" rel="noopener">'
+        f'<span class="pd-name">{esc(p["name"])}<span class="partner-ext" aria-hidden="true">↗</span></span>'
+        f'<span class="pd-tag">{esc(p["tagline"])}</span></a>' for p in ps)
+    return ('<section class="partner-detail" aria-labelledby="pd-h">'
+            '<h2 class="detail-section-title" id="pd-h">この資格の対策サイト</h2>'
+            f'<div class="partner-detail-grid">{items}</div>'
+            '<p class="muted partner-note">当サイト運営者が制作している学習・対策サイトです。</p>'
+            '</section>')
+
+
 TYPE_BADGE = {
     "国家": ("国家資格", "badge-national"),
     "公的": ("公的資格", "badge-public"),
@@ -525,6 +599,7 @@ def page_shell(title: str, body: str, depth: int, noindex: bool = True,
       <a href="{base}index.html#compare">よく比較される資格</a>
       <a href="{base}about.html">サイトについて・編集方針</a>
     </nav>
+    {partner_footer_html()}
     <p class="site-footer-note">掲載内容は参考情報です。受験料・合格率・制度・日程等は変更される場合があるため、出願前に各資格の公式情報で必ずご確認ください。各詳細ページに最終確認日と情報源を表示しています。</p>
     <p class="site-footer-copy">© {esc(SITE_NAME)}／一覧データ出典: 厚生労働省 ハローワーク「免許・資格コード一覧」ほか、各資格の公式の一次情報に基づき整備。</p>
   </div>
@@ -859,6 +934,7 @@ def build_detail(row) -> str:
                  f"a=a.filter(function(x){{return x.s!=='{esc(row['slug'])}';}});"
                  f"a.unshift({{s:'{esc(row['slug'])}',n:'{_rn}'}});a=a.slice(0,8);"
                  "localStorage.setItem(k,JSON.stringify(a));}catch(e){}})();</script>")
+    partner_detail = partner_detail_html(row["slug"])
     body = f"""<nav class="crumbs"><a href="../index.html">トップ</a> ›
 <a href="../bunya/{esc(bslug)}.html">{esc(major)}</a> › {esc(name)}</nav>
 <h1 class="detail-title">{esc(name)}</h1>
@@ -866,6 +942,7 @@ def build_detail(row) -> str:
 {facts_grid}
 <div class="detail-actions"><button type="button" class="cmp-add-btn" data-slug="{esc(row["slug"])}" data-name="{esc(re.sub(r"[（(].*?[）)]", "", name).strip() or name)}">＋ 比較</button>{cta}</div>
 {points_html}
+{partner_detail}
 <section class="detail-spec" aria-labelledby="ds-h">
 <h2 class="detail-section-title" id="ds-h">詳細情報</h2>
 <table class="spec">{rows_html}</table></section>
@@ -2368,6 +2445,11 @@ def build_index(rows) -> str:
   <ul id="results" class="results"><li class="muted">読み込み中…</li></ul>
 </section>
 
+<section class="block block-secondary" id="partners">
+  <div class="block-head"><h2>おすすめの資格対策サイト</h2><p>当サイト運営者が制作している資格別の学習・対策サイト</p></div>
+  <div class="partner-grid">{partner_cards_html()}</div>
+</section>
+
 <section class="feature-nav">
   <div class="block-head"><h2>サイトの索引</h2><p>特集・職種・全分野の一覧</p></div>
   <h3>特集・ランキングから探す</h3>
@@ -2989,6 +3071,28 @@ table.cmp tbody th{background:var(--gray-50);color:var(--gray-800);white-space:n
 .site-footer-nav a:hover{color:var(--ink);text-decoration:underline;text-underline-offset:2px}
 .site-footer-note{font-size:var(--text-xs);color:var(--gray-500);line-height:1.65;margin:0 0 8px;max-width:54em}
 .site-footer-copy{font-size:var(--text-2xs);color:var(--gray-400);line-height:1.5;margin:0}
+.site-footer-partners{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 14px;padding:12px 0;margin:0 0 12px;border-top:1px solid var(--gray-200);border-bottom:1px solid var(--gray-200)}
+.sfp-label{font-size:var(--text-xs);font-weight:700;color:var(--gray-700)}
+.sfp-links{display:flex;flex-wrap:wrap;gap:4px 14px}
+.site-footer-partners a{font-size:var(--text-sm);color:var(--accent);text-decoration:none;font-weight:600}
+.site-footer-partners a:hover{text-decoration:underline;text-underline-offset:2px}
+/* Partner sites (おすすめ対策サイト) */
+.partner-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+@media(max-width:760px){.partner-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:460px){.partner-grid{grid-template-columns:1fr}}
+.partner-card{display:flex;flex-direction:column;gap:3px;background:#fff;border:1px solid var(--gray-200);border-radius:var(--radius);padding:13px 14px;text-decoration:none;color:inherit;box-shadow:0 1px 3px rgba(0,0,0,.07);transition:border-color .15s,background .15s}
+.partner-card:hover{border-color:var(--accent);background:var(--accent-light)}
+.partner-card-name{font-size:var(--text-card-title);font-weight:700;color:var(--ink-deep)}
+.partner-card-tag{font-size:var(--text-sm);color:var(--gray-700);line-height:1.5}
+.partner-ext{font-size:.78em;color:var(--accent);margin-left:5px;font-weight:700}
+.partner-detail{margin:0 0 22px;background:var(--accent-light);border:1px solid rgba(35,111,100,.2);border-radius:var(--radius);padding:14px 16px}
+.partner-detail .detail-section-title{margin-bottom:8px}
+.partner-detail-grid{display:flex;flex-wrap:wrap;gap:10px}
+.partner-detail-card{display:flex;flex-direction:column;gap:2px;flex:1 1 220px;background:#fff;border:1px solid rgba(35,111,100,.25);border-radius:var(--radius);padding:11px 13px;text-decoration:none;color:inherit;transition:border-color .15s}
+.partner-detail-card:hover{border-color:var(--accent)}
+.pd-name{font-size:var(--text-body);font-weight:700;color:var(--accent-hover)}
+.pd-tag{font-size:var(--text-sm);color:var(--gray-700);line-height:1.45}
+.partner-note{font-size:var(--text-2xs);margin:8px 0 0}
 /* Detail */
 .detail-title{font-size:var(--text-page);font-weight:700;color:var(--ink-deep);line-height:1.35;margin:.1em 0 8px}
 .detail-audience{font-size:var(--text-lead);color:var(--gray-700);line-height:1.65;margin:0 0 18px;max-width:42em}
@@ -3201,6 +3305,11 @@ def main() -> int:
 <p>制度・受験料・日程・合格率は改定されることがあります。掲載内容は参考情報であり、
 出願・受験の前には必ず各資格の<strong>公式サイトで最新情報をご確認</strong>ください。
 本サイトの情報の利用により生じたいかなる損害についても責任を負いかねます。</p></section>
+
+<section class="detail-spec"><h2 class="detail-section-title">運営者の資格対策サイト</h2>
+<p>当サイトの運営者は、個別資格の学習・対策に特化した以下のサイトも制作・運営しています。
+各資格の試験対策には、あわせてご活用ください。</p>
+<div class="partner-grid">{partner_cards_html()}</div></section>
 
 <aside class="detail-source"><p class="detail-source-note">
 一覧データ出典: 厚生労働省 ハローワーク「免許・資格コード一覧」ほか、各資格の公式の一次情報。

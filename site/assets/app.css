@@ -277,6 +277,28 @@ table.cmp tbody th{background:var(--gray-50);color:var(--gray-800);white-space:n
 .site-footer-nav a:hover{color:var(--ink);text-decoration:underline;text-underline-offset:2px}
 .site-footer-note{font-size:var(--text-xs);color:var(--gray-500);line-height:1.65;margin:0 0 8px;max-width:54em}
 .site-footer-copy{font-size:var(--text-2xs);color:var(--gray-400);line-height:1.5;margin:0}
+.site-footer-partners{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 14px;padding:12px 0;margin:0 0 12px;border-top:1px solid var(--gray-200);border-bottom:1px solid var(--gray-200)}
+.sfp-label{font-size:var(--text-xs);font-weight:700;color:var(--gray-700)}
+.sfp-links{display:flex;flex-wrap:wrap;gap:4px 14px}
+.site-footer-partners a{font-size:var(--text-sm);color:var(--accent);text-decoration:none;font-weight:600}
+.site-footer-partners a:hover{text-decoration:underline;text-underline-offset:2px}
+/* Partner sites (おすすめ対策サイト) */
+.partner-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+@media(max-width:760px){.partner-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:460px){.partner-grid{grid-template-columns:1fr}}
+.partner-card{display:flex;flex-direction:column;gap:3px;background:#fff;border:1px solid var(--gray-200);border-radius:var(--radius);padding:13px 14px;text-decoration:none;color:inherit;box-shadow:0 1px 3px rgba(0,0,0,.07);transition:border-color .15s,background .15s}
+.partner-card:hover{border-color:var(--accent);background:var(--accent-light)}
+.partner-card-name{font-size:var(--text-card-title);font-weight:700;color:var(--ink-deep)}
+.partner-card-tag{font-size:var(--text-sm);color:var(--gray-700);line-height:1.5}
+.partner-ext{font-size:.78em;color:var(--accent);margin-left:5px;font-weight:700}
+.partner-detail{margin:0 0 22px;background:var(--accent-light);border:1px solid rgba(35,111,100,.2);border-radius:var(--radius);padding:14px 16px}
+.partner-detail .detail-section-title{margin-bottom:8px}
+.partner-detail-grid{display:flex;flex-wrap:wrap;gap:10px}
+.partner-detail-card{display:flex;flex-direction:column;gap:2px;flex:1 1 220px;background:#fff;border:1px solid rgba(35,111,100,.25);border-radius:var(--radius);padding:11px 13px;text-decoration:none;color:inherit;transition:border-color .15s}
+.partner-detail-card:hover{border-color:var(--accent)}
+.pd-name{font-size:var(--text-body);font-weight:700;color:var(--accent-hover)}
+.pd-tag{font-size:var(--text-sm);color:var(--gray-700);line-height:1.45}
+.partner-note{font-size:var(--text-2xs);margin:8px 0 0}
 /* Detail */
 .detail-title{font-size:var(--text-page);font-weight:700;color:var(--ink-deep);line-height:1.35;margin:.1em 0 8px}
 .detail-audience{font-size:var(--text-lead);color:var(--gray-700);line-height:1.65;margin:0 0 18px;max-width:42em}
