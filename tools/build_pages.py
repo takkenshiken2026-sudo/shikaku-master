@@ -523,6 +523,7 @@ def page_shell(title: str, body: str, depth: int, noindex: bool = True,
       <a href="{base}index.html#fields">分野から探す</a>
       <a href="{base}shoku/index.html">職種から探す</a>
       <a href="{base}index.html#compare">よく比較される資格</a>
+      <a href="{base}about.html">サイトについて・編集方針</a>
     </nav>
     <p class="site-footer-note">掲載内容は参考情報です。受験料・合格率・制度・日程等は変更される場合があるため、出願前に各資格の公式情報で必ずご確認ください。各詳細ページに最終確認日と情報源を表示しています。</p>
     <p class="site-footer-copy">© {esc(SITE_NAME)}／一覧データ出典: 厚生労働省 ハローワーク「免許・資格コード一覧」ほか、各資格の公式の一次情報に基づき整備。</p>
@@ -2377,7 +2378,11 @@ def build_index(rows) -> str:
                              "query-input": "required name=search_term_string"}},
         {"@context": "https://schema.org", "@type": "Organization",
          "name": SITE_NAME, "url": BASE_URL + "/",
-         "logo": BASE_URL + "/assets/favicon.svg"},
+         "logo": BASE_URL + "/assets/favicon.svg",
+         "image": BASE_URL + "/assets/og.png",
+         "description": "日本国内の資格を、各資格の公式の一次情報に基づいて整理・"
+                        "掲載する資格情報サイト。受験料・受験資格・試験形式・合格率・"
+                        "実施団体・公式サイトを横断的に検索・比較できます。"},
     ]
     return page_shell(
         f"{SITE_NAME}｜就職・転職・スキルアップの資格を検索・比較（{len(rows)}件以上）",
@@ -3119,7 +3124,8 @@ def main() -> int:
     from datetime import date
     today = date.today().isoformat()
     # (path, lastmod, priority)
-    entries = [("", today, "1.0"), ("compare.html", today, "0.7")]
+    entries = [("", today, "1.0"), ("compare.html", today, "0.7"),
+               ("about.html", today, "0.5")]
     entries += [(f"bunya/{s}.html", today, "0.8") for s in cat_pages]
     entries += [(f"feature/{s}.html", today, "0.8") for s in feat_pages]
     entries += [(f"vs/{s}.html", today, "0.7") for s in vs_pages]
@@ -3144,6 +3150,50 @@ def main() -> int:
     # GitHub Pages 独自ドメイン（毎回 site/ を作り直すため、ビルドで必ず出力）
     if CUSTOM_DOMAIN:
         (SITE / "CNAME").write_text(CUSTOM_DOMAIN + "\n", encoding="utf-8")
+
+    # サイトについて・編集方針（E-E-A-T: 出典・信頼性の明示）
+    _n_total = len(indexable)
+    _n_checked = sum(1 for r in indexable if (r.get("source_checked_at") or "").strip())
+    about_body = f"""<nav class="crumbs"><a href="index.html">トップ</a> › サイトについて</nav>
+<h1>サイトについて・編集方針</h1>
+<p class="lead">{esc(SITE_NAME)}は、日本国内の資格を「探せる・絞れる・比べられる」ことを目的に、
+各資格の<strong>公式の一次情報</strong>に基づいて情報を整理・掲載する資格情報サイトです。
+就職・転職・スキルアップに役立つ資格選びを支援します。</p>
+
+<section class="detail-spec"><h2 class="detail-section-title">掲載範囲</h2>
+<p>国内の資格 <strong>{_n_total}件</strong> を収録し、各資格について受験料・受験資格・試験形式・
+合格率・実施頻度・実施団体・公式サイトを掲載しています。資格は国家・公的・民間・要確認に区分し、
+区分の判定基準は編集方針として明文化しています。</p></section>
+
+<section class="detail-spec"><h2 class="detail-section-title">編集方針・情報源</h2>
+<ul class="point-list">
+<li>掲載値は各資格の<strong>実施団体公式・所管省庁などの一次情報</strong>に基づいて整備しています。</li>
+<li>各詳細ページに<strong>最終確認日</strong>と<strong>情報源</strong>を表示し、確認状況を追跡できるようにしています（確認済み {_n_checked}/{_n_total}件）。</li>
+<li>一次情報で確認できない項目は推測で埋めず、「公式で確認」と表示しています。</li>
+<li>資格名・区分は厚生労働省 ハローワーク「免許・資格コード一覧」を出発点に、各実施団体の公式情報で精査しています。</li>
+<li>学習時間・難易度・総合スコアは編集部による<strong>目安</strong>であり、公式の数値ではありません。</li>
+</ul></section>
+
+<section class="detail-spec"><h2 class="detail-section-title">ご利用にあたっての注意</h2>
+<p>制度・受験料・日程・合格率は改定されることがあります。掲載内容は参考情報であり、
+出願・受験の前には必ず各資格の<strong>公式サイトで最新情報をご確認</strong>ください。
+本サイトの情報の利用により生じたいかなる損害についても責任を負いかねます。</p></section>
+
+<aside class="detail-source"><p class="detail-source-note">
+一覧データ出典: 厚生労働省 ハローワーク「免許・資格コード一覧」ほか、各資格の公式の一次情報。
+関連: 厚生労働省 職業情報提供サイト（job tag）等。</p></aside>"""
+    about_ld = {"@context": "https://schema.org", "@type": "AboutPage",
+                "name": f"サイトについて・編集方針｜{SITE_NAME}",
+                "url": BASE_URL + "/about.html",
+                "publisher": {"@type": "Organization", "name": SITE_NAME,
+                              "url": BASE_URL + "/"}}
+    (SITE / "about.html").write_text(
+        page_shell(f"サイトについて・編集方針｜{SITE_NAME}", about_body, depth=0,
+                   noindex=False,
+                   desc=f"{SITE_NAME}の編集方針・情報源・免責。各資格の公式の一次情報に基づき"
+                        f"国内の資格{_n_total}件を整理。最終確認日と情報源を明示しています。",
+                   path="about.html", jsonld=about_ld),
+        encoding="utf-8")
 
     # カスタム 404（GitHub Pages が未検出時に配信）
     _nf_pop = "".join(
