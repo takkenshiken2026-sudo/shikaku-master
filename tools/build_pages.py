@@ -13,6 +13,7 @@
 import csv
 import html
 import json
+import math
 import re
 import shutil
 from pathlib import Path
@@ -289,37 +290,83 @@ def load_cert_relations():
 CERT_RELATIONS = load_cert_relations()
 
 
+def _rel_name(s):
+    n = NAME_BY_SLUG.get(s, s)
+    return re.sub(r"[（(].*?[）)]", "", n).strip() or n
+
+
+def step_up_chain(slug):
+    """step_up 関係をたどり、この資格を含む級・上位資格の直線チェーンを返す。
+    前段階(down)を遡り、上位(up)を辿る。分岐は最初の枝のみを背骨に採用。"""
+    seen = {slug}
+    preds, cur = [], slug
+    while True:
+        nxt = next((s for s, _ in CERT_RELATIONS.get(cur, {}).get("down", []) if s not in seen), None)
+        if not nxt:
+            break
+        preds.append(nxt); seen.add(nxt); cur = nxt
+    preds.reverse()
+    succs, cur = [], slug
+    while True:
+        nxt = next((s for s, _ in CERT_RELATIONS.get(cur, {}).get("up", []) if s not in seen), None)
+        if not nxt:
+            break
+        succs.append(nxt); seen.add(nxt); cur = nxt
+    return preds + [slug] + succs
+
+
+def roadmap_html(slug, chain):
+    """step_up チェーンを取得ロードマップとして横並び表示。2段未満なら空文字。"""
+    if len(chain) < 2:
+        return ""
+    steps = []
+    for s in chain:
+        if s == slug:
+            steps.append(f'<li class="rm-step rm-cur"><span>{esc(_rel_name(s))}</span>'
+                         f'<small>いま見ている資格</small></li>')
+        else:
+            steps.append(f'<li class="rm-step"><a href="{esc(s)}.html">{esc(_rel_name(s))}</a></li>')
+    return ('<div class="roadmap"><h3>取得ロードマップ</h3>'
+            '<ol class="rm-track">' + "".join(steps) + "</ol>"
+            '<p class="muted">級・段階のステップアップの流れです（左から上位へ）。'
+            'いま見ている資格を起点に、前後の資格ページへ進めます。</p></div>')
+
+
 def cert_relations_html(slug):
-    """資格ページの「関連資格・ステップアップ」セクション。なければ空文字。"""
+    """資格ページの「関連資格・ステップアップ」セクション。
+    step_up はロードマップで可視化し、免除・ダブルライセンスを併記。なければ空文字。"""
     rel = CERT_RELATIONS.get(slug)
     if not rel:
         return ""
 
-    def nm(s):
-        n = NAME_BY_SLUG.get(s, s)
-        return re.sub(r"[（(].*?[）)]", "", n).strip() or n
-
     def li(s, note):
         note_html = f' <span class="muted">— {esc(note)}</span>' if note else ""
-        return f'<li><a href="{esc(s)}.html">{esc(nm(s))}</a>{note_html}</li>'
+        return f'<li><a href="{esc(s)}.html">{esc(_rel_name(s))}</a>{note_html}</li>'
+
+    chain = step_up_chain(slug)
+    rm = roadmap_html(slug, chain)
+    chain_set = set(chain)
 
     subs = []
-    if rel["up"]:
-        subs.append("<h3>上位資格・次に目指す</h3><ul>"
-                    + "".join(li(s, n) for s, n in rel["up"]) + "</ul>")
-    if rel["down"]:
-        subs.append("<h3>前段階・入門となる資格</h3><ul>"
-                    + "".join(li(s, n) for s, n in rel["down"]) + "</ul>")
+    # ロードマップに載らない上位/前段階（分岐）だけ補足リスト化
+    branch_up = [(s, n) for s, n in rel["up"] if s not in chain_set]
+    branch_down = [(s, n) for s, n in rel["down"] if s not in chain_set]
+    if branch_up:
+        subs.append("<h3>そのほか上位として目指せる資格</h3><ul>"
+                    + "".join(li(s, n) for s, n in branch_up) + "</ul>")
+    if branch_down:
+        subs.append("<h3>そのほか前段階となる資格</h3><ul>"
+                    + "".join(li(s, n) for s, n in branch_down) + "</ul>")
     if rel["exempt_to"] or rel["exempt_from"]:
         items = "".join(li(s, n) for s, n in rel["exempt_to"] + rel["exempt_from"])
         subs.append("<h3>試験の免除・受験資格の優遇</h3><ul>" + items + "</ul>")
     if rel["combo"]:
         subs.append("<h3>あわせて取りたい資格（ダブルライセンス）</h3><ul>"
                     + "".join(li(s, n) for s, n in rel["combo"]) + "</ul>")
-    if not subs:
+    if not rm and not subs:
         return ""
     return ('<section class="rel-certs"><h2>関連資格・ステップアップ</h2>'
-            + "".join(subs)
+            + rm + "".join(subs)
             + '<p class="muted">※免除・受験資格の要件は変更されることがあります。'
               '出願前に必ず各資格の公式情報でご確認ください。</p></section>')
 
@@ -450,6 +497,12 @@ def build_detail(row) -> str:
         spec.append(("難易度の目安",
                      f'<span class="diff-badge {dcls}">{esc(dlabel)}</span>'
                      f' <span class="muted">（公表合格率 {esc(row["pass_rate"])} に基づく簡易目安）</span>'))
+    dr = DIFFICULTY_RANK.get(row["slug"])
+    if dr:
+        spec.append(("総合難易度（目安）",
+                     f'<span class="diff-rank">掲載資格中 上位{dr["pct"]}%</span>'
+                     f' <span class="muted">（合格率・学習時間から算出した編集部の総合スコア。'
+                     f'スコア算出{dr["total"]}件中{dr["rank"]}位相当で、難易度の絶対指標ではありません）</span>'))
     if ed.get("exam_subjects"):
         spec.append(("試験科目・出題範囲", esc(ed["exam_subjects"])))
     st = STUDY.get(row["slug"], {})
@@ -697,6 +750,72 @@ def difficulty(r):
     if p < 80:
         return ("比較的やさしい", "diff-easy")
     return ("入門〜標準", "diff-veryeasy")
+
+
+def study_hours_max(slug):
+    """学習時間文字列から代表値（範囲なら上限）を時間で。なければ None。"""
+    s = (STUDY.get(slug, {}) or {}).get("study_hours", "")
+    nums = [int(x.replace(",", "")) for x in re.findall(r"([0-9][0-9,]*)", s)]
+    return max(nums) if nums else None
+
+
+def eff_pass_pct(r):
+    """合格率文字列の全%を段階（一次/二次・学科/実地）の積として合成した実効合格率(%)。
+    例: 一次36.7%/二次49.6% → 0.367×0.496 = 18.2%。なければ None。"""
+    nums = [float(x) for x in re.findall(r"([0-9]+(?:\.[0-9]+)?)\s*%", r.get("pass_rate", ""))]
+    if not nums:
+        return None
+    p = 1.0
+    for n in nums:
+        p *= min(max(n, 0.0), 100.0) / 100.0
+    return p * 100.0
+
+
+# 総合難易度ランキング（合格率・学習時間からの編集部スコア）。main() で build_difficulty_rank() が算出。
+DIFFICULTY_RANK = {}  # slug -> {"pct": 上位X%, "rank": int, "total": int}
+
+
+def build_difficulty_rank(rows):
+    """合格率(実効)と学習時間を全体内パーセンタイルに正規化し、平均した総合難易度で
+    ランキングを作る。両シグナルとも無い資格は対象外。DIFFICULTY_RANK を更新する。"""
+    import bisect
+    items = []  # (slug, eff_pass, hours)
+    pass_vals, hour_vals = [], []
+    for r in rows:
+        ep = eff_pass_pct(r)
+        hr = study_hours_max(r["slug"])
+        if ep is None and hr is None:
+            continue
+        items.append((r["slug"], ep, hr))
+        if ep is not None:
+            pass_vals.append(ep)
+        if hr is not None:
+            hour_vals.append(hr)
+    pass_sorted = sorted(pass_vals)
+    hour_sorted = sorted(hour_vals)
+
+    def hardness(slug, ep, hr):
+        sig = []
+        if ep is not None and pass_sorted:
+            # 合格率が低いほど難しい → ハードネス = 母集団で実効合格率が当該以上の割合
+            idx = bisect.bisect_left(pass_sorted, ep)
+            sig.append(1.0 - (idx + 0.5) / len(pass_sorted))
+        if hr is not None and hour_sorted:
+            # 学習時間が長いほど難しい
+            idx = bisect.bisect_left(hour_sorted, hr)
+            sig.append((idx + 0.5) / len(hour_sorted))
+        return sum(sig) / len(sig) if sig else None
+
+    scored = [(s, hardness(s, ep, hr)) for s, ep, hr in items]
+    scored = [(s, h) for s, h in scored if h is not None]
+    # 難しい順（ハードネス降順）。同点は slug で安定化。
+    scored.sort(key=lambda x: (-x[1], x[0]))
+    total = len(scored)
+    DIFFICULTY_RANK.clear()
+    for i, (s, h) in enumerate(scored):
+        rank = i + 1
+        pct = max(1, math.ceil(rank / total * 100))
+        DIFFICULTY_RANK[s] = {"pct": pct, "rank": rank, "total": total}
 
 
 def n_facts(r):
@@ -2041,6 +2160,17 @@ table.spec th{width:34%;background:#f2f5fa;color:#3a4757;font-weight:600;white-s
 .diff-badge{display:inline-block;font-weight:700;font-size:.82rem;padding:2px 9px;border-radius:11px;color:#fff}
 .diff-veryhard{background:#b71c1c}.diff-hard{background:#e65100}.diff-mid{background:#f9a825;color:#3a2c00}
 .diff-easy{background:#388e3c}.diff-veryeasy{background:#1565c0}
+.diff-rank{display:inline-block;font-weight:700;font-size:.82rem;padding:2px 10px;border-radius:11px;background:#3b2f63;color:#fff}
+.roadmap{margin:.4em 0 .6em}.roadmap h3{font-size:.92rem;margin:.7em 0 .35em;color:#3a4757}
+.rm-track{list-style:none;display:flex;flex-wrap:wrap;align-items:stretch;gap:8px;padding:0;margin:.2em 0}
+.rm-step{display:flex;flex-direction:column;justify-content:center;background:#fff;border:1px solid #cfd6e0;border-radius:9px;padding:8px 12px;position:relative;min-width:96px}
+.rm-step:not(:last-child){margin-right:14px}
+.rm-step:not(:last-child)::after{content:"›";position:absolute;right:-13px;top:50%;transform:translateY(-50%);color:#9aa6b4;font-weight:700;font-size:1.2rem}
+.rm-step a{text-decoration:none;color:#0d47a1;font-weight:600}
+.rm-cur{background:#eef4ff;border-color:#5b8def;box-shadow:0 0 0 1px #5b8def inset}
+.rm-cur span{font-weight:700;color:#1b2430}.rm-cur small{display:block;color:#5b6675;font-size:.72rem;margin-top:1px}
+@media(max-width:560px){.rm-step{min-width:0;flex:1 1 100%}.rm-step:not(:last-child){margin-right:0;margin-bottom:14px}
+.rm-step:not(:last-child)::after{content:"▾";right:50%;top:auto;bottom:-13px;transform:translateX(50%)}}
 .careers-sec{margin:18px 0 0;border-top:1px solid #e6e9ef;padding-top:12px}
 .careers-sec h2{font-size:1.05rem;margin:.2em 0 .4em}
 .careers{margin:.2em 0;padding-left:1.1em}.careers li{margin:2px 0}
@@ -2114,6 +2244,8 @@ def main() -> int:
     # 詳細→比較ページの相互リンク用グローバルを設定
     NAME_BY_SLUG.update({r["slug"]: r["name"] for r in rows})
     INDEXABLE_SLUGS.update(r["slug"] for r in indexable if is_indexable_detail(r))
+    # 総合難易度ランキング（合格率・学習時間ベース）を算出
+    build_difficulty_rank(indexable)
 
     if SITE.exists():
         shutil.rmtree(SITE)
