@@ -34,7 +34,9 @@ table.spec th{width:34%;background:#f2f5fa;color:#3a4757;font-weight:600;white-s
 .diff-badge{display:inline-block;font-weight:700;font-size:.82rem;padding:2px 9px;border-radius:11px;color:#fff}
 .diff-veryhard{background:#b71c1c}.diff-hard{background:#e65100}.diff-mid{background:#f9a825;color:#3a2c00}
 .diff-easy{background:#388e3c}.diff-veryeasy{background:#1565c0}
-.diff-rank{display:inline-block;font-weight:700;font-size:.82rem;padding:2px 10px;border-radius:11px;background:#3b2f63;color:#fff}
+.diff-rank{display:inline-block;font-weight:700;font-size:.82rem;padding:2px 10px;border-radius:11px;background:#3b2f63;color:#fff;margin:1px 2px 1px 0}
+.diff-rank-field{background:#0d5e63}
+.diff-meta{font-size:.8rem;margin-top:3px}
 .roadmap{margin:.4em 0 .6em}.roadmap h3{font-size:.92rem;margin:.7em 0 .35em;color:#3a4757}
 .rm-track{list-style:none;display:flex;flex-wrap:wrap;align-items:stretch;gap:8px;padding:0;margin:.2em 0}
 .rm-step{display:flex;flex-direction:column;justify-content:center;background:#fff;border:1px solid #cfd6e0;border-radius:9px;padding:8px 12px;position:relative;min-width:96px}

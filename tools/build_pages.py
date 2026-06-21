@@ -23,6 +23,7 @@ CSV = ROOT / "data" / "certifications.csv"
 CAREERS_CSV = ROOT / "data" / "careers.csv"
 EXAM_CSV = ROOT / "data" / "exam_details.csv"
 STUDY_CSV = ROOT / "data" / "study_time.csv"
+DIFFICULTY_CSV = ROOT / "data" / "difficulty.csv"
 SITE = ROOT / "site"
 BRAND = ROOT / "brand"
 
@@ -122,6 +123,29 @@ def load_study_time():
 
 
 STUDY = load_study_time()
+
+
+def load_difficulty_data():
+    """slug → {value, source}。編集部が出典付きで投入する難易度データ（0-100、高いほど難）。
+    総合難易度スコアの第3軸。空でも可（その場合は合格率・学習時間のみで算出）。"""
+    if not DIFFICULTY_CSV.exists():
+        return {}
+    out = {}
+    with DIFFICULTY_CSV.open(encoding="utf-8") as f:
+        for r in csv.DictReader(f):
+            s = (r.get("slug") or "").strip()
+            v = (r.get("difficulty") or "").strip()
+            if not s or not v:
+                continue
+            try:
+                val = float(v)
+            except ValueError:
+                continue
+            out[s] = {"value": val, "source": (r.get("source") or "").strip()}
+    return out
+
+
+DIFFICULTY_DATA = load_difficulty_data()
 
 
 # ── 職種データベース（occupations.csv / cert_occupations.csv）──
@@ -499,10 +523,18 @@ def build_detail(row) -> str:
                      f' <span class="muted">（公表合格率 {esc(row["pass_rate"])} に基づく簡易目安）</span>'))
     dr = DIFFICULTY_RANK.get(row["slug"])
     if dr:
+        badges = [f'<span class="diff-rank">掲載資格中 上位{dr["pct"]}%</span>']
+        if dr.get("fpct"):
+            badges.append(f'<span class="diff-rank diff-rank-field">'
+                          f'{esc(dr["fname"])}分野内 上位{dr["fpct"]}%</span>')
+        conf_note = {"高": "高（主要指標2つ以上で算出）",
+                     "中": "中（単一指標ベースの参考値）"}.get(dr["conf"], dr["conf"])
+        meta = (f'信頼度: {conf_note}／スコア算出{dr["total"]}件中{dr["rank"]}位相当。'
+                f'{"・".join(dr["srcs"])}から算出した編集部の総合スコアで、'
+                f'難易度の絶対指標ではありません。')
         spec.append(("総合難易度（目安）",
-                     f'<span class="diff-rank">掲載資格中 上位{dr["pct"]}%</span>'
-                     f' <span class="muted">（合格率・学習時間から算出した編集部の総合スコア。'
-                     f'スコア算出{dr["total"]}件中{dr["rank"]}位相当で、難易度の絶対指標ではありません）</span>'))
+                     " ".join(badges)
+                     + f'<div class="muted diff-meta">{meta}</div>'))
     if ed.get("exam_subjects"):
         spec.append(("試験科目・出題範囲", esc(ed["exam_subjects"])))
     st = STUDY.get(row["slug"], {})
@@ -771,51 +803,123 @@ def eff_pass_pct(r):
     return p * 100.0
 
 
-# 総合難易度ランキング（合格率・学習時間からの編集部スコア）。main() で build_difficulty_rank() が算出。
-DIFFICULTY_RANK = {}  # slug -> {"pct": 上位X%, "rank": int, "total": int}
+_ELIG_NEG = re.compile(r"(受験資格.{0,4}(なし|不問)|制限なし|どなたでも|誰でも|だれでも"
+                       r"|学歴.{0,3}不問|年齢.{0,3}不問|実務.{0,3}不問)")
+
+
+def elig_strictness(r):
+    """受験資格テキストから受験ハードルを 0-1 で粗く推定。判別不能・空は None。
+
+    注: 受験資格の厳しさは試験そのものの難しさとは別物。総合スコアでは低い重みの
+    「補助シグナル」として、主要シグナル（合格率・学習時間・難易度データ）がある資格の
+    位置を微調整する用途に限って使う（単独では極端な順位を作らない）。"""
+    t = (r.get("eligibility") or "").strip()
+    if not t:
+        return None
+    if _ELIG_NEG.search(t):
+        return 0.10
+    m = re.search(r"実務.{0,4}(?:経験|従事).{0,8}?(\d+)\s*年", t)
+    if m:
+        y = int(m.group(1))
+        return 0.85 if y >= 5 else 0.70 if y >= 3 else 0.60
+    if re.search(r"実務.{0,4}経験|業務.{0,4}経験|従事.{0,3}経験", t):
+        return 0.60
+    if re.search(r"(大学|短大|高専|専門学校|高校|学校).{0,8}(卒|修了|在学|課程|履修)", t):
+        return 0.50
+    if re.search(r"(資格.{0,5}保有|合格者|級.{0,5}(取得|保持)|上位.{0,3}資格"
+                 r"|指定.{0,5}講習|登録.{0,4}(必要|要)|養成.{0,3}課程)", t):
+        return 0.55
+    return None
+
+
+# 総合難易度ランキング（合格率・学習時間・難易度データ・受験資格からの編集部スコア）。
+# main() で build_difficulty_rank() が算出。
+DIFFICULTY_RANK = {}  # slug -> {pct,rank,total,conf,fpct,frank,ftotal,fname,...}
+
+# 各シグナルの重み（主要3軸＋補助1軸）と信頼度補正の強さ。
+_W_PASS, _W_HOUR, _W_DIFF, _W_ELIG = 1.0, 0.8, 1.0, 0.35
+_SHRINK_K0 = 0.9   # 大きいほど主要シグナルが少ない資格を中央値へ強く収縮
+_FIELD_MIN = 8     # 分野内ランキングを出す最小母数
 
 
 def build_difficulty_rank(rows):
-    """合格率(実効)と学習時間を全体内パーセンタイルに正規化し、平均した総合難易度で
-    ランキングを作る。両シグナルとも無い資格は対象外。DIFFICULTY_RANK を更新する。"""
+    """合格率(実効)・学習時間・編集部難易度データを全体内パーセンタイルに正規化し、
+    受験資格の厳しさを補助シグナルとして加重平均。主要シグナルの数に応じて中央値へ
+    収縮(shrinkage)させ、過信を抑える。全体および分野内のランキングを DIFFICULTY_RANK に格納。"""
     import bisect
-    items = []  # (slug, eff_pass, hours)
-    pass_vals, hour_vals = [], []
+    from collections import defaultdict
+
+    items = []  # (row, eff_pass, hours, diff_value, elig)
+    pass_vals, hour_vals, diff_vals = [], [], []
     for r in rows:
         ep = eff_pass_pct(r)
         hr = study_hours_max(r["slug"])
-        if ep is None and hr is None:
-            continue
-        items.append((r["slug"], ep, hr))
+        dv = (DIFFICULTY_DATA.get(r["slug"], {}) or {}).get("value")
+        es = elig_strictness(r)
+        if ep is None and hr is None and dv is None:
+            continue  # 主要シグナルが1つも無ければ対象外（受験資格のみでは順位化しない）
+        items.append((r, ep, hr, dv, es))
         if ep is not None:
             pass_vals.append(ep)
         if hr is not None:
             hour_vals.append(hr)
-    pass_sorted = sorted(pass_vals)
-    hour_sorted = sorted(hour_vals)
+        if dv is not None:
+            diff_vals.append(dv)
+    pass_sorted, hour_sorted, diff_sorted = sorted(pass_vals), sorted(hour_vals), sorted(diff_vals)
 
-    def hardness(slug, ep, hr):
-        sig = []
-        if ep is not None and pass_sorted:
-            # 合格率が低いほど難しい → ハードネス = 母集団で実効合格率が当該以上の割合
-            idx = bisect.bisect_left(pass_sorted, ep)
-            sig.append(1.0 - (idx + 0.5) / len(pass_sorted))
-        if hr is not None and hour_sorted:
-            # 学習時間が長いほど難しい
-            idx = bisect.bisect_left(hour_sorted, hr)
-            sig.append((idx + 0.5) / len(hour_sorted))
-        return sum(sig) / len(sig) if sig else None
+    def pctl(sorted_vals, v):
+        n = len(sorted_vals)
+        return (bisect.bisect_left(sorted_vals, v) + 0.5) / n if n else None
 
-    scored = [(s, hardness(s, ep, hr)) for s, ep, hr in items]
-    scored = [(s, h) for s, h in scored if h is not None]
-    # 難しい順（ハードネス降順）。同点は slug で安定化。
-    scored.sort(key=lambda x: (-x[1], x[0]))
-    total = len(scored)
+    records = []  # (slug, major, hardness, conf, sources)
+    for r, ep, hr, dv, es in items:
+        sig = []  # (hardness0-1, weight, is_primary)
+        if ep is not None:
+            sig.append((1.0 - pctl(pass_sorted, ep), _W_PASS, True))   # 低合格率=難
+        if hr is not None:
+            sig.append((pctl(hour_sorted, hr), _W_HOUR, True))         # 長時間=難
+        if dv is not None:
+            sig.append((pctl(diff_sorted, dv), _W_DIFF, True))         # 難易度データ
+        if es is not None:
+            sig.append((es, _W_ELIG, False))                           # 受験資格(補助)
+        wsum = sum(w for _, w, _ in sig)
+        h_raw = sum(h * w for h, w, _ in sig) / wsum
+        prim_w = sum(w for _, w, p in sig if p)
+        nprim = sum(1 for _, _, p in sig if p)
+        # 主要シグナルの重み総和が小さいほど中央値(0.5)へ収縮 → 単一指標の過信を抑制
+        k = prim_w / (prim_w + _SHRINK_K0)
+        h = 0.5 + (h_raw - 0.5) * k
+        conf = "高" if nprim >= 2 else "中"
+        srcs = []
+        if ep is not None:
+            srcs.append("合格率(実効)")
+        if hr is not None:
+            srcs.append("学習時間")
+        if dv is not None:
+            srcs.append("編集部難易度データ")
+        if es is not None:
+            srcs.append("受験資格の要件")
+        records.append((r["slug"], r.get("major_category", ""), h, conf, srcs))
+
+    records.sort(key=lambda x: (-x[2], x[0]))  # 難しい順、slug で安定化
+    total = len(records)
     DIFFICULTY_RANK.clear()
-    for i, (s, h) in enumerate(scored):
-        rank = i + 1
-        pct = max(1, math.ceil(rank / total * 100))
-        DIFFICULTY_RANK[s] = {"pct": pct, "rank": rank, "total": total}
+    for i, (s, mj, h, conf, srcs) in enumerate(records):
+        DIFFICULTY_RANK[s] = {"pct": max(1, math.ceil((i + 1) / total * 100)),
+                              "rank": i + 1, "total": total, "conf": conf, "srcs": srcs}
+
+    # 分野内ランキング（母集団差の補正）。母数が十分な分野のみ。
+    groups = defaultdict(list)
+    for s, mj, h, conf, srcs in records:
+        groups[mj].append((s, h))
+    for mj, lst in groups.items():
+        if not mj or len(lst) < _FIELD_MIN:
+            continue
+        lst.sort(key=lambda x: (-x[1], x[0]))
+        ft = len(lst)
+        for j, (s, _h) in enumerate(lst):
+            DIFFICULTY_RANK[s].update({"fpct": max(1, math.ceil((j + 1) / ft * 100)),
+                                       "frank": j + 1, "ftotal": ft, "fname": mj})
 
 
 def n_facts(r):
@@ -2160,7 +2264,9 @@ table.spec th{width:34%;background:#f2f5fa;color:#3a4757;font-weight:600;white-s
 .diff-badge{display:inline-block;font-weight:700;font-size:.82rem;padding:2px 9px;border-radius:11px;color:#fff}
 .diff-veryhard{background:#b71c1c}.diff-hard{background:#e65100}.diff-mid{background:#f9a825;color:#3a2c00}
 .diff-easy{background:#388e3c}.diff-veryeasy{background:#1565c0}
-.diff-rank{display:inline-block;font-weight:700;font-size:.82rem;padding:2px 10px;border-radius:11px;background:#3b2f63;color:#fff}
+.diff-rank{display:inline-block;font-weight:700;font-size:.82rem;padding:2px 10px;border-radius:11px;background:#3b2f63;color:#fff;margin:1px 2px 1px 0}
+.diff-rank-field{background:#0d5e63}
+.diff-meta{font-size:.8rem;margin-top:3px}
 .roadmap{margin:.4em 0 .6em}.roadmap h3{font-size:.92rem;margin:.7em 0 .35em;color:#3a4757}
 .rm-track{list-style:none;display:flex;flex-wrap:wrap;align-items:stretch;gap:8px;padding:0;margin:.2em 0}
 .rm-step{display:flex;flex-direction:column;justify-content:center;background:#fff;border:1px solid #cfd6e0;border-radius:9px;padding:8px 12px;position:relative;min-width:96px}
