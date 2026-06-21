@@ -1789,6 +1789,10 @@ def build_comparison_pages(indexable):
             '<div class="vs-cta">'
             f'<a class="btn-official" href="../c/{esc(ra["slug"])}.html">{esc(na)}の詳細</a> '
             f'<a class="btn-official" href="../c/{esc(rb["slug"])}.html">{esc(nb)}の詳細</a>'
+            "</div>"
+            '<div class="vs-cta">'
+            f'<button type="button" class="cmp-add-btn" data-slug="{esc(ra["slug"])}" data-name="{esc(na)}">＋ {esc(na)}を比較に追加</button>'
+            f'<button type="button" class="cmp-add-btn" data-slug="{esc(rb["slug"])}" data-name="{esc(nb)}">＋ {esc(nb)}を比較に追加</button>'
             "</div>")
 
         # 比較 FAQ（違い・難易度）
@@ -2538,7 +2542,7 @@ OCC_SEARCH_JS = """(function(){
     stat.textContent=out.length+' 件';
     res.innerHTML=out.slice(0,400).map(function(x){
       return '<li><a href="'+x.id+'.html">'+esc(x.n)+'</a> <span class="muted">（'+x.c+'資格）</span></li>';
-    }).join('')||'<li class="muted">該当なし</li>';
+    }).join('')||'<li class="empty-state">条件に一致する職種が見つかりませんでした。キーワードを短くするか、分野を「すべて」に戻してみてください。</li>';
     if(out.length>400)res.innerHTML+='<li class="muted">…他 '+(out.length-400)+' 件（絞り込んでください）</li>';
   }
   fetch('../data/occupations.json').then(function(r){return r.json();}).then(function(all){
