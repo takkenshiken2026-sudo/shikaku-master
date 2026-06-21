@@ -473,7 +473,8 @@ def page_shell(title: str, body: str, depth: int, noindex: bool = True,
 <meta name="description" content="{esc(desc)}">
 {og}<link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap"></noscript>
 <link rel="icon" href="{base}assets/favicon.ico" sizes="32x32">
 <link rel="icon" href="{base}assets/favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="{base}assets/apple-touch-icon.png">
@@ -1221,11 +1222,26 @@ def build_category_pages(indexable):
             f"主なカテゴリ: {esc('、'.join(cats[:12]))}{'ほか' if len(cats) > 12 else ''}。</p>"
             + _list_items(items, depth=1)
         )
+        ld = [
+            {"@context": "https://schema.org", "@type": "BreadcrumbList",
+             "itemListElement": [
+                 {"@type": "ListItem", "position": 1, "name": "トップ",
+                  "item": BASE_URL + "/"},
+                 {"@type": "ListItem", "position": 2, "name": f"{major}の資格一覧"}]},
+            {"@context": "https://schema.org", "@type": "ItemList",
+             "name": f"{major}の資格一覧",
+             "numberOfItems": len(items),
+             "itemListElement": [
+                 {"@type": "ListItem", "position": i,
+                  "url": f'{BASE_URL}/c/{r["slug"]}.html', "name": r["name"]}
+                 for i, r in enumerate(items[:50], 1)
+                 if is_indexable_detail(r)]},
+        ]
         pages[slug] = page_shell(
             f"{major}の資格一覧｜{SITE_NAME}", body, depth=1, noindex=False,
             desc=f"「{major}」分野の資格 {len(items)} 件（うち公式データ掲載 {npub} 件）。"
                  f"受験料・試験形式・受験資格・合格率を一覧・比較できます。",
-            path=f"bunya/{slug}.html")
+            path=f"bunya/{slug}.html", jsonld=ld)
     return pages
 
 
@@ -1583,9 +1599,23 @@ def build_feature_pages(indexable):
             + '<p class="muted" style="margin-top:14px">※受験料・合格率は公式の一次情報に基づきますが、'
               '最新の金額・制度・日程は各資格の公式サイトで必ずご確認ください。</p>'
         )
+        _ld = [
+            {"@context": "https://schema.org", "@type": "BreadcrumbList",
+             "itemListElement": [
+                 {"@type": "ListItem", "position": 1, "name": "トップ",
+                  "item": BASE_URL + "/"},
+                 {"@type": "ListItem", "position": 2, "name": h1}]},
+            {"@context": "https://schema.org", "@type": "ItemList",
+             "name": h1, "numberOfItems": len(items),
+             "itemListElement": [
+                 {"@type": "ListItem", "position": i,
+                  "url": f'{BASE_URL}/c/{r["slug"]}.html', "name": r["name"]}
+                 for i, r in enumerate(items[:50], 1)
+                 if is_indexable_detail(r)]},
+        ]
         pages[slug] = page_shell(f"{title}｜{SITE_NAME}", body, depth=1,
                                  noindex=False, desc=desc,
-                                 path=f"feature/{slug}.html")
+                                 path=f"feature/{slug}.html", jsonld=_ld)
 
     # 受験者数が多い順（公式統計のある資格）
     popular = sorted((r for r in pub if applicants_num(r) is not None),
@@ -1700,9 +1730,23 @@ def build_feature_pages(indexable):
               '必ずご確認ください。</p>'
             + hub_nav(slug)
         )
+        _ld = [
+            {"@context": "https://schema.org", "@type": "BreadcrumbList",
+             "itemListElement": [
+                 {"@type": "ListItem", "position": 1, "name": "トップ",
+                  "item": BASE_URL + "/"},
+                 {"@type": "ListItem", "position": 2, "name": h1}]},
+            {"@context": "https://schema.org", "@type": "ItemList",
+             "name": h1, "numberOfItems": len(items),
+             "itemListElement": [
+                 {"@type": "ListItem", "position": i,
+                  "url": f'{BASE_URL}/c/{r["slug"]}.html', "name": r["name"]}
+                 for i, r in enumerate(items[:50], 1)
+                 if is_indexable_detail(r)]},
+        ]
         pages[slug] = page_shell(f"{title}｜{SITE_NAME}", body, depth=1,
                                  noindex=False, desc=desc,
-                                 path=f"feature/{slug}.html")
+                                 path=f"feature/{slug}.html", jsonld=_ld)
 
     ind = curated(HUB_INDEPENDENCE)
     hub("independence", "独立・開業を目指せる資格", "独立・開業を目指せる資格",
