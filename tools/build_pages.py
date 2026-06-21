@@ -2217,7 +2217,7 @@ def build_index(rows) -> str:
   <div id="tagfilter" class="tagfilter"><span class="tf-label">目的・特徴で絞り込み：</span></div>
   <div class="results-bar"><p id="status" class="muted"></p><button type="button" id="clearFilters" class="clear-filters" hidden>× 条件をクリア</button></div>
   <p class="muted hint">各行の「＋比較」で資格を選ぶと、画面下の比較バーから最大4件まで並べて比較できます。</p>
-  <ul id="results" class="results"></ul>
+  <ul id="results" class="results"><li class="muted">読み込み中…</li></ul>
 </section>
 
 <section class="feature-nav">
@@ -2252,7 +2252,7 @@ def build_compare() -> str:
 <h1>資格を比較</h1>
 <p class="lead">選択した資格を並べて比較します（最大4件）。数値・制度は各資格の公式情報で必ずご確認ください。</p>
 <div id="cmpVerdict"></div>
-<div id="cmp" class="cmp-wrap"></div>
+<div id="cmp" class="cmp-wrap"><p class="muted">読み込み中…</p></div>
 <p style="margin-top:18px"><a href="index.html">← 検索に戻って選び直す</a></p>
 <script src="assets/compare.js"></script>
 """
@@ -2352,8 +2352,8 @@ SEARCH_JS = """(function(){
         '</div>'+
         '<button type="button" class="cmp-add-btn" data-slug="'+x.slug+'" data-name="'+esc(shortName(x.name))+'">＋ 比較</button>'+
         '</li>';
-    }).join('')||'<li class="muted">該当なし</li>';
-    if(out.length>300) results.innerHTML+='<li class="muted">…他 '+(out.length-300)+' 件（絞り込んでください）</li>';
+    }).join('')||'<li class="empty-state">条件に一致する資格が見つかりませんでした。<br>キーワードを短くするか、上の「× 条件をクリア」で絞り込みを解除してください。</li>';
+    if(out.length>300) results.innerHTML+='<li class="muted">…他 '+(out.length-300)+' 件。さらに絞り込むと見つけやすくなります。</li>';
     if(window.CmpBar)window.CmpBar.refresh();
     syncURL();
   }
@@ -2838,6 +2838,7 @@ table.cmp tbody th{background:var(--gray-50);color:var(--gray-800);white-space:n
 .btn-sm{padding:7px 14px;font-size:var(--text-nav)}
 /* 一覧の行＋比較ボタン */
 .results li{display:flex;gap:12px;align-items:center}
+.results li.empty-state{display:block;text-align:center;color:var(--gray-600);background:var(--gray-50);border:1px dashed var(--gray-300);padding:22px 16px;line-height:1.75}
 .result-main{flex:1;min-width:0}
 .result-label{display:inline-block;font-size:var(--text-2xs);font-weight:600;color:var(--gray-600);background:var(--gray-100);border:1px solid var(--gray-300);border-radius:4px;padding:1px 6px;margin-left:6px;vertical-align:middle}
 .cmp-add-btn{flex-shrink:0;min-width:78px;padding:8px 10px;font-size:var(--text-xs);font-weight:600;line-height:1.2;border:1px solid var(--accent);border-radius:8px;background:var(--white);color:var(--accent);cursor:pointer;font-family:inherit;text-align:center;transition:border-color .15s,background .15s,color .15s}
