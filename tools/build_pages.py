@@ -32,7 +32,7 @@ BRAND = ROOT / "brand"
 # 厚労省 職業情報提供サイト（job tag）— 関連職業の公式ディスカバリ導線
 JOBTAG_URL = "https://shigoto.mhlw.go.jp/User/Search/Top"
 
-SITE_NAME = "資格カタログ"
+SITE_NAME = "資格マスター"
 SITE_DESC = "日本の資格を「探せる・絞れる・比べられる」資格データベース。受験料・試験形式・受験資格・合格率・実施団体・公式サイトを公式の一次情報に基づき掲載。"
 BASE_URL = "https://shikaku-master.jp"
 CUSTOM_DOMAIN = "shikaku-master.jp"
