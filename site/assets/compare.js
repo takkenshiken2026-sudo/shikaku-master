@@ -3,7 +3,9 @@
   var ids=(p.get('ids')||'').split(',').filter(Boolean);
   var root=document.getElementById('cmp');
   function esc(s){return (s||'').replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
-  if(!ids.length){root.innerHTML='<p class="muted">比較する資格が選択されていません。<a href="index.html">トップ</a>で資格にチェックを入れて選んでください。</p>';return;}
+  if(!ids.length){root.innerHTML='<p class="muted">比較する資格が選択されていません。<a href="index.html">資格一覧</a>から各行の「＋比較」で資格を選んでください。</p>';return;}
+  function feeNum(x){var m=(x.fee||'').replace(/,/g,'').match(/([0-9]+)\s*円/);return m?parseInt(m[1],10):null;}
+  function passNum(x){var m=(x.pass_rate||'').replace(/,/g,'').match(/([0-9]+(?:\.[0-9]+)?)\s*%/);return m?parseFloat(m[1]):null;}
   var FIELDS=[['区分','type'],['分野','major'],['カテゴリ','category'],
     ['実施団体','authority'],['受験資格','eligibility'],['試験形式','exam_format'],
     ['受験料','fee'],['合格率','pass_rate'],['実施頻度','frequency']];
@@ -11,7 +13,21 @@
     var map={};all.forEach(function(x){map[x.slug]=x;});
     var items=ids.map(function(s){return map[s];}).filter(Boolean);
     if(!items.length){root.innerHTML='<p class="muted">該当する資格データが見つかりませんでした。</p>';return;}
-    var h='<table class="cmp"><thead><tr><th></th>';
+    var v=[],seen={};
+    function card(label,x,why){if(!x||seen[label+x.slug])return;seen[label+x.slug]=1;
+      v.push('<div class="cmp-verdict-card"><div class="pick">'+label+'</div>'+
+        '<div class="pickname"><a href="c/'+x.slug+'.html">'+esc(x.name)+'</a></div>'+
+        '<div class="why">'+why+'</div></div>');}
+    if(items.length>=2){
+      var cheap=items.filter(function(x){return feeNum(x)!==null;}).sort(function(a,b){return feeNum(a)-feeNum(b);})[0];
+      if(cheap)card('費用を抑えたいなら',cheap,'受験料が最も安い：'+esc(cheap.fee));
+      var hp=items.filter(function(x){return passNum(x)!==null;}).sort(function(a,b){return passNum(b)-passNum(a);})[0];
+      if(hp)card('合格しやすさなら',hp,'公表合格率が最も高い：'+esc(hp.pass_rate));
+      var nr=items.filter(function(x){return /(なし|不問|制限なし)/.test(x.eligibility||'');})[0];
+      if(nr)card('誰でも受けたいなら',nr,'受験資格の制限なし');
+    }
+    var vhtml=v.length?('<section class="cmp-verdict"><h2 class="cmp-verdict-title">選び方の目安（掲載データに基づく簡易判定）</h2><div class="cmp-verdict-grid">'+v.join('')+'</div></section>'):'';
+    var h=vhtml+'<table class="cmp"><thead><tr><th></th>';
     items.forEach(function(x){h+='<th><a href="c/'+x.slug+'.html">'+esc(x.name)+'</a></th>';});
     h+='</tr></thead><tbody>';
     FIELDS.forEach(function(f){
