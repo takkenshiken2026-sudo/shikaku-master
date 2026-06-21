@@ -760,10 +760,34 @@ def build_detail(row) -> str:
         qa.append((f"{name}はいつ実施されますか？", row["frequency"]))
     if row["authority"]:
         qa.append((f"{name}の実施団体はどこですか？", row["authority"]))
+    # 派生Q&A（保有データに基づく事実回答。ロングテール検索を狙う）
+    _sth = (STUDY.get(row["slug"], {}) or {}).get("study_hours", "")
+    if is_noreq(row):
+        qa.append((f"{name}は誰でも受験できますか？",
+                   "受験資格の制限はなく、誰でも受験できます。"))
+    if is_cbt(row):
+        qa.append((f"{name}は在宅・CBTで受けられますか？",
+                   "CBT（テストセンターやネット試験）方式に対応しています。会場や日程は公式サイトでご確認ください。"))
+    if _sth:
+        qa.append((f"{name}の合格に必要な学習時間の目安は？",
+                   f"編集部調べでは{_sth}が目安です（個人差があり、公式の数値ではありません）。"))
+    _dq = difficulty(row)
+    if _dq and row["pass_rate"]:
+        qa.append((f"{name}の難易度はどのくらいですか？",
+                   f"公表合格率（{row['pass_rate']}）に基づく簡易的な目安では「{_dq[0]}」です。"
+                   "合格率は受験者層により変わるため、難易度の絶対指標ではありません。"))
     faq = ({"@context": "https://schema.org", "@type": "FAQPage",
             "mainEntity": [{"@type": "Question", "name": q,
                             "acceptedAnswer": {"@type": "Answer", "text": a}}
                            for q, a in qa]} if qa else None)
+    faq_html = ""
+    if qa:
+        _items = "".join(
+            f'<details class="faq-item"><summary>{esc(q)}</summary>'
+            f'<div class="faq-a">{esc(a)}</div></details>' for q, a in qa)
+        faq_html = ('<section class="detail-faq" aria-labelledby="faq-h">'
+                    f'<h2 class="detail-section-title" id="faq-h">{esc(name)}のよくある質問</h2>'
+                    f'{_items}</section>')
 
     _mat = materials_section_html(row["slug"])
     _mat_block = ("\n" + _mat) if _mat else ""
@@ -854,6 +878,7 @@ def build_detail(row) -> str:
 {provenance}
 {careers_section}{_mat_block}{_rel_block}
 {rel_links}
+{faq_html}
 <section class="related"><h2>同じカテゴリの資格</h2><ul id="related"></ul></section>
 {source_aside}
 <script>
@@ -2965,6 +2990,14 @@ table.cmp tbody th{background:var(--gray-50);color:var(--gray-800);white-space:n
 .point-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:7px}
 .point-list li{position:relative;padding:8px 12px 8px 32px;background:var(--accent-light);border:1px solid rgba(42,122,110,.15);border-radius:var(--radius);font-size:var(--text-ui);color:var(--gray-800);line-height:1.55}
 .point-list li::before{content:"✓";position:absolute;left:12px;top:8px;color:var(--accent);font-weight:700}
+.detail-faq{margin:0 0 22px}
+.faq-item{border:1px solid var(--gray-200);border-radius:var(--radius);margin-bottom:8px;background:#fff;overflow:hidden}
+.faq-item summary{cursor:pointer;padding:12px 14px;font-weight:600;color:var(--ink-deep);font-size:var(--text-ui);list-style:none;position:relative;padding-right:36px}
+.faq-item summary::-webkit-details-marker{display:none}
+.faq-item summary::after{content:"＋";position:absolute;right:14px;top:12px;color:var(--accent);font-weight:700}
+.faq-item[open] summary::after{content:"−"}
+.faq-item summary:hover{background:var(--gray-50)}
+.faq-a{padding:0 14px 13px;color:var(--gray-700);line-height:1.7;font-size:var(--text-sm)}
 .btn-sm{padding:7px 14px;font-size:var(--text-nav)}
 /* 一覧の行＋比較ボタン */
 .results li{display:flex;gap:12px;align-items:center}

@@ -293,6 +293,14 @@ table.cmp tbody th{background:var(--gray-50);color:var(--gray-800);white-space:n
 .point-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:7px}
 .point-list li{position:relative;padding:8px 12px 8px 32px;background:var(--accent-light);border:1px solid rgba(42,122,110,.15);border-radius:var(--radius);font-size:var(--text-ui);color:var(--gray-800);line-height:1.55}
 .point-list li::before{content:"✓";position:absolute;left:12px;top:8px;color:var(--accent);font-weight:700}
+.detail-faq{margin:0 0 22px}
+.faq-item{border:1px solid var(--gray-200);border-radius:var(--radius);margin-bottom:8px;background:#fff;overflow:hidden}
+.faq-item summary{cursor:pointer;padding:12px 14px;font-weight:600;color:var(--ink-deep);font-size:var(--text-ui);list-style:none;position:relative;padding-right:36px}
+.faq-item summary::-webkit-details-marker{display:none}
+.faq-item summary::after{content:"＋";position:absolute;right:14px;top:12px;color:var(--accent);font-weight:700}
+.faq-item[open] summary::after{content:"−"}
+.faq-item summary:hover{background:var(--gray-50)}
+.faq-a{padding:0 14px 13px;color:var(--gray-700);line-height:1.7;font-size:var(--text-sm)}
 .btn-sm{padding:7px 14px;font-size:var(--text-nav)}
 /* 一覧の行＋比較ボタン */
 .results li{display:flex;gap:12px;align-items:center}
