@@ -2190,25 +2190,25 @@ def build_index(rows) -> str:
 <section class="block block-primary" id="all">
   <div class="block-head"><h2>すべての資格から探す</h2><p>分野・区分・条件で絞り込み</p></div>
   <div class="controls">
-    <select id="major"><option value="">分野（すべて）</option></select>
-    <select id="type"><option value="">区分（すべて）</option></select>
-    <select id="industry"><option value="">活かせる業界（すべて）</option></select>
-    <select id="study">
-      <option value="">学習時間の目安（すべて）</option>
+    <label class="ctl"><span class="ctl-l">分野</span><select id="major" aria-label="分野で絞り込み"><option value="">すべて</option></select></label>
+    <label class="ctl"><span class="ctl-l">区分</span><select id="type" aria-label="区分で絞り込み"><option value="">すべて</option></select></label>
+    <label class="ctl"><span class="ctl-l">活かせる業界</span><select id="industry" aria-label="活かせる業界で絞り込み"><option value="">すべて</option></select></label>
+    <label class="ctl"><span class="ctl-l">学習時間の目安</span><select id="study" aria-label="学習時間の目安で絞り込み">
+      <option value="">すべて</option>
       <option value="0-50">〜50時間</option>
       <option value="50-100">50〜100時間</option>
       <option value="100-300">100〜300時間</option>
       <option value="300-1000">300〜1000時間</option>
       <option value="1000-">1000時間以上</option>
-    </select>
-    <select id="sort">
-      <option value="">並び順（標準）</option>
+    </select></label>
+    <label class="ctl"><span class="ctl-l">並び順</span><select id="sort" aria-label="並び順">
+      <option value="">標準（人気を上位）</option>
       <option value="fee-asc">受験料が安い順</option>
       <option value="fee-desc">受験料が高い順</option>
       <option value="pass-desc">合格率が高い順</option>
       <option value="pass-asc">合格率が低い順</option>
       <option value="app-desc">受験者数が多い順（人気）</option>
-    </select>
+    </select></label>
   </div>
   <div class="filters">
     <label><input type="checkbox" id="f-pub"> データ掲載のみ</label>
@@ -2684,9 +2684,13 @@ html{scroll-padding-top:64px}
 h1{font-size:var(--text-page);margin:.1em 0 .35em;color:var(--ink-deep);font-weight:700}
 h2{color:var(--ink-deep)}
 .lead{color:var(--gray-700);font-size:var(--text-body);margin:0 0 14px}
-.controls{display:flex;gap:10px;flex-wrap:wrap;margin:16px 0}
+.controls{display:flex;gap:10px 14px;flex-wrap:wrap;margin:16px 0;align-items:flex-end}
 .controls input,.controls select{padding:10px 12px;border:1px solid var(--gray-300);border-radius:var(--radius);font-size:var(--text-ui);font-family:inherit;background:#fff;color:var(--ink)}
 .controls input{flex:1 1 260px}.controls select{cursor:pointer}
+.ctl{display:inline-flex;flex-direction:column;gap:3px;min-width:0}
+.ctl-l{font-size:var(--text-2xs);font-weight:600;color:var(--gray-500);letter-spacing:.02em}
+.ctl select{width:100%;min-width:130px}
+@media(max-width:560px){.ctl{flex:1 1 44%}}
 .filters{display:flex;flex-wrap:wrap;gap:14px;margin:-6px 0 6px;font-size:var(--text-sm);color:var(--gray-700)}
 .filters label{display:inline-flex;align-items:center;gap:5px;cursor:pointer}
 .tagfilter{display:flex;flex-wrap:wrap;align-items:center;gap:7px;margin:2px 0 10px}

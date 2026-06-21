@@ -136,9 +136,13 @@ html{scroll-padding-top:64px}
 h1{font-size:var(--text-page);margin:.1em 0 .35em;color:var(--ink-deep);font-weight:700}
 h2{color:var(--ink-deep)}
 .lead{color:var(--gray-700);font-size:var(--text-body);margin:0 0 14px}
-.controls{display:flex;gap:10px;flex-wrap:wrap;margin:16px 0}
+.controls{display:flex;gap:10px 14px;flex-wrap:wrap;margin:16px 0;align-items:flex-end}
 .controls input,.controls select{padding:10px 12px;border:1px solid var(--gray-300);border-radius:var(--radius);font-size:var(--text-ui);font-family:inherit;background:#fff;color:var(--ink)}
 .controls input{flex:1 1 260px}.controls select{cursor:pointer}
+.ctl{display:inline-flex;flex-direction:column;gap:3px;min-width:0}
+.ctl-l{font-size:var(--text-2xs);font-weight:600;color:var(--gray-500);letter-spacing:.02em}
+.ctl select{width:100%;min-width:130px}
+@media(max-width:560px){.ctl{flex:1 1 44%}}
 .filters{display:flex;flex-wrap:wrap;gap:14px;margin:-6px 0 6px;font-size:var(--text-sm);color:var(--gray-700)}
 .filters label{display:inline-flex;align-items:center;gap:5px;cursor:pointer}
 .tagfilter{display:flex;flex-wrap:wrap;align-items:center;gap:7px;margin:2px 0 10px}
