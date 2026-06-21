@@ -46,7 +46,7 @@ html{scroll-padding-top:64px}
 .header-menu-panel a{color:var(--gray-300);text-decoration:none;padding:12px 4px;border-bottom:1px solid var(--gray-800);font-size:var(--text-ui)}
 .header-menu-panel a:last-child{border-bottom:none}
 .header-menu-panel a:hover{color:#fff;text-decoration:none}
-@media(max-width:768px){.header-nav{display:none}.header-actions{display:flex}.header-inner{padding:10px 16px}}
+@media(max-width:768px){.header-nav{display:none}.header-actions{display:flex}.header-inner{padding:10px 16px}.site-tagline{display:none}.container{padding:20px 16px 36px}}
 
 .container{max-width:1200px;margin:0 auto;padding:24px 24px 40px;width:100%;flex:1 0 auto;min-width:0}
 
