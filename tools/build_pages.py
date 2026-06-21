@@ -2215,7 +2215,7 @@ def build_index(rows) -> str:
     <span class="muted" id="studynote" style="display:none">学習時間は編集部調べの目安（非公式）</span>
   </div>
   <div id="tagfilter" class="tagfilter"><span class="tf-label">目的・特徴で絞り込み：</span></div>
-  <p id="status" class="muted"></p>
+  <div class="results-bar"><p id="status" class="muted"></p><button type="button" id="clearFilters" class="clear-filters" hidden>× 条件をクリア</button></div>
   <p class="muted hint">各行の「＋比較」で資格を選ぶと、画面下の比較バーから最大4件まで並べて比較できます。</p>
   <ul id="results" class="results"></ul>
 </section>
@@ -2269,7 +2269,8 @@ SEARCH_JS = """(function(){
       studyNote=document.getElementById('studynote'),
       results=document.getElementById('results'),
       status=document.getElementById('status'),count=document.getElementById('count'),
-      heroResult=document.getElementById('heroResult');
+      heroResult=document.getElementById('heroResult'),
+      clearBtn=document.getElementById('clearFilters');
   var DATA=[], activeTags=new Set();
   var TAG_ORDER=['就職・転職','独立・開業','在宅ワーク','手に職','未経験からIT','定年後・シニア','受験資格なし','CBT・ネット試験','働きながら'];
   function esc(s){return (s||'').replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
@@ -2334,8 +2335,9 @@ SEARCH_JS = """(function(){
       });
     }
     status.textContent=out.length+' 件';
+    var anyFilter=t||mj||tp||ind||band||activeTags.size||fPub.checked;
+    if(clearBtn)clearBtn.hidden=!anyFilter;
     if(heroResult){
-      var anyFilter=t||mj||tp||ind||band||activeTags.size||fPub.checked;
       if(anyFilter){
         heroResult.hidden=false;
         heroResult.innerHTML=(t?'「<strong>'+esc(t)+'</strong>」を含む資格 ':'絞り込み結果 ')+
@@ -2397,6 +2399,12 @@ SEARCH_JS = """(function(){
   fPub.addEventListener('change',render);
   q.addEventListener('keydown',function(e){
     if(e.key==='Enter'){var a=document.getElementById('all');if(a){e.preventDefault();a.scrollIntoView();}}
+  });
+  if(clearBtn)clearBtn.addEventListener('click',function(){
+    q.value='';majorSel.value='';typeSel.value='';industrySel.value='';studySel.value='';sortSel.value='';fPub.checked=false;
+    activeTags.clear();
+    Array.prototype.forEach.call(tagFilter.querySelectorAll('.tf-chip.on'),function(c){c.classList.remove('on');});
+    render();
   });
 })();
 """
@@ -2692,6 +2700,10 @@ h2{color:var(--ink-deep)}
 .results li a:hover{color:var(--accent)}
 .results .meta{display:block;color:var(--gray-500);font-size:var(--text-sm);margin-top:3px}
 .hint{font-size:var(--text-sm);margin:4px 0 10px;color:var(--gray-500)}
+.results-bar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:2px 0 2px}
+.results-bar #status{margin:0}
+.clear-filters{background:none;border:none;color:var(--accent);font-family:inherit;font-size:var(--text-sm);font-weight:600;cursor:pointer;padding:0;text-decoration:underline;text-underline-offset:2px}
+.clear-filters:hover{color:var(--accent-hover)}
 .muted{color:var(--gray-400)}
 .crumbs{font-size:var(--text-nav);color:var(--gray-500);margin-bottom:10px}
 .crumbs a{color:var(--gray-700)}

@@ -6,7 +6,8 @@
       studyNote=document.getElementById('studynote'),
       results=document.getElementById('results'),
       status=document.getElementById('status'),count=document.getElementById('count'),
-      heroResult=document.getElementById('heroResult');
+      heroResult=document.getElementById('heroResult'),
+      clearBtn=document.getElementById('clearFilters');
   var DATA=[], activeTags=new Set();
   var TAG_ORDER=['就職・転職','独立・開業','在宅ワーク','手に職','未経験からIT','定年後・シニア','受験資格なし','CBT・ネット試験','働きながら'];
   function esc(s){return (s||'').replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
@@ -71,8 +72,9 @@
       });
     }
     status.textContent=out.length+' 件';
+    var anyFilter=t||mj||tp||ind||band||activeTags.size||fPub.checked;
+    if(clearBtn)clearBtn.hidden=!anyFilter;
     if(heroResult){
-      var anyFilter=t||mj||tp||ind||band||activeTags.size||fPub.checked;
       if(anyFilter){
         heroResult.hidden=false;
         heroResult.innerHTML=(t?'「<strong>'+esc(t)+'</strong>」を含む資格 ':'絞り込み結果 ')+
@@ -134,5 +136,11 @@
   fPub.addEventListener('change',render);
   q.addEventListener('keydown',function(e){
     if(e.key==='Enter'){var a=document.getElementById('all');if(a){e.preventDefault();a.scrollIntoView();}}
+  });
+  if(clearBtn)clearBtn.addEventListener('click',function(){
+    q.value='';majorSel.value='';typeSel.value='';industrySel.value='';studySel.value='';sortSel.value='';fPub.checked=false;
+    activeTags.clear();
+    Array.prototype.forEach.call(tagFilter.querySelectorAll('.tf-chip.on'),function(c){c.classList.remove('on');});
+    render();
   });
 })();

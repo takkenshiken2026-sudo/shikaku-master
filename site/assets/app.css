@@ -152,6 +152,10 @@ h2{color:var(--ink-deep)}
 .results li a:hover{color:var(--accent)}
 .results .meta{display:block;color:var(--gray-500);font-size:var(--text-sm);margin-top:3px}
 .hint{font-size:var(--text-sm);margin:4px 0 10px;color:var(--gray-500)}
+.results-bar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:2px 0 2px}
+.results-bar #status{margin:0}
+.clear-filters{background:none;border:none;color:var(--accent);font-family:inherit;font-size:var(--text-sm);font-weight:600;cursor:pointer;padding:0;text-decoration:underline;text-underline-offset:2px}
+.clear-filters:hover{color:var(--accent-hover)}
 .muted{color:var(--gray-400)}
 .crumbs{font-size:var(--text-nav);color:var(--gray-500);margin-bottom:10px}
 .crumbs a{color:var(--gray-700)}
