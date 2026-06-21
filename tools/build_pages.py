@@ -596,7 +596,29 @@ def build_detail(row) -> str:
     src = row.get("source_checked_at", "")
     if src:
         spec.append(("情報確認日", esc(src) + ' <span class="muted">（公式の一次情報に基づき確認）</span>'))
-    rows_html = "".join(f"<tr><th>{esc(k)}</th><td>{v}</td></tr>" for k, v in spec)
+    # ページ上部の「基本情報」グリッドに出す項目は詳細表から省いて重複を避ける
+    _grid_keys = {"資格区分", "受験料", "実施頻度"}
+    rows_html = "".join(f"<tr><th>{esc(k)}</th><td>{v}</td></tr>"
+                        for k, v in spec if k not in _grid_keys)
+
+    # 基本情報グリッド（区分・受験料・受験資格・実施頻度）
+    def _short_elig(v):
+        if not v:
+            return '<span class="muted">公式で確認</span>'
+        if re.search(r"(受験資格|制限)?(なし|不問)", v) and "実務" not in v and "級" not in v:
+            return "なし"
+        return esc(v if len(v) <= 16 else v[:15] + "…")
+    facts_grid = (
+        '<div class="detail-facts" aria-label="基本情報"><div class="facts">'
+        f'<div class="fact"><div class="l">区分</div><div class="v">{esc(label)}</div></div>'
+        f'<div class="fact"><div class="l">受験料</div><div class="v">{field(row["fee"], "公式で確認")}</div></div>'
+        f'<div class="fact"><div class="l">受験資格</div><div class="v">{_short_elig(row["eligibility"])}</div></div>'
+        f'<div class="fact"><div class="l">実施頻度</div><div class="v">{field(row["frequency"], "公式で確認")}</div></div>'
+        + (f'<div class="fact"><div class="l">合格率</div><div class="v">{esc(row["pass_rate"])}</div></div>'
+           if row["pass_rate"] else "")
+        + (f'<div class="fact"><div class="l">学習目安</div><div class="v">{esc(st_h)}</div></div>'
+           if (st_h := (STUDY.get(row["slug"], {}) or {}).get("study_hours", "")) else "")
+        + '</div></div>')
 
     # 公式サイトへの導線（CTA）と出典・注意書き
     if row["official_url"]:
@@ -734,16 +756,56 @@ def build_detail(row) -> str:
     _mat_block = ("\n" + _mat) if _mat else ""
     _rel = cert_relations_html(row["slug"])
     _rel_block = ("\n" + _rel) if _rel else ""
+
+    # 関連資格との比較（この資格が含まれる比較ペア＝静的vsページへ）
+    vs_pairs = []
+    for ps, other in COMPARE_INDEX.get(row["slug"], []):
+        if other in INDEXABLE_SLUGS:
+            on = re.sub(r"[（(].*?[）)]", "", NAME_BY_SLUG.get(other, other)).strip() or other
+            vs_pairs.append((ps, on))
+    related_compare = ""
+    if vs_pairs:
+        links = " ・ ".join(f'<a href="../vs/{esc(ps)}.html">{esc(on)}との違い</a>'
+                            for ps, on in vs_pairs[:5])
+        related_compare = (
+            '<section class="related-compare" aria-labelledby="rc-h">'
+            '<h2 class="detail-section-title" id="rc-h">関連資格との比較</h2>'
+            f'<p>よく一緒に比較されます： {links}</p></section>')
+
+    # 出典・最終確認日（フッターだけでなく資格ごとに明示）
+    if row["official_url"]:
+        u = esc(row["official_url"])
+        official_src = f'<a href="{u}" rel="nofollow noopener" target="_blank">公式サイト</a>'
+        if row["authority"]:
+            official_src += f'（{esc(row["authority"])}）'
+    elif row["authority"]:
+        official_src = esc(row["authority"])
+    else:
+        official_src = "各資格の公式情報"
+    source_aside = (
+        '<aside class="detail-source" aria-label="情報の出典">'
+        f'<p><span class="k">最終確認日：</span>{esc(jd) if jd else "—"}</p>'
+        f'<p><span class="k">情報源：</span>{official_src}</p>'
+        '<p class="detail-source-note">受験料・受験資格・試験形式・合格率・実施団体は公式の一次情報に基づきます。'
+        '学習時間・難易度・総合スコアは編集部による目安で、公式の数値ではありません。'
+        '制度・金額・日程は改定されることがあるため、出願前に必ず公式サイトでご確認ください。</p>'
+        '</aside>')
+
     body = f"""<nav class="crumbs"><a href="../index.html">トップ</a> ›
-<a href="../index.html?major={esc(major)}">{esc(major)}</a> › {esc(name)}</nav>
-<h1>{esc(name)}</h1>
-{updated_html}<p class="lead">{lead}</p>
-{fact_p}
-<table class="spec">{rows_html}</table>
-{cta}{provenance}
+<a href="../bunya/{esc(bslug)}.html">{esc(major)}</a> › {esc(name)}</nav>
+<h1 class="detail-title">{esc(name)}</h1>
+<p class="detail-audience">{lead}</p>
+{facts_grid}
+<div class="detail-actions">{cta}</div>
+{related_compare}
+<section class="detail-spec" aria-labelledby="ds-h">
+<h2 class="detail-section-title" id="ds-h">詳細情報</h2>
+<table class="spec">{rows_html}</table></section>
+{provenance}
 {careers_section}{_mat_block}{_rel_block}
 {rel_links}
 <section class="related"><h2>同じカテゴリの資格</h2><ul id="related"></ul></section>
+{source_aside}
 <script>
 fetch("../data/certifications.json").then(r=>r.json()).then(all=>{{
   const cat={json.dumps(cat, ensure_ascii=False)}, me={json.dumps(row["slug"], ensure_ascii=False)};
@@ -2635,6 +2697,26 @@ table.cmp tbody th{background:var(--gray-50);color:var(--gray-800);white-space:n
 .site-footer-nav a:hover{color:var(--ink);text-decoration:underline;text-underline-offset:2px}
 .site-footer-note{font-size:var(--text-xs);color:var(--gray-500);line-height:1.65;margin:0 0 8px;max-width:54em}
 .site-footer-copy{font-size:var(--text-2xs);color:var(--gray-400);line-height:1.5;margin:0}
+/* Detail */
+.detail-title{font-size:var(--text-page);font-weight:700;color:var(--ink-deep);line-height:1.35;margin:.1em 0 8px}
+.detail-audience{font-size:var(--text-lead);color:var(--gray-700);line-height:1.65;margin:0 0 18px;max-width:42em}
+.detail-facts{margin-bottom:18px}
+.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px}
+.fact{background:var(--gray-50);border-radius:8px;padding:9px 11px;border:1px solid var(--gray-200)}
+.fact .l{font-size:var(--text-2xs);color:var(--gray-500)}
+.fact .v{font-size:var(--text-nav);font-weight:600;color:var(--ink-deep)}
+.detail-actions{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:22px;align-items:center}
+.detail-actions .official-cta{margin:0}
+.detail-section-title{font-size:var(--text-nav);font-weight:600;color:var(--ink-deep);margin:0 0 10px}
+.related-compare{background:var(--gray-50);border:1px solid var(--gray-200);border-radius:var(--radius);padding:14px;margin-bottom:22px;font-size:var(--text-ui)}
+.related-compare p{margin:0 0 10px;line-height:1.55;color:var(--gray-700)}
+.related-compare a{color:var(--accent);font-weight:600}
+.detail-spec{margin-bottom:4px}
+.detail-source{margin-top:22px;padding:14px 0 0;border-top:1px solid var(--gray-200);font-size:var(--text-sm);color:var(--gray-600);line-height:1.65}
+.detail-source p{margin:0 0 5px}.detail-source .k{font-weight:600;color:var(--gray-700)}
+.detail-source a{color:var(--ink);text-decoration:underline;text-underline-offset:2px}
+.detail-source-note{margin-top:8px;color:var(--gray-500);font-size:var(--text-xs)}
+.btn-sm{padding:7px 14px;font-size:var(--text-nav)}
 """
 
 
