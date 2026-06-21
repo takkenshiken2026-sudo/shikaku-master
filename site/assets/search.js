@@ -143,4 +143,15 @@
     Array.prototype.forEach.call(tagFilter.querySelectorAll('.tf-chip.on'),function(c){c.classList.remove('on');});
     render();
   });
+  (function renderRecent(){
+    try{
+      var a=JSON.parse(localStorage.getItem('recent')||'[]');
+      var blk=document.getElementById('recentBlock'),grid=document.getElementById('recentGrid');
+      if(!blk||!grid||!a.length)return;
+      grid.innerHTML=a.slice(0,8).map(function(x){
+        return '<a class="pop-card card-link" href="c/'+esc(x.s)+'.html"><div class="pop-card-name">'+esc(x.n)+'</div></a>';
+      }).join('');
+      blk.hidden=false;
+    }catch(e){}
+  })();
 })();
