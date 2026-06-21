@@ -2279,6 +2279,21 @@ SEARCH_JS = """(function(){
   function passNum(x){var m=(x.pass_rate||'').replace(/,/g,'').match(/([0-9]+(?:\.[0-9]+)?)\s*%/);return m?parseFloat(m[1]):null;}
   function studyLow(x){var m=(x.study_hours||'').replace(/,/g,'').match(/([0-9]+)/);return m?parseInt(m[1],10):null;}
   function appNum(x){var m=(x.applicants||'').replace(/,/g,'').match(/([0-9]+)\s*[人名]/);return m?parseInt(m[1],10):null;}
+  function syncURL(){
+    try{
+      var p=new URLSearchParams();
+      if(q.value.trim())p.set('q',q.value.trim());
+      if(majorSel.value)p.set('major',majorSel.value);
+      if(typeSel.value)p.set('type',typeSel.value);
+      if(industrySel.value)p.set('industry',industrySel.value);
+      if(studySel.value)p.set('study',studySel.value);
+      if(sortSel.value)p.set('sort',sortSel.value);
+      if(fPub.checked)p.set('pub','1');
+      if(activeTags.size)p.set('tag',[].slice.call(activeTags).join(','));
+      var qs=p.toString();
+      history.replaceState(null,'',qs?('?'+qs):location.pathname);
+    }catch(e){}
+  }
   function studyHit(x,band){
     var v=studyLow(x); if(v===null)return false;
     var p=band.split('-'),lo=parseInt(p[0],10),hi=p[1]===''?Infinity:parseInt(p[1],10);
@@ -2310,6 +2325,13 @@ SEARCH_JS = """(function(){
         if(va===null)return 1; if(vb===null)return -1;
         return asc?va-vb:vb-va;
       });
+    } else {
+      // 既定: 定番（受験者数の多い人気資格）を上位に。残りは元の分野順を維持。
+      out=out.slice().sort(function(a,b){
+        var pa=a.popular?1:0,pb=b.popular?1:0;
+        if(pa!==pb)return pb-pa;
+        return (appNum(b)||0)-(appNum(a)||0);
+      });
     }
     status.textContent=out.length+' 件';
     if(heroResult){
@@ -2331,6 +2353,7 @@ SEARCH_JS = """(function(){
     }).join('')||'<li class="muted">該当なし</li>';
     if(out.length>300) results.innerHTML+='<li class="muted">…他 '+(out.length-300)+' 件（絞り込んでください）</li>';
     if(window.CmpBar)window.CmpBar.refresh();
+    syncURL();
   }
   function buildTagChips(all){
     var present={},counts={};
@@ -2360,7 +2383,11 @@ SEARCH_JS = """(function(){
     var p=new URLSearchParams(location.search);
     if(p.get('q'))q.value=p.get('q');
     if(p.get('major'))majorSel.value=p.get('major');
+    if(p.get('type'))typeSel.value=p.get('type');
     if(p.get('industry'))industrySel.value=p.get('industry');
+    if(p.get('study'))studySel.value=p.get('study');
+    if(p.get('sort'))sortSel.value=p.get('sort');
+    if(p.get('pub')==='1')fPub.checked=true;
     if(p.get('tag')){p.get('tag').split(',').forEach(function(tg){
       activeTags.add(tg);
       var c=tagFilter.querySelector('[data-tag="'+tg+'"]'); if(c)c.classList.add('on');});}
