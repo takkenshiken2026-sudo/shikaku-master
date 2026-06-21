@@ -193,6 +193,24 @@ def load_occupation_descriptions():
 OCC_DESC = load_occupation_descriptions()
 
 
+def load_occupation_salary():
+    """occ_id → 想定年収レンジ（目安・編集値）。公式値ではない。"""
+    path = ROOT / "data" / "occupation_salary.csv"
+    if not path.exists():
+        return {}
+    out = {}
+    with path.open(encoding="utf-8") as f:
+        for r in csv.DictReader(f):
+            oid = (r.get("occ_id") or "").strip()
+            sal = (r.get("salary") or "").strip()
+            if oid and sal:
+                out[oid] = sal
+    return out
+
+
+OCC_SALARY = load_occupation_salary()
+
+
 # ── おすすめ教材・講座（アフィリエイト対応。本体DBとは分離）──
 MATERIALS_CSV = ROOT / "data" / "materials.csv"
 
@@ -1515,6 +1533,16 @@ def build_occupation_pages(indexable):
                 for s in dinfo["skills"].split("、") if s.strip())
             work_html += ('<section class="occ-work"><h2>活かせるスキル・知識</h2>'
                           f'<p class="occ-skills">{chips}</p></section>')
+        sal = OCC_SALARY.get(occ_id)
+        if sal:
+            work_html += (
+                '<section class="occ-salary"><h2>想定年収（目安）</h2>'
+                f'<p class="salary-range">{esc(sal)} <span class="muted">／目安</span></p>'
+                '<p class="muted occ-salary-note">※年収は地域・経験・雇用形態・勤務先により'
+                '大きく異なります。公開の賃金統計・求人情報を参考にした<strong>目安</strong>で、'
+                '公式の統計値ではありません。公的な賃金データは'
+                f'<a href="{JOBTAG_URL}" rel="nofollow noopener" target="_blank">'
+                '厚生労働省 job tag</a> 等でご確認ください。</p></section>')
 
         listing = (_list_items(certs, depth=1) if certs
                    else '<p class="muted">この職種に直接ひも付く掲載資格は精査中です。</p>')
@@ -1995,6 +2023,9 @@ table.spec th{width:34%;background:#f2f5fa;color:#3a4757;font-weight:600;white-s
 .occ-stats-label{font-size:.84rem;color:#43505f;font-weight:600;margin-right:4px}
 .occ-stat{display:inline-block;background:#eef4ff;color:#0d47a1;border:1px solid #cfe0fb;border-radius:6px;font-size:.8rem;padding:1px 8px;margin-right:6px}
 .occ-work{margin:14px 0 0}.occ-work h2{font-size:1.05rem;margin:.2em 0 .3em}.occ-work p{margin:.2em 0}
+.occ-salary{margin:14px 0 0}.occ-salary h2{font-size:1.05rem;margin:.2em 0 .3em}
+.salary-range{font-size:1.2rem;font-weight:700;color:#0d47a1;margin:.1em 0}
+.occ-salary-note{font-size:.8rem}
 .occ-skills{display:flex;flex-wrap:wrap;gap:2px 0}
 .rel-links{margin:18px 0 0;border-top:1px solid #e6e9ef;padding-top:12px}
 .rel-links h2{font-size:1.05rem;margin:.2em 0 .3em}
