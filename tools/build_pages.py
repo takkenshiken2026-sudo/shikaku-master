@@ -798,12 +798,49 @@ def build_detail(row) -> str:
         '制度・金額・日程は改定されることがあるため、出願前に必ず公式サイトでご確認ください。</p>'
         '</aside>')
 
+    # この資格のポイント（保有データ・タグから導く定性的ハイライト。捏造しない）
+    pts = []
+    if is_noreq(row):
+        pts.append("受験資格の制限がなく、誰でも受験できます")
+    if is_cbt(row):
+        pts.append("CBT・ネット試験に対応し、比較的受けやすい試験です")
+    _d = difficulty(row)
+    if _d:
+        pts.append(f"難易度の目安は「{_d[0]}」です（公表合格率に基づく簡易目安）")
+    _tg = cert_tags(row)
+    _tagmsg = [("就職・転職", "就職・転職でアピールしやすい資格です"),
+               ("独立・開業", "独立・開業につながる資格です"),
+               ("在宅ワーク", "在宅・リモートワークに活かせます"),
+               ("手に職", "手に職をつけられる実務的な資格です"),
+               ("未経験からIT", "未経験からITを目指す入口になります"),
+               ("定年後・シニア", "定年後・シニアの活動にも役立ちます")]
+    for _k, _m in _tagmsg:
+        if _k in _tg:
+            pts.append(_m)
+    _inds = industry_tags(row)
+    if _inds:
+        pts.append(f"主に{'・'.join(_inds[:2])}の分野で活かせます")
+    pts = pts[:5]
+    points_html = ""
+    if pts:
+        _lis = "".join(f"<li>{esc(p)}</li>" for p in pts)
+        points_html = ('<section class="detail-points" aria-labelledby="dp-h">'
+                       '<h2 class="detail-section-title" id="dp-h">この資格のポイント</h2>'
+                       f'<ul class="point-list">{_lis}</ul></section>')
+
+    # 「最近見た資格」記録（localStorage）
+    _rn = esc(re.sub(r"[（(].*?[）)]", "", name).strip() or name)
+    recent_js = ("<script>(function(){try{var k='recent',a=JSON.parse(localStorage.getItem(k)||'[]');"
+                 f"a=a.filter(function(x){{return x.s!=='{esc(row['slug'])}';}});"
+                 f"a.unshift({{s:'{esc(row['slug'])}',n:'{_rn}'}});a=a.slice(0,8);"
+                 "localStorage.setItem(k,JSON.stringify(a));}catch(e){}})();</script>")
     body = f"""<nav class="crumbs"><a href="../index.html">トップ</a> ›
 <a href="../bunya/{esc(bslug)}.html">{esc(major)}</a> › {esc(name)}</nav>
 <h1 class="detail-title">{esc(name)}</h1>
 <p class="detail-audience">{lead}</p>
 {facts_grid}
 <div class="detail-actions"><button type="button" class="cmp-add-btn" data-slug="{esc(row["slug"])}" data-name="{esc(re.sub(r"[（(].*?[）)]", "", name).strip() or name)}">＋ 比較</button>{cta}</div>
+{points_html}
 {related_compare}
 <section class="detail-spec" aria-labelledby="ds-h">
 <h2 class="detail-section-title" id="ds-h">詳細情報</h2>
@@ -825,6 +862,7 @@ fetch("../data/certifications.json").then(r=>r.json()).then(all=>{{
   if(!ul.children.length) ul.innerHTML='<li class="muted">なし</li>';
 }});
 </script>
+{recent_js}
 """
     bits = [b for b in (("受験料" + row["fee"]) if row["fee"] else "",
                         ("合格率" + row["pass_rate"]) if row["pass_rate"] else "") if b]
@@ -2174,6 +2212,11 @@ def build_index(rows) -> str:
   <p class="hero-result" id="heroResult" hidden></p>
 </section>
 
+<section class="block block-secondary" id="recentBlock" hidden>
+  <div class="block-head"><h2>最近見た資格</h2><p>このブラウザの閲覧履歴</p></div>
+  <div class="popular-grid" id="recentGrid"></div>
+</section>
+
 <section class="block block-primary" id="purpose">
   <div class="block-head"><h2>目的から探す</h2></div>
   <div class="purpose-grid">{pur_html}</div>
@@ -2252,8 +2295,10 @@ def build_index(rows) -> str:
          "name": SITE_NAME, "url": BASE_URL + "/",
          "logo": BASE_URL + "/assets/favicon.svg"},
     ]
-    return page_shell(SITE_NAME, body, depth=0, noindex=False,
-                      desc=SITE_DESC, path="", jsonld=site_ld)
+    return page_shell(
+        f"{SITE_NAME}｜就職・転職・スキルアップの資格を検索・比較（{len(rows)}件以上）",
+        body, depth=0, noindex=False,
+        desc=SITE_DESC, path="", jsonld=site_ld)
 
 
 def build_compare() -> str:
@@ -2415,6 +2460,17 @@ SEARCH_JS = """(function(){
     Array.prototype.forEach.call(tagFilter.querySelectorAll('.tf-chip.on'),function(c){c.classList.remove('on');});
     render();
   });
+  (function renderRecent(){
+    try{
+      var a=JSON.parse(localStorage.getItem('recent')||'[]');
+      var blk=document.getElementById('recentBlock'),grid=document.getElementById('recentGrid');
+      if(!blk||!grid||!a.length)return;
+      grid.innerHTML=a.slice(0,8).map(function(x){
+        return '<a class="pop-card card-link" href="c/'+esc(x.s)+'.html"><div class="pop-card-name">'+esc(x.n)+'</div></a>';
+      }).join('');
+      blk.hidden=false;
+    }catch(e){}
+  })();
 })();
 """
 
@@ -2846,6 +2902,10 @@ table.cmp tbody th{background:var(--gray-50);color:var(--gray-800);white-space:n
 .detail-source p{margin:0 0 5px}.detail-source .k{font-weight:600;color:var(--gray-700)}
 .detail-source a{color:var(--ink);text-decoration:underline;text-underline-offset:2px}
 .detail-source-note{margin-top:8px;color:var(--gray-500);font-size:var(--text-xs)}
+.detail-points{margin:0 0 22px}
+.point-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:7px}
+.point-list li{position:relative;padding:8px 12px 8px 32px;background:var(--accent-light);border:1px solid rgba(42,122,110,.15);border-radius:var(--radius);font-size:var(--text-ui);color:var(--gray-800);line-height:1.55}
+.point-list li::before{content:"✓";position:absolute;left:12px;top:8px;color:var(--accent);font-weight:700}
 .btn-sm{padding:7px 14px;font-size:var(--text-nav)}
 /* 一覧の行＋比較ボタン */
 .results li{display:flex;gap:12px;align-items:center}
@@ -2994,10 +3054,25 @@ def main() -> int:
         (SITE / "CNAME").write_text(CUSTOM_DOMAIN + "\n", encoding="utf-8")
 
     # カスタム 404（GitHub Pages が未検出時に配信）
-    nf_body = ('<h1>ページが見つかりません（404）</h1>'
-               '<p class="lead">お探しのページは移動または削除された可能性があります。'
-               'トップから資格名で検索してください。</p>'
-               '<p><a href="/">▶ トップページへ</a></p>')
+    _nf_pop = "".join(
+        f'<li><a href="/c/{r["slug"]}.html">'
+        f'{esc(re.sub(r"[（(].*?[）)]", "", r["name"]).strip() or r["name"])}</a></li>'
+        for r in _pop_ranked[:8])
+    nf_body = (
+        '<h1>ページが見つかりません（404）</h1>'
+        '<p class="lead">お探しのページは移動または削除された可能性があります。'
+        '資格名で検索するか、人気の資格・分野からお探しください。</p>'
+        '<form class="hero-search" action="/index.html" method="get" style="max-width:480px;margin-bottom:8px">'
+        '<span class="ico"><svg class="ico-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" '
+        'stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/>'
+        '<path d="M15.5 15.5L21 21"/></svg></span>'
+        '<input type="search" name="q" placeholder="資格名で検索（例: 簿記, 宅建）" aria-label="資格名で検索">'
+        '</form>'
+        '<section class="block block-secondary" style="margin-top:22px">'
+        '<div class="block-head"><h2>人気の資格</h2></div>'
+        f'<ul class="feat-list">{_nf_pop}</ul></section>'
+        '<p><a href="/">▶ トップページへ</a>　・　<a href="/index.html#fields">分野から探す</a>'
+        '　・　<a href="/shoku/index.html">職種から探す</a></p>')
     (SITE / "404.html").write_text(
         page_shell(f"404 ページが見つかりません｜{SITE_NAME}", nf_body, depth=0,
                    noindex=True, desc="ページが見つかりません。", path="404.html"),

@@ -289,6 +289,10 @@ table.cmp tbody th{background:var(--gray-50);color:var(--gray-800);white-space:n
 .detail-source p{margin:0 0 5px}.detail-source .k{font-weight:600;color:var(--gray-700)}
 .detail-source a{color:var(--ink);text-decoration:underline;text-underline-offset:2px}
 .detail-source-note{margin-top:8px;color:var(--gray-500);font-size:var(--text-xs)}
+.detail-points{margin:0 0 22px}
+.point-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:7px}
+.point-list li{position:relative;padding:8px 12px 8px 32px;background:var(--accent-light);border:1px solid rgba(42,122,110,.15);border-radius:var(--radius);font-size:var(--text-ui);color:var(--gray-800);line-height:1.55}
+.point-list li::before{content:"✓";position:absolute;left:12px;top:8px;color:var(--accent);font-weight:700}
 .btn-sm{padding:7px 14px;font-size:var(--text-nav)}
 /* 一覧の行＋比較ボタン */
 .results li{display:flex;gap:12px;align-items:center}
