@@ -680,6 +680,7 @@ def page_shell(title: str, body: str, depth: int, noindex: bool = True,
       <a href="{base}index.html#fields">分野から探す</a><span class="header-nav-sep" aria-hidden="true">｜</span>
       <a href="{base}index.html#all-certs">資格一覧</a><span class="header-nav-sep" aria-hidden="true">｜</span>
       <a href="{base}compare.html">比較</a>
+      <a href="{base}index.html#partners" class="header-nav-cta">資格対策サイト</a>
     </nav>
     <div class="header-actions">
       <button type="button" class="header-icon-btn" data-toggle="search" aria-label="資格名で検索" aria-controls="hSearch" aria-expanded="false"><svg class="ico-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/></svg></button>
@@ -2955,6 +2956,8 @@ html{scroll-padding-top:64px}
 .header-nav a{color:var(--gray-300);font-size:var(--text-nav);text-decoration:none;padding:6px 8px;white-space:nowrap;border-radius:4px}
 .header-nav a:hover{color:#fff;text-decoration:none}
 .header-nav a.is-current{color:#fff;font-weight:600}
+.header-nav-cta{margin-left:8px;padding:7px 12px;background:var(--accent);color:#fff !important;font-weight:600;border-radius:var(--radius);line-height:1.2}
+.header-nav-cta:hover{background:var(--accent-hover);color:#fff !important;text-decoration:none}
 .header-nav-sep{color:var(--gray-600);font-size:var(--text-xs);user-select:none;padding:0 1px}
 .header-actions{display:none;align-items:center;gap:2px;margin-left:auto;flex-shrink:0}
 .header-icon-btn{display:inline-flex;align-items:center;justify-content:center;background:transparent;border:none;color:var(--gray-300);cursor:pointer;padding:8px;border-radius:6px;line-height:0;font-family:inherit}
