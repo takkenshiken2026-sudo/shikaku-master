@@ -2381,9 +2381,6 @@ def build_occupation_pages(indexable):
 def build_index(rows) -> str:
     pub = sum(1 for r in rows if r.get("status") == "published")
     majors = sorted({r["major_category"] for r in rows})
-    cat_links = " ".join(
-        f'<a class="chip" href="bunya/{MAJOR_SLUGS.get(m, "other")}.html">{esc(m)}</a>'
-        for m in majors)
     by_slug = {r["slug"]: r for r in rows}
 
     def _short(r):
