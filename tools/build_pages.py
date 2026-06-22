@@ -763,7 +763,7 @@ def build_detail(row) -> str:
         ("受験資格", field(row["eligibility"])),
         ("試験形式", field(row["exam_format"])),
         ("受験料", field(row["fee"])),
-        ("合格率", field(row["pass_rate"])),
+        ("合格率", field(pass_rate_short(row["pass_rate"]) or row["pass_rate"])),
         ("実施頻度", field(row["frequency"])),
         ("ハローワークコード", esc(row["hellowork_code"])),
     ]
@@ -900,7 +900,30 @@ def build_detail(row) -> str:
                  '学習時間・難易度・総合スコアは編集部による目安で、公式の数値ではありません。'
                  '制度・金額・日程は改定されることがあるため、出願前に必ず公式サイトでご確認ください。</p>'))
 
-    rows_html = "".join(f"<tr><th>{esc(k)}</th><td>{v}</td></tr>" for k, v in spec)
+    rows_html = "".join(
+        spec_row_html(k, v, row["official_url"] if k in ("公式サイト", "最新情報の確認") and row.get("official_url") else "")
+        for k, v in spec)
+
+    spec_js = """<script>
+(function(){
+  var tbl=document.querySelector(".page-detail table.spec");
+  if(!tbl)return;
+  tbl.querySelectorAll("tr.spec-row").forEach(function(tr){
+    tr.addEventListener("click",function(e){
+      if(e.target.closest("a"))return;
+      var href=tr.getAttribute("data-href");
+      if(href){window.open(href,"_blank","noopener");return;}
+      tbl.querySelectorAll("tr.spec-row.is-active").forEach(function(r){
+        if(r!==tr)r.classList.remove("is-active");
+      });
+      tr.classList.toggle("is-active");
+    });
+    tr.addEventListener("keydown",function(e){
+      if(e.key==="Enter"||e.key===" "){e.preventDefault();tr.click();}
+    });
+  });
+})();
+</script>"""
 
     # ユニーク本文（概要）— 手書きの独自解説があれば優先、なければテンプレート生成
     hand_desc = DESC.get(row["slug"], "")
@@ -1020,7 +1043,7 @@ def build_detail(row) -> str:
 {_roadmap_block}
 <section class="detail-spec" aria-labelledby="ds-h">
 <h2 class="detail-section-title" id="ds-h">資格情報</h2>
-<div class="spec-wrap"><table class="spec">{rows_html}</table></div></section>
+<div class="spec-wrap"><table class="spec">{rows_html}</table></div>{spec_js}</section>
 {detail_nav}
 {recent_js}
 </div>"""
@@ -1082,6 +1105,22 @@ def pass_pct(r):
     """合格率文字列から最初の「N%」を float で。なければ None。"""
     m = re.search(r"([0-9]+(?:\.[0-9]+)?)\s*%", r.get("pass_rate", ""))
     return float(m.group(1)) if m else None
+
+
+def pass_rate_short(val):
+    """表表示用: 数値と % のみ（年度等は省略）。"""
+    if not val:
+        return ""
+    m = re.search(r"([0-9]+(?:\.[0-9]+)?)\s*%", val.replace(",", ""))
+    return f"{m.group(1)}%" if m else ""
+
+
+def spec_row_html(label, value, href=""):
+    """資格情報表の1行（クリック・ホバー対応）。"""
+    href_attr = f' data-href="{esc(href)}"' if href else ""
+    return (
+        f'<tr class="spec-row" tabindex="0"{href_attr}>'
+        f"<th>{esc(label)}</th><td>{value}</td></tr>")
 
 
 def difficulty(r):
@@ -3336,6 +3375,10 @@ table.cmp tbody th{background:var(--gray-50);color:var(--ink);white-space:nowrap
 .page-detail table.spec{font-size:var(--text-md)}
 .page-detail table.spec th{background:var(--gray-50);color:var(--ink);font-weight:450;font-size:var(--text-md)}
 .page-detail table.spec td{color:var(--ink);font-size:var(--text-md);font-weight:400}
+.page-detail table.spec tr.spec-row{cursor:pointer;transition:background-color .12s ease}
+.page-detail table.spec tr.spec-row:hover th,.page-detail table.spec tr.spec-row:hover td{background:var(--gray-100)}
+.page-detail table.spec tr.spec-row.is-active th,.page-detail table.spec tr.spec-row.is-active td{background:var(--accent-light)}
+.page-detail table.spec tr.spec-row:focus-visible{outline:2px solid var(--accent-ring);outline-offset:-2px}
 .page-detail table.spec .badge,.page-detail table.spec .badge-national,.page-detail table.spec .badge-public,.page-detail table.spec .badge-private,.page-detail table.spec .badge-unknown,.page-detail table.spec .badge-overseas{color:var(--ink);background:var(--gray-50);border-color:var(--gray-200);font-size:inherit;font-weight:400}
 .page-detail table.spec .tag-chip,.page-detail table.spec .tag-ind{font-weight:400}
 .page-detail table.spec .spec-list{list-style:disc;margin:.15em 0 .3em;padding-left:1.25em}

@@ -444,6 +444,10 @@ table.cmp tbody th{background:var(--gray-50);color:var(--ink);white-space:nowrap
 .page-detail table.spec{font-size:var(--text-md)}
 .page-detail table.spec th{background:var(--gray-50);color:var(--ink);font-weight:450;font-size:var(--text-md)}
 .page-detail table.spec td{color:var(--ink);font-size:var(--text-md);font-weight:400}
+.page-detail table.spec tr.spec-row{cursor:pointer;transition:background-color .12s ease}
+.page-detail table.spec tr.spec-row:hover th,.page-detail table.spec tr.spec-row:hover td{background:var(--gray-100)}
+.page-detail table.spec tr.spec-row.is-active th,.page-detail table.spec tr.spec-row.is-active td{background:var(--accent-light)}
+.page-detail table.spec tr.spec-row:focus-visible{outline:2px solid var(--accent-ring);outline-offset:-2px}
 .page-detail table.spec .badge,.page-detail table.spec .badge-national,.page-detail table.spec .badge-public,.page-detail table.spec .badge-private,.page-detail table.spec .badge-unknown,.page-detail table.spec .badge-overseas{color:var(--ink);background:var(--gray-50);border-color:var(--gray-200);font-size:inherit;font-weight:400}
 .page-detail table.spec .tag-chip,.page-detail table.spec .tag-ind{font-weight:400}
 .page-detail table.spec .spec-list{list-style:disc;margin:.15em 0 .3em;padding-left:1.25em}
