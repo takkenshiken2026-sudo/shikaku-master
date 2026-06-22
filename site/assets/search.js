@@ -27,7 +27,7 @@
       if(typeSel.value)p.set('type',typeSel.value);
       if(industrySel.value)p.set('industry',industrySel.value);
       if(studySel.value)p.set('study',studySel.value);
-      if(sortSel.value)p.set('sort',sortSel.value);
+      if(sortSel.value&&sortSel.value!=='app-desc')p.set('sort',sortSel.value);
       if(fPub.checked)p.set('pub','1');
       if(activeTags.size)p.set('tag',[].slice.call(activeTags).join(','));
       if(currentPage>1)p.set('page',String(currentPage));
@@ -64,7 +64,7 @@
   }
   function render(){
     if(resetPage){currentPage=1;resetPage=false;}
-    var t=(q.value||'').trim().toLowerCase(),mj=majorSel.value,tp=typeSel.value,sk=sortSel.value,
+    var t=(q.value||'').trim().toLowerCase(),mj=majorSel.value,tp=typeSel.value,sk=sortSel.value||'app-desc',
         ind=industrySel.value,band=studySel.value;
     if(studyNote)studyNote.style.display=band?'inline':'none';
     var out=DATA.filter(function(x){
@@ -81,21 +81,13 @@
       }
       return true;
     });
-    if(sk){
-      var key=sk.indexOf('app')===0?appNum:(sk.indexOf('fee')===0?feeNum:passNum), asc=sk.indexOf('asc')>=0;
-      out=out.slice().sort(function(a,b){
-        var va=key(a),vb=key(b);
-        if(va===null&&vb===null)return 0;
-        if(va===null)return 1; if(vb===null)return -1;
-        return asc?va-vb:vb-va;
-      });
-    } else {
-      out=out.slice().sort(function(a,b){
-        var pa=a.popular?1:0,pb=b.popular?1:0;
-        if(pa!==pb)return pb-pa;
-        return (appNum(b)||0)-(appNum(a)||0);
-      });
-    }
+    var key=sk.indexOf('app')===0?appNum:(sk.indexOf('fee')===0?feeNum:passNum), asc=sk.indexOf('asc')>=0;
+    out=out.slice().sort(function(a,b){
+      var va=key(a),vb=key(b);
+      if(va===null&&vb===null)return 0;
+      if(va===null)return 1; if(vb===null)return -1;
+      return asc?va-vb:vb-va;
+    });
     var pages=Math.max(1,Math.ceil(out.length/PAGE_SIZE));
     if(currentPage>pages)currentPage=pages;
     var sliceStart=(currentPage-1)*PAGE_SIZE;
@@ -149,7 +141,7 @@
     if(p.get('type'))typeSel.value=p.get('type');
     if(p.get('industry'))industrySel.value=p.get('industry');
     if(p.get('study'))studySel.value=p.get('study');
-    if(p.get('sort'))sortSel.value=p.get('sort');
+    sortSel.value=p.get('sort')||'app-desc';
     if(p.get('pub')==='1')fPub.checked=true;
     if(p.get('page'))currentPage=Math.max(1,parseInt(p.get('page'),10)||1);
     if(p.get('tag')){p.get('tag').split(',').forEach(function(tg){activeTags.add(tg);});}
@@ -163,7 +155,7 @@
     if(e.key==='Enter'){var a=document.getElementById('all-certs');if(a){e.preventDefault();a.scrollIntoView();}}
   });
   if(clearBtn)clearBtn.addEventListener('click',function(){
-    q.value='';majorSel.value='';typeSel.value='';industrySel.value='';studySel.value='';sortSel.value='';fPub.checked=false;
+    q.value='';majorSel.value='';typeSel.value='';industrySel.value='';studySel.value='';sortSel.value='app-desc';fPub.checked=false;
     activeTags.clear();resetPage=true;render();
   });
   (function renderRecent(){
