@@ -391,8 +391,19 @@ CERT_RELATIONS = load_cert_relations()
 
 
 def _rel_name(s):
+    """関連資格・ロードマップ用の短縮名。級・種別など識別に必要な括弧書きは残す。"""
     n = NAME_BY_SLUG.get(s, s)
-    return re.sub(r"[（(].*?[）)]", "", n).strip() or n
+    qualifiers = re.findall(r"[（(]([^）)]+)[）)]", n)
+    base = re.sub(r"[（(][^）)]+[）)]", "", n).strip() or n
+    for q in reversed(qualifiers):
+        q = q.strip()
+        if not q or len(q) > 14:
+            continue
+        if re.search(r"旧|廃止|所管|法律|国家資格|検定の|誰でも|一次情報", q):
+            continue
+        if re.search(r"種|級|類|号|部門|上級|中級|下級|全経|日商", q):
+            return f"{base}({q})"
+    return base
 
 
 def step_up_chain(slug):
