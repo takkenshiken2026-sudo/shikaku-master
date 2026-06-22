@@ -564,7 +564,6 @@ def page_shell(title: str, body: str, depth: int, noindex: bool = True,
     <div class="header-brand"><a class="logo" href="{base}index.html">{esc(SITE_NAME)}</a>
       <span class="site-tagline">就職・転職・スキルアップの資格情報</span></div>
     <nav class="header-nav" aria-label="サイトメニュー">
-      <a href="{base}index.html#purpose">目的から探す</a><span class="header-nav-sep" aria-hidden="true">｜</span>
       <a href="{base}index.html#fields">分野から探す</a><span class="header-nav-sep" aria-hidden="true">｜</span>
       <a href="{base}index.html">資格一覧</a><span class="header-nav-sep" aria-hidden="true">｜</span>
       <a href="{base}shoku/index.html">職種から探す</a><span class="header-nav-sep" aria-hidden="true">｜</span>
@@ -582,7 +581,6 @@ def page_shell(title: str, body: str, depth: int, noindex: bool = True,
     </form>
   </div>
   <nav class="header-menu-panel" id="hMenu" aria-label="サイトメニュー" hidden>
-    <a href="{base}index.html#purpose">目的から探す</a>
     <a href="{base}index.html#fields">分野から探す</a>
     <a href="{base}index.html">資格一覧</a>
     <a href="{base}shoku/index.html">職種から探す</a>
@@ -2352,47 +2350,6 @@ def build_index(rows) -> str:
         if _n >= 6:
             break
 
-    # --- 目的から探す（3カード・具体導線つき。意図ハブ＋特集＋条件フィルタへ直接リンク） ---
-    PURPOSE = [
-        ("就職", "新卒・就活・はじめて資格を選ぶ方", [
-            ("就職・転職に役立つ資格", "feature/job-hunting.html"),
-            ("受験資格なしで受けられる資格", "feature/no-requirement.html"),
-            ("受験者数が多い人気資格", "feature/popular.html"),
-            ("未経験からITを目指す", "feature/it-beginner.html"),
-            ("「就職・転職」向けで絞り込む →", "index.html?tag=" + quote("就職・転職") + "#all"),
-        ]),
-        ("転職", "働きながら職種・キャリアを変えたい方", [
-            ("働きながら取りやすい資格", "feature/working-adults.html"),
-            ("在宅・リモートワークに活かせる", "feature/remote-work.html"),
-            ("独立・開業を目指せる資格", "feature/independence.html"),
-            ("国家資格の一覧", "feature/national.html"),
-            ("「働きながら」で絞り込む →", "index.html?tag=" + quote("働きながら") + "#all"),
-        ]),
-        ("スキルアップ", "今の仕事に活かす・手に職をつけたい方", [
-            ("手に職をつけられる資格", "feature/skilled-trade.html"),
-            ("未経験からITエンジニアを目指す", "feature/it-beginner.html"),
-            ("定年後・シニアに役立つ資格", "feature/senior.html"),
-            ("合格率が高い資格", "feature/high-pass.html"),
-            ("「手に職」で絞り込む →", "index.html?tag=" + quote("手に職") + "#all"),
-        ]),
-    ]
-    PURPOSE_ICONS = [
-        '<path d="M12 3L2 8l10 5 10-5-10-5z"/><path d="M5 11v5c0 2.5 3.5 5 7 5s7-2.5 7-5v-5"/><path d="M22 8v6"/>',
-        '<path d="M4 9h12l-3-3"/><path d="M20 9V5"/><path d="M20 15H8l3 3"/><path d="M4 15v4"/>',
-        '<path d="M4 18h16"/><path d="M7 15l4-6 3 3 5-7"/>',
-    ]
-    pur_html = ""
-    for (title, forwhom, links), icon in zip(PURPOSE, PURPOSE_ICONS):
-        lis = "".join(f'<li><a href="{esc(href)}">{esc(label)}</a></li>'
-                      for label, href in links)
-        pur_html += (
-            f'<div class="purpose-card">'
-            f'<div class="purpose-card-head">'
-            f'<div class="icon"><svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"'
-            f' stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">{icon}</svg></div>'
-            f'<div><h3>{esc(title)}</h3><p class="purpose-card-for">{esc(forwhom)}</p></div></div>'
-            f'<ul class="purpose-card-links">{lis}</ul></div>')
-
     body = f"""<section class="hero">
   <h1><span class="hero-h1-line">就職・転職・スキルアップの</span><span class="hero-h1-line">資格情報サイト</span></h1>
   <p class="hero-sub">日本国内の資格を <strong id="count">{len(rows)}</strong> 件以上掲載。受験料・受験資格・試験形式・合格率・公式サイトを、公式の一次情報に基づいて整理しています。</p>
@@ -2400,18 +2357,13 @@ def build_index(rows) -> str:
     <span class="ico"><svg class="ico-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/></svg></span>
     <input id="q" type="search" placeholder="資格名で検索（例: 簿記, 宅建, ITパスポート）" aria-label="資格名で検索">
   </div>
-  <p class="hero-hint">または <a href="#purpose">目的から探す</a>・<a href="#fields">分野から探す</a></p>
+  <p class="hero-hint">または <a href="#fields">分野から探す</a>・<a href="#all">条件で絞り込む</a></p>
   <p class="hero-result" id="heroResult" hidden></p>
 </section>
 
 <section class="block block-secondary" id="recentBlock" hidden>
   <div class="block-head"><h2>最近見た資格</h2><p>このブラウザの閲覧履歴</p></div>
   <div class="popular-grid" id="recentGrid"></div>
-</section>
-
-<section class="block block-primary" id="purpose">
-  <div class="block-head"><h2>目的から探す</h2><p>就職・転職・スキルアップ — やりたいことから具体的に絞り込めます</p></div>
-  <div class="purpose-grid">{pur_html}</div>
 </section>
 
 <section class="block block-primary">
@@ -2871,22 +2823,6 @@ html{scroll-padding-top:64px}
 .card-link:hover::after,.card-link:focus-visible::after{opacity:1;color:var(--accent)}
 .card-link:hover,.card-link:focus-visible{background:var(--accent-light);border-color:var(--accent);text-decoration:none}
 
-/* Purpose */
-.purpose-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
-@media(max-width:640px){.purpose-grid{grid-template-columns:1fr}}
-.purpose-card{display:flex;flex-direction:column;background:#fff;border:1px solid var(--gray-200);border-radius:var(--radius);padding:16px 14px;color:inherit}
-.purpose-card-head{display:flex;align-items:flex-start;gap:12px;margin-bottom:10px}
-.purpose-card .icon{flex-shrink:0;width:44px;height:44px;display:flex;align-items:center;justify-content:center;background:var(--gray-100);border-radius:var(--radius);color:var(--gray-700)}
-.purpose-card .icon-svg{width:26px;height:26px}
-.purpose-card h3{font-size:var(--text-card-title);font-weight:700;margin:0 0 3px;color:var(--ink-deep)}
-.purpose-card-for{font-size:var(--text-sm);color:var(--gray-600);line-height:1.45;margin:0}
-.purpose-card-links{list-style:none;margin:0;padding:0;border-top:1px solid var(--gray-200)}
-.purpose-card-links li{border-bottom:1px solid var(--gray-100)}
-.purpose-card-links li:last-child{border-bottom:0}
-.purpose-card-links a{display:block;padding:9px 4px 9px 16px;font-size:var(--text-sm);color:var(--gray-800);text-decoration:none;position:relative;line-height:1.4}
-.purpose-card-links a::before{content:"›";position:absolute;left:3px;top:9px;color:var(--accent);font-weight:700}
-.purpose-card-links a:hover,.purpose-card-links a:focus-visible{color:var(--accent);background:var(--accent-light)}
-.purpose-card-links li:last-child a{font-weight:600;color:var(--accent)}
 
 /* Popular */
 .popular-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
@@ -2970,7 +2906,7 @@ h2{color:var(--ink-deep)}
 .clear-filters{background:none;border:none;color:var(--accent);font-family:inherit;font-size:var(--text-sm);font-weight:600;cursor:pointer;padding:0;text-decoration:underline;text-underline-offset:2px}
 .clear-filters:hover{color:var(--accent-hover)}
 .muted{color:var(--gray-500)}
-.purpose-card,.pop-card,.field-card,.compare-card,.faq-item,table.spec,.results li,.occ-list li{box-shadow:0 1px 3px rgba(0,0,0,.07)}
+.pop-card,.field-card,.compare-card,.faq-item,table.spec,.results li,.occ-list li{box-shadow:0 1px 3px rgba(0,0,0,.07)}
 .crumbs{font-size:var(--text-nav);color:var(--gray-500);margin-bottom:10px}
 .crumbs a{color:var(--gray-700)}
 
