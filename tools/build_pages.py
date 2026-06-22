@@ -561,12 +561,12 @@ def page_shell(title: str, body: str, depth: int, noindex: bool = True,
 <a class="skip-link" href="#main">本文へスキップ</a>
 <header class="site-header" id="siteHeader">
   <div class="header-inner">
-    <div class="header-brand"><a class="logo" href="{base}index.html">{esc(SITE_NAME)}</a>
-      <span class="site-tagline">就職・転職・スキルアップの資格情報</span></div>
+    <div class="header-brand"><a class="logo" href="{base}index.html">{esc(SITE_NAME)}</a></div>
     <nav class="header-nav" aria-label="サイトメニュー">
       <a href="{base}index.html#fields">分野から探す</a><span class="header-nav-sep" aria-hidden="true">｜</span>
       <a href="{base}index.html">資格一覧</a><span class="header-nav-sep" aria-hidden="true">｜</span>
       <a href="{base}shoku/index.html">職種から探す</a><span class="header-nav-sep" aria-hidden="true">｜</span>
+      <a href="{base}feature/index.html">特集・ランキング</a><span class="header-nav-sep" aria-hidden="true">｜</span>
       <a href="{base}index.html#partners">資格対策サイト</a>
     </nav>
     <div class="header-actions">
@@ -584,6 +584,7 @@ def page_shell(title: str, body: str, depth: int, noindex: bool = True,
     <a href="{base}index.html#fields">分野から探す</a>
     <a href="{base}index.html">資格一覧</a>
     <a href="{base}shoku/index.html">職種から探す</a>
+    <a href="{base}feature/index.html">特集・ランキング</a>
     <a href="{base}index.html#partners">資格対策サイト</a>
   </nav>
 </header>
@@ -602,7 +603,6 @@ def page_shell(title: str, body: str, depth: int, noindex: bool = True,
       <a href="{base}index.html#compare">よく比較される資格</a>
       <a href="{base}about.html">サイトについて・編集方針</a>
     </nav>
-    {partner_footer_html()}
     <p class="site-footer-note">掲載内容は参考情報です。受験料・合格率・制度・日程等は変更される場合があるため、出願前に各資格の公式情報で必ずご確認ください。各詳細ページに最終確認日と情報源を表示しています。</p>
     <p class="site-footer-copy">© {esc(SITE_NAME)}／一覧データ出典: 厚生労働省 ハローワーク「免許・資格コード一覧」ほか、各資格の公式の一次情報に基づき整備。</p>
   </div>
@@ -1949,6 +1949,30 @@ def build_feature_pages(indexable):
         sen, "定年後・シニアの再就職や独立に役立つ資格の一覧。マンション管理・設備・"
         "不動産・士業など、経験を活かせる資格を比較できます。", group=True)
 
+    # 特集・ランキングの一覧（ヘッダーから参照する index ページ）
+    feat_li = "".join(f'<li><a href="{s}.html">{esc(l)}</a></li>'
+                      for s, l in FEATURE_NAV if s in pages)
+    hub_li = "".join(f'<li><a href="{s}.html">{esc(l)}</a></li>'
+                     for s, l in INTENT_HUB_NAV if s in pages)
+    fidx_body = (
+        '<nav class="crumbs"><a href="../index.html">トップ</a> › 特集・ランキング</nav>'
+        '<h1>特集・ランキングから探す</h1>'
+        '<p class="lead">人気・受験料・合格率などの切り口で資格を一覧できる特集・ランキングと、'
+        '目的別のガイドをまとめています。</p>'
+        f'<h2 class="hub-grp">ランキング・特集</h2><ul class="feat-list">{feat_li}</ul>'
+        + (f'<h2 class="hub-grp">目的別ガイド</h2><ul class="feat-list">{hub_li}</ul>'
+           if hub_li else ""))
+    fidx_ld = {"@context": "https://schema.org", "@type": "BreadcrumbList",
+               "itemListElement": [
+                   {"@type": "ListItem", "position": 1, "name": "トップ",
+                    "item": BASE_URL + "/"},
+                   {"@type": "ListItem", "position": 2, "name": "特集・ランキング"}]}
+    pages["index"] = page_shell(
+        f"特集・ランキングから探す｜{SITE_NAME}", fidx_body, depth=1, noindex=False,
+        desc="人気・受験料・合格率などの切り口で資格を一覧できる特集・ランキングと、"
+             "目的別ガイドの一覧。",
+        path="feature/index.html", jsonld=fidx_ld)
+
     return pages
 
 
@@ -2276,10 +2300,6 @@ def build_index(rows) -> str:
     cat_links = " ".join(
         f'<a class="chip" href="bunya/{MAJOR_SLUGS.get(m, "other")}.html">{esc(m)}</a>'
         for m in majors)
-    feat_links = "".join(
-        f'<li><a href="feature/{slug}.html">{esc(label)}</a></li>'
-        for slug, label in FEATURE_NAV
-        if slug != "popular" or any(applicants_num(r) is not None for r in rows))
     by_slug = {r["slug"]: r for r in rows}
 
     def _short(r):
@@ -2332,6 +2352,9 @@ def build_index(rows) -> str:
                      f'<p class="field-examples">{esc(_examples(m))}</p></div></a>')
 
     # --- よく比較される資格（COMPARE_PAIRS 先頭6） ---
+    def _cmpname(r):
+        return (_short(r).replace("ファイナンシャル・プランニング", "FP")
+                .replace("ファイナンシャルプランニング", "FP"))
     cmp_html = ""
     _n = 0
     for pslug, sa, sb, intro in COMPARE_PAIRS:
@@ -2343,7 +2366,7 @@ def build_index(rows) -> str:
             tip = tip[:47] + "…"
         cmp_html += (f'<a class="compare-card" href="vs/{pslug}.html">'
                      f'<span class="compare-tag">{esc(ra["major_category"])}</span>'
-                     f'<div class="compare-names">{esc(_short(ra))} <em>vs</em> {esc(_short(rb))}</div>'
+                     f'<div class="compare-names">{esc(_cmpname(ra))} <em>vs</em> {esc(_cmpname(rb))}</div>'
                      f'<p class="compare-tip">{esc(tip)}</p>'
                      f'<span class="compare-go">比較する →</span></a>')
         _n += 1
@@ -2421,9 +2444,7 @@ def build_index(rows) -> str:
 </section>
 
 <section class="feature-nav">
-  <div class="block-head"><h2>サイトの索引</h2><p>特集・職種・全分野の一覧</p></div>
-  <h3>特集・ランキングから探す</h3>
-  <ul class="feat-list">{feat_links}</ul>
+  <div class="block-head"><h2>サイトの索引</h2><p>職種・全分野の一覧</p></div>
   <h3>職種から探す</h3>
   <ul class="feat-list"><li><a href="shoku/index.html">職種から資格を逆引きする（活かせる仕事から探す）</a></li></ul>
   <h3>すべての分野</h3>
@@ -2829,6 +2850,7 @@ html{scroll-padding-top:64px}
 @media(max-width:720px){.popular-grid{grid-template-columns:repeat(2,1fr);gap:10px}.pop-card--more{display:none}}
 .pop-card{display:flex;flex-direction:column;background:#fff;color:var(--gray-900);border-radius:var(--radius);padding:14px 32px 12px 13px;text-decoration:none;border:1px solid var(--gray-200);transition:border-color .15s,background .15s}
 .pop-card-name{font-size:var(--text-body);font-weight:700;line-height:1.35;margin-bottom:6px;color:var(--ink-deep)}
+#recentGrid .pop-card-name{font-size:var(--text-sm);font-weight:400;margin-bottom:0}
 .pop-card-audience{font-size:var(--text-sm);color:var(--gray-800);line-height:1.5;margin:0 0 10px;font-weight:600;padding-left:8px;border-left:2px solid var(--accent)}
 .pop-card-facts{list-style:none;margin:auto 0 0;padding:10px 0 0;border-top:1px solid var(--gray-200);display:flex;flex-direction:column;gap:5px}
 .pop-card-facts li{display:grid;grid-template-columns:4.8em 1fr;gap:4px;font-size:var(--text-xs);line-height:1.45}
