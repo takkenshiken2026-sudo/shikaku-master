@@ -2,14 +2,13 @@
   var q=document.getElementById('q'),majorSel=document.getElementById('major'),
       typeSel=document.getElementById('type'),sortSel=document.getElementById('sort'),
       industrySel=document.getElementById('industry'),studySel=document.getElementById('study'),
-      fPub=document.getElementById('f-pub'),tagFilter=document.getElementById('tagfilter'),
+      fPub=document.getElementById('f-pub'),
       studyNote=document.getElementById('studynote'),
       results=document.getElementById('results'),
       status=document.getElementById('status'),count=document.getElementById('count'),
       heroResult=document.getElementById('heroResult'),
       clearBtn=document.getElementById('clearFilters');
   var DATA=[], activeTags=new Set();
-  var TAG_ORDER=['就職・転職','独立・開業','在宅ワーク','手に職','未経験からIT','定年後・シニア','受験資格なし','CBT・ネット試験','働きながら'];
   function esc(s){return (s||'').replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
   function shortName(n){return (n||'').replace(/[（(][^）)]*[）)]/g,'').trim()||n;}
   function opt(sel,v){var o=document.createElement('option');o.value=v;o.textContent=v;sel.appendChild(o);}
@@ -94,22 +93,6 @@
     if(window.CmpBar)window.CmpBar.refresh();
     syncURL();
   }
-  function buildTagChips(all){
-    var present={},counts={};
-    all.forEach(function(x){(x.tags||[]).forEach(function(tg){present[tg]=1;counts[tg]=(counts[tg]||0)+1;});});
-    TAG_ORDER.forEach(function(tg){
-      if(!present[tg])return;
-      var b=document.createElement('button');
-      b.type='button';b.className='tf-chip';b.setAttribute('data-tag',tg);
-      b.textContent=tg+'（'+counts[tg]+'）';
-      b.onclick=function(){
-        if(activeTags.has(tg)){activeTags.delete(tg);b.classList.remove('on');}
-        else{activeTags.add(tg);b.classList.add('on');}
-        render();
-      };
-      tagFilter.appendChild(b);
-    });
-  }
   fetch('data/certifications.json').then(function(r){return r.json();}).then(function(all){
     DATA=all; if(count)count.textContent=all.length;
     var majors={},types={},inds={};
@@ -118,7 +101,6 @@
     ['国家','公的','民間','要確認'].forEach(function(v){if(types[v])opt(typeSel,v);});
     Object.keys(inds).sort(function(a,b){return inds[b]-inds[a];}).forEach(function(v){
       var o=document.createElement('option');o.value=v;o.textContent=v+'（'+inds[v]+'）';industrySel.appendChild(o);});
-    buildTagChips(all);
     var p=new URLSearchParams(location.search);
     if(p.get('q'))q.value=p.get('q');
     if(p.get('major'))majorSel.value=p.get('major');
@@ -127,9 +109,7 @@
     if(p.get('study'))studySel.value=p.get('study');
     if(p.get('sort'))sortSel.value=p.get('sort');
     if(p.get('pub')==='1')fPub.checked=true;
-    if(p.get('tag')){p.get('tag').split(',').forEach(function(tg){
-      activeTags.add(tg);
-      var c=tagFilter.querySelector('[data-tag="'+tg+'"]'); if(c)c.classList.add('on');});}
+    if(p.get('tag')){p.get('tag').split(',').forEach(function(tg){activeTags.add(tg);});}
     render();
   });
   [q,majorSel,typeSel,sortSel,industrySel,studySel].forEach(function(el){el.addEventListener('input',render);});
@@ -140,7 +120,6 @@
   if(clearBtn)clearBtn.addEventListener('click',function(){
     q.value='';majorSel.value='';typeSel.value='';industrySel.value='';studySel.value='';sortSel.value='';fPub.checked=false;
     activeTags.clear();
-    Array.prototype.forEach.call(tagFilter.querySelectorAll('.tf-chip.on'),function(c){c.classList.remove('on');});
     render();
   });
   (function renderRecent(){

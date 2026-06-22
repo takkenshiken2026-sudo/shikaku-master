@@ -2458,7 +2458,6 @@ def build_index(rows) -> str:
     <label><input type="checkbox" id="f-pub"> データ掲載のみ</label>
     <span class="muted" id="studynote" style="display:none">学習時間は編集部調べの目安（非公式）</span>
   </div>
-  <div id="tagfilter" class="tagfilter"><span class="tf-label">目的・特徴で絞り込み：</span></div>
   <div class="results-bar"><p id="status" class="muted"></p><button type="button" id="clearFilters" class="clear-filters" hidden>× 条件をクリア</button></div>
   <p class="muted hint">各行の「＋比較」で資格を選ぶと、画面下の比較バーから最大4件まで並べて比較できます。</p>
   <ul id="results" class="results"><li class="muted">読み込み中…</li></ul>
@@ -2519,14 +2518,13 @@ SEARCH_JS = """(function(){
   var q=document.getElementById('q'),majorSel=document.getElementById('major'),
       typeSel=document.getElementById('type'),sortSel=document.getElementById('sort'),
       industrySel=document.getElementById('industry'),studySel=document.getElementById('study'),
-      fPub=document.getElementById('f-pub'),tagFilter=document.getElementById('tagfilter'),
+      fPub=document.getElementById('f-pub'),
       studyNote=document.getElementById('studynote'),
       results=document.getElementById('results'),
       status=document.getElementById('status'),count=document.getElementById('count'),
       heroResult=document.getElementById('heroResult'),
       clearBtn=document.getElementById('clearFilters');
   var DATA=[], activeTags=new Set();
-  var TAG_ORDER=['就職・転職','独立・開業','在宅ワーク','手に職','未経験からIT','定年後・シニア','受験資格なし','CBT・ネット試験','働きながら'];
   function esc(s){return (s||'').replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
   function shortName(n){return (n||'').replace(/[（(][^）)]*[）)]/g,'').trim()||n;}
   function opt(sel,v){var o=document.createElement('option');o.value=v;o.textContent=v;sel.appendChild(o);}
@@ -2611,22 +2609,6 @@ SEARCH_JS = """(function(){
     if(window.CmpBar)window.CmpBar.refresh();
     syncURL();
   }
-  function buildTagChips(all){
-    var present={},counts={};
-    all.forEach(function(x){(x.tags||[]).forEach(function(tg){present[tg]=1;counts[tg]=(counts[tg]||0)+1;});});
-    TAG_ORDER.forEach(function(tg){
-      if(!present[tg])return;
-      var b=document.createElement('button');
-      b.type='button';b.className='tf-chip';b.setAttribute('data-tag',tg);
-      b.textContent=tg+'（'+counts[tg]+'）';
-      b.onclick=function(){
-        if(activeTags.has(tg)){activeTags.delete(tg);b.classList.remove('on');}
-        else{activeTags.add(tg);b.classList.add('on');}
-        render();
-      };
-      tagFilter.appendChild(b);
-    });
-  }
   fetch('data/certifications.json').then(function(r){return r.json();}).then(function(all){
     DATA=all; if(count)count.textContent=all.length;
     var majors={},types={},inds={};
@@ -2635,7 +2617,6 @@ SEARCH_JS = """(function(){
     ['国家','公的','民間','要確認'].forEach(function(v){if(types[v])opt(typeSel,v);});
     Object.keys(inds).sort(function(a,b){return inds[b]-inds[a];}).forEach(function(v){
       var o=document.createElement('option');o.value=v;o.textContent=v+'（'+inds[v]+'）';industrySel.appendChild(o);});
-    buildTagChips(all);
     var p=new URLSearchParams(location.search);
     if(p.get('q'))q.value=p.get('q');
     if(p.get('major'))majorSel.value=p.get('major');
@@ -2644,9 +2625,7 @@ SEARCH_JS = """(function(){
     if(p.get('study'))studySel.value=p.get('study');
     if(p.get('sort'))sortSel.value=p.get('sort');
     if(p.get('pub')==='1')fPub.checked=true;
-    if(p.get('tag')){p.get('tag').split(',').forEach(function(tg){
-      activeTags.add(tg);
-      var c=tagFilter.querySelector('[data-tag="'+tg+'"]'); if(c)c.classList.add('on');});}
+    if(p.get('tag')){p.get('tag').split(',').forEach(function(tg){activeTags.add(tg);});}
     render();
   });
   [q,majorSel,typeSel,sortSel,industrySel,studySel].forEach(function(el){el.addEventListener('input',render);});
@@ -2657,7 +2636,6 @@ SEARCH_JS = """(function(){
   if(clearBtn)clearBtn.addEventListener('click',function(){
     q.value='';majorSel.value='';typeSel.value='';industrySel.value='';studySel.value='';sortSel.value='';fPub.checked=false;
     activeTags.clear();
-    Array.prototype.forEach.call(tagFilter.querySelectorAll('.tf-chip.on'),function(c){c.classList.remove('on');});
     render();
   });
   (function renderRecent(){
@@ -2967,11 +2945,6 @@ h2{color:var(--ink-deep)}
 @media(max-width:560px){.ctl{flex:1 1 44%}}
 .filters{display:flex;flex-wrap:wrap;gap:14px;margin:-6px 0 6px;font-size:var(--text-sm);color:var(--gray-700)}
 .filters label{display:inline-flex;align-items:center;gap:5px;cursor:pointer}
-.tagfilter{display:flex;flex-wrap:wrap;align-items:center;gap:7px;margin:2px 0 10px}
-.tagfilter .tf-label{font-size:var(--text-sm);color:var(--gray-700);margin-right:2px}
-.tf-chip{background:#fff;color:var(--accent);border:1px solid var(--gray-300);border-radius:999px;padding:5px 13px;font-size:var(--text-sm);cursor:pointer;transition:.12s}
-.tf-chip:hover{background:var(--accent-light)}
-.tf-chip.on{background:var(--accent);color:#fff;border-color:var(--accent)}
 .results{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:7px}
 .results li{background:#fff;border:1px solid var(--gray-200);border-radius:11px;padding:11px 14px}
 .results li a{font-weight:600;color:var(--gray-900);text-decoration:none}
