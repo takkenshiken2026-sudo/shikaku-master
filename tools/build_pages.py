@@ -16,6 +16,7 @@ import json
 import re
 import shutil
 from pathlib import Path
+from urllib.parse import quote_plus
 
 ROOT = Path(__file__).resolve().parent.parent
 CSV = ROOT / "data" / "certifications.csv"
@@ -27,6 +28,15 @@ BRAND = ROOT / "brand"
 
 # 厚労省 職業情報提供サイト（job tag）— 関連職業の公式ディスカバリ導線
 JOBTAG_URL = "https://shigoto.mhlw.go.jp/User/Search/Top"
+
+# Amazonアソシエイト — 資格名から書籍検索リンクを自動生成（トラッキングID付与）
+AMAZON_TAG = "ue083093-22"
+
+
+def amazon_search_url(keyword: str) -> str:
+    """資格名のキーワードからAmazon書籍カテゴリ検索URL（アソシエイトタグ付き）を生成。"""
+    return (f"https://www.amazon.co.jp/s?k={quote_plus(keyword)}"
+            f"&i=stripbooks&tag={AMAZON_TAG}")
 
 SITE_NAME = "資格カタログ"
 SITE_DESC = "日本の資格を「探せる・絞れる・比べられる」資格データベース。受験料・試験形式・受験資格・合格率・実施団体・公式サイトを公式の一次情報に基づき掲載。"
@@ -295,6 +305,23 @@ def build_detail(row) -> str:
         + f'<p class="jobtag"><a href="{JOBTAG_URL}" rel="nofollow noopener" '
           f'target="_blank">厚生労働省 job tag で関連職業を調べる ↗</a></p></section>')
 
+    # 参考書・問題集（Amazonアソシエイト検索リンクを自動生成）
+    base_name = re.sub(r"[（(].*?[）)]", "", name).strip() or name
+    books = [
+        (f"{base_name} 参考書", "参考書・テキストを探す"),
+        (f"{base_name} 問題集", "問題集・過去問を探す"),
+    ]
+    book_links = "".join(
+        f'<li><a class="btn-amazon" href="{esc(amazon_search_url(kw))}" '
+        f'rel="nofollow sponsored noopener" target="_blank">{esc(lbl)} ↗</a></li>'
+        for kw, lbl in books)
+    books_section = (
+        '<section class="books-sec"><h2>参考書・問題集</h2>'
+        f'<p class="muted">{esc(base_name)}の学習に使えるテキスト・問題集をAmazonで探せます。</p>'
+        f'<ul class="book-links">{book_links}</ul>'
+        '<p class="muted books-disclosure">※当サイトはAmazonアソシエイト・プログラムの参加者です。'
+        '上記リンク経由の購入により当サイトが収益を得る場合があります。</p></section>')
+
     # 関連内部リンク
     bslug = MAJOR_SLUGS.get(major, "other")
     rel = [(f"../bunya/{bslug}.html", f"{major}の資格一覧")]
@@ -363,6 +390,7 @@ def build_detail(row) -> str:
 <table class="spec">{rows_html}</table>
 {cta}{provenance}
 {careers_section}
+{books_section}
 {rel_links}
 <section class="related"><h2>同じカテゴリの資格</h2><ul id="related"></ul></section>
 <script>
@@ -1527,6 +1555,12 @@ table.spec th{width:34%;background:#f2f5fa;color:#3a4757;font-weight:600;white-s
 .careers{margin:.2em 0;padding-left:1.1em}.careers li{margin:2px 0}
 .careers-src{font-size:.8rem;margin:.3em 0 0}
 .jobtag{margin:.5em 0 0;font-size:.92rem}
+.books-sec{margin:18px 0 0;border-top:1px solid #e6e9ef;padding-top:12px}
+.books-sec h2{font-size:1.05rem;margin:.2em 0 .4em}
+.book-links{list-style:none;margin:.5em 0 0;padding:0;display:flex;flex-wrap:wrap;gap:8px}
+.btn-amazon{display:inline-block;background:#ff9900;color:#111;font-weight:700;padding:9px 16px;border-radius:8px;font-size:.92rem}
+.btn-amazon:hover{background:#e88a00;text-decoration:none}
+.books-disclosure{font-size:.78rem;margin:.6em 0 0}
 .rel-links{margin:18px 0 0;border-top:1px solid #e6e9ef;padding-top:12px}
 .rel-links h2{font-size:1.05rem;margin:.2em 0 .3em}
 .rel-links ul{margin:.2em 0;padding-left:1.1em}.rel-links li{margin:2px 0}
