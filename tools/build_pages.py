@@ -420,15 +420,18 @@ def roadmap_html(slug, chain):
     if len(chain) < 2:
         return ""
     steps = []
-    for s in chain:
+    for i, s in enumerate(chain, 1):
+        num = f'<span class="rm-num">{i}</span>'
         if s == slug:
-            steps.append(f'<li class="rm-step rm-cur"><span>{esc(_rel_name(s))}</span>'
-                         f'<small>いま見ている資格</small></li>')
+            steps.append(f'<li class="rm-step rm-cur">{num}'
+                         f'<span class="rm-name">{esc(_rel_name(s))}</span>'
+                         f'<span class="rm-badge">いま見ている資格</span></li>')
         else:
-            steps.append(f'<li class="rm-step"><a href="{esc(s)}.html">{esc(_rel_name(s))}</a></li>')
+            steps.append(f'<li class="rm-step">{num}'
+                         f'<a class="rm-name" href="{esc(s)}.html">{esc(_rel_name(s))}</a></li>')
     return ('<div class="roadmap"><h3>取得ロードマップ</h3>'
             '<ol class="rm-track">' + "".join(steps) + "</ol>"
-            '<p class="muted">級・段階のステップアップの流れです（左から上位へ）。'
+            '<p class="muted">STEP順に上位へとステップアップする流れです。'
             'いま見ている資格を起点に、前後の資格ページへ進めます。</p></div>')
 
 
@@ -3028,15 +3031,19 @@ a.tag-chip:hover{border-color:var(--accent);background:var(--accent-light);text-
 .diff-rank{display:inline-block;font-weight:700;font-size:var(--text-xs);padding:2px 10px;border-radius:6px;background:var(--gray-700);color:#fff;margin:1px 2px 1px 0}
 .diff-rank-field{background:var(--accent-hover)}
 .diff-meta{font-size:var(--text-2xs);margin-top:3px}
-.roadmap{margin:.4em 0 .6em}.roadmap h3{font-size:.95rem;margin:.7em 0 .35em;color:var(--gray-800)}
-.rm-track{list-style:none;display:flex;flex-wrap:wrap;align-items:stretch;gap:8px;padding:0;margin:.2em 0}
-.rm-step{display:flex;flex-direction:column;justify-content:center;background:#fff;border:1px solid var(--gray-300);border-radius:9px;padding:8px 12px;position:relative;min-width:96px}
-.rm-step:not(:last-child){margin-right:14px}
-.rm-step:not(:last-child)::after{content:"›";position:absolute;right:-13px;top:50%;transform:translateY(-50%);color:var(--gray-400);font-weight:700;font-size:1.2rem}
-.rm-step a{text-decoration:none;color:var(--accent);font-weight:600}
+.roadmap{margin:.4em 0 .8em}.roadmap h3{font-size:.95rem;margin:.7em 0 .5em;color:var(--gray-800)}
+.rm-track{list-style:none;display:flex;flex-wrap:wrap;align-items:stretch;gap:12px 20px;padding:0;margin:.2em 0}
+.rm-step{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid var(--gray-300);border-radius:10px;padding:10px 14px;position:relative;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.rm-num{flex-shrink:0;display:flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;background:var(--gray-200);color:var(--gray-700);font-size:.78rem;font-weight:700;font-variant-numeric:tabular-nums}
+.rm-name{font-weight:600;line-height:1.3}
+a.rm-name{color:var(--accent);text-decoration:none}
+a.rm-name:hover{text-decoration:underline}
+.rm-step:not(:last-child)::after{content:"›";position:absolute;right:-14px;top:50%;transform:translateY(-50%);color:var(--gray-400);font-weight:700;font-size:1.3rem;line-height:1}
 .rm-cur{background:var(--accent-light);border-color:var(--accent);box-shadow:0 0 0 1px var(--accent) inset}
-.rm-cur span{font-weight:700;color:var(--ink-deep)}.rm-cur small{display:block;color:var(--gray-600);font-size:.72rem;margin-top:1px}
-@media(max-width:560px){.rm-step{min-width:0;flex:1 1 100%}.rm-step:not(:last-child){margin-right:0;margin-bottom:14px}.rm-step:not(:last-child)::after{content:"▾";right:50%;top:auto;bottom:-13px;transform:translateX(50%)}}
+.rm-cur .rm-num{background:var(--accent);color:#fff}
+.rm-cur .rm-name{color:var(--ink-deep);font-weight:700}
+.rm-badge{flex-shrink:0;font-size:.7rem;font-weight:700;color:#fff;background:var(--accent);border-radius:4px;padding:2px 7px;white-space:nowrap}
+@media(max-width:560px){.rm-track{flex-direction:column;gap:18px 0}.rm-step{width:100%}.rm-step:not(:last-child)::after{content:"▾";right:auto;left:25px;top:auto;bottom:-15px;transform:translateX(-50%)}}
 .careers-sec,.materials-sec,.rel-certs,.rel-links{margin:18px 0 0;border-top:1px solid var(--gray-200);padding-top:12px}
 .careers-sec h2,.materials-sec h2,.rel-certs h2,.rel-links h2,.occ-work h2,.occ-salary h2{font-size:1.05rem;margin:.2em 0 .4em}
 .careers,.rel-certs ul,.rel-links ul{margin:.2em 0;padding-left:1.1em}.careers li{margin:2px 0}
