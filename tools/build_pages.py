@@ -2392,7 +2392,6 @@ def build_index(rows) -> str:
             facts += f'<li><span class="k">学習目安</span><span class="v">{esc(sh)}</span></li>'
         pop_html += (f'<a class="pop-card card-link{more}" href="c/{r["slug"]}.html">'
                      f'<div class="pop-card-name">{esc(_short(r))}</div>'
-                     f'<p class="pop-card-audience">{esc(r["type"])}</p>'
                      f'<ul class="pop-card-facts">{facts}</ul></a>')
 
     # --- 分野から探す（収録数の多い順 上位8） ---
@@ -3007,9 +3006,7 @@ html{scroll-padding-top:64px}
 /* Popular */
 .popular-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
 .pop-card{display:flex;flex-direction:column;background:#fff;color:var(--gray-900);border-radius:var(--radius);padding:14px 32px 12px 13px;text-decoration:none;border:1px solid var(--gray-200);transition:border-color .15s,background .15s}
-.pop-card-name{font-size:var(--text-body);font-weight:700;line-height:1.35;margin-bottom:6px;color:var(--ink-deep)}
-#recentGrid .pop-card-name{font-size:var(--text-sm);font-weight:400;margin-bottom:0}
-.pop-card-audience{font-size:var(--text-sm);color:var(--gray-800);line-height:1.5;margin:0 0 10px;font-weight:600;padding-left:8px;border-left:2px solid var(--accent)}
+.pop-card-name{font-size:var(--text-body);font-weight:700;line-height:1.35;margin-bottom:10px;color:var(--ink-deep)}
 .pop-card-facts{list-style:none;margin:auto 0 0;padding:10px 0 0;border-top:1px solid var(--gray-200);display:flex;flex-direction:column;gap:5px}
 .pop-card-facts li{display:grid;grid-template-columns:4.8em 1fr;gap:4px;font-size:var(--text-xs);line-height:1.45}
 .pop-card-facts .k{color:var(--gray-500)}.pop-card-facts .v{color:var(--gray-800);font-weight:600}
