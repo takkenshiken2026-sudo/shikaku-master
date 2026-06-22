@@ -2814,12 +2814,12 @@ APP_CSS = """:root{
 --gray-100:#f0f0f0;--gray-50:#f7f7f7;--white:#fff;--page-bg:#eef0f1;
 --accent:#236f64;--accent-hover:#1c5a51;--accent-light:#e6f1ef;--accent-ring:rgba(35,111,100,.22);
 --radius:8px;
---text-hero:clamp(1.75rem,4vw,2.45rem);--text-page:1.5rem;--text-section:1.3rem;--text-section-sub:1.12rem;
+--text-hero:clamp(1.5rem,5vw,2.45rem);--text-page:clamp(1.3rem,4.4vw,1.5rem);--text-section:1.3rem;--text-section-sub:1.12rem;
 --text-card-title:1.18rem;--text-lead:1.06rem;--text-input:1.06rem;--text-body:1.02rem;--text-ui:1rem;
 --text-nav:.95rem;--text-sm:.9rem;--text-xs:.86rem;--text-2xs:.82rem;--text-chip:.8rem}
 *{box-sizing:border-box}
 html{font-size:16px}
-body{margin:0;min-height:100vh;display:flex;flex-direction:column;font-family:"Noto Sans JP",system-ui,-apple-system,"Hiragino Kaku Gothic ProN",Meiryo,sans-serif;font-size:var(--text-ui);color:var(--ink);background:var(--page-bg);line-height:1.7;-webkit-font-smoothing:antialiased}
+body{margin:0;min-height:100vh;display:flex;flex-direction:column;font-family:"Noto Sans JP",system-ui,-apple-system,"Hiragino Kaku Gothic ProN",Meiryo,sans-serif;font-size:var(--text-ui);color:var(--ink);background:var(--page-bg);line-height:1.7;-webkit-font-smoothing:antialiased;overflow-wrap:break-word}
 a{color:var(--ink)}a:hover{text-decoration:underline}
 img{max-width:100%}
 :focus-visible{outline:3px solid var(--accent-ring);outline-offset:2px}
@@ -3182,6 +3182,33 @@ table.cmp tbody th{background:var(--gray-50);color:var(--gray-800);white-space:n
 .cmp-verdict-card .pickname{font-size:var(--text-body);font-weight:700;color:var(--ink-deep);line-height:1.4}
 .cmp-verdict-card .pickname a{color:var(--ink-deep);text-decoration:underline;text-underline-offset:2px}
 .cmp-verdict-card .why{font-size:var(--text-xs);color:var(--gray-600);margin-top:3px;line-height:1.5}
+/* ===== モバイル最適化（可読性・余白・タップ領域） ===== */
+@media(max-width:600px){
+  /* 小さめの文字を底上げして読みやすく（キャプション・メタ・バッジ等） */
+  :root{--text-sm:.94rem;--text-xs:.9rem;--text-2xs:.86rem;--text-chip:.85rem}
+  /* ヒーロー：余白を詰め、本文を読みやすいサイズに */
+  .hero{padding:18px 0 2px}
+  .hero h1{margin-bottom:10px}
+  .hero-sub{font-size:1rem;line-height:1.7}
+  .hero-search{margin-top:14px;max-width:none}
+  /* セクション間隔をモバイル向けに調整 */
+  .block{margin-bottom:24px}.block-primary{margin-bottom:30px}.block-secondary{margin-bottom:26px}
+  .block-head{margin-bottom:10px}
+  /* 人気の資格は1列にして各カードの情報を見やすく */
+  .popular-grid{grid-template-columns:1fr;gap:10px}
+  .pop-card{padding:14px 16px}
+  .pop-card-facts li{grid-template-columns:5.5em 1fr}
+  /* 比較カードのタイトルが詰まらないように */
+  .compare-names{font-size:var(--text-body)}
+  /* 一覧・ランキングのタップ領域と余白 */
+  .cl-link{padding:13px 14px}
+  /* 詳細：本文サイズと余白 */
+  .detail-audience{font-size:var(--text-body);line-height:1.7}
+  .point-list li{font-size:var(--text-body)}
+  .faq-item summary,.faq-a{font-size:var(--text-body)}
+  /* 比較バーが内容に被らないよう余白を増やす */
+  body.cmp-open{padding-bottom:96px}
+}
 """
 
 
