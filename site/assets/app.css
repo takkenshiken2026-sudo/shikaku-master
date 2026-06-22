@@ -442,6 +442,11 @@ table.cmp tbody th{background:var(--gray-50);color:var(--gray-800);white-space:n
 .page-detail table.spec{font-size:var(--text-sm)}
 .page-detail table.spec th{background:var(--gray-50);color:var(--gray-700);font-weight:600;font-size:var(--text-sm)}
 .page-detail table.spec td{color:var(--gray-800);font-size:var(--text-sm)}
+.page-detail table.spec .spec-list{list-style:disc;margin:.15em 0 .3em;padding-left:1.25em}
+.page-detail table.spec .spec-list li{margin:2px 0;line-height:1.55}
+.page-detail table.spec .materials{margin-top:.25em}
+.page-detail table.spec .ad-disclosure{margin:0 0 8px}
+.page-detail table.spec .careers-src,.page-detail table.spec .jobtag,.page-detail table.spec .mat-foot{margin-top:6px}
 .page-detail .tag-chip{font-size:var(--text-sm);background:var(--gray-50);color:var(--gray-700);border-color:var(--gray-200)}
 .page-detail .tag-ind{background:var(--gray-50);color:var(--gray-700);border-color:var(--gray-200)}
 .page-detail a.tag-chip:hover{background:var(--gray-100);border-color:var(--gray-300)}

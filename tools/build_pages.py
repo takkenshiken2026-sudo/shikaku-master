@@ -568,9 +568,8 @@ fetch("../data/certifications.json").then(r=>r.json()).then(all=>{{
     return f'<nav class="detail-nav" aria-label="関連する資格への導線">{block1}{block2}</nav>'
 
 
-def materials_section_html(slug):
-    """おすすめ教材・講座セクション。アフィリンクがある場合は広告表示(景表法/ステマ規制)と
-    rel=sponsored を自動付与する。教材が無ければ空文字。"""
+def materials_cell_html(slug):
+    """おすすめ教材・講座（表セル用）。教材が無ければ空文字。"""
     mats = MATERIALS.get(slug) or []
     if not mats:
         return ""
@@ -588,18 +587,28 @@ def materials_section_html(slug):
         note = f'<span class="mat-note">{esc(m["note"])}</span>' if m["note"] else ""
         items.append(f'<li><span class="mat-kind">{esc(m["kind"])}</span>'
                      f'<span class="mat-body">{title_html}{prov}{note}</span></li>')
-    pr = '<span class="pr-badge">PR</span>' if has_aff else ""
     disclosure = (
         '<p class="ad-disclosure">本セクションには広告（アフィリエイトリンク）を含みます。'
         'リンクを経由して購入・申込みされた場合、当サイトが収益を得ることがあります。'
         '掲載は編集部の選定によるもので、内容の正確性・価格は各提供元の公式情報をご確認ください。</p>'
         if has_aff else "")
     return (
-        f'<section class="materials-sec"><h2 class="detail-section-title">おすすめテキスト・講座{pr}</h2>'
         f'{disclosure}'
         f'<ul class="materials">{"".join(items)}</ul>'
         '<p class="muted mat-foot">編集部が選んだ学習教材・講座の例です。最新の価格・改訂版・'
-        '開講状況は各販売元・提供元の公式情報で必ずご確認ください。</p></section>')
+        '開講状況は各販売元・提供元の公式情報で必ずご確認ください。</p>')
+
+
+def materials_section_html(slug):
+    """おすすめ教材・講座セクション（後方互換）。"""
+    cell = materials_cell_html(slug)
+    if not cell:
+        return ""
+    has_aff = any(m["affiliate"] for m in (MATERIALS.get(slug) or []))
+    pr = '<span class="pr-badge">PR</span>' if has_aff else ""
+    return (
+        f'<section class="materials-sec"><h2 class="detail-section-title">おすすめテキスト・講座{pr}</h2>'
+        f'{cell}</section>')
 
 
 def applicants_num(r):
@@ -801,31 +810,76 @@ def build_detail(row) -> str:
             f' title="「{esc(t)}」の資格を探す">{esc(t)}</a>' for t in tags)
         spec.append(("特徴・目的タグ", chips))
     src = row.get("source_checked_at", "")
+
+    # この資格のポイント（表内1行に統合）
+    pts = []
+    if is_noreq(row):
+        pts.append("受験資格の制限がなく、誰でも受験できます")
+    if is_cbt(row):
+        pts.append("CBT・ネット試験に対応し、比較的受けやすい試験です")
+    _d = difficulty(row)
+    if _d:
+        pts.append(f"難易度の目安は「{_d[0]}」です（公表合格率に基づく簡易目安）")
+    _tg = cert_tags(row)
+    _tagmsg = [("就職・転職", "就職・転職でアピールしやすい資格です"),
+               ("独立・開業", "独立・開業につながる資格です"),
+               ("在宅ワーク", "在宅・リモートワークに活かせます"),
+               ("手に職", "手に職をつけられる実務的な資格です"),
+               ("未経験からIT", "未経験からITを目指す入口になります"),
+               ("定年後・シニア", "定年後・シニアの活動にも役立ちます")]
+    for _k, _m in _tagmsg:
+        if _k in _tg:
+            pts.append(_m)
+    _inds = industry_tags(row)
+    if _inds:
+        pts.append(f"主に{'・'.join(_inds[:2])}の分野で活かせます")
+    pts = pts[:5]
+    if pts:
+        _lis = "".join(f"<li>{esc(p)}</li>" for p in pts)
+        spec.append(("この資格のポイント",
+                     f'<ul class="spec-list">{_lis}</ul>'))
+
+    # 活かせる仕事・キャリア（表内1行に統合）
+    cur = CAREERS.get(row["slug"])
+    if cur:
+        items = []
+        for tok in cur["careers"].split("、"):
+            tok = tok.strip()
+            if not tok:
+                continue
+            nm, note = occlib.split_name_note(tok)
+            nm = occlib.canonical(nm)
+            note_html = f'<span class="muted">（{esc(note)}）</span>' if note else ""
+            oid = OCC_ID_BY_NAME.get(nm)
+            if oid:
+                items.append(f'<li><a href="../shoku/{oid}.html">{esc(nm)}</a>{note_html}</li>')
+            else:
+                items.append(f'<li>{esc(nm)}{note_html}</li>')
+        careers_cell = f'<ul class="spec-list careers">{"".join(items)}</ul>'
+        if cur["source"]:
+            careers_cell += (f'<p class="muted careers-src">出典: '
+                             f'<a href="{esc(cur["source"])}" rel="nofollow noopener" target="_blank">'
+                             f'公式・job tag 等</a>（職種名から各職種ページへ：'
+                             f'その職種に活かせる資格を逆引きできます）</p>')
+    else:
+        careers_cell = (f'<p class="muted">{esc(name)}（{esc(major)}分野）を要件・推奨とする'
+                        '職業は個別に精査中です。関連する職業は、厚生労働省の職業情報提供'
+                        'サイト（job tag）で資格名から検索できます。</p>')
+    careers_cell += (f'<p class="jobtag"><a href="{JOBTAG_URL}" rel="nofollow noopener" '
+                     f'target="_blank">厚生労働省 job tag で関連職業を調べる ↗</a></p>')
+    spec.append(("活かせる仕事・キャリア", careers_cell))
+
+    # おすすめ教材（表内1行に統合）
+    _mat_cell = materials_cell_html(row["slug"])
+    if _mat_cell:
+        _mat_aff = any(m["affiliate"] for m in (MATERIALS.get(row["slug"]) or []))
+        _mat_pr = ' <span class="pr-badge">PR</span>' if _mat_aff else ""
+        spec.append((f"おすすめテキスト・講座{_mat_pr}", _mat_cell))
+
     if src:
         spec.append(("情報確認日", esc(src) + ' <span class="note-muted">（公式の一次情報に基づき確認）</span>'))
-    # ページ上部の「基本情報」グリッドに出す項目は詳細表から省いて重複を避ける
-    _grid_keys = {"資格区分", "受験料", "実施頻度"}
-    rows_html = "".join(f"<tr><th>{esc(k)}</th><td>{v}</td></tr>"
-                        for k, v in spec if k not in _grid_keys)
 
-    # 基本情報グリッド（区分・受験料・受験資格・実施頻度）
-    def _short_elig(v):
-        if not v:
-            return '<span class="muted">公式で確認</span>'
-        if re.search(r"(受験資格|制限)?(なし|不問)", v) and "実務" not in v and "級" not in v:
-            return "なし"
-        return esc(v if len(v) <= 16 else v[:15] + "…")
-    facts_grid = (
-        '<div class="detail-facts" aria-label="基本情報"><div class="facts">'
-        f'<div class="fact"><div class="l">区分</div><div class="v">{esc(label)}</div></div>'
-        f'<div class="fact"><div class="l">受験料</div><div class="v">{field(row["fee"], "公式で確認")}</div></div>'
-        f'<div class="fact"><div class="l">受験資格</div><div class="v">{_short_elig(row["eligibility"])}</div></div>'
-        f'<div class="fact"><div class="l">実施頻度</div><div class="v">{field(row["frequency"], "公式で確認")}</div></div>'
-        + (f'<div class="fact"><div class="l">合格率</div><div class="v">{esc(fmt_nums_in_text(row["pass_rate"]))}</div></div>'
-           if row["pass_rate"] else "")
-        + (f'<div class="fact"><div class="l">学習目安</div><div class="v">{esc(fmt_nums_in_text(st_h))}</div></div>'
-           if (st_h := (STUDY.get(row["slug"], {}) or {}).get("study_hours", "")) else "")
-        + '</div></div>')
+    rows_html = "".join(f"<tr><th>{esc(k)}</th><td>{v}</td></tr>" for k, v in spec)
 
     # 公式サイトへの導線（detail-official に出力）
     if row["official_url"]:
@@ -862,39 +916,6 @@ def build_detail(row) -> str:
     fact_p = (f"<p>{name}の概要: " + "、".join(fact)
               + "。最新の金額・日程・合格率は公式サイトで必ずご確認ください。</p>") if fact else ""
 
-    # 活かせる仕事・キャリア（職種DBへの内部リンク化 + job tag 導線）
-    cur = CAREERS.get(row["slug"])
-    if cur:
-        items = []
-        for tok in cur["careers"].split("、"):
-            tok = tok.strip()
-            if not tok:
-                continue
-            nm, note = occlib.split_name_note(tok)
-            nm = occlib.canonical(nm)
-            note_html = f'<span class="muted">（{esc(note)}）</span>' if note else ""
-            oid = OCC_ID_BY_NAME.get(nm)
-            if oid:
-                items.append(f'<li><a href="../shoku/{oid}.html">{esc(nm)}</a>{note_html}</li>')
-            else:
-                items.append(f'<li>{esc(nm)}{note_html}</li>')
-        jobs_html = "".join(items)
-        src_html = ""
-        if cur["source"]:
-            src_html = (f'<p class="muted careers-src">出典: '
-                        f'<a href="{esc(cur["source"])}" rel="nofollow noopener" target="_blank">'
-                        f'公式・job tag 等</a>（職種名から各職種ページへ：その職種に活かせる資格を逆引きできます）</p>')
-        careers_body = f'<ul class="careers">{jobs_html}</ul>{src_html}'
-    else:
-        careers_body = (f'<p class="muted">{esc(name)}（{esc(major)}分野）を要件・推奨とする'
-                        '職業は個別に精査中です。関連する職業は、厚生労働省の職業情報提供'
-                        'サイト（job tag）で資格名から検索できます。</p>')
-    careers_section = (
-        '<section class="careers-sec"><h2 class="detail-section-title">活かせる仕事・キャリア</h2>'
-        + careers_body
-        + f'<p class="jobtag"><a href="{JOBTAG_URL}" rel="nofollow noopener" '
-          f'target="_blank">厚生労働省 job tag で関連職業を調べる ↗</a></p></section>')
-
     # 関連内部リンク
     bslug = MAJOR_SLUGS.get(major, "other")
     rel = [(f"../bunya/{bslug}.html", f"{major}の資格一覧")]
@@ -925,7 +946,13 @@ def build_detail(row) -> str:
     rel += [("../feature/cheap.html", "受験料が安い資格ランキング"),
             ("../feature/high-pass.html", "合格率が高い資格")]
 
-    # FAQ 構造化データ
+    vs_pairs = []
+    for ps, other in COMPARE_INDEX.get(row["slug"], []):
+        if other in INDEXABLE_SLUGS:
+            on = re.sub(r"[（(].*?[）)]", "", NAME_BY_SLUG.get(other, other)).strip() or other
+            vs_pairs.append((ps, on))
+
+    # FAQ 構造化データ（表示は表に統合、JSON-LD のみ出力）
     qa = []
     if row["fee"]:
         qa.append((f"{name}の受験料はいくらですか？", fmt_nums_in_text(row["fee"])))
@@ -963,24 +990,6 @@ def build_detail(row) -> str:
             "mainEntity": [{"@type": "Question", "name": q,
                             "acceptedAnswer": {"@type": "Answer", "text": a}}
                            for q, a in qa]} if qa else None)
-    faq_html = ""
-    if qa:
-        _items = "".join(
-            f'<details class="faq-item"><summary>{esc(q)}</summary>'
-            f'<div class="faq-a">{esc(a)}</div></details>' for q, a in qa)
-        faq_html = ('<section class="detail-faq" aria-labelledby="faq-h">'
-                    f'<h2 class="detail-section-title" id="faq-h">{esc(name)}のよくある質問</h2>'
-                    f'{_items}</section>')
-
-    _mat = materials_section_html(row["slug"])
-    _mat_block = ("\n" + _mat) if _mat else ""
-
-    # 関連資格との比較（この資格が含まれる比較ペア＝静的vsページへ）
-    vs_pairs = []
-    for ps, other in COMPARE_INDEX.get(row["slug"], []):
-        if other in INDEXABLE_SLUGS:
-            on = re.sub(r"[（(].*?[）)]", "", NAME_BY_SLUG.get(other, other)).strip() or other
-            vs_pairs.append((ps, on))
 
     detail_nav = detail_nav_html(row["slug"], cat, rel, vs_pairs)
 
@@ -1003,36 +1012,6 @@ def build_detail(row) -> str:
         '制度・金額・日程は改定されることがあるため、出願前に必ず公式サイトでご確認ください。</p>'
         '</aside>')
 
-    # この資格のポイント（保有データ・タグから導く定性的ハイライト。捏造しない）
-    pts = []
-    if is_noreq(row):
-        pts.append("受験資格の制限がなく、誰でも受験できます")
-    if is_cbt(row):
-        pts.append("CBT・ネット試験に対応し、比較的受けやすい試験です")
-    _d = difficulty(row)
-    if _d:
-        pts.append(f"難易度の目安は「{_d[0]}」です（公表合格率に基づく簡易目安）")
-    _tg = cert_tags(row)
-    _tagmsg = [("就職・転職", "就職・転職でアピールしやすい資格です"),
-               ("独立・開業", "独立・開業につながる資格です"),
-               ("在宅ワーク", "在宅・リモートワークに活かせます"),
-               ("手に職", "手に職をつけられる実務的な資格です"),
-               ("未経験からIT", "未経験からITを目指す入口になります"),
-               ("定年後・シニア", "定年後・シニアの活動にも役立ちます")]
-    for _k, _m in _tagmsg:
-        if _k in _tg:
-            pts.append(_m)
-    _inds = industry_tags(row)
-    if _inds:
-        pts.append(f"主に{'・'.join(_inds[:2])}の分野で活かせます")
-    pts = pts[:5]
-    points_html = ""
-    if pts:
-        _lis = "".join(f"<li>{esc(p)}</li>" for p in pts)
-        points_html = ('<section class="detail-points" aria-labelledby="dp-h">'
-                       '<h2 class="detail-section-title" id="dp-h">この資格のポイント</h2>'
-                       f'<ul class="point-list">{_lis}</ul></section>')
-
     # 「最近見た資格」記録（localStorage）
     _rn = esc(re.sub(r"[（(].*?[）)]", "", name).strip() or name)
     recent_js = ("<script>(function(){try{var k='recent',a=JSON.parse(localStorage.getItem(k)||'[]');"
@@ -1045,14 +1024,10 @@ def build_detail(row) -> str:
 <a href="../bunya/{esc(bslug)}.html">{esc(major)}</a> › {esc(name)}</nav>
 <h1 class="detail-title">{esc(name)}</h1>
 <p class="detail-audience">{lead}</p>
-{facts_grid}
-{points_html}
 {partner_detail}
 <section class="detail-spec" aria-labelledby="ds-h">
-<h2 class="detail-section-title" id="ds-h">詳細情報</h2>
+<h2 class="detail-section-title" id="ds-h">資格情報</h2>
 <div class="spec-wrap"><table class="spec">{rows_html}</table></div></section>
-{faq_html}
-{careers_section}{_mat_block}
 {source_aside}
 {detail_official}
 {detail_nav}
@@ -3368,6 +3343,11 @@ table.cmp tbody th{background:var(--gray-50);color:var(--gray-800);white-space:n
 .page-detail table.spec{font-size:var(--text-sm)}
 .page-detail table.spec th{background:var(--gray-50);color:var(--gray-700);font-weight:600;font-size:var(--text-sm)}
 .page-detail table.spec td{color:var(--gray-800);font-size:var(--text-sm)}
+.page-detail table.spec .spec-list{list-style:disc;margin:.15em 0 .3em;padding-left:1.25em}
+.page-detail table.spec .spec-list li{margin:2px 0;line-height:1.55}
+.page-detail table.spec .materials{margin-top:.25em}
+.page-detail table.spec .ad-disclosure{margin:0 0 8px}
+.page-detail table.spec .careers-src,.page-detail table.spec .jobtag,.page-detail table.spec .mat-foot{margin-top:6px}
 .page-detail .tag-chip{font-size:var(--text-sm);background:var(--gray-50);color:var(--gray-700);border-color:var(--gray-200)}
 .page-detail .tag-ind{background:var(--gray-50);color:var(--gray-700);border-color:var(--gray-200)}
 .page-detail a.tag-chip:hover{background:var(--gray-100);border-color:var(--gray-300)}
