@@ -3324,7 +3324,7 @@ table.cmp tbody th{background:var(--gray-50);color:var(--ink);white-space:nowrap
 .cmp-verdict-card .pickname a{color:var(--ink-deep);text-decoration:underline;text-underline-offset:2px}
 .cmp-verdict-card .why{font-size:var(--text-sm);color:var(--muted);margin-top:3px;line-height:1.5}
 /* Detail page typography（詳細ページのフォント・色統一） */
-.page-detail{font-size:var(--text-md);color:var(--ink);line-height:1.7}
+.page-detail{font-size:var(--text-md);color:var(--ink);line-height:1.7;font-weight:500}
 .page-detail .detail-title{font-size:var(--text-xl);color:var(--ink-deep);margin:.1em 0 6px}
 .page-detail .detail-audience{font-size:var(--text-md);color:var(--ink);line-height:1.7;margin:0 0 16px}
 .page-detail .crumbs{font-size:var(--text-sm);color:var(--muted);margin-bottom:8px}
@@ -3334,8 +3334,9 @@ table.cmp tbody th{background:var(--gray-50);color:var(--ink);white-space:nowrap
 .page-detail .fact .v{font-size:var(--text-md);font-weight:600;color:var(--ink)}
 .page-detail .detail-section-title{font-size:var(--text-lg);font-weight:700;color:var(--ink-deep);margin:0 0 10px}
 .page-detail table.spec{font-size:var(--text-md)}
-.page-detail table.spec th{background:var(--gray-50);color:var(--muted);font-weight:600;font-size:var(--text-sm)}
-.page-detail table.spec td{color:var(--ink);font-size:var(--text-md)}
+.page-detail table.spec th{background:var(--gray-50);color:var(--ink);font-weight:600;font-size:var(--text-md)}
+.page-detail table.spec td{color:var(--ink);font-size:var(--text-md);font-weight:600}
+.page-detail table.spec .badge,.page-detail table.spec .badge-national,.page-detail table.spec .badge-public,.page-detail table.spec .badge-private,.page-detail table.spec .badge-unknown,.page-detail table.spec .badge-overseas{color:var(--ink);background:var(--gray-50);border-color:var(--gray-200);font-size:inherit;font-weight:600}
 .page-detail table.spec .spec-list{list-style:disc;margin:.15em 0 .3em;padding-left:1.25em}
 .page-detail table.spec .spec-list li{margin:2px 0;line-height:1.55}
 .page-detail table.spec .materials{margin:.15em 0 .25em}
