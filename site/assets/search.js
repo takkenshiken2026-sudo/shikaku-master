@@ -119,10 +119,10 @@
       var pass=x.pass_rate?esc(x.pass_rate):'—';
       return '<tr>'+
         '<td class="all-certs-name"><a href="c/'+x.slug+'.html">'+esc(shortName(x.name))+'</a></td>'+
-        '<td>'+esc(x.major)+'</td>'+
-        '<td><span class="badge b-'+x.type+'">'+esc(x.type)+'</span></td>'+
-        '<td class="all-certs-num">'+fee+'</td>'+
-        '<td class="all-certs-num">'+pass+'</td></tr>';
+        '<td class="all-certs-cell">'+esc(x.major)+'</td>'+
+        '<td class="all-certs-cell">'+esc(x.type)+'</td>'+
+        '<td class="all-certs-cell all-certs-num">'+fee+'</td>'+
+        '<td class="all-certs-cell all-certs-num">'+pass+'</td></tr>';
     }).join('')||'<tr><td colspan="5" class="empty-state">条件に一致する資格が見つかりませんでした。<br>キーワードを短くするか、上の「× 条件をクリア」で絞り込みを解除してください。</td></tr>';
     renderPagination(out.length);
     syncURL();
