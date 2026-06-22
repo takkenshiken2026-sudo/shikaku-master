@@ -2747,8 +2747,8 @@ SEARCH_JS = """(function(){
     results.innerHTML=pageItems.map(function(x){
       var fee=x.fee?esc(x.fee):'—';
       var pass=x.pass_rate?esc(x.pass_rate):'—';
-      return '<tr>'+
-        '<td class="all-certs-name"><a href="c/'+x.slug+'.html">'+esc(shortName(x.name))+'</a></td>'+
+      return '<tr class="cert-row" tabindex="0" data-href="c/'+esc(x.slug)+'.html">'+
+        '<td class="all-certs-name"><span class="all-certs-name-text">'+esc(shortName(x.name))+'</span></td>'+
         '<td class="all-certs-cell">'+esc(x.major)+'</td>'+
         '<td class="all-certs-cell">'+esc(x.type)+'</td>'+
         '<td class="all-certs-cell all-certs-num">'+fee+'</td>'+
@@ -2765,6 +2765,22 @@ SEARCH_JS = """(function(){
     currentPage=p; render();
     var sec=document.getElementById('all-certs'); if(sec)sec.scrollIntoView({behavior:'smooth',block:'start'});
   });
+  if(results){
+    results.addEventListener('click',function(e){
+      var tr=e.target.closest('tr.cert-row');
+      if(!tr)return;
+      var href=tr.getAttribute('data-href');
+      if(href)location.href=href;
+    });
+    results.addEventListener('keydown',function(e){
+      if(e.key!=='Enter'&&e.key!==' ')return;
+      var tr=e.target.closest('tr.cert-row');
+      if(!tr)return;
+      e.preventDefault();
+      var href=tr.getAttribute('data-href');
+      if(href)location.href=href;
+    });
+  }
   fetch('data/certifications.json').then(function(r){return r.json();}).then(function(all){
     DATA=all; if(count)count.textContent=fmtN(all.length);
     var majors={},types={},inds={};
@@ -3072,11 +3088,13 @@ html{scroll-padding-top:64px}
 .block-all-certs .all-certs-table{width:100%;border-collapse:collapse;background:#fff;border:none;border-radius:0;font-size:var(--text-sm);color:var(--ink)}
 .block-all-certs .all-certs-table thead th{text-align:left;padding:11px 14px;background:var(--gray-50);color:var(--muted);font-weight:600;font-size:var(--text-sm);border-bottom:1px solid var(--gray-300);white-space:nowrap}
 .block-all-certs .all-certs-table tbody td{padding:11px 14px;border-bottom:1px solid var(--gray-200);vertical-align:middle;line-height:1.5;white-space:nowrap;font-size:var(--text-sm);color:var(--ink)}
+.block-all-certs .all-certs-table tbody tr.cert-row{cursor:pointer;transition:background-color .12s ease}
+.block-all-certs .all-certs-table tbody tr.cert-row:hover td{background:var(--accent-light)}
+.block-all-certs .all-certs-table tbody tr.cert-row:focus-visible{outline:2px solid var(--accent-ring);outline-offset:-2px}
 .block-all-certs .all-certs-table tbody tr:last-child td{border-bottom:none}
-.block-all-certs .all-certs-table tbody tr:hover{background:var(--gray-50)}
 .block-all-certs .all-certs-name{min-width:12em}
-.block-all-certs .all-certs-name a{white-space:nowrap;font-weight:600;color:var(--ink-deep);text-decoration:none}
-.block-all-certs .all-certs-name a:hover{color:var(--accent);text-decoration:none}
+.block-all-certs .all-certs-name-text{white-space:nowrap;font-weight:600;color:var(--ink-deep)}
+.block-all-certs .all-certs-table tbody tr.cert-row:hover .all-certs-name-text{color:var(--accent)}
 .block-all-certs .all-certs-cell{font-weight:400;color:var(--ink)}
 .block-all-certs .all-certs-num{font-variant-numeric:tabular-nums;color:var(--ink)}
 .block-all-certs .all-certs-table .empty-state{white-space:normal;text-align:center;color:var(--muted);background:var(--gray-50);padding:22px 16px;line-height:1.75;font-size:var(--text-sm)}

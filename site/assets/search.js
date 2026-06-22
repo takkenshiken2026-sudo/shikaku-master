@@ -109,8 +109,8 @@
     results.innerHTML=pageItems.map(function(x){
       var fee=x.fee?esc(x.fee):'—';
       var pass=x.pass_rate?esc(x.pass_rate):'—';
-      return '<tr>'+
-        '<td class="all-certs-name"><a href="c/'+x.slug+'.html">'+esc(shortName(x.name))+'</a></td>'+
+      return '<tr class="cert-row" tabindex="0" data-href="c/'+esc(x.slug)+'.html">'+
+        '<td class="all-certs-name"><span class="all-certs-name-text">'+esc(shortName(x.name))+'</span></td>'+
         '<td class="all-certs-cell">'+esc(x.major)+'</td>'+
         '<td class="all-certs-cell">'+esc(x.type)+'</td>'+
         '<td class="all-certs-cell all-certs-num">'+fee+'</td>'+
@@ -127,6 +127,22 @@
     currentPage=p; render();
     var sec=document.getElementById('all-certs'); if(sec)sec.scrollIntoView({behavior:'smooth',block:'start'});
   });
+  if(results){
+    results.addEventListener('click',function(e){
+      var tr=e.target.closest('tr.cert-row');
+      if(!tr)return;
+      var href=tr.getAttribute('data-href');
+      if(href)location.href=href;
+    });
+    results.addEventListener('keydown',function(e){
+      if(e.key!=='Enter'&&e.key!==' ')return;
+      var tr=e.target.closest('tr.cert-row');
+      if(!tr)return;
+      e.preventDefault();
+      var href=tr.getAttribute('data-href');
+      if(href)location.href=href;
+    });
+  }
   fetch('data/certifications.json').then(function(r){return r.json();}).then(function(all){
     DATA=all; if(count)count.textContent=fmtN(all.length);
     var majors={},types={},inds={};
