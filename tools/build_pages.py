@@ -1377,7 +1377,7 @@ def _list_items(items, depth, ranked=False):
 
 _CERTS_TABLE_SCRIPT = """<script>
 (function(){
-  document.querySelectorAll('.certs-table tbody').forEach(function(tb){
+  document.querySelectorAll('.all-certs-table tbody').forEach(function(tb){
     function go(tr){var h=tr.getAttribute('data-href');if(h)location.href=h;}
     tb.addEventListener('click',function(e){var tr=e.target.closest('tr.cert-row');if(tr)go(tr);});
     tb.addEventListener('keydown',function(e){
@@ -1417,7 +1417,8 @@ def _certs_table(items, depth=1, *, show_major=False, show_category=False,
         ])
         if show_category:
             cells.append(
-                f'<td class="all-certs-cell bunya-cat">{esc(r["category"])}</td>')
+                f'<td class="all-certs-cell all-certs-cell--cat">'
+                f'{esc(r["category"])}</td>')
         cells.extend([
             f'<td class="all-certs-cell all-certs-num">{esc(fee)}</td>',
             f'<td class="all-certs-cell all-certs-num">{esc(pr)}</td>',
@@ -1426,16 +1427,16 @@ def _certs_table(items, depth=1, *, show_major=False, show_category=False,
             f'<tr class="cert-row" tabindex="0" data-href="{base}c/{esc(r["slug"])}.html">'
             + "".join(cells) + "</tr>")
     table = (
-        '<div class="all-certs-table-wrap certs-table-wrap">'
-        '<table class="all-certs-table certs-table">'
+        '<div class="all-certs-table-wrap">'
+        '<table class="all-certs-table">'
         f'<thead><tr>{"".join(headers)}</tr></thead>'
         f'<tbody>{"".join(rows)}</tbody></table></div>')
     return table + (_CERTS_TABLE_SCRIPT if with_script else "")
 
 
 def _category_table(items, depth=1):
-    """分野別一覧ページ用の表形式HTML。"""
-    return _certs_table(items, depth, show_category=True)
+    """分野別一覧ページ用の表形式HTML（トップの資格一覧と同じ列構成）。"""
+    return _certs_table(items, depth, show_major=True)
 
 
 # 大分類のページslug（安定・ローマ字キー）
@@ -3150,19 +3151,19 @@ html{scroll-padding-top:64px}
 .all-certs-check input{width:15px;height:15px;accent-color:var(--accent)}
 .block-all-certs .all-certs-count{font-size:var(--text-sm);color:var(--muted);margin-bottom:12px}
 .all-certs-table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;border:1px solid var(--gray-300);border-radius:var(--radius);background:#fff}
-.block-all-certs .all-certs-table{width:100%;border-collapse:collapse;background:#fff;border:none;border-radius:0;font-size:var(--text-sm);color:var(--ink)}
-.block-all-certs .all-certs-table thead th{text-align:left;padding:11px 14px;background:var(--gray-50);color:var(--muted);font-weight:600;font-size:var(--text-sm);border-bottom:1px solid var(--gray-300);white-space:nowrap}
-.block-all-certs .all-certs-table tbody td{padding:11px 14px;border-bottom:1px solid var(--gray-200);vertical-align:middle;line-height:1.5;white-space:nowrap;font-size:var(--text-sm);color:var(--ink)}
-.block-all-certs .all-certs-table tbody tr.cert-row{cursor:pointer;transition:background-color .12s ease}
-.block-all-certs .all-certs-table tbody tr.cert-row:hover td{background:var(--accent-light)}
-.block-all-certs .all-certs-table tbody tr.cert-row:focus-visible{outline:2px solid var(--accent-ring);outline-offset:-2px}
-.block-all-certs .all-certs-table tbody tr:last-child td{border-bottom:none}
-.block-all-certs .all-certs-name{min-width:12em}
-.block-all-certs .all-certs-name-text{white-space:nowrap;font-weight:600;color:var(--ink-deep)}
-.block-all-certs .all-certs-table tbody tr.cert-row:hover .all-certs-name-text{color:var(--accent)}
-.block-all-certs .all-certs-cell{font-weight:400;color:var(--ink)}
-.block-all-certs .all-certs-num{font-variant-numeric:tabular-nums;color:var(--ink)}
-.block-all-certs .all-certs-table .empty-state{white-space:normal;text-align:center;color:var(--muted);background:var(--gray-50);padding:22px 16px;line-height:1.75;font-size:var(--text-sm)}
+.all-certs-table{width:100%;border-collapse:collapse;background:#fff;border:none;border-radius:0;font-size:var(--text-sm);color:var(--ink)}
+.all-certs-table thead th{text-align:left;padding:11px 14px;background:var(--gray-50);color:var(--muted);font-weight:600;font-size:var(--text-sm);border-bottom:1px solid var(--gray-300);white-space:nowrap}
+.all-certs-table tbody td{padding:11px 14px;border-bottom:1px solid var(--gray-200);vertical-align:middle;line-height:1.5;white-space:nowrap;font-size:var(--text-sm);color:var(--ink)}
+.all-certs-table tbody tr.cert-row{cursor:pointer;transition:background-color .12s ease}
+.all-certs-table tbody tr.cert-row:hover td{background:var(--accent-light)}
+.all-certs-table tbody tr.cert-row:focus-visible{outline:2px solid var(--accent-ring);outline-offset:-2px}
+.all-certs-table tbody tr:last-child td{border-bottom:none}
+.all-certs-name{min-width:12em}
+.all-certs-name-text{white-space:nowrap;font-weight:600;color:var(--ink-deep)}
+.all-certs-table tbody tr.cert-row:hover .all-certs-name-text{color:var(--accent)}
+.all-certs-cell{font-weight:400;color:var(--ink)}
+.all-certs-num{font-variant-numeric:tabular-nums;color:var(--ink)}
+.all-certs-table .empty-state{white-space:normal;text-align:center;color:var(--muted);background:var(--gray-50);padding:22px 16px;line-height:1.75;font-size:var(--text-sm)}
 .pagination{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin-top:28px;padding-top:4px}
 .block-all-certs .pagination-status{font-size:var(--text-sm);color:var(--muted)}
 .pagination-links{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
@@ -3174,14 +3175,12 @@ html{scroll-padding-top:64px}
 .pagination-ellipsis{font-size:var(--text-sm);color:var(--muted);padding:0 2px}
 @media(max-width:720px){.all-certs-filters{grid-template-columns:repeat(2,minmax(0,1fr))}.pagination{flex-direction:column;align-items:stretch}.pagination-links{justify-content:center}}
 
-/* 分野別一覧（表形式） */
-.page-bunya .certs-table-wrap{margin-top:8px}
-.page-bunya .bunya-cat{white-space:normal;min-width:8em;max-width:14em}
-
-/* 目的別ガイド（表形式） */
-.page-feature .certs-table-wrap{margin-top:8px}
-.page-feature .hub-grp + .certs-table-wrap{margin-top:4px}
-.page-feature .bunya-cat{white-space:normal;min-width:8em;max-width:14em}
+/* 分野別・目的別ガイド（トップの資格一覧表と同じデザイン） */
+.page-bunya .all-certs-table-wrap,
+.page-feature .all-certs-table-wrap{margin-top:8px}
+.page-feature .hub-grp + .all-certs-table-wrap{margin-top:4px}
+.page-bunya .all-certs-cell--cat,
+.page-feature .all-certs-cell--cat{white-space:normal;min-width:8em;max-width:14em}
 
 /* Fields */
 .field-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
