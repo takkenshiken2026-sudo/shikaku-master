@@ -1227,23 +1227,33 @@ def _badge(t):
     return f'<span class="badge {cls}">{esc(label)}</span>'
 
 
-def _list_items(items, depth):
-    """資格カードのリストHTML。publishedは受験料/合格率を併記し★表示。"""
+def _list_items(items, depth, ranked=False):
+    """資格の一覧／ランキングのリストHTML。
+    2段組（資格名＋メタ情報）のカードで、ranked=True のとき順位番号を表示する。"""
     base = "../" * depth
     out = []
-    for r in items:
+    for i, r in enumerate(items, 1):
         pub = r.get("status") == "published"
-        extra = ""
+        meta = [_badge(r["type"]),
+                f'<span class="cl-major">{esc(r["major_category"])}</span>']
         if pub:
-            bits = [b for b in (r.get("fee"), (("合格率" + r["pass_rate"]) if r.get("pass_rate") else "")) if b]
-            extra = ('<span class="meta">★データ掲載 ' + esc(" / ".join(bits)) + "</span>") if bits else '<span class="meta">★データ掲載</span>'
+            bits = [b for b in (r.get("fee"),
+                                (("合格率" + r["pass_rate"]) if r.get("pass_rate") else "")) if b]
+            meta.append('<span class="cl-data">'
+                        + (esc(" / ".join(bits)) if bits else "データ掲載") + "</span>")
         else:
-            extra = f'<span class="meta">{esc(r["category"])}</span>'
+            meta.append(f'<span class="cl-cat">{esc(r["category"])}</span>')
+        rank = ""
+        if ranked:
+            rank = (f'<span class="cl-rank{" cl-rank--top" if i <= 3 else ""}">'
+                    f'{i}</span>')
         out.append(
-            f'<li><a href="{base}c/{esc(r["slug"])}.html">{esc(r["name"])}</a> '
-            f'{_badge(r["type"])}{extra}</li>'
-        )
-    return '<ul class="results">' + "".join(out) + "</ul>"
+            f'<li class="cl-item">{rank}'
+            f'<a class="cl-link" href="{base}c/{esc(r["slug"])}.html">'
+            f'<span class="cl-name">{esc(r["name"])}</span>'
+            f'<span class="cl-meta">{"".join(meta)}</span></a></li>')
+    cls = "cert-list" + (" cert-list--ranked" if ranked else "")
+    return f'<ul class="{cls}">' + "".join(out) + "</ul>"
 
 
 # 大分類のページslug（安定・ローマ字キー）
@@ -1690,12 +1700,12 @@ def build_feature_pages(indexable):
     pub = [r for r in indexable if r["status"] == "published"]
     pages = {}
 
-    def page(slug, title, h1, intro, items, desc):
+    def page(slug, title, h1, intro, items, desc, ranked=False):
         body = (
             f'<nav class="crumbs"><a href="../index.html">トップ</a> › 特集</nav>'
             f"<h1>{esc(h1)}</h1>"
             f'<p class="lead">{intro}</p>'
-            + _list_items(items, depth=1)
+            + _list_items(items, depth=1, ranked=ranked)
             + '<p class="muted" style="margin-top:14px">※受験料・合格率は公式の一次情報に基づきますが、'
               '最新の金額・制度・日程は各資格の公式サイトで必ずご確認ください。</p>'
         )
@@ -1725,7 +1735,7 @@ def build_feature_pages(indexable):
              f"公式が公表する直近の受験者数が多い順に並べた資格ランキング（データ掲載分の"
              f"上位 {len(popular)} 件）。受験者数は実施回・年度により変動します。",
              popular, "受験者数が多い人気資格を受験者数の多い順にランキング。"
-             "受験料・合格率・受験者数・公式情報を掲載。")
+             "受験料・合格率・受験者数・公式情報を掲載。", ranked=True)
 
     # 受験料が安い順（代表額のあるものを昇順・上位120）
     cheap = sorted((r for r in pub if fee_yen(r) is not None),
@@ -1733,7 +1743,8 @@ def build_feature_pages(indexable):
     page("cheap", "受験料が安い資格ランキング", "受験料が安い資格ランキング",
          f"受験料（代表額）が安い順に並べた資格ランキング。データ掲載分の上位 {len(cheap)} 件。"
          "受験料は級・方式で異なる場合があります。",
-         cheap, "受験料が安い資格を安い順にランキング。受験料・合格率・公式情報を掲載。")
+         cheap, "受験料が安い資格を安い順にランキング。受験料・合格率・公式情報を掲載。",
+         ranked=True)
 
     # 合格率が高い順
     hi = sorted((r for r in pub if pass_pct(r) is not None),
@@ -1741,14 +1752,16 @@ def build_feature_pages(indexable):
     page("high-pass", "合格率が高い資格", "合格率が高い資格",
          f"公表されている合格率が高い順に並べた資格一覧（上位 {len(hi)} 件）。"
          "合格率は実施回・年度により変動します。",
-         hi, "合格率が高い資格を高い順に一覧。受験料・合格率・公式情報を掲載。")
+         hi, "合格率が高い資格を高い順に一覧。受験料・合格率・公式情報を掲載。",
+         ranked=True)
 
     # 合格率が低い順（難関）
     lo = sorted((r for r in pub if pass_pct(r) is not None),
                 key=lambda r: (pass_pct(r), r["name"]))[:120]
     page("hard", "合格率が低い難関資格", "合格率が低い難関資格",
          f"公表されている合格率が低い（難易度が高い）順に並べた資格一覧（上位 {len(lo)} 件）。",
-         lo, "合格率が低い難関資格を一覧。受験料・合格率・公式情報を掲載。")
+         lo, "合格率が低い難関資格を一覧。受験料・合格率・公式情報を掲載。",
+         ranked=True)
 
     # 在宅・CBT
     cbt = sorted((r for r in pub if is_cbt(r)),
@@ -2841,7 +2854,7 @@ html{scroll-padding-top:64px}
 .header-menu-panel a{color:var(--gray-300);text-decoration:none;padding:12px 4px;border-bottom:1px solid var(--gray-800);font-size:var(--text-ui)}
 .header-menu-panel a:last-child{border-bottom:none}
 .header-menu-panel a:hover{color:#fff;text-decoration:none}
-@media(max-width:768px){.header-nav{display:none}.header-actions{display:flex}.header-inner{padding:10px 16px}.site-tagline{display:none}.container{padding:20px 16px 36px}}
+@media(max-width:768px){.header-nav{display:none}.header-actions{display:flex}.header-inner{padding:10px 16px}.site-tagline{display:none}.container{padding:20px 16px 36px}.block-compare{margin-left:-16px;margin-right:-16px;padding-left:16px;padding-right:16px}}
 
 .container{max-width:1200px;margin:0 auto;padding:24px 24px 40px;width:100%;flex:1 0 auto;min-width:0;background:#fff;box-shadow:0 0 24px rgba(0,0,0,.05)}
 
@@ -2906,6 +2919,7 @@ html{scroll-padding-top:64px}
 /* Fields */
 .field-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
 @media(max-width:900px){.field-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:520px){.field-grid{grid-template-columns:1fr}}
 .field-card{display:flex;align-items:flex-start;gap:12px;background:#fff;border:1px solid var(--gray-200);border-radius:10px;padding:13px;text-decoration:none;color:inherit;transition:border-color .15s,background .15s}
 .field-card:hover,.field-card:focus-visible{background:var(--accent-light);border-color:var(--accent);text-decoration:none}
 .field-card .icon{flex-shrink:0;width:40px;height:40px;display:flex;align-items:center;justify-content:center;background:var(--gray-100);border-radius:var(--radius);color:var(--ink)}
@@ -2956,6 +2970,20 @@ h2{color:var(--ink-deep)}
 .results li{background:#fff;border:1px solid var(--gray-200);border-radius:11px;padding:11px 14px}
 .results li a{font-weight:600;color:var(--gray-900);text-decoration:none}
 .results li a:hover{color:var(--accent)}
+/* 資格の一覧・ランキングリスト */
+.cert-list{list-style:none;padding:0;margin:.5em 0 0;display:flex;flex-direction:column;gap:8px}
+.cl-item{display:flex;align-items:stretch;gap:10px}
+.cl-rank{flex-shrink:0;display:flex;align-items:center;justify-content:center;min-width:30px;font-weight:700;font-size:var(--text-card-title);color:var(--gray-400);font-variant-numeric:tabular-nums;line-height:1}
+.cl-rank--top{color:var(--accent)}
+.cl-link{flex:1;min-width:0;display:flex;flex-direction:column;gap:5px;background:#fff;border:1px solid var(--gray-200);border-radius:10px;padding:12px 14px;text-decoration:none;color:inherit;box-shadow:0 1px 3px rgba(0,0,0,.06);transition:border-color .15s,background .15s}
+.cl-link:hover,.cl-link:focus-visible{border-color:var(--accent);background:var(--accent-light);text-decoration:none}
+.cl-name{font-size:var(--text-body);font-weight:600;color:var(--gray-900);line-height:1.4}
+.cl-link:hover .cl-name{color:var(--accent-hover)}
+.cl-meta{display:flex;flex-wrap:wrap;align-items:center;gap:5px 9px;font-size:var(--text-sm);color:var(--gray-600);line-height:1.4}
+.cl-major,.cl-cat{color:var(--gray-600)}
+.cl-data{color:var(--gray-700);font-weight:600}
+.cert-list--ranked .cl-rank{min-width:34px}
+@media(max-width:480px){.cl-rank{min-width:22px;font-size:var(--text-body)}.cert-list--ranked .cl-rank{min-width:26px}}
 .results .meta{display:block;color:var(--gray-500);font-size:var(--text-sm);margin-top:3px}
 .hint{font-size:var(--text-sm);margin:4px 0 10px;color:var(--gray-500)}
 .results-bar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:2px 0 2px}
@@ -2979,6 +3007,7 @@ h2{color:var(--ink-deep)}
 table.spec{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--gray-200);border-radius:10px;overflow:hidden;font-size:var(--text-ui)}
 table.spec th,table.spec td{text-align:left;padding:10px 14px;border-bottom:1px solid var(--gray-200);vertical-align:top}
 table.spec th{width:34%;background:var(--gray-100);color:var(--gray-800);font-weight:600;white-space:nowrap}
+@media(max-width:480px){table.spec th,table.spec td{display:block;width:auto}table.spec th{white-space:normal;border-bottom:none;padding:9px 14px 1px}table.spec td{padding:1px 14px 11px}}
 .related{margin-top:24px}.related ul{padding-left:1.1em}
 .official-cta{margin:16px 0 6px}
 .btn-official{display:inline-block;background:var(--accent);color:#fff;font-weight:700;padding:11px 20px;border-radius:var(--radius)}
