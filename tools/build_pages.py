@@ -890,21 +890,17 @@ def build_detail(row) -> str:
     elif src:
         spec.append(("最終確認日", esc(src)))
     spec.append(("情報源", official_src))
+    if row["official_url"]:
+        u = esc(row["official_url"])
+        spec.append(("最新情報の確認",
+                     f'<a class="btn" href="{u}" rel="nofollow noopener" target="_blank">'
+                     f'公式サイトで最新情報を確認 ↗</a>'))
     spec.append(("データの注記",
                  '<p class="detail-source-note">受験料・受験資格・試験形式・合格率・実施団体は公式の一次情報に基づきます。'
                  '学習時間・難易度・総合スコアは編集部による目安で、公式の数値ではありません。'
                  '制度・金額・日程は改定されることがあるため、出願前に必ず公式サイトでご確認ください。</p>'))
 
     rows_html = "".join(f"<tr><th>{esc(k)}</th><td>{v}</td></tr>" for k, v in spec)
-
-    # 公式サイトへの導線（detail-official に出力）
-    if row["official_url"]:
-        u = esc(row["official_url"])
-        detail_official = (
-            f'<div class="detail-official"><a class="btn" href="{u}" '
-            f'rel="nofollow noopener" target="_blank">公式サイトで最新情報を確認 ↗</a></div>')
-    else:
-        detail_official = ""
 
     # ユニーク本文（概要）— 手書きの独自解説があれば優先、なければテンプレート生成
     hand_desc = DESC.get(row["slug"], "")
@@ -1025,7 +1021,6 @@ def build_detail(row) -> str:
 <section class="detail-spec" aria-labelledby="ds-h">
 <h2 class="detail-section-title" id="ds-h">資格情報</h2>
 <div class="spec-wrap"><table class="spec">{rows_html}</table></div></section>
-{detail_official}
 {detail_nav}
 {recent_js}
 </div>"""
@@ -3345,6 +3340,7 @@ table.cmp tbody th{background:var(--gray-50);color:var(--gray-800);white-space:n
 .page-detail table.spec .ad-disclosure{margin:0 0 8px}
 .page-detail table.spec .careers-src,.page-detail table.spec .jobtag,.page-detail table.spec .mat-foot{margin-top:6px}
 .page-detail table.spec .detail-source-note{margin:0;font-size:var(--text-sm);color:var(--gray-600);line-height:1.65}
+.page-detail table.spec .btn{display:inline-block;margin:0;padding:10px 18px;font-size:var(--text-sm)}
 .page-detail .tag-chip{font-size:var(--text-sm);background:var(--gray-50);color:var(--gray-700);border-color:var(--gray-200)}
 .page-detail .tag-ind{background:var(--gray-50);color:var(--gray-700);border-color:var(--gray-200)}
 .page-detail a.tag-chip:hover{background:var(--gray-100);border-color:var(--gray-300)}
