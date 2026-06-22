@@ -611,6 +611,25 @@ def applicants_num(r):
     return int(m.group(1).replace(",", "")) if m else None
 
 
+def fmt_nums_in_text(s: str) -> str:
+    """文字列内の4桁以上の整数に3桁カンマを付与（小数部・年数は除外）。"""
+    if not s:
+        return s
+
+    def repl(m: re.Match[str]) -> str:
+        n = m.group(0)
+        if len(n) < 4:
+            return n
+        start, end = m.start(), m.end()
+        if start > 0 and s[start - 1] == ".":
+            return n
+        if end < len(s) and s[end] == "年":
+            return n
+        return f"{int(n):,}"
+
+    return re.sub(r"\d+", repl, s)
+
+
 def page_shell(title: str, body: str, depth: int, noindex: bool = True,
                desc: str = "", path: str = "", jsonld=None) -> str:
     base = "../" * depth
@@ -716,7 +735,7 @@ def build_detail(row) -> str:
     cat = row["category"]
 
     def field(v, fallback="公式情報で確認"):
-        return esc(v) if v else f'<span class="muted">{fallback}</span>'
+        return esc(fmt_nums_in_text(v)) if v else f'<span class="muted">{fallback}</span>'
 
     official = ""
     if row["official_url"]:
@@ -741,13 +760,13 @@ def build_detail(row) -> str:
     ]
     ed = EXAM.get(row["slug"], {})
     if ed.get("applicants"):
-        spec.append(("受験者数", esc(ed["applicants"])))
+        spec.append(("受験者数", esc(fmt_nums_in_text(ed["applicants"]))))
     diff = difficulty(row)
     if diff:
         dlabel, dcls = diff
         spec.append(("難易度の目安",
                      f'<span class="diff-badge {dcls}">{esc(dlabel)}</span>'
-                     f' <span class="muted">（公表合格率 {esc(row["pass_rate"])} に基づく簡易目安）</span>'))
+                     f' <span class="muted">（公表合格率 {esc(fmt_nums_in_text(row["pass_rate"]))} に基づく簡易目安）</span>'))
     dr = DIFFICULTY_RANK.get(row["slug"])
     if dr:
         badges = [f'<span class="diff-rank">掲載資格中 上位{dr["pct"]}%</span>']
@@ -767,7 +786,7 @@ def build_detail(row) -> str:
     st = STUDY.get(row["slug"], {})
     if st.get("study_hours"):
         spec.append(("学習時間の目安",
-                     esc(st["study_hours"])
+                     esc(fmt_nums_in_text(st["study_hours"]))
                      + ' <span class="muted">（編集部調べの目安。個人差があり、公式の数値ではありません）</span>'))
     inds = industry_tags(row)
     if inds:
@@ -802,9 +821,9 @@ def build_detail(row) -> str:
         f'<div class="fact"><div class="l">受験料</div><div class="v">{field(row["fee"], "公式で確認")}</div></div>'
         f'<div class="fact"><div class="l">受験資格</div><div class="v">{_short_elig(row["eligibility"])}</div></div>'
         f'<div class="fact"><div class="l">実施頻度</div><div class="v">{field(row["frequency"], "公式で確認")}</div></div>'
-        + (f'<div class="fact"><div class="l">合格率</div><div class="v">{esc(row["pass_rate"])}</div></div>'
+        + (f'<div class="fact"><div class="l">合格率</div><div class="v">{esc(fmt_nums_in_text(row["pass_rate"]))}</div></div>'
            if row["pass_rate"] else "")
-        + (f'<div class="fact"><div class="l">学習目安</div><div class="v">{esc(st_h)}</div></div>'
+        + (f'<div class="fact"><div class="l">学習目安</div><div class="v">{esc(fmt_nums_in_text(st_h))}</div></div>'
            if (st_h := (STUDY.get(row["slug"], {}) or {}).get("study_hours", "")) else "")
         + '</div></div>')
 
@@ -833,9 +852,9 @@ def build_detail(row) -> str:
         lead += "このページでは受験料・試験形式・受験資格・合格率・実施頻度・公式サイトをまとめています。"
     fact = []
     if row["fee"]:
-        fact.append(f"受験料は{esc(row['fee'])}")
+        fact.append(f"受験料は{esc(fmt_nums_in_text(row['fee']))}")
     if row["pass_rate"]:
-        fact.append(f"合格率は{esc(row['pass_rate'])}")
+        fact.append(f"合格率は{esc(fmt_nums_in_text(row['pass_rate']))}")
     if row["exam_format"]:
         fact.append(f"試験形式は{esc(row['exam_format'])}")
     if row["frequency"]:
@@ -909,17 +928,17 @@ def build_detail(row) -> str:
     # FAQ 構造化データ
     qa = []
     if row["fee"]:
-        qa.append((f"{name}の受験料はいくらですか？", row["fee"]))
+        qa.append((f"{name}の受験料はいくらですか？", fmt_nums_in_text(row["fee"])))
     if row["eligibility"]:
         qa.append((f"{name}に受験資格はありますか？", row["eligibility"]))
     if row["exam_format"]:
         qa.append((f"{name}の試験はどのような形式ですか？", row["exam_format"]))
     if row["pass_rate"]:
-        qa.append((f"{name}の合格率はどのくらいですか？", row["pass_rate"]))
+        qa.append((f"{name}の合格率はどのくらいですか？", fmt_nums_in_text(row["pass_rate"])))
     if ed.get("exam_subjects"):
         qa.append((f"{name}の試験科目・出題範囲は？", ed["exam_subjects"]))
     if ed.get("applicants"):
-        qa.append((f"{name}の受験者数はどのくらいですか？", ed["applicants"]))
+        qa.append((f"{name}の受験者数はどのくらいですか？", fmt_nums_in_text(ed["applicants"])))
     if row["frequency"]:
         qa.append((f"{name}はいつ実施されますか？", row["frequency"]))
     if row["authority"]:
@@ -1046,9 +1065,9 @@ def build_detail(row) -> str:
         lead_txt = f"{_short}は{label}。" + lead_txt
     _facts = []
     if row["fee"]:
-        _facts.append("受験料" + row["fee"])
+        _facts.append("受験料" + fmt_nums_in_text(row["fee"]))
     if row["pass_rate"]:
-        _facts.append("合格率" + row["pass_rate"])
+        _facts.append("合格率" + fmt_nums_in_text(row["pass_rate"]))
     if not _facts and row["authority"]:
         _facts.append("実施団体は" + row["authority"])
     desc = lead_txt + ("（" + "／".join(_facts) + "）" if _facts else "")
@@ -1305,8 +1324,8 @@ def _list_items(items, depth, ranked=False):
         meta = [_badge(r["type"]),
                 f'<span class="cl-major">{esc(r["major_category"])}</span>']
         if pub:
-            bits = [b for b in (r.get("fee"),
-                                (("合格率" + r["pass_rate"]) if r.get("pass_rate") else "")) if b]
+            bits = [b for b in (fmt_nums_in_text(r.get("fee") or ""),
+                                (("合格率" + fmt_nums_in_text(r["pass_rate"])) if r.get("pass_rate") else "")) if b]
             meta.append('<span class="cl-data">'
                         + (esc(" / ".join(bits)) if bits else "データ掲載") + "</span>")
         else:
@@ -2389,7 +2408,7 @@ def build_index(rows) -> str:
             facts += f'<li><span class="k">難易度</span><span class="v">{esc(d[0])}</span></li>'
         sh = (STUDY.get(r["slug"], {}) or {}).get("study_hours", "")
         if sh:
-            facts += f'<li><span class="k">学習目安</span><span class="v">{esc(sh)}</span></li>'
+            facts += f'<li><span class="k">学習目安</span><span class="v">{esc(fmt_nums_in_text(sh))}</span></li>'
         pop_html += (f'<a class="pop-card card-link{more}" href="c/{r["slug"]}.html">'
                      f'<div class="pop-card-name">{esc(_short(r))}</div>'
                      f'<ul class="pop-card-facts">{facts}</ul></a>')
@@ -2445,7 +2464,7 @@ def build_index(rows) -> str:
 
     body = f"""<section class="hero">
   <h1><span class="hero-h1-line">就職・転職・スキルアップの</span><span class="hero-h1-line">資格情報サイト</span></h1>
-  <p class="hero-sub">日本国内の資格を <strong id="count">{len(rows)}</strong> 件以上掲載。受験料・受験資格・試験形式・合格率・公式サイトを、公式の一次情報に基づいて整理しています。</p>
+  <p class="hero-sub">日本国内の資格を <strong id="count">{len(rows):,}</strong> 件以上掲載。受験料・受験資格・試験形式・合格率・公式サイトを、公式の一次情報に基づいて整理しています。</p>
   <div class="hero-search">
     <span class="ico"><svg class="ico-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/></svg></span>
     <input id="q" type="search" placeholder="資格名で検索（例: 簿記, 宅建, ITパスポート）" aria-label="資格名で検索">
@@ -2610,6 +2629,7 @@ SEARCH_JS = """(function(){
       clearBtn=document.getElementById('clearFilters');
   var DATA=[], activeTags=new Set(), currentPage=1, PAGE_SIZE=20, resetPage=true;
   function esc(s){return (s||'').replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+  function fmtN(n){return Number(n).toLocaleString('ja-JP');}
   function shortName(n){return (n||'').replace(/[（(][^）)]*[）)]/g,'').trim()||n;}
   function opt(sel,v){var o=document.createElement('option');o.value=v;o.textContent=v;sel.appendChild(o);}
   function feeNum(x){var m=(x.fee||'').replace(/,/g,'').match(/([0-9]+)\s*円/);return m?parseInt(m[1],10):null;}
@@ -2657,7 +2677,7 @@ SEARCH_JS = """(function(){
       else links+='<button type="button" class="pagination-num'+(n===currentPage?' is-current':'')+'" data-page="'+n+'"'+(n===currentPage?' aria-current="page"':'')+'>'+n+'</button>';
     });
     links+='<button type="button" class="pagination-btn'+(currentPage>=pages?' is-disabled':'')+'" data-page="'+(currentPage+1)+'"'+(currentPage>=pages?' aria-disabled="true"':'')+'>次へ →</button>';
-    pagination.innerHTML='<span class="pagination-status">'+start+'–'+end+'件 / 全'+total+'件</span><div class="pagination-links">'+links+'</div>';
+    pagination.innerHTML='<span class="pagination-status">'+fmtN(start)+'–'+fmtN(end)+'件 / 全'+fmtN(total)+'件</span><div class="pagination-links">'+links+'</div>';
   }
   function render(){
     if(resetPage){currentPage=1;resetPage=false;}
@@ -2701,14 +2721,14 @@ SEARCH_JS = """(function(){
     if(clearBtn)clearBtn.hidden=!anyFilter;
     if(countEl){
       if(out.length){
-        countEl.innerHTML='全 <strong>'+out.length+'</strong> 件 · '+(sliceStart+1)+'–'+(sliceStart+pageItems.length)+'件を表示';
+        countEl.innerHTML='全 <strong>'+fmtN(out.length)+'</strong> 件 · '+fmtN(sliceStart+1)+'–'+fmtN(sliceStart+pageItems.length)+'件を表示';
       } else countEl.textContent='該当する資格はありません';
     }
     if(heroResult){
       if(anyFilter){
         heroResult.hidden=false;
         heroResult.innerHTML=(t?'「<strong>'+esc(t)+'</strong>」を含む資格 ':'絞り込み結果 ')+
-          '<strong>'+out.length+'</strong> 件 <a href="#all-certs">一覧へ ↓</a>';
+          '<strong>'+fmtN(out.length)+'</strong> 件 <a href="#all-certs">一覧へ ↓</a>';
       } else { heroResult.hidden=true; heroResult.innerHTML=''; }
     }
     results.innerHTML=pageItems.map(function(x){
@@ -2733,13 +2753,13 @@ SEARCH_JS = """(function(){
     var sec=document.getElementById('all-certs'); if(sec)sec.scrollIntoView({behavior:'smooth',block:'start'});
   });
   fetch('data/certifications.json').then(function(r){return r.json();}).then(function(all){
-    DATA=all; if(count)count.textContent=all.length;
+    DATA=all; if(count)count.textContent=fmtN(all.length);
     var majors={},types={},inds={};
     all.forEach(function(x){majors[x.major]=1;types[x.type]=1;(x.industries||[]).forEach(function(i){inds[i]=(inds[i]||0)+1;});});
     Object.keys(majors).sort().forEach(function(v){opt(majorSel,v);});
     ['国家','公的','民間','要確認'].forEach(function(v){if(types[v])opt(typeSel,v);});
     Object.keys(inds).sort(function(a,b){return inds[b]-inds[a];}).forEach(function(v){
-      var o=document.createElement('option');o.value=v;o.textContent=v+'（'+inds[v]+'）';industrySel.appendChild(o);});
+      var o=document.createElement('option');o.value=v;o.textContent=v+'（'+fmtN(inds[v])+'）';industrySel.appendChild(o);});
     var p=new URLSearchParams(location.search);
     if(p.get('q'))q.value=p.get('q');
     if(p.get('major'))majorSel.value=p.get('major');
@@ -3404,13 +3424,14 @@ def main() -> int:
         "category": r["category"], "type": r["type"],
         "authority": r["authority"], "official_url": r["official_url"],
         "eligibility": r["eligibility"], "exam_format": r["exam_format"],
-        "fee": r["fee"], "pass_rate": r["pass_rate"], "frequency": r["frequency"],
+        "fee": fmt_nums_in_text(r["fee"]), "pass_rate": fmt_nums_in_text(r["pass_rate"]),
+        "frequency": r["frequency"],
         "status": r.get("status", ""),
         "tags": cert_tags(r),
         "industries": industry_tags(r),
         "difficulty": _diff_label(r),
-        "applicants": (EXAM.get(r["slug"], {}) or {}).get("applicants", ""),
-        "study_hours": (STUDY.get(r["slug"], {}) or {}).get("study_hours", ""),
+        "applicants": fmt_nums_in_text((EXAM.get(r["slug"], {}) or {}).get("applicants", "")),
+        "study_hours": fmt_nums_in_text((STUDY.get(r["slug"], {}) or {}).get("study_hours", "")),
     } for r in indexable]
     payload.sort(key=lambda x: (x["major"], x["category"], x["name"]))
     (SITE / "data" / "certifications.json").write_text(

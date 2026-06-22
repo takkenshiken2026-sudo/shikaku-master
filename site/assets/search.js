@@ -12,6 +12,7 @@
       clearBtn=document.getElementById('clearFilters');
   var DATA=[], activeTags=new Set(), currentPage=1, PAGE_SIZE=20, resetPage=true;
   function esc(s){return (s||'').replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+  function fmtN(n){return Number(n).toLocaleString('ja-JP');}
   function shortName(n){return (n||'').replace(/[（(][^）)]*[）)]/g,'').trim()||n;}
   function opt(sel,v){var o=document.createElement('option');o.value=v;o.textContent=v;sel.appendChild(o);}
   function feeNum(x){var m=(x.fee||'').replace(/,/g,'').match(/([0-9]+)\s*円/);return m?parseInt(m[1],10):null;}
@@ -59,7 +60,7 @@
       else links+='<button type="button" class="pagination-num'+(n===currentPage?' is-current':'')+'" data-page="'+n+'"'+(n===currentPage?' aria-current="page"':'')+'>'+n+'</button>';
     });
     links+='<button type="button" class="pagination-btn'+(currentPage>=pages?' is-disabled':'')+'" data-page="'+(currentPage+1)+'"'+(currentPage>=pages?' aria-disabled="true"':'')+'>次へ →</button>';
-    pagination.innerHTML='<span class="pagination-status">'+start+'–'+end+'件 / 全'+total+'件</span><div class="pagination-links">'+links+'</div>';
+    pagination.innerHTML='<span class="pagination-status">'+fmtN(start)+'–'+fmtN(end)+'件 / 全'+fmtN(total)+'件</span><div class="pagination-links">'+links+'</div>';
   }
   function render(){
     if(resetPage){currentPage=1;resetPage=false;}
@@ -103,14 +104,14 @@
     if(clearBtn)clearBtn.hidden=!anyFilter;
     if(countEl){
       if(out.length){
-        countEl.innerHTML='全 <strong>'+out.length+'</strong> 件 · '+(sliceStart+1)+'–'+(sliceStart+pageItems.length)+'件を表示';
+        countEl.innerHTML='全 <strong>'+fmtN(out.length)+'</strong> 件 · '+fmtN(sliceStart+1)+'–'+fmtN(sliceStart+pageItems.length)+'件を表示';
       } else countEl.textContent='該当する資格はありません';
     }
     if(heroResult){
       if(anyFilter){
         heroResult.hidden=false;
         heroResult.innerHTML=(t?'「<strong>'+esc(t)+'</strong>」を含む資格 ':'絞り込み結果 ')+
-          '<strong>'+out.length+'</strong> 件 <a href="#all-certs">一覧へ ↓</a>';
+          '<strong>'+fmtN(out.length)+'</strong> 件 <a href="#all-certs">一覧へ ↓</a>';
       } else { heroResult.hidden=true; heroResult.innerHTML=''; }
     }
     results.innerHTML=pageItems.map(function(x){
@@ -135,13 +136,13 @@
     var sec=document.getElementById('all-certs'); if(sec)sec.scrollIntoView({behavior:'smooth',block:'start'});
   });
   fetch('data/certifications.json').then(function(r){return r.json();}).then(function(all){
-    DATA=all; if(count)count.textContent=all.length;
+    DATA=all; if(count)count.textContent=fmtN(all.length);
     var majors={},types={},inds={};
     all.forEach(function(x){majors[x.major]=1;types[x.type]=1;(x.industries||[]).forEach(function(i){inds[i]=(inds[i]||0)+1;});});
     Object.keys(majors).sort().forEach(function(v){opt(majorSel,v);});
     ['国家','公的','民間','要確認'].forEach(function(v){if(types[v])opt(typeSel,v);});
     Object.keys(inds).sort(function(a,b){return inds[b]-inds[a];}).forEach(function(v){
-      var o=document.createElement('option');o.value=v;o.textContent=v+'（'+inds[v]+'）';industrySel.appendChild(o);});
+      var o=document.createElement('option');o.value=v;o.textContent=v+'（'+fmtN(inds[v])+'）';industrySel.appendChild(o);});
     var p=new URLSearchParams(location.search);
     if(p.get('q'))q.value=p.get('q');
     if(p.get('major'))majorSel.value=p.get('major');
