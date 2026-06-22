@@ -3031,7 +3031,7 @@ OCC_SEARCH_JS = """(function(){
 
 APP_CSS = """:root{
 --ink-deep:#1a1a1a;--ink:#333333;--muted:#666666;
---header-bg:#404040;
+--header-bg:#333333;
 --on-dark:#c4c4c4;--on-dark-muted:#888888;
 --gray-300:#c4c4c4;--gray-200:#dcdcdc;--gray-100:#f0f0f0;--gray-50:#f7f7f7;
 --gray-800:#434343;--gray-700:#525252;--gray-400:#7f7f7f;--white:#fff;--page-bg:#eef0f1;
