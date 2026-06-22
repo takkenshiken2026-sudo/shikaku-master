@@ -432,7 +432,7 @@ table.cmp tbody th{background:var(--gray-50);color:var(--ink);white-space:nowrap
 .cmp-verdict-card .pickname a{color:var(--ink-deep);text-decoration:underline;text-underline-offset:2px}
 .cmp-verdict-card .why{font-size:var(--text-sm);color:var(--muted);margin-top:3px;line-height:1.5}
 /* Detail page typography（詳細ページのフォント・色統一） */
-.page-detail{font-size:var(--text-md);color:var(--ink);line-height:1.7;font-weight:500}
+.page-detail{font-size:var(--text-md);color:var(--ink);line-height:1.7;font-weight:450}
 .page-detail .detail-title{font-size:var(--text-xl);color:var(--ink-deep);margin:.1em 0 6px}
 .page-detail .detail-audience{font-size:var(--text-md);color:var(--ink);line-height:1.7;margin:0 0 16px}
 .page-detail .crumbs{font-size:var(--text-sm);color:var(--muted);margin-bottom:8px}
