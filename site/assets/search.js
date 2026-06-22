@@ -114,10 +114,16 @@
       } else { heroResult.hidden=true; heroResult.innerHTML=''; }
     }
     results.innerHTML=pageItems.map(function(x){
-      return '<li><a class="all-certs-card" href="c/'+x.slug+'.html">'+
-        '<span class="all-certs-card-title">'+esc(shortName(x.name))+'</span>'+
-        '<span class="all-certs-card-sub">'+esc(x.major)+' · '+esc(x.type)+'</span></a></li>';
-    }).join('')||'<li class="muted" style="grid-column:1/-1">条件に一致する資格が見つかりませんでした。<br>キーワードを短くするか、上の「× 条件をクリア」で絞り込みを解除してください。</li>';
+      var fee=x.fee?esc(x.fee):'—';
+      var pass=x.pass_rate?esc(x.pass_rate):'—';
+      return '<tr>'+
+        '<td class="all-certs-name"><a href="c/'+x.slug+'.html">'+esc(shortName(x.name))+'</a>'+
+        (x.popular?' <span class="result-label">定番</span>':'')+'</td>'+
+        '<td>'+esc(x.major)+'</td>'+
+        '<td><span class="badge b-'+x.type+'">'+esc(x.type)+'</span></td>'+
+        '<td class="all-certs-num">'+fee+'</td>'+
+        '<td class="all-certs-num">'+pass+'</td></tr>';
+    }).join('')||'<tr><td colspan="5" class="empty-state">条件に一致する資格が見つかりませんでした。<br>キーワードを短くするか、上の「× 条件をクリア」で絞り込みを解除してください。</td></tr>';
     renderPagination(out.length);
     syncURL();
   }

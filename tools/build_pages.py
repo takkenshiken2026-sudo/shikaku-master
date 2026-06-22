@@ -2459,7 +2459,7 @@ def build_index(rows) -> str:
   <p class="hero-result" id="heroResult" hidden></p>
 </section>
 
-<section class="block block-primary" id="purpose">
+<section class="block block-band block-band--white" id="purpose">
   <div class="block-head"><h2>目的から探す</h2></div>
   <div class="purpose-grid">
     <a class="purpose-card" href="feature/job-hunting.html">
@@ -2489,29 +2489,29 @@ def build_index(rows) -> str:
   </div>
 </section>
 
-<section class="block block-secondary" id="recentBlock" hidden>
+<section class="block block-inset" id="recentBlock" hidden>
   <div class="block-head"><h2>最近見た資格</h2></div>
   <ul class="recent-list" id="recentGrid"></ul>
 </section>
 
-<section class="block block-primary">
+<section class="block block-band block-band--gray">
   <div class="block-head"><h2>人気の資格</h2><p>受験者数の多い順</p></div>
   <div class="popular-grid">{pop_html}</div>
   <p class="popular-more"><a href="feature/popular.html">人気資格をすべて見る →</a></p>
 </section>
 
-<section class="block block-secondary" id="fields">
+<section class="block block-band block-band--white" id="fields">
   <div class="block-head"><h2>分野から探す</h2></div>
   <div class="field-grid">{fld_html}</div>
   <p class="field-more"><a href="#all-certs">すべての分野・条件で絞り込む →</a></p>
 </section>
 
-<section class="block block-secondary block-compare" id="compare">
+<section class="block block-band block-band--gray block-compare" id="compare">
   <div class="block-head"><h2>よく比較される資格</h2><p>2つ以上を並べて違いを確認</p></div>
   <div class="compare-grid">{cmp_html}</div>
 </section>
 
-<section class="block block-secondary block-all-certs" id="all-certs">
+<section class="block block-band block-band--white block-all-certs" id="all-certs">
   <div class="block-head"><h2>すべての資格から探す</h2><p>分野・区分・条件で絞り込み</p></div>
   <div class="all-certs-filters">
     <div class="filter-field"><label for="major">分野</label><select id="major" aria-label="分野で絞り込み"><option value="">すべて</option></select></div>
@@ -2538,16 +2538,29 @@ def build_index(rows) -> str:
   <span class="muted" id="studynote" style="display:none">学習時間は編集部調べの目安（非公式）</span>
   <div class="results-bar"><button type="button" id="clearFilters" class="clear-filters" hidden>× 条件をクリア</button></div>
   <p class="all-certs-count" id="allCertsCount"></p>
-  <ul id="results" class="all-certs-grid"><li class="muted" style="grid-column:1/-1">読み込み中…</li></ul>
+  <div class="all-certs-table-wrap">
+    <table class="all-certs-table">
+      <thead>
+        <tr>
+          <th scope="col">資格名</th>
+          <th scope="col">分野</th>
+          <th scope="col">種別</th>
+          <th scope="col">受験料</th>
+          <th scope="col">合格率</th>
+        </tr>
+      </thead>
+      <tbody id="results"><tr><td colspan="5" class="muted">読み込み中…</td></tr></tbody>
+    </table>
+  </div>
   <nav class="pagination" id="pagination" aria-label="資格一覧のページ送り" hidden></nav>
 </section>
 
-<section class="block block-secondary" id="partners">
+<section class="block block-band block-band--gray" id="partners">
   <div class="block-head"><h2>おすすめの資格対策サイト</h2><p>当サイト運営者が制作している資格別の学習・対策サイト</p></div>
   <div class="partner-grid">{partner_cards_html()}</div>
 </section>
 
-<section class="feature-nav">
+<section class="block block-band block-band--white feature-nav">
   <div class="block-head"><h2>サイトの索引</h2><p>職種・全分野の一覧</p></div>
   <h3>職種から探す</h3>
   <ul class="feat-list"><li><a href="shoku/index.html">職種から資格を逆引きする（活かせる仕事から探す）</a></li></ul>
@@ -2707,10 +2720,16 @@ SEARCH_JS = """(function(){
       } else { heroResult.hidden=true; heroResult.innerHTML=''; }
     }
     results.innerHTML=pageItems.map(function(x){
-      return '<li><a class="all-certs-card" href="c/'+x.slug+'.html">'+
-        '<span class="all-certs-card-title">'+esc(shortName(x.name))+'</span>'+
-        '<span class="all-certs-card-sub">'+esc(x.major)+' · '+esc(x.type)+'</span></a></li>';
-    }).join('')||'<li class="muted" style="grid-column:1/-1">条件に一致する資格が見つかりませんでした。<br>キーワードを短くするか、上の「× 条件をクリア」で絞り込みを解除してください。</li>';
+      var fee=x.fee?esc(x.fee):'—';
+      var pass=x.pass_rate?esc(x.pass_rate):'—';
+      return '<tr>'+
+        '<td class="all-certs-name"><a href="c/'+x.slug+'.html">'+esc(shortName(x.name))+'</a>'+
+        (x.popular?' <span class="result-label">定番</span>':'')+'</td>'+
+        '<td>'+esc(x.major)+'</td>'+
+        '<td><span class="badge b-'+x.type+'">'+esc(x.type)+'</span></td>'+
+        '<td class="all-certs-num">'+fee+'</td>'+
+        '<td class="all-certs-num">'+pass+'</td></tr>';
+    }).join('')||'<tr><td colspan="5" class="empty-state">条件に一致する資格が見つかりませんでした。<br>キーワードを短くするか、上の「× 条件をクリア」で絞り込みを解除してください。</td></tr>';
     renderPagination(out.length);
     syncURL();
   }
@@ -2953,7 +2972,7 @@ html{scroll-padding-top:64px}
 .header-menu-panel a{color:var(--gray-300);text-decoration:none;padding:12px 4px;border-bottom:1px solid var(--gray-800);font-size:var(--text-ui)}
 .header-menu-panel a:last-child{border-bottom:none}
 .header-menu-panel a:hover{color:#fff;text-decoration:none}
-@media(max-width:768px){.header-nav{display:none}.header-actions{display:flex}.header-inner{padding:10px 16px;--page-gutter:16px}.site-tagline{display:none}.container{padding:20px 16px 36px}.block-compare,.block-all-certs{margin-left:-16px;margin-right:-16px;padding-left:16px;padding-right:16px}}
+@media(max-width:768px){.header-nav{display:none}.header-actions{display:flex}.header-inner{padding:10px 16px;--page-gutter:16px}.site-tagline{display:none}.container{padding:20px 16px 36px}.block-band{margin-left:-16px;margin-right:-16px;padding-left:16px;padding-right:16px}.block-all-certs{padding-left:16px;padding-right:16px}}
 
 .container{max-width:1200px;margin:0 auto;padding:28px var(--page-gutter) 36px;width:100%;flex:1 0 auto;min-width:0;background:#fff;box-shadow:0 0 24px rgba(0,0,0,.05)}
 
@@ -2976,11 +2995,14 @@ html{scroll-padding-top:64px}
 
 /* Blocks */
 .block{margin-bottom:28px}.block-primary{margin-bottom:40px}.block-secondary{margin-bottom:34px}
+.block-band{margin-left:calc(-1*var(--page-gutter));margin-right:calc(-1*var(--page-gutter));padding:28px var(--page-gutter) 32px;border-top:1px solid var(--gray-200);margin-bottom:0}
+.block-band--gray{background:var(--gray-50)}
+.block-band--white{background:#fff}
+.block-inset{margin-bottom:16px;padding:0 2px}
 .block-head{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:12px;gap:8px;flex-wrap:wrap}
 .block-head h2{font-size:var(--text-section);font-weight:700;color:var(--ink-deep);margin:0}
 .block-head p{font-size:var(--text-nav);color:var(--gray-500);margin:0}
-.block-compare{background:var(--gray-50);margin-left:calc(-1*var(--page-gutter));margin-right:calc(-1*var(--page-gutter));padding:28px var(--page-gutter) 32px;border-top:1px solid var(--gray-200);margin-bottom:0}
-.block-all-certs{margin-left:calc(-1*var(--page-gutter));margin-right:calc(-1*var(--page-gutter));padding:40px var(--page-gutter) 48px;border-top:1px solid var(--gray-200);margin-bottom:36px;background:#fff}
+.block-all-certs{padding:40px var(--page-gutter) 48px;margin-bottom:36px}
 .block-all-certs .block-head{margin-bottom:20px}
 .card-link{position:relative}
 .card-link::after{content:"→";position:absolute;right:12px;top:14px;font-size:var(--text-nav);font-weight:600;color:var(--gray-400);opacity:0;transition:opacity .15s,color .15s;pointer-events:none}
@@ -3023,11 +3045,17 @@ html{scroll-padding-top:64px}
 .all-certs-check{display:inline-flex;align-items:center;gap:6px;font-size:var(--text-xs);color:var(--gray-700);margin-bottom:24px;cursor:pointer}
 .all-certs-check input{width:15px;height:15px;accent-color:var(--accent)}
 .all-certs-count{font-size:var(--text-xs);color:var(--gray-600);margin-bottom:14px}
-.all-certs-grid{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
-.all-certs-card{display:block;padding:13px 14px;border:1px solid var(--gray-200);border-radius:var(--radius);background:#fff;text-decoration:none;color:inherit;transition:border-color .15s,background .15s}
-.all-certs-card:hover{border-color:var(--gray-400);background:var(--gray-50);text-decoration:none}
-.all-certs-card-title{display:block;font-size:var(--text-sm);font-weight:600;line-height:1.4;color:var(--ink-deep);margin-bottom:5px}
-.all-certs-card-sub{display:block;font-size:var(--text-2xs);color:var(--gray-500);line-height:1.45}
+.all-certs-table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.all-certs-table{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--gray-200);border-radius:var(--radius);overflow:hidden;font-size:var(--text-sm);box-shadow:0 1px 3px rgba(0,0,0,.07)}
+.all-certs-table thead th{text-align:left;padding:10px 14px;background:var(--gray-100);color:var(--gray-800);font-weight:600;font-size:var(--text-xs);border-bottom:1px solid var(--gray-200);white-space:nowrap}
+.all-certs-table tbody td{padding:10px 14px;border-bottom:1px solid var(--gray-200);vertical-align:middle;line-height:1.45}
+.all-certs-table tbody tr:last-child td{border-bottom:none}
+.all-certs-table tbody tr:hover{background:var(--gray-50)}
+.all-certs-name{min-width:12em}
+.all-certs-name a{font-weight:600;color:var(--ink-deep);text-decoration:none}
+.all-certs-name a:hover{color:var(--accent);text-decoration:none}
+.all-certs-num{font-variant-numeric:tabular-nums;white-space:nowrap;color:var(--gray-800)}
+.all-certs-table .empty-state{text-align:center;color:var(--gray-600);background:var(--gray-50);padding:22px 16px;line-height:1.75}
 .pagination{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin-top:28px;padding-top:4px}
 .pagination-status{font-size:var(--text-xs);color:var(--gray-600)}
 .pagination-links{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
@@ -3036,7 +3064,7 @@ html{scroll-padding-top:64px}
 .pagination-num.is-current{background:var(--ink-deep);color:#fff;border-color:var(--ink-deep)}
 .pagination-btn.is-disabled,.pagination-num.is-disabled{opacity:.4;pointer-events:none}
 .pagination-ellipsis{font-size:var(--text-sm);color:var(--gray-500);padding:0 2px}
-@media(max-width:720px){.all-certs-filters{grid-template-columns:repeat(2,minmax(0,1fr))}.all-certs-grid{grid-template-columns:1fr}.pagination{flex-direction:column;align-items:stretch}.pagination-links{justify-content:center}}
+@media(max-width:720px){.all-certs-filters{grid-template-columns:repeat(2,minmax(0,1fr))}.pagination{flex-direction:column;align-items:stretch}.pagination-links{justify-content:center}}
 
 /* Fields */
 .field-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
@@ -3189,7 +3217,7 @@ a.rm-name:hover{text-decoration:underline}
 .vs-table thead th{background:var(--gray-100);color:var(--ink-deep);text-align:center}
 .vs-table tbody th{background:var(--gray-50);white-space:nowrap;width:7.5em}
 .vs-cta{margin:14px 0;display:flex;gap:10px;flex-wrap:wrap}
-.feature-nav{margin-top:28px;border-top:1px solid var(--gray-200);padding-top:14px}
+.feature-nav{margin-top:0;padding-top:0}
 .feature-nav h2{font-size:var(--text-section-sub);margin:.6em 0 .3em}
 .feature-nav h3{font-size:var(--text-ui);font-weight:600;color:var(--gray-800);margin:.9em 0 .3em}
 .feature-nav ul{margin:.2em 0 .6em;padding-left:1.1em}
@@ -3233,13 +3261,14 @@ table.cmp tbody th{background:var(--gray-50);color:var(--gray-800);white-space:n
 .site-footer-partners a{font-size:var(--text-sm);color:var(--accent);text-decoration:none;font-weight:600}
 .site-footer-partners a:hover{text-decoration:underline;text-underline-offset:2px}
 /* Partner sites (おすすめ対策サイト) */
-.partner-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
-@media(max-width:760px){.partner-grid{grid-template-columns:repeat(2,1fr)}}
+.partner-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+@media(max-width:900px){.partner-grid{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:640px){.partner-grid{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:460px){.partner-grid{grid-template-columns:1fr}}
-.partner-card{display:flex;flex-direction:column;gap:3px;background:#fff;border:1px solid var(--gray-200);border-radius:var(--radius);padding:13px 14px;text-decoration:none;color:inherit;box-shadow:0 1px 3px rgba(0,0,0,.07);transition:border-color .15s,background .15s}
+.partner-card{display:flex;flex-direction:column;gap:2px;background:#fff;border:1px solid var(--gray-200);border-radius:var(--radius);padding:10px 11px;text-decoration:none;color:inherit;box-shadow:0 1px 3px rgba(0,0,0,.07);transition:border-color .15s,background .15s}
 .partner-card:hover{border-color:var(--accent);background:var(--accent-light)}
-.partner-card-name{font-size:var(--text-card-title);font-weight:700;color:var(--ink-deep)}
-.partner-card-tag{font-size:var(--text-sm);color:var(--gray-700);line-height:1.5}
+.partner-card-name{font-size:var(--text-sm);font-weight:700;color:var(--ink-deep);line-height:1.35}
+.partner-card-tag{font-size:var(--text-xs);color:var(--gray-700);line-height:1.45}
 .partner-ext{font-size:.78em;color:var(--accent);margin-left:5px;font-weight:700}
 .partner-detail{margin:0 0 22px;background:var(--accent-light);border:1px solid rgba(35,111,100,.2);border-radius:var(--radius);padding:14px 16px}
 .partner-detail .detail-section-title{margin-bottom:8px}
