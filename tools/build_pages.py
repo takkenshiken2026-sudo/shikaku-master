@@ -564,7 +564,8 @@ def page_shell(title: str, body: str, depth: int, noindex: bool = True,
       <a href="{base}index.html#purpose">目的から探す</a><span class="header-nav-sep" aria-hidden="true">｜</span>
       <a href="{base}index.html#fields">分野から探す</a><span class="header-nav-sep" aria-hidden="true">｜</span>
       <a href="{base}index.html">資格一覧</a><span class="header-nav-sep" aria-hidden="true">｜</span>
-      <a href="{base}shoku/index.html">職種から探す</a>
+      <a href="{base}shoku/index.html">職種から探す</a><span class="header-nav-sep" aria-hidden="true">｜</span>
+      <a href="{base}index.html#partners">資格対策サイト</a>
     </nav>
     <div class="header-actions">
       <button type="button" class="header-icon-btn" data-toggle="search" aria-label="資格名で検索" aria-controls="hSearch" aria-expanded="false"><svg class="ico-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/></svg></button>
@@ -582,6 +583,7 @@ def page_shell(title: str, body: str, depth: int, noindex: bool = True,
     <a href="{base}index.html#fields">分野から探す</a>
     <a href="{base}index.html">資格一覧</a>
     <a href="{base}shoku/index.html">職種から探す</a>
+    <a href="{base}index.html#partners">資格対策サイト</a>
   </nav>
 </header>
 <main class="container" id="main">
