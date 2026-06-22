@@ -442,16 +442,18 @@ table.cmp tbody th{background:var(--gray-50);color:var(--ink);white-space:nowrap
 .page-detail .fact .v{font-size:var(--text-md);font-weight:600;color:var(--ink)}
 .page-detail .detail-section-title{font-size:var(--text-lg);font-weight:700;color:var(--ink-deep);margin:0 0 10px}
 .page-detail table.spec{font-size:var(--text-md)}
-.page-detail table.spec th{background:var(--gray-50);color:var(--ink);font-weight:600;font-size:var(--text-md)}
-.page-detail table.spec td{color:var(--ink);font-size:var(--text-md);font-weight:600}
-.page-detail table.spec .badge,.page-detail table.spec .badge-national,.page-detail table.spec .badge-public,.page-detail table.spec .badge-private,.page-detail table.spec .badge-unknown,.page-detail table.spec .badge-overseas{color:var(--ink);background:var(--gray-50);border-color:var(--gray-200);font-size:inherit;font-weight:600}
+.page-detail table.spec th{background:var(--gray-50);color:var(--ink);font-weight:450;font-size:var(--text-md)}
+.page-detail table.spec td{color:var(--ink);font-size:var(--text-md);font-weight:400}
+.page-detail table.spec .badge,.page-detail table.spec .badge-national,.page-detail table.spec .badge-public,.page-detail table.spec .badge-private,.page-detail table.spec .badge-unknown,.page-detail table.spec .badge-overseas{color:var(--ink);background:var(--gray-50);border-color:var(--gray-200);font-size:inherit;font-weight:400}
+.page-detail table.spec .tag-chip,.page-detail table.spec .tag-ind{font-weight:400}
 .page-detail table.spec .spec-list{list-style:disc;margin:.15em 0 .3em;padding-left:1.25em}
 .page-detail table.spec .spec-list li{margin:2px 0;line-height:1.55}
 .page-detail table.spec .materials{margin:.15em 0 .25em}
 .page-detail table.spec .materials li{display:block;background:none;border:none;border-radius:0;padding:2px 0;margin:0 0 4px;line-height:1.55}
-.page-detail table.spec .materials a{color:var(--accent);font-weight:600;text-decoration:none}
+.page-detail table.spec .materials a{color:var(--accent);font-weight:400;text-decoration:none}
 .page-detail table.spec .materials a:hover{color:var(--accent-hover);text-decoration:underline;text-underline-offset:2px}
-.page-detail table.spec .mat-kind{display:inline;background:none;border:none;padding:0;margin:0;font-weight:600;color:var(--ink)}
+.page-detail table.spec .mat-kind{display:inline;background:none;border:none;padding:0;margin:0;font-weight:400;color:var(--ink)}
+.page-detail table.spec a{font-weight:400}
 .page-detail table.spec .mat-kind::after{content:"："}
 .page-detail table.spec .mat-foot{margin-top:6px}
 .page-detail table.spec .ad-disclosure{margin:0 0 6px;padding:8px 10px}
