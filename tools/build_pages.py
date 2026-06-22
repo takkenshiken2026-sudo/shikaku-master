@@ -2144,10 +2144,6 @@ def build_comparison_pages(indexable):
             '<div class="vs-cta">'
             f'<a class="btn-official" href="../c/{esc(ra["slug"])}.html">{esc(na)}の詳細</a> '
             f'<a class="btn-official" href="../c/{esc(rb["slug"])}.html">{esc(nb)}の詳細</a>'
-            "</div>"
-            '<div class="vs-cta">'
-            f'<button type="button" class="cmp-add-btn" data-slug="{esc(ra["slug"])}" data-name="{esc(na)}">＋ {esc(na)}を比較に追加</button>'
-            f'<button type="button" class="cmp-add-btn" data-slug="{esc(rb["slug"])}" data-name="{esc(nb)}">＋ {esc(nb)}を比較に追加</button>'
             "</div>")
 
         # 比較 FAQ（違い・難易度）
