@@ -583,9 +583,9 @@ def materials_cell_html(slug):
         else:
             title_html = esc(m["title"])
         prov = f' <span class="muted">／{esc(m["provider"])}</span>' if m["provider"] else ""
-        note = f'<span class="mat-note">{esc(m["note"])}</span>' if m["note"] else ""
-        items.append(f'<li><span class="mat-kind">{esc(m["kind"])}</span>'
-                     f'<span class="mat-body">{title_html}{prov}{note}</span></li>')
+        note = f' <span class="note-muted">— {esc(m["note"])}</span>' if m["note"] else ""
+        items.append(f'<li><span class="mat-kind">{esc(m["kind"])}</span> '
+                     f'{title_html}{prov}{note}</li>')
     disclosure = (
         '<p class="ad-disclosure">本セクションには広告（アフィリエイトリンク）を含みます。'
         'リンクを経由して購入・申込みされた場合、当サイトが収益を得ることがあります。'
@@ -893,7 +893,7 @@ def build_detail(row) -> str:
     if row["official_url"]:
         u = esc(row["official_url"])
         spec.append(("最新情報の確認",
-                     f'<a class="btn" href="{u}" rel="nofollow noopener" target="_blank">'
+                     f'<a href="{u}" rel="nofollow noopener" target="_blank">'
                      f'公式サイトで最新情報を確認 ↗</a>'))
     spec.append(("データの注記",
                  '<p class="detail-source-note">受験料・受験資格・試験形式・合格率・実施団体は公式の一次情報に基づきます。'
@@ -3334,11 +3334,14 @@ table.cmp tbody th{background:var(--gray-50);color:var(--gray-800);white-space:n
 .page-detail table.spec td{color:var(--gray-800);font-size:var(--text-sm)}
 .page-detail table.spec .spec-list{list-style:disc;margin:.15em 0 .3em;padding-left:1.25em}
 .page-detail table.spec .spec-list li{margin:2px 0;line-height:1.55}
-.page-detail table.spec .materials{margin-top:.25em}
-.page-detail table.spec .ad-disclosure{margin:0 0 8px}
+.page-detail table.spec .materials{margin:.15em 0 .25em}
+.page-detail table.spec .materials li{display:block;background:none;border:none;border-radius:0;padding:2px 0;margin:0 0 4px;line-height:1.55}
+.page-detail table.spec .mat-kind{display:inline;background:none;border:none;padding:0;margin:0;font-weight:600;color:var(--gray-700)}
+.page-detail table.spec .mat-kind::after{content:"："}
+.page-detail table.spec .mat-foot{margin-top:6px}
+.page-detail table.spec .ad-disclosure{margin:0 0 6px;padding:8px 10px}
 .page-detail table.spec .careers-src,.page-detail table.spec .jobtag,.page-detail table.spec .mat-foot{margin-top:6px}
 .page-detail table.spec .detail-source-note{margin:0;font-size:var(--text-sm);color:var(--gray-600);line-height:1.65}
-.page-detail table.spec .btn{display:inline-block;margin:0;padding:10px 18px;font-size:var(--text-sm)}
 .page-detail .tag-chip{font-size:var(--text-sm);background:var(--gray-50);color:var(--gray-700);border-color:var(--gray-200)}
 .page-detail .tag-ind{background:var(--gray-50);color:var(--gray-700);border-color:var(--gray-200)}
 .page-detail a.tag-chip:hover{background:var(--gray-100);border-color:var(--gray-300)}
