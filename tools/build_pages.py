@@ -2308,10 +2308,11 @@ def build_index(rows) -> str:
                   '<path d="M4 7a2 2 0 0 1 2-2h3l2 2h7a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"/></svg>')
     fld_html = ""
     for m in sorted(mcount, key=lambda m: -mcount[m])[:8]:
-        fld_html += (f'<a class="field-card card-link" href="bunya/{MAJOR_SLUGS.get(m, "other")}.html">'
-                     f'<span class="field-count">{mcount[m]}件</span>'
+        fld_html += (f'<a class="field-card" href="bunya/{MAJOR_SLUGS.get(m, "other")}.html">'
                      f'<div class="icon">{FIELD_ICON}</div>'
-                     f'<div class="field-card-body"><h3>{esc(m)}</h3>'
+                     f'<div class="field-card-body">'
+                     f'<div class="field-card-top"><h3>{esc(m)}</h3>'
+                     f'<span class="field-count">{mcount[m]}件</span></div>'
                      f'<p class="field-examples">{esc(_examples(m))}</p></div></a>')
 
     # --- よく比較される資格（COMPARE_PAIRS 先頭6） ---
@@ -2905,13 +2906,15 @@ html{scroll-padding-top:64px}
 /* Fields */
 .field-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
 @media(max-width:900px){.field-grid{grid-template-columns:repeat(2,1fr)}}
-.field-card{position:relative;display:flex;align-items:flex-start;gap:12px;background:#fff;border:1px solid var(--gray-200);border-radius:10px;padding:13px;text-decoration:none;color:inherit;transition:border-color .15s,background .15s}
+.field-card{display:flex;align-items:flex-start;gap:12px;background:#fff;border:1px solid var(--gray-200);border-radius:10px;padding:13px;text-decoration:none;color:inherit;transition:border-color .15s,background .15s}
+.field-card:hover,.field-card:focus-visible{background:var(--accent-light);border-color:var(--accent);text-decoration:none}
 .field-card .icon{flex-shrink:0;width:40px;height:40px;display:flex;align-items:center;justify-content:center;background:var(--gray-100);border-radius:var(--radius);color:var(--ink)}
 .field-card .icon-svg{width:22px;height:22px}
-.field-card-body{min-width:0;flex:1;padding-right:30px}
-.field-card h3{font-size:var(--text-body);font-weight:600;line-height:1.35;color:var(--ink-deep);margin:0 0 4px}
-.field-count{position:absolute;top:10px;right:10px;padding:4px 7px;border-radius:4px;font-size:var(--text-2xs);font-weight:600;color:var(--gray-700);background:var(--gray-100);border:1px solid var(--gray-200);line-height:1;white-space:nowrap}
-.field-examples{font-size:var(--text-xs);color:var(--gray-500);line-height:1.45}
+.field-card-body{min-width:0;flex:1}
+.field-card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin:0 0 4px}
+.field-card h3{font-size:var(--text-body);font-weight:600;line-height:1.35;color:var(--ink-deep);margin:0}
+.field-count{flex-shrink:0;margin-top:1px;padding:3px 7px;border-radius:4px;font-size:var(--text-2xs);font-weight:600;color:var(--gray-700);background:var(--gray-100);border:1px solid var(--gray-200);line-height:1.2;white-space:nowrap}
+.field-examples{font-size:var(--text-xs);color:var(--gray-500);line-height:1.45;margin:0}
 
 /* Compare cards */
 .compare-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
