@@ -2570,14 +2570,6 @@ def build_index(rows) -> str:
   <div class="block-head"><h2>おすすめの資格対策サイト</h2><p>当サイト運営者が制作している資格別の学習・対策サイト</p></div>
   <div class="partner-grid">{partner_cards_html()}</div>
 </section>
-
-<section class="block block-band block-band--white feature-nav">
-  <div class="block-head"><h2>サイトの索引</h2><p>職種・全分野の一覧</p></div>
-  <h3>職種から探す</h3>
-  <ul class="feat-list"><li><a href="shoku/index.html">職種から資格を逆引きする（活かせる仕事から探す）</a></li></ul>
-  <h3>すべての分野</h3>
-  <div class="chips">{cat_links}</div>
-</section>
 <script src="assets/search.js"></script>
 """
     site_ld = [
