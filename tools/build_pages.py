@@ -2383,7 +2383,7 @@ def build_index(rows) -> str:
     pop_html = ""
     for i, r in enumerate(pop):
         more = " pop-card--more" if i >= 4 else ""
-        facts = f'<li><span class="k">区分</span><span class="v">{esc(r["type"])}</span></li>'
+        facts = ""
         d = difficulty(r)
         if d:
             facts += f'<li><span class="k">難易度</span><span class="v">{esc(d[0])}</span></li>'
@@ -2392,7 +2392,7 @@ def build_index(rows) -> str:
             facts += f'<li><span class="k">学習目安</span><span class="v">{esc(sh)}</span></li>'
         pop_html += (f'<a class="pop-card card-link{more}" href="c/{r["slug"]}.html">'
                      f'<div class="pop-card-name">{esc(_short(r))}</div>'
-                     f'<p class="pop-card-audience">{esc(r["major_category"])}</p>'
+                     f'<p class="pop-card-audience">{esc(r["type"])}</p>'
                      f'<ul class="pop-card-facts">{facts}</ul></a>')
 
     # --- 分野から探す（収録数の多い順 上位8） ---
@@ -2426,13 +2426,9 @@ def build_index(rows) -> str:
         ra, rb = by_slug.get(sa), by_slug.get(sb)
         if not (ra and rb and is_indexable_detail(ra) and is_indexable_detail(rb)):
             continue
-        tip = re.sub(r"<[^>]+>", "", intro or "")
-        if len(tip) > 48:
-            tip = tip[:47] + "…"
         cmp_html += (f'<a class="compare-card" href="vs/{pslug}.html">'
                      f'<span class="compare-tag">{esc(ra["major_category"])}</span>'
                      f'<div class="compare-names">{esc(_cmpname(ra))} <em>vs</em> {esc(_cmpname(rb))}</div>'
-                     f'<p class="compare-tip">{esc(tip)}</p>'
                      f'<span class="compare-go">比較する →</span></a>')
         _n += 1
         if _n >= 6:
@@ -2972,12 +2968,12 @@ html{scroll-padding-top:64px}
 .header-menu-panel a{color:var(--gray-300);text-decoration:none;padding:12px 4px;border-bottom:1px solid var(--gray-800);font-size:var(--text-ui)}
 .header-menu-panel a:last-child{border-bottom:none}
 .header-menu-panel a:hover{color:#fff;text-decoration:none}
-@media(max-width:768px){.header-nav{display:none}.header-actions{display:flex}.header-inner{padding:10px 16px;--page-gutter:16px}.site-tagline{display:none}.container{padding:20px 16px 36px}.block-band{margin-left:-16px;margin-right:-16px;padding-left:16px;padding-right:16px}.block-all-certs{padding-left:16px;padding-right:16px}}
+@media(max-width:768px){.header-nav{display:none}.header-actions{display:flex}.header-inner{padding:10px 16px;--page-gutter:16px}.site-tagline{display:none}.container{padding:20px 16px 36px}.block-band{margin-left:-16px;margin-right:-16px;padding:32px 16px 36px}.block-all-certs{padding:40px 16px 44px}}
 
 .container{max-width:1200px;margin:0 auto;padding:28px var(--page-gutter) 36px;width:100%;flex:1 0 auto;min-width:0;background:#fff;box-shadow:0 0 24px rgba(0,0,0,.05)}
 
 /* Hero */
-.hero{padding:28px 0 4px;margin-bottom:8px}
+.hero{padding:32px 0 20px;margin-bottom:0}
 .hero h1{font-weight:700;line-height:1.4;margin:0 0 12px;letter-spacing:.02em}
 .hero-h1-line{display:block;font-size:var(--text-hero);font-weight:700;color:var(--ink-deep);letter-spacing:.02em}
 .hero-h1-line+.hero-h1-line{margin-top:2px}
@@ -2995,15 +2991,16 @@ html{scroll-padding-top:64px}
 
 /* Blocks */
 .block{margin-bottom:28px}.block-primary{margin-bottom:40px}.block-secondary{margin-bottom:34px}
-.block-band{margin-left:calc(-1*var(--page-gutter));margin-right:calc(-1*var(--page-gutter));padding:28px var(--page-gutter) 32px;border-top:1px solid var(--gray-200);margin-bottom:0}
+.block-band{margin-left:calc(-1*var(--page-gutter));margin-right:calc(-1*var(--page-gutter));padding:40px var(--page-gutter) 44px;border-top:1px solid var(--gray-200);margin-bottom:0}
+.hero+.block-band{border-top:none}
 .block-band--gray{background:var(--gray-50)}
 .block-band--white{background:#fff}
-.block-inset{margin-bottom:16px;padding:0 2px}
-.block-head{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:12px;gap:8px;flex-wrap:wrap}
+.block-inset{margin:8px 0 20px;padding:0 2px}
+.block-head{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:18px;gap:8px;flex-wrap:wrap}
 .block-head h2{font-size:var(--text-section);font-weight:700;color:var(--ink-deep);margin:0}
 .block-head p{font-size:var(--text-nav);color:var(--gray-500);margin:0}
-.block-all-certs{padding:40px var(--page-gutter) 48px;margin-bottom:36px}
-.block-all-certs .block-head{margin-bottom:20px}
+.block-all-certs{padding:52px var(--page-gutter) 56px;margin-bottom:0}
+.block-all-certs .block-head{margin-bottom:24px}
 .card-link{position:relative}
 .card-link::after{content:"→";position:absolute;right:12px;top:14px;font-size:var(--text-nav);font-weight:600;color:var(--gray-400);opacity:0;transition:opacity .15s,color .15s;pointer-events:none}
 .card-link:hover::after,.card-link:focus-visible::after{opacity:1;color:var(--accent)}
@@ -3048,14 +3045,15 @@ html{scroll-padding-top:64px}
 .all-certs-table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
 .all-certs-table{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--gray-200);border-radius:var(--radius);overflow:hidden;font-size:var(--text-sm);box-shadow:0 1px 3px rgba(0,0,0,.07)}
 .all-certs-table thead th{text-align:left;padding:10px 14px;background:var(--gray-100);color:var(--gray-800);font-weight:600;font-size:var(--text-xs);border-bottom:1px solid var(--gray-200);white-space:nowrap}
-.all-certs-table tbody td{padding:10px 14px;border-bottom:1px solid var(--gray-200);vertical-align:middle;line-height:1.45}
+.all-certs-table tbody td{padding:10px 14px;border-bottom:1px solid var(--gray-200);vertical-align:middle;line-height:1.45;white-space:nowrap}
 .all-certs-table tbody tr:last-child td{border-bottom:none}
 .all-certs-table tbody tr:hover{background:var(--gray-50)}
 .all-certs-name{min-width:12em}
+.all-certs-name a,.all-certs-name .result-label{white-space:nowrap}
 .all-certs-name a{font-weight:600;color:var(--ink-deep);text-decoration:none}
 .all-certs-name a:hover{color:var(--accent);text-decoration:none}
-.all-certs-num{font-variant-numeric:tabular-nums;white-space:nowrap;color:var(--gray-800)}
-.all-certs-table .empty-state{text-align:center;color:var(--gray-600);background:var(--gray-50);padding:22px 16px;line-height:1.75}
+.all-certs-num{font-variant-numeric:tabular-nums;color:var(--gray-800)}
+.all-certs-table .empty-state{white-space:normal;text-align:center;color:var(--gray-600);background:var(--gray-50);padding:22px 16px;line-height:1.75}
 .pagination{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin-top:28px;padding-top:4px}
 .pagination-status{font-size:var(--text-xs);color:var(--gray-600)}
 .pagination-links{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
@@ -3089,7 +3087,6 @@ html{scroll-padding-top:64px}
 .compare-tag{font-size:var(--text-2xs);font-weight:600;color:var(--gray-500);letter-spacing:.04em;margin-bottom:6px}
 .compare-names{font-size:var(--text-ui);font-weight:600;line-height:1.45;color:var(--ink-deep);margin-bottom:6px;flex:1}
 .compare-names em{font-style:normal;color:var(--gray-500);font-weight:400;font-size:var(--text-sm)}
-.compare-tip{font-size:var(--text-sm);color:var(--gray-700);line-height:1.5;margin-bottom:8px}
 .compare-go{font-size:var(--text-sm);font-weight:600;color:var(--accent);text-decoration:underline;text-underline-offset:2px}
 
 /* Buttons */
@@ -3359,7 +3356,7 @@ table.cmp tbody th{background:var(--gray-50);color:var(--gray-800);white-space:n
   /* 小さめの文字を底上げして読みやすく（キャプション・メタ・バッジ等） */
   :root{--text-nav:.92rem;--text-sm:.92rem;--text-xs:.84rem;--text-2xs:.84rem;--text-chip:.84rem}
   /* ヒーロー：余白を詰め、本文を読みやすいサイズに */
-  .hero{padding:18px 0 2px}
+  .hero{padding:22px 0 14px}
   .hero h1{margin-bottom:10px}
   .hero-sub{font-size:var(--text-body);line-height:1.7}
   .hero-search{margin-top:14px;max-width:none}
