@@ -508,7 +508,7 @@ def detail_nav_html(slug, cat, rel_links, vs_pairs):
                 + "</ul>")
         if rel["combo"]:
             subs.append(
-                '<h3 class="detail-nav-subhead detail-nav-subhead-title">あわせて取りたい資格（ダブルライセンス）</h3>'
+                '<h3 class="detail-nav-subhead detail-nav-subhead-title">あわせて取りたい資格</h3>'
                 '<ul class="detail-link-list">'
                 + "".join(_detail_link_item(s, n) for s, n in rel["combo"])
                 + "</ul>")
@@ -519,7 +519,7 @@ def detail_nav_html(slug, cat, rel_links, vs_pairs):
             f'<a href="../vs/{esc(ps)}.html">{esc(on)}との違い</a>'
             for ps, on in vs_pairs[:5])
         compare_row = (
-            '<h3 class="detail-nav-subhead">よく比較される資格</h3>'
+            '<h3 class="detail-nav-subhead detail-nav-subhead-title">よく比較される資格</h3>'
             f'<div class="detail-compare-row">{links}</div>')
         subs.append(compare_row)
 
@@ -529,7 +529,6 @@ def detail_nav_html(slug, cat, rel_links, vs_pairs):
                 '出願前に必ず各資格の公式情報でご確認ください。</p>' if rel else "")
         block1 = (
             '<div class="detail-nav-block">'
-            '<h2 class="detail-nav-head">ステップアップ・上位資格を目指す</h2>'
             + "".join(subs)
             + note
             + '</div>')
