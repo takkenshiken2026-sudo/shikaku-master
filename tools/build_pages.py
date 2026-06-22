@@ -727,7 +727,6 @@ def page_shell(title: str, body: str, depth: int, noindex: bool = True,
       <a href="{base}index.html#compare">よく比較される資格</a>
       <a href="{base}about.html">サイトについて・編集方針</a>
     </nav>
-    <p class="site-footer-note">掲載内容は参考情報です。受験料・合格率・制度・日程等は変更される場合があるため、出願前に各資格の公式情報で必ずご確認ください。各詳細ページに最終確認日と情報源を表示しています。</p>
     <p class="site-footer-copy">© {esc(SITE_NAME)}／一覧データ出典: 厚生労働省 ハローワーク「免許・資格コード一覧」ほか、各資格の公式の一次情報に基づき整備。</p>
   </div>
 </footer>
@@ -763,7 +762,7 @@ def build_detail(row) -> str:
         ("受験資格", field(row["eligibility"])),
         ("試験形式", field(row["exam_format"])),
         ("受験料", field(row["fee"])),
-        ("合格率", field(pass_rate_short(row["pass_rate"]) or row["pass_rate"])),
+        ("合格率", field(pass_rate_display(row["pass_rate"]) or row["pass_rate"])),
         ("実施頻度", field(row["frequency"])),
         ("ハローワークコード", esc(row["hellowork_code"])),
     ]
@@ -775,7 +774,7 @@ def build_detail(row) -> str:
         dlabel, dcls = diff
         spec.append(("難易度の目安",
                      esc(dlabel)
-                     + f' <span class="note-muted">（公表合格率 {esc(fmt_nums_in_text(row["pass_rate"]))} に基づく簡易目安）</span>'))
+                     + f' <span class="note-muted">（公表合格率 {esc(pass_rate_display(row["pass_rate"]))} に基づく簡易目安）</span>'))
     dr = DIFFICULTY_RANK.get(row["slug"])
     if dr:
         rank_parts = [f'掲載資格中 上位{dr["pct"]}%']
@@ -938,7 +937,7 @@ def build_detail(row) -> str:
     if row["fee"]:
         fact.append(f"受験料は{esc(fmt_nums_in_text(row['fee']))}")
     if row["pass_rate"]:
-        fact.append(f"合格率は{esc(fmt_nums_in_text(row['pass_rate']))}")
+        fact.append(f"合格率は{esc(pass_rate_display(row['pass_rate']))}")
     if row["exam_format"]:
         fact.append(f"試験形式は{esc(row['exam_format'])}")
     if row["frequency"]:
@@ -991,7 +990,7 @@ def build_detail(row) -> str:
     if row["exam_format"]:
         qa.append((f"{name}の試験はどのような形式ですか？", row["exam_format"]))
     if row["pass_rate"]:
-        qa.append((f"{name}の合格率はどのくらいですか？", fmt_nums_in_text(row["pass_rate"])))
+        qa.append((f"{name}の合格率はどのくらいですか？", pass_rate_display(row["pass_rate"])))
     if ed.get("exam_subjects"):
         qa.append((f"{name}の試験科目・出題範囲は？", ed["exam_subjects"]))
     if ed.get("applicants"):
@@ -1014,7 +1013,7 @@ def build_detail(row) -> str:
     _dq = difficulty(row)
     if _dq and row["pass_rate"]:
         qa.append((f"{name}の難易度はどのくらいですか？",
-                   f"公表合格率（{row['pass_rate']}）に基づく簡易的な目安では「{_dq[0]}」です。"
+                   f"公表合格率（{pass_rate_display(row['pass_rate'])}）に基づく簡易的な目安では「{_dq[0]}」です。"
                    "合格率は受験者層により変わるため、難易度の絶対指標ではありません。"))
     faq = ({"@context": "https://schema.org", "@type": "FAQPage",
             "mainEntity": [{"@type": "Question", "name": q,
@@ -1057,7 +1056,7 @@ def build_detail(row) -> str:
     if row["fee"]:
         _facts.append("受験料" + fmt_nums_in_text(row["fee"]))
     if row["pass_rate"]:
-        _facts.append("合格率" + fmt_nums_in_text(row["pass_rate"]))
+        _facts.append("合格率" + pass_rate_display(row["pass_rate"]))
     if not _facts and row["authority"]:
         _facts.append("実施団体は" + row["authority"])
     desc = lead_txt + ("（" + "／".join(_facts) + "）" if _facts else "")
@@ -1108,11 +1107,27 @@ def pass_pct(r):
 
 
 def pass_rate_short(val):
-    """表表示用: 数値と % のみ（年度等は省略）。"""
+    """表示用: 数値と%のみ（年度・回次などの括弧書きは省略）。"""
     if not val:
         return ""
-    m = re.search(r"([0-9]+(?:\.[0-9]+)?)\s*%", val.replace(",", ""))
+    s = str(val).replace(",", "")
+    s = re.sub(r"[（(][^）)]*(?:年度|令和|平成|昭和|第\d+回)[^）)]*[）)]", "", s)
+    s = s.strip()
+    parts = re.findall(
+        r"((?:一次|二次|筆記|口頭|学科|実地|全体|上期|下期)?[0-9]+(?:\.[0-9]+)?%)",
+        s)
+    if len(parts) > 1:
+        return "/".join(parts)
+    if parts:
+        return parts[0]
+    m = re.search(r"([0-9]+(?:\.[0-9]+)?)\s*%", s)
     return f"{m.group(1)}%" if m else ""
+
+
+def pass_rate_display(val):
+    """合格率の画面表示用文字列（カンマ整形＋年度省略）。"""
+    s = pass_rate_short(val)
+    return fmt_nums_in_text(s) if s else ""
 
 
 def spec_row_html(label, value, href=""):
@@ -1331,7 +1346,7 @@ def _list_items(items, depth, ranked=False):
                 f'<span class="cl-major">{esc(r["major_category"])}</span>']
         if pub:
             bits = [b for b in (fmt_nums_in_text(r.get("fee") or ""),
-                                (("合格率" + fmt_nums_in_text(r["pass_rate"])) if r.get("pass_rate") else "")) if b]
+                                (("合格率" + pass_rate_display(r["pass_rate"])) if r.get("pass_rate") else "")) if b]
             meta.append('<span class="cl-data">'
                         + (esc(" / ".join(bits)) if bits else "データ掲載") + "</span>")
         else:
@@ -2077,6 +2092,8 @@ def build_comparison_pages(indexable):
 
     def cell(r, key, fallback="公式情報で確認"):
         v = r.get(key, "")
+        if key == "pass_rate" and v:
+            v = pass_rate_display(v) or v
         return esc(v) if v else f'<span class="muted">{fallback}</span>'
 
     def diff_cell(r):
@@ -2127,7 +2144,7 @@ def build_comparison_pages(indexable):
                re.sub("<[^>]+>", "", intro))]
         if ra.get("pass_rate") and rb.get("pass_rate"):
             qa.append((f"{na}と{nb}はどちらが難しいですか？",
-                       f"公表合格率は{na}が{ra['pass_rate']}、{nb}が{rb['pass_rate']}です。"
+                       f"公表合格率は{na}が{pass_rate_display(ra['pass_rate'])}、{nb}が{pass_rate_display(rb['pass_rate'])}です。"
                        "合格率は受験者層により変わるため難易度の目安としてご覧ください。"))
         faq = {"@context": "https://schema.org", "@type": "FAQPage",
                "mainEntity": [{"@type": "Question", "name": q,
@@ -2472,7 +2489,6 @@ def build_index(rows) -> str:
     <span class="ico"><svg class="ico-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/></svg></span>
     <input id="q" type="search" placeholder="資格名で検索（例: 簿記, 宅建, ITパスポート）" aria-label="資格名で検索">
   </div>
-  <p class="hero-hint">または <a href="#purpose">目的から探す</a>・<a href="#fields">分野から探す</a></p>
   <p class="hero-result" id="heroResult" hidden></p>
 </section>
 
@@ -2987,8 +3003,6 @@ html{scroll-padding-top:64px}
 .hero-search input::placeholder{color:var(--muted)}
 .hero-search input:focus,.hero-search input:focus-visible{border-color:var(--accent);outline:3px solid var(--accent-ring);outline-offset:2px}
 .hero-search .ico{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--muted);display:flex}
-.hero-hint{margin-top:10px;font-size:var(--text-sm);color:var(--muted)}
-.hero-hint a{color:var(--accent);font-weight:600;text-decoration:none}.hero-hint a:hover{text-decoration:underline}
 .hero-result{margin-top:12px;font-size:var(--text-sm);color:var(--muted)}
 .hero-result a{color:var(--accent);font-weight:600;text-decoration:underline;text-underline-offset:2px}
 .hero-result strong{color:var(--ink-deep)}
@@ -3252,7 +3266,6 @@ table.cmp tbody th{background:var(--gray-50);color:var(--ink);white-space:nowrap
 .site-footer-nav{display:flex;flex-wrap:wrap;gap:6px 18px;margin-bottom:12px}
 .site-footer-nav a{font-size:var(--text-sm);color:var(--muted);text-decoration:none}
 .site-footer-nav a:hover{color:var(--ink);text-decoration:underline;text-underline-offset:2px}
-.site-footer-note{font-size:var(--text-sm);color:var(--muted);line-height:1.65;margin:0 0 8px;max-width:54em}
 .site-footer-copy{font-size:var(--text-sm);color:var(--muted);line-height:1.5;margin:0}
 .site-footer-partners{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 14px;padding:12px 0;margin:0 0 12px;border-top:1px solid var(--gray-200);border-bottom:1px solid var(--gray-200)}
 .sfp-label{font-size:var(--text-sm);font-weight:700;color:var(--muted)}
@@ -3260,12 +3273,12 @@ table.cmp tbody th{background:var(--gray-50);color:var(--ink);white-space:nowrap
 .site-footer-partners a{font-size:var(--text-sm);color:var(--accent);text-decoration:none;font-weight:600}
 .site-footer-partners a:hover{text-decoration:underline;text-underline-offset:2px}
 /* Partner sites (おすすめ対策サイト) */
-.partner-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
-@media(max-width:900px){.partner-grid{grid-template-columns:repeat(3,1fr)}}
-@media(max-width:640px){.partner-grid{grid-template-columns:repeat(2,1fr)}}
+.partner-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+@media(max-width:720px){.partner-grid{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:460px){.partner-grid{grid-template-columns:1fr}}
-.partner-card{display:flex;flex-direction:column;gap:2px;background:#fff;border:1px solid var(--gray-200);border-radius:var(--radius);padding:10px 11px;text-decoration:none;color:inherit;box-shadow:0 1px 3px rgba(0,0,0,.07);transition:border-color .15s,background .15s}
+.partner-card{display:flex;flex-direction:column;gap:2px;min-width:0;overflow:hidden;background:#fff;border:1px solid var(--gray-200);border-radius:var(--radius);padding:10px 11px;text-decoration:none;color:inherit;box-shadow:0 1px 3px rgba(0,0,0,.07);transition:border-color .15s,background .15s}
 .partner-card:hover{border-color:var(--accent);background:var(--accent-light)}
+.partner-card-name,.partner-card-tag{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .partner-card-name{font-size:var(--text-sm);font-weight:700;color:var(--ink-deep);line-height:1.35}
 .partner-card-tag{font-size:var(--text-sm);color:var(--muted);line-height:1.45}
 .partner-ext{font-size:.78em;color:var(--accent);margin-left:5px;font-weight:700}
@@ -3483,7 +3496,7 @@ def main() -> int:
         "category": r["category"], "type": r["type"],
         "authority": r["authority"], "official_url": r["official_url"],
         "eligibility": r["eligibility"], "exam_format": r["exam_format"],
-        "fee": fmt_nums_in_text(r["fee"]), "pass_rate": fmt_nums_in_text(r["pass_rate"]),
+        "fee": fmt_nums_in_text(r["fee"]), "pass_rate": pass_rate_display(r["pass_rate"]),
         "frequency": r["frequency"],
         "status": r.get("status", ""),
         "tags": cert_tags(r),
@@ -3603,9 +3616,7 @@ def main() -> int:
 </ul></section>
 
 <section class="detail-spec"><h2 class="detail-section-title">ご利用にあたっての注意</h2>
-<p>制度・受験料・日程・合格率は改定されることがあります。掲載内容は参考情報であり、
-出願・受験の前には必ず各資格の<strong>公式サイトで最新情報をご確認</strong>ください。
-本サイトの情報の利用により生じたいかなる損害についても責任を負いかねます。</p></section>
+<p>掲載内容は参考情報です。受験料・合格率・制度・日程等は変更される場合があるため、出願前に各資格の公式情報で必ずご確認ください。各詳細ページに最終確認日と情報源を表示しています。本サイトの情報の利用により生じたいかなる損害についても責任を負いかねます。</p></section>
 
 <section class="detail-spec"><h2 class="detail-section-title">運営者の資格対策サイト</h2>
 <p>当サイトの運営者は、個別資格の学習・対策に特化した以下のサイトも制作・運営しています。
