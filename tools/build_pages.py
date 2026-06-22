@@ -1451,6 +1451,87 @@ MAJOR_SLUGS = {
     "運輸・運転・航空": "transport", "農林水産・動物": "agriculture", "海外資格": "overseas",
 }
 
+_SVG = ('<svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"'
+        ' stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">{}</svg>')
+
+def _icon_svg(paths):
+    return _SVG.format(paths)
+
+ICON_TROPHY = _icon_svg(
+    '<path d="M8 21h8"/><path d="M12 17v4"/>'
+    '<path d="M7 4h10v5a5 5 0 0 1-10 0V4z"/>'
+    '<path d="M5 5H3v2a3 3 0 0 0 3 3"/>'
+    '<path d="M19 5h2v2a3 3 0 0 1-3 3"/>')
+
+FIELD_ICONS = {
+    "IT・情報処理": _icon_svg(
+        '<rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8"/><path d="M12 17v4"/>'),
+    "法律・法務・知財": _icon_svg(
+        '<path d="M12 3v18"/><path d="M5 7h14"/>'
+        '<path d="M7 10l-2 7h4l-2-7z"/><path d="M17 10l-2 7h4l-2-7z"/>'),
+    "会計・金融・経営": _icon_svg(
+        '<rect x="4" y="2" width="16" height="20" rx="2"/>'
+        '<path d="M8 6h8M8 10h2M12 10h2M8 14h2M12 14h2M8 18h8"/>'),
+    "不動産": _icon_svg(
+        '<path d="M3 10.5L12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>'),
+    "建築・設備": _icon_svg(
+        '<path d="M3 21h18"/><path d="M5 21V9l7-5 7 5v12"/>'
+        '<path d="M9 21v-6h6v6"/>'),
+    "設備・プラント・機械運転": _icon_svg(
+        '<path d="M12 2v4"/><path d="M12 18v4"/>'
+        '<path d="M4.93 4.93l2.83 2.83"/><path d="M16.24 16.24l2.83 2.83"/>'
+        '<path d="M2 12h4"/><path d="M18 12h4"/>'
+        '<path d="M4.93 19.07l2.83-2.83"/><path d="M16.24 7.76l2.83-2.83"/>'
+        '<circle cx="12" cy="12" r="3"/>'),
+    "土木・測量・建設": _icon_svg(
+        '<path d="M2 20h20"/><path d="M6 20V8l6-4 6 4v12"/>'
+        '<path d="M10 12h4"/><path d="M12 10v4"/>'),
+    "電気・通信": _icon_svg('<path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>'),
+    "機械・電気・ものづくり": _icon_svg(
+        '<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>'),
+    "食品・調理・栄養": _icon_svg(
+        '<path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/>'
+        '<path d="M7 2v20"/><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3z"/>'),
+    "医療・看護・薬": _icon_svg(
+        '<path d="M12 8v8"/><path d="M8 12h8"/>'
+        '<circle cx="12" cy="12" r="9"/>'),
+    "福祉・介護・心理": _icon_svg(
+        '<path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>'),
+    "教育・保育・学術": _icon_svg(
+        '<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>'
+        '<path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>'),
+    "語学・コミュニケーション": _icon_svg(
+        '<circle cx="12" cy="12" r="10"/>'
+        '<path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>'),
+    "デザイン・美術・文化": _icon_svg(
+        '<path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z"/>'
+        '<path d="M12 2a10 10 0 0 1 0 20"/><path d="M2 12h20"/>'),
+    "美容・サービス・スポーツ": _icon_svg(
+        '<circle cx="6" cy="6" r="3"/><circle cx="18" cy="6" r="3"/>'
+        '<path d="M9 6h6"/><path d="M6 9v3a6 6 0 0 0 12 0V9"/>'),
+    "商業・販売・事務": _icon_svg(
+        '<rect x="2" y="7" width="20" height="14" rx="2"/>'
+        '<path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/>'),
+    "安全・環境・危険物": _icon_svg(
+        '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>'),
+    "運輸・運転・航空": _icon_svg(
+        '<path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"/>'
+        '<path d="M15 18H9"/><path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.624l-3.48-4.35A1 1 0 0 0 17.52 8H14"/>'
+        '<circle cx="17" cy="18" r="2"/><circle cx="7" cy="18" r="2"/>'),
+    "農林水産・動物": _icon_svg(
+        '<path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10z"/>'
+        '<path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/>'),
+    "海外資格": _icon_svg(
+        '<path d="M17.8 19.2L16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H8l-1 1 1 1h1l5-2 3.2 3.2c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/>'),
+}
+
+_FIELD_ICON_DEFAULT = _icon_svg(
+    '<path d="M4 7a2 2 0 0 1 2-2h3l2 2h7a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"/>')
+
+
+def field_icon(major):
+    return FIELD_ICONS.get(major, _FIELD_ICON_DEFAULT)
+
 # 業界レイヤー（分野とは別軸）。分野→業界の対応＋全業界で通用する汎用資格。
 MAJOR_INDUSTRY = {
     "IT・情報処理": "IT・通信", "法律・法務・知財": "法律・士業",
@@ -2507,7 +2588,9 @@ def build_index(rows) -> str:
         if sh:
             facts += f'<li><span class="k">学習目安</span><span class="v">{esc(fmt_nums_in_text(sh))}</span></li>'
         pop_html += (f'<a class="pop-card card-link{more}" href="c/{r["slug"]}.html">'
-                     f'<div class="pop-card-name">{esc(_short(r))}</div>'
+                     f'<div class="pop-card-head">'
+                     f'<span class="pop-card-trophy" aria-hidden="true">{ICON_TROPHY}</span>'
+                     f'<div class="pop-card-name">{esc(_short(r))}</div></div>'
                      f'<ul class="pop-card-facts">{facts}</ul></a>')
 
     # --- 分野から探す（収録数の多い順 上位8） ---
@@ -2519,13 +2602,10 @@ def build_index(rows) -> str:
     def _examples(m):
         cs = sorted(by_major[m], key=lambda r: -(applicants_num(r) or 0))
         return "・".join(_short(r) for r in cs[:3]) + "など"
-    FIELD_ICON = ('<svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"'
-                  ' stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
-                  '<path d="M4 7a2 2 0 0 1 2-2h3l2 2h7a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"/></svg>')
     fld_html = ""
     for m in sorted(mcount, key=lambda m: -mcount[m])[:8]:
         fld_html += (f'<a class="field-card" href="bunya/{MAJOR_SLUGS.get(m, "other")}.html">'
-                     f'<div class="icon">{FIELD_ICON}</div>'
+                     f'<div class="icon">{field_icon(m)}</div>'
                      f'<div class="field-card-body">'
                      f'<div class="field-card-top"><h3>{esc(m)}</h3>'
                      f'<span class="field-count">{mcount[m]}件</span></div>'
@@ -2602,7 +2682,7 @@ def build_index(rows) -> str:
 </section>
 
 <section class="block block-band block-band--gray">
-  <div class="block-head"><h2>人気の資格</h2><p>受験者数の多い順</p></div>
+  <div class="block-head"><h2 class="block-head-title"><span class="block-head-icon" aria-hidden="true">{ICON_TROPHY}</span>人気の資格</h2><p>受験者数の多い順</p></div>
   <div class="popular-grid">{pop_html}</div>
   <p class="popular-more"><a href="feature/popular.html">人気資格をすべて見る →</a></p>
 </section>
@@ -3110,6 +3190,9 @@ html{scroll-padding-top:64px}
 .block-inset{margin:8px 0 20px;padding:0 2px}
 .block-head{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:18px;gap:8px;flex-wrap:wrap}
 .block-head h2{font-size:var(--text-lg);font-weight:700;color:var(--ink-deep);margin:0}
+.block-head-title{display:flex;align-items:center;gap:8px}
+.block-head-icon{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;color:var(--accent);flex-shrink:0}
+.block-head-icon .icon-svg{width:22px;height:22px}
 .block-head p{font-size:var(--text-sm);color:var(--muted);margin:0}
 .block-all-certs{padding:52px var(--page-gutter) 56px;margin-bottom:0}
 .block-all-certs .block-head{margin-bottom:24px}
@@ -3122,7 +3205,10 @@ html{scroll-padding-top:64px}
 /* Popular */
 .popular-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
 .pop-card{display:flex;flex-direction:column;background:#fff;color:var(--ink);border-radius:var(--radius);padding:14px 32px 12px 13px;text-decoration:none;border:1px solid var(--gray-200);transition:border-color .15s,background .15s}
-.pop-card-name{font-size:var(--text-md);font-weight:700;line-height:1.35;margin-bottom:10px;color:var(--ink-deep)}
+.pop-card-head{display:flex;align-items:flex-start;gap:10px;margin-bottom:10px}
+.pop-card-trophy{flex-shrink:0;width:36px;height:36px;display:flex;align-items:center;justify-content:center;background:#f7f3e8;border-radius:var(--radius);color:#b8860b}
+.pop-card-trophy .icon-svg{width:20px;height:20px}
+.pop-card-name{font-size:var(--text-md);font-weight:700;line-height:1.35;color:var(--ink-deep);margin:0;flex:1;min-width:0}
 .pop-card-facts{list-style:none;margin:auto 0 0;padding:10px 0 0;border-top:1px solid var(--gray-200);display:flex;flex-direction:column;gap:5px}
 .pop-card-facts li{display:grid;grid-template-columns:4.8em 1fr;gap:4px;font-size:var(--text-sm);line-height:1.45}
 .pop-card-facts .k{color:var(--muted)}.pop-card-facts .v{color:var(--ink);font-weight:600}
