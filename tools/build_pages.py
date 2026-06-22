@@ -2463,7 +2463,6 @@ def build_index(rows) -> str:
       <div class="purpose-card-body">
         <h3>就職</h3>
         <p class="purpose-card-for">就活・新卒・第二新卒で、はじめて資格を選ぶ方</p>
-        <ul class="purpose-card-examples" aria-label="職種の例"><li>事務・経理</li><li>IT・情報技術</li><li>営業・販売</li><li>未経験OK</li></ul>
       </div>
     </a>
     <a class="purpose-card" href="feature/job-hunting.html">
@@ -2471,7 +2470,6 @@ def build_index(rows) -> str:
       <div class="purpose-card-body">
         <h3>転職</h3>
         <p class="purpose-card-for">業界や職種を変えたい社会人向け</p>
-        <ul class="purpose-card-examples" aria-label="職種の例"><li>事務・経理</li><li>IT・情報技術</li><li>不動産</li><li>医療・介護</li></ul>
       </div>
     </a>
     <a class="purpose-card" href="feature/working-adults.html">
@@ -2479,7 +2477,6 @@ def build_index(rows) -> str:
       <div class="purpose-card-body">
         <h3>スキルアップ</h3>
         <p class="purpose-card-for">今の仕事に活かせる資格を探す方</p>
-        <ul class="purpose-card-examples" aria-label="職種の例"><li>事務・経理</li><li>IT・情報技術</li><li>管理・マネジメント</li><li>営業・販売</li></ul>
       </div>
     </a>
   </div>
@@ -3027,9 +3024,7 @@ html{scroll-padding-top:64px}
 .purpose-card .icon-svg{width:26px;height:26px}
 .purpose-card-body{min-width:0;flex:1}
 .purpose-card h3{font-size:var(--text-card-title);font-weight:700;margin:0 0 4px;color:var(--ink-deep)}
-.purpose-card-for{font-size:var(--text-sm);color:var(--gray-600);line-height:1.5;margin:0 0 8px}
-.purpose-card-examples{display:flex;flex-wrap:wrap;gap:5px;list-style:none;margin:0;padding:0}
-.purpose-card-examples li{font-size:var(--text-chip);color:var(--gray-700);background:var(--accent-light);border:1px solid rgba(42,122,110,.15);border-radius:6px;padding:2px 7px;line-height:1.45}
+.purpose-card-for{font-size:var(--text-sm);color:var(--gray-600);line-height:1.5;margin:0}
 .purpose-card::after{content:"→";position:absolute;right:12px;top:14px;font-size:var(--text-nav);font-weight:600;color:var(--gray-400);opacity:0;transition:opacity .15s,color .15s;pointer-events:none}
 .purpose-card:hover::after,.purpose-card:focus-visible::after{opacity:1;color:var(--accent)}
 .purpose-card:hover,.purpose-card:focus-visible{border-color:var(--gray-500);background:var(--accent-light);text-decoration:none}
