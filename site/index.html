@@ -36,9 +36,10 @@
     <div class="header-brand"><a class="logo" href="index.html">資格マスター</a></div>
     <nav class="header-nav" aria-label="サイトメニュー">
       <a href="index.html#purpose">目的から探す</a><span class="header-nav-sep" aria-hidden="true">｜</span>
+      <a href="index.html#guides">特集・ガイド</a><span class="header-nav-sep" aria-hidden="true">｜</span>
       <a href="index.html#fields">分野から探す</a><span class="header-nav-sep" aria-hidden="true">｜</span>
       <a href="index.html#all-certs">資格一覧</a><span class="header-nav-sep" aria-hidden="true">｜</span>
-      <a href="compare.html">比較</a>
+      <a href="index.html#compare">比較</a>
       <a href="index.html#partners" class="header-nav-cta">資格対策サイト</a>
     </nav>
     <div class="header-actions">
@@ -54,11 +55,13 @@
   </div>
   <nav class="header-menu-panel" id="hMenu" aria-label="サイトメニュー" hidden>
     <a href="index.html#purpose">目的から探す</a>
+    <a href="index.html#guides">特集・ガイド</a>
     <a href="index.html#fields">分野から探す</a>
     <a href="index.html#all-certs">資格一覧</a>
-    <a href="compare.html">比較</a>
+    <a href="index.html#compare">比較記事</a>
     <a href="shoku/index.html">職種から探す</a>
-    <a href="feature/index.html">特集・ランキング</a>
+    <a href="feature/index.html">特集・ランキング一覧</a>
+    <a href="compare.html">資格を比較する</a>
     <a href="index.html#partners">資格対策サイト</a>
   </nav>
 </header>
@@ -70,7 +73,7 @@
     <span class="ico"><svg class="ico-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/></svg></span>
     <input id="q" type="search" placeholder="資格名で検索（例: 簿記, 宅建, ITパスポート）" aria-label="資格名で検索">
   </div>
-  <p class="hero-hint">または <a href="#purpose">目的から探す</a>・<a href="#fields">分野から探す</a></p>
+  <p class="hero-hint">または <a href="#purpose">目的から探す</a>・<a href="#guides">特集・ガイド</a>・<a href="#fields">分野から探す</a>・<a href="#compare">比較</a></p>
   <p class="hero-result" id="heroResult" hidden></p>
 </section>
 
@@ -101,6 +104,16 @@
   </div>
 </section>
 
+<section class="block block-band block-band--gray" id="guides">
+  <div class="block-head"><h2>特集・ガイドから探す</h2><p>目的や条件に合わせた記事・ランキング</p></div>
+  <h3 class="hub-grp">目的別ガイド</h3>
+  <div class="guide-grid"><a class="guide-card" href="feature/independence.html"><span class="guide-card-label">独立・開業を目指せる資格</span><span class="guide-go" aria-hidden="true">→</span></a><a class="guide-card" href="feature/job-hunting.html"><span class="guide-card-label">就職・転職に役立つ資格</span><span class="guide-go" aria-hidden="true">→</span></a><a class="guide-card" href="feature/remote-work.html"><span class="guide-card-label">在宅・リモートワークに活かせる資格</span><span class="guide-go" aria-hidden="true">→</span></a><a class="guide-card" href="feature/skilled-trade.html"><span class="guide-card-label">手に職をつけられる資格</span><span class="guide-go" aria-hidden="true">→</span></a><a class="guide-card" href="feature/working-adults.html"><span class="guide-card-label">働きながら取りやすい資格</span><span class="guide-go" aria-hidden="true">→</span></a><a class="guide-card" href="feature/it-beginner.html"><span class="guide-card-label">未経験からITエンジニアを目指す資格</span><span class="guide-go" aria-hidden="true">→</span></a><a class="guide-card" href="feature/senior.html"><span class="guide-card-label">定年後・シニアに役立つ資格</span><span class="guide-go" aria-hidden="true">→</span></a></div>
+  <h3 class="hub-grp">ランキング・条件で探す</h3>
+  <div class="guide-chips"><a class="chip" href="feature/popular.html">人気ランキング</a><a class="chip" href="feature/cheap.html">受験料が安い</a><a class="chip" href="feature/high-pass.html">合格率が高い</a><a class="chip" href="feature/no-requirement-national.html">受験資格なし・国家</a><a class="chip" href="feature/cbt.html">在宅・CBT</a></div>
+  <a class="guide-banner" href="shoku/index.html"><span class="guide-banner-title">職種から探す</span><span class="guide-banner-desc">目指す仕事に活かせる資格を866件の職種から逆引き</span><span class="guide-go" aria-hidden="true">→</span></a>
+  <p class="guide-more"><a href="feature/index.html">特集・ランキングをすべて見る →</a></p>
+</section>
+
 <section class="block block-inset" id="recentBlock" hidden>
   <div class="block-head"><h2>最近見た資格</h2></div>
   <ul class="recent-list" id="recentGrid"></ul>
@@ -119,8 +132,9 @@
 </section>
 
 <section class="block block-band block-band--gray block-compare" id="compare">
-  <div class="block-head"><h2>よく比較される資格</h2><p>2つ以上を並べて違いを確認</p></div>
+  <div class="block-head"><h2>よく比較される資格</h2><p>2つの資格の違いを記事で確認</p></div>
   <div class="compare-grid"><a class="compare-card" href="vs/takken-gyoseishoshi.html"><span class="compare-tag">不動産</span><div class="compare-names">宅地建物取引士 <em>vs</em> 行政書士</div><span class="compare-go" aria-hidden="true">→</span></a><a class="compare-card" href="vs/gyoseishoshi-sharoshi.html"><span class="compare-tag">法律・法務・知財</span><div class="compare-names">行政書士 <em>vs</em> 社会保険労務士</div><span class="compare-go" aria-hidden="true">→</span></a><a class="compare-card" href="vs/boki-2-3.html"><span class="compare-tag">会計・金融・経営</span><div class="compare-names">日商簿記2級 <em>vs</em> 日商簿記3級</div><span class="compare-go" aria-hidden="true">→</span></a><a class="compare-card" href="vs/kihonjoho-ojoho.html"><span class="compare-tag">IT・情報処理</span><div class="compare-names">基本情報技術者 <em>vs</em> 応用情報技術者</div><span class="compare-go" aria-hidden="true">→</span></a><a class="compare-card" href="vs/fp-2-3.html"><span class="compare-tag">会計・金融・経営</span><div class="compare-names">2級FP技能士 <em>vs</em> 3級FP技能士</div><span class="compare-go" aria-hidden="true">→</span></a><a class="compare-card" href="vs/takken-mankanshi.html"><span class="compare-tag">不動産</span><div class="compare-names">宅地建物取引士 <em>vs</em> マンション管理士</div><span class="compare-go" aria-hidden="true">→</span></a></div>
+  <p class="compare-more"><a href="vs/index.html">比較記事をすべて見る →</a></p>
 </section>
 
 <section class="block block-band block-band--white block-all-certs" id="all-certs">
@@ -180,10 +194,12 @@
     <p class="site-footer-brand">資格マスター</p>
     <nav class="site-footer-nav" aria-label="フッターナビ">
       <a href="index.html#purpose">目的から探す</a>
+      <a href="index.html#guides">特集・ガイド</a>
       <a href="index.html#all-certs">資格一覧</a>
       <a href="index.html#fields">分野から探す</a>
       <a href="shoku/index.html">職種から探す</a>
-      <a href="index.html#compare">よく比較される資格</a>
+      <a href="index.html#compare">比較記事</a>
+      <a href="feature/index.html">特集・ランキング</a>
       <a href="about.html">サイトについて・編集方針</a>
     </nav>
     <p class="site-footer-note">掲載内容は参考情報です。受験料・合格率・制度・日程等は変更される場合があるため、出願前に各資格の公式情報で必ずご確認ください。各詳細ページに最終確認日と情報源を表示しています。</p>
