@@ -35,11 +35,10 @@
   <div class="header-inner">
     <div class="header-brand"><a class="logo" href="index.html">資格マスター</a></div>
     <nav class="header-nav" aria-label="サイトメニュー">
+      <a href="index.html#purpose">目的から探す</a><span class="header-nav-sep" aria-hidden="true">｜</span>
       <a href="index.html#fields">分野から探す</a><span class="header-nav-sep" aria-hidden="true">｜</span>
-      <a href="index.html">資格一覧</a><span class="header-nav-sep" aria-hidden="true">｜</span>
-      <a href="shoku/index.html">職種から探す</a><span class="header-nav-sep" aria-hidden="true">｜</span>
-      <a href="feature/index.html">特集・ランキング</a><span class="header-nav-sep" aria-hidden="true">｜</span>
-      <a href="index.html#partners">資格対策サイト</a>
+      <a href="index.html#all-certs">資格一覧</a><span class="header-nav-sep" aria-hidden="true">｜</span>
+      <a href="compare.html">比較</a>
     </nav>
     <div class="header-actions">
       <button type="button" class="header-icon-btn" data-toggle="search" aria-label="資格名で検索" aria-controls="hSearch" aria-expanded="false"><svg class="ico-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/></svg></button>
@@ -53,8 +52,10 @@
     </form>
   </div>
   <nav class="header-menu-panel" id="hMenu" aria-label="サイトメニュー" hidden>
+    <a href="index.html#purpose">目的から探す</a>
     <a href="index.html#fields">分野から探す</a>
-    <a href="index.html">資格一覧</a>
+    <a href="index.html#all-certs">資格一覧</a>
+    <a href="compare.html">比較</a>
     <a href="shoku/index.html">職種から探す</a>
     <a href="feature/index.html">特集・ランキング</a>
     <a href="index.html#partners">資格対策サイト</a>
@@ -68,13 +69,43 @@
     <span class="ico"><svg class="ico-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/></svg></span>
     <input id="q" type="search" placeholder="資格名で検索（例: 簿記, 宅建, ITパスポート）" aria-label="資格名で検索">
   </div>
-  <p class="hero-hint">または <a href="#fields">分野から探す</a>・<a href="#all">条件で絞り込む</a></p>
+  <p class="hero-hint">または <a href="#purpose">目的から探す</a>・<a href="#fields">分野から探す</a></p>
   <p class="hero-result" id="heroResult" hidden></p>
 </section>
 
+<section class="block block-primary" id="purpose">
+  <div class="block-head"><h2>目的から探す</h2></div>
+  <div class="purpose-grid">
+    <a class="purpose-card" href="feature/job-hunting.html">
+      <div class="icon"><svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3L2 8l10 5 10-5-10-5z"/><path d="M5 11v5c0 2.5 3.5 5 7 5s7-2.5 7-5v-5"/><path d="M22 8v6"/></svg></div>
+      <div class="purpose-card-body">
+        <h3>就職</h3>
+        <p class="purpose-card-for">就活・新卒・第二新卒で、はじめて資格を選ぶ方</p>
+        <ul class="purpose-card-examples" aria-label="職種の例"><li>事務・経理</li><li>IT・情報技術</li><li>営業・販売</li><li>未経験OK</li></ul>
+      </div>
+    </a>
+    <a class="purpose-card" href="feature/job-hunting.html">
+      <div class="icon"><svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9h12l-3-3"/><path d="M20 9V5"/><path d="M20 15H8l3 3"/><path d="M4 15v4"/></svg></div>
+      <div class="purpose-card-body">
+        <h3>転職</h3>
+        <p class="purpose-card-for">業界や職種を変えたい社会人向け</p>
+        <ul class="purpose-card-examples" aria-label="職種の例"><li>事務・経理</li><li>IT・情報技術</li><li>不動産</li><li>医療・介護</li></ul>
+      </div>
+    </a>
+    <a class="purpose-card" href="feature/working-adults.html">
+      <div class="icon"><svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 18h16"/><path d="M7 15l4-6 3 3 5-7"/></svg></div>
+      <div class="purpose-card-body">
+        <h3>スキルアップ</h3>
+        <p class="purpose-card-for">今の仕事に活かせる資格を探す方</p>
+        <ul class="purpose-card-examples" aria-label="職種の例"><li>事務・経理</li><li>IT・情報技術</li><li>管理・マネジメント</li><li>営業・販売</li></ul>
+      </div>
+    </a>
+  </div>
+</section>
+
 <section class="block block-secondary" id="recentBlock" hidden>
-  <div class="block-head"><h2>最近見た資格</h2><p>このブラウザの閲覧履歴</p></div>
-  <div class="popular-grid" id="recentGrid"></div>
+  <div class="block-head"><h2>最近見た資格</h2></div>
+  <ul class="recent-list" id="recentGrid"></ul>
 </section>
 
 <section class="block block-primary">
@@ -86,7 +117,7 @@
 <section class="block block-secondary" id="fields">
   <div class="block-head"><h2>分野から探す</h2></div>
   <div class="field-grid"><a class="field-card" href="bunya/manufacturing.html"><div class="icon"><svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7a2 2 0 0 1 2-2h3l2 2h7a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"/></svg></div><div class="field-card-body"><div class="field-card-top"><h3>機械・電気・ものづくり</h3><span class="field-count">284件</span></div><p class="field-examples">危険物取扱者・第三種電気主任技術者・1級電気工事施工管理技士など</p></div></a><a class="field-card" href="bunya/it.html"><div class="icon"><svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7a2 2 0 0 1 2-2h3l2 2h7a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"/></svg></div><div class="field-card-body"><div class="field-card-top"><h3>IT・情報処理</h3><span class="field-count">109件</span></div><p class="field-examples">ITパスポート・基本情報技術者・応用情報技術者など</p></div></a><a class="field-card" href="bunya/architecture.html"><div class="icon"><svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7a2 2 0 0 1 2-2h3l2 2h7a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"/></svg></div><div class="field-card-body"><div class="field-card-top"><h3>建築・設備</h3><span class="field-count">93件</span></div><p class="field-examples">一級建築士・1級建築施工管理技士・二級建築士など</p></div></a><a class="field-card" href="bunya/language.html"><div class="icon"><svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7a2 2 0 0 1 2-2h3l2 2h7a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"/></svg></div><div class="field-card-body"><div class="field-card-top"><h3>語学・コミュニケーション</h3><span class="field-count">64件</span></div><p class="field-examples">日本漢字能力検定2級・全商英語検定1級・秘書検定2級など</p></div></a><a class="field-card" href="bunya/safety.html"><div class="icon"><svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7a2 2 0 0 1 2-2h3l2 2h7a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"/></svg></div><div class="field-card-body"><div class="field-card-top"><h3>安全・環境・危険物</h3><span class="field-count">54件</span></div><p class="field-examples">甲種消防設備士・乙種消防設備士・公害防止管理者など</p></div></a><a class="field-card" href="bunya/finance.html"><div class="icon"><svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7a2 2 0 0 1 2-2h3l2 2h7a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"/></svg></div><div class="field-card-body"><div class="field-card-top"><h3>会計・金融・経営</h3><span class="field-count">52件</span></div><p class="field-examples">日商簿記3級・日商簿記2級・税理士など</p></div></a><a class="field-card" href="bunya/service.html"><div class="icon"><svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7a2 2 0 0 1 2-2h3l2 2h7a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"/></svg></div><div class="field-card-body"><div class="field-card-top"><h3>美容・サービス・スポーツ</h3><span class="field-count">52件</span></div><p class="field-examples">美容師・クリーニング師・社会体育指導者など</p></div></a><a class="field-card" href="bunya/business.html"><div class="icon"><svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7a2 2 0 0 1 2-2h3l2 2h7a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"/></svg></div><div class="field-card-body"><div class="field-card-top"><h3>商業・販売・事務</h3><span class="field-count">45件</span></div><p class="field-examples">登録販売者・一種・二種外務員資格・国内旅行業務取扱管理者など</p></div></a></div>
-  <p class="field-more"><a href="#all">すべての分野・条件で絞り込む →</a></p>
+  <p class="field-more"><a href="#all-certs">すべての分野・条件で絞り込む →</a></p>
 </section>
 
 <section class="block block-secondary block-compare" id="compare">
@@ -94,36 +125,35 @@
   <div class="compare-grid"><a class="compare-card" href="vs/takken-gyoseishoshi.html"><span class="compare-tag">不動産</span><div class="compare-names">宅地建物取引士 <em>vs</em> 行政書士</div><p class="compare-tip">どちらも受験資格のない人気の国家資格ですが、活かす分野が異なります。宅地建物取引士は不動産取引…</p><span class="compare-go">比較する →</span></a><a class="compare-card" href="vs/gyoseishoshi-sharoshi.html"><span class="compare-tag">法律・法務・知財</span><div class="compare-names">行政書士 <em>vs</em> 社会保険労務士</div><p class="compare-tip">ともに独立開業を狙える法律系国家資格です。行政書士は許認可・各種書類作成と業務範囲が広く、社会…</p><span class="compare-go">比較する →</span></a><a class="compare-card" href="vs/boki-2-3.html"><span class="compare-tag">会計・金融・経営</span><div class="compare-names">日商簿記2級 <em>vs</em> 日商簿記3級</div><p class="compare-tip">日商簿記の2級と3級の比較です。3級は商業簿記の基礎で経理の入門に、2級は商業簿記＋工業簿記ま…</p><span class="compare-go">比較する →</span></a><a class="compare-card" href="vs/kihonjoho-ojoho.html"><span class="compare-tag">IT・情報処理</span><div class="compare-names">基本情報技術者 <em>vs</em> 応用情報技術者</div><p class="compare-tip">情報処理技術者試験の基本情報と応用情報の比較です。基本情報はIT基礎・開発の登竜門、応用情報は…</p><span class="compare-go">比較する →</span></a><a class="compare-card" href="vs/fp-2-3.html"><span class="compare-tag">会計・金融・経営</span><div class="compare-names">2級FP技能士 <em>vs</em> 3級FP技能士</div><p class="compare-tip">FP技能士の2級と3級の比較です。3級は家計・お金の基礎を学ぶ入門、2級は実務・相談業務で評価…</p><span class="compare-go">比較する →</span></a><a class="compare-card" href="vs/takken-mankanshi.html"><span class="compare-tag">不動産</span><div class="compare-names">宅地建物取引士 <em>vs</em> マンション管理士</div><p class="compare-tip">不動産系国家資格同士の比較です。宅地建物取引士は不動産の売買・仲介に必須で求人が豊富、マンショ…</p><span class="compare-go">比較する →</span></a></div>
 </section>
 
-<section class="block block-primary" id="all">
+<section class="block block-secondary block-all-certs" id="all-certs">
   <div class="block-head"><h2>すべての資格から探す</h2><p>分野・区分・条件で絞り込み</p></div>
-  <div class="controls">
-    <label class="ctl"><span class="ctl-l">分野</span><select id="major" aria-label="分野で絞り込み"><option value="">すべて</option></select></label>
-    <label class="ctl"><span class="ctl-l">区分</span><select id="type" aria-label="区分で絞り込み"><option value="">すべて</option></select></label>
-    <label class="ctl"><span class="ctl-l">活かせる業界</span><select id="industry" aria-label="活かせる業界で絞り込み"><option value="">すべて</option></select></label>
-    <label class="ctl"><span class="ctl-l">学習時間の目安</span><select id="study" aria-label="学習時間の目安で絞り込み">
+  <div class="all-certs-filters">
+    <div class="filter-field"><label for="major">分野</label><select id="major" aria-label="分野で絞り込み"><option value="">すべて</option></select></div>
+    <div class="filter-field"><label for="type">区分</label><select id="type" aria-label="区分で絞り込み"><option value="">すべて</option></select></div>
+    <div class="filter-field"><label for="industry">活かせる業界</label><select id="industry" aria-label="活かせる業界で絞り込み"><option value="">すべて</option></select></div>
+    <div class="filter-field"><label for="study">学習時間の目安</label><select id="study" aria-label="学習時間の目安で絞り込み">
       <option value="">すべて</option>
       <option value="0-50">〜50時間</option>
       <option value="50-100">50〜100時間</option>
       <option value="100-300">100〜300時間</option>
       <option value="300-1000">300〜1000時間</option>
       <option value="1000-">1000時間以上</option>
-    </select></label>
-    <label class="ctl"><span class="ctl-l">並び順</span><select id="sort" aria-label="並び順">
+    </select></div>
+    <div class="filter-field"><label for="sort">並び順</label><select id="sort" aria-label="並び順">
       <option value="">標準（人気を上位）</option>
       <option value="fee-asc">受験料が安い順</option>
       <option value="fee-desc">受験料が高い順</option>
       <option value="pass-desc">合格率が高い順</option>
       <option value="pass-asc">合格率が低い順</option>
       <option value="app-desc">受験者数が多い順（人気）</option>
-    </select></label>
+    </select></div>
   </div>
-  <div class="filters">
-    <label><input type="checkbox" id="f-pub"> データ掲載のみ</label>
-    <span class="muted" id="studynote" style="display:none">学習時間は編集部調べの目安（非公式）</span>
-  </div>
-  <div class="results-bar"><p id="status" class="muted"></p><button type="button" id="clearFilters" class="clear-filters" hidden>× 条件をクリア</button></div>
-  <p class="muted hint">各行の「＋比較」で資格を選ぶと、画面下の比較バーから最大4件まで並べて比較できます。</p>
-  <ul id="results" class="results"><li class="muted">読み込み中…</li></ul>
+  <label class="all-certs-check"><input type="checkbox" id="f-pub"> データ掲載のみ</label>
+  <span class="muted" id="studynote" style="display:none">学習時間は編集部調べの目安（非公式）</span>
+  <div class="results-bar"><button type="button" id="clearFilters" class="clear-filters" hidden>× 条件をクリア</button></div>
+  <p class="all-certs-count" id="allCertsCount"></p>
+  <ul id="results" class="all-certs-grid"><li class="muted" style="grid-column:1/-1">読み込み中…</li></ul>
+  <nav class="pagination" id="pagination" aria-label="資格一覧のページ送り" hidden></nav>
 </section>
 
 <section class="block block-secondary" id="partners">
@@ -147,7 +177,8 @@
   <div class="site-footer-inner">
     <p class="site-footer-brand">資格マスター</p>
     <nav class="site-footer-nav" aria-label="フッターナビ">
-      <a href="index.html">資格一覧</a>
+      <a href="index.html#purpose">目的から探す</a>
+      <a href="index.html#all-certs">資格一覧</a>
       <a href="index.html#fields">分野から探す</a>
       <a href="shoku/index.html">職種から探す</a>
       <a href="index.html#compare">よく比較される資格</a>

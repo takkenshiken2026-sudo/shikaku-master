@@ -474,6 +474,100 @@ def cert_relations_html(slug):
               '出願前に必ず各資格の公式情報でご確認ください。</p></section>')
 
 
+def _detail_link_item(slug, note=""):
+    desc = f'<span class="detail-link-desc">{esc(note)}</span>' if note else ""
+    return (f'<li class="detail-link-item"><a href="{esc(slug)}.html">'
+            f'{esc(_rel_name(slug))}</a>{desc}</li>')
+
+
+def detail_nav_html(slug, cat, rel_links, vs_pairs):
+    """UI spec v2.8: detail-nav（ステップアップ + ほかの資格を見る）。"""
+    rel = CERT_RELATIONS.get(slug)
+    block1 = ""
+    if rel:
+        chain = step_up_chain(slug)
+        rm = roadmap_html(slug, chain)
+        chain_set = set(chain)
+        subs = []
+        branch_up = [(s, n) for s, n in rel["up"] if s not in chain_set]
+        branch_down = [(s, n) for s, n in rel["down"] if s not in chain_set]
+        if branch_up:
+            subs.append(
+                '<h3 class="detail-nav-subhead">そのほか上位として目指せる資格</h3>'
+                '<ul class="detail-link-list">'
+                + "".join(_detail_link_item(s, n) for s, n in branch_up)
+                + "</ul>")
+        if branch_down:
+            subs.append(
+                '<h3 class="detail-nav-subhead">そのほか前段階となる資格</h3>'
+                '<ul class="detail-link-list">'
+                + "".join(_detail_link_item(s, n) for s, n in branch_down)
+                + "</ul>")
+        if rel["exempt_to"] or rel["exempt_from"]:
+            items = rel["exempt_to"] + rel["exempt_from"]
+            subs.append(
+                '<h3 class="detail-nav-subhead">試験の免除・受験資格の優遇</h3>'
+                '<ul class="detail-link-list">'
+                + "".join(_detail_link_item(s, n) for s, n in items)
+                + "</ul>")
+        if rel["combo"]:
+            subs.append(
+                '<h3 class="detail-nav-subhead">あわせて取りたい資格（ダブルライセンス）</h3>'
+                '<ul class="detail-link-list">'
+                + "".join(_detail_link_item(s, n) for s, n in rel["combo"])
+                + "</ul>")
+        if rm or subs:
+            block1 = (
+                '<div class="detail-nav-block">'
+                '<h2 class="detail-nav-head">ステップアップ・上位資格を目指す</h2>'
+                + rm + "".join(subs)
+                + '<p class="detail-nav-note">※免除・受験資格の要件は変更されることがあります。'
+                  '出願前に必ず各資格の公式情報でご確認ください。</p>'
+                '</div>')
+
+    compare_row = ""
+    if vs_pairs:
+        links = "".join(
+            f'<a href="../vs/{esc(ps)}.html">{esc(on)}との違い</a>'
+            for ps, on in vs_pairs[:5])
+        compare_row = (
+            '<h3 class="detail-nav-subhead">よく比較される資格</h3>'
+            f'<div class="detail-compare-row">{links}</div>')
+
+    more_grid = (
+        '<h3 class="detail-nav-subhead">もっと探す</h3>'
+        '<ul class="detail-link-grid">'
+        + "".join(
+            f'<li class="detail-link-item"><a href="{u}">{esc(t)}</a></li>'
+            for u, t in rel_links)
+        + "</ul>")
+
+    related_js = f"""<script>
+fetch("../data/certifications.json").then(r=>r.json()).then(all=>{{
+  const cat={json.dumps(cat, ensure_ascii=False)}, me={json.dumps(slug, ensure_ascii=False)};
+  const ul=document.getElementById("relatedGrid");
+  all.filter(x=>x.category===cat&&x.slug!==me).slice(0,12).forEach(x=>{{
+    const li=document.createElement("li");
+    li.className="detail-link-item";
+    li.innerHTML='<a href="'+x.slug+'.html">'+x.name+'</a>';
+    ul.appendChild(li);
+  }});
+  if(!ul.children.length) ul.innerHTML='<li class="detail-link-item muted">なし</li>';
+}});
+</script>"""
+
+    block2 = (
+        '<div class="detail-nav-block">'
+        '<h2 class="detail-nav-head">ほかの資格を見る・比較する</h2>'
+        '<h3 class="detail-nav-subhead">同じ分野の他の資格</h3>'
+        '<ul class="detail-link-grid" id="relatedGrid"></ul>'
+        + compare_row + more_grid
+        + '</div>'
+        + related_js)
+
+    return f'<nav class="detail-nav" aria-label="関連する資格への導線">{block1}{block2}</nav>'
+
+
 def materials_section_html(slug):
     """おすすめ教材・講座セクション。アフィリンクがある場合は広告表示(景表法/ステマ規制)と
     rel=sponsored を自動付与する。教材が無ければ空文字。"""
@@ -563,11 +657,10 @@ def page_shell(title: str, body: str, depth: int, noindex: bool = True,
   <div class="header-inner">
     <div class="header-brand"><a class="logo" href="{base}index.html">{esc(SITE_NAME)}</a></div>
     <nav class="header-nav" aria-label="サイトメニュー">
+      <a href="{base}index.html#purpose">目的から探す</a><span class="header-nav-sep" aria-hidden="true">｜</span>
       <a href="{base}index.html#fields">分野から探す</a><span class="header-nav-sep" aria-hidden="true">｜</span>
-      <a href="{base}index.html">資格一覧</a><span class="header-nav-sep" aria-hidden="true">｜</span>
-      <a href="{base}shoku/index.html">職種から探す</a><span class="header-nav-sep" aria-hidden="true">｜</span>
-      <a href="{base}feature/index.html">特集・ランキング</a><span class="header-nav-sep" aria-hidden="true">｜</span>
-      <a href="{base}index.html#partners">資格対策サイト</a>
+      <a href="{base}index.html#all-certs">資格一覧</a><span class="header-nav-sep" aria-hidden="true">｜</span>
+      <a href="{base}compare.html">比較</a>
     </nav>
     <div class="header-actions">
       <button type="button" class="header-icon-btn" data-toggle="search" aria-label="資格名で検索" aria-controls="hSearch" aria-expanded="false"><svg class="ico-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/></svg></button>
@@ -581,8 +674,10 @@ def page_shell(title: str, body: str, depth: int, noindex: bool = True,
     </form>
   </div>
   <nav class="header-menu-panel" id="hMenu" aria-label="サイトメニュー" hidden>
+    <a href="{base}index.html#purpose">目的から探す</a>
     <a href="{base}index.html#fields">分野から探す</a>
-    <a href="{base}index.html">資格一覧</a>
+    <a href="{base}index.html#all-certs">資格一覧</a>
+    <a href="{base}compare.html">比較</a>
     <a href="{base}shoku/index.html">職種から探す</a>
     <a href="{base}feature/index.html">特集・ランキング</a>
     <a href="{base}index.html#partners">資格対策サイト</a>
@@ -597,7 +692,8 @@ def page_shell(title: str, body: str, depth: int, noindex: bool = True,
   <div class="site-footer-inner">
     <p class="site-footer-brand">{esc(SITE_NAME)}</p>
     <nav class="site-footer-nav" aria-label="フッターナビ">
-      <a href="{base}index.html">資格一覧</a>
+      <a href="{base}index.html#purpose">目的から探す</a>
+      <a href="{base}index.html#all-certs">資格一覧</a>
       <a href="{base}index.html#fields">分野から探す</a>
       <a href="{base}shoku/index.html">職種から探す</a>
       <a href="{base}index.html#compare">よく比較される資格</a>
@@ -676,13 +772,13 @@ def build_detail(row) -> str:
     inds = industry_tags(row)
     if inds:
         chips = "".join(
-            f'<a class="tag-chip tag-ind" href="../index.html?industry={quote(t)}#all"'
+            f'<a class="tag-chip tag-ind" href="../index.html?industry={quote(t)}#all-certs"'
             f' title="「{esc(t)}」で活かせる資格を探す">{esc(t)}</a>' for t in inds)
         spec.append(("活かせる業界", chips))
     tags = cert_tags(row)
     if tags:
         chips = "".join(
-            f'<a class="tag-chip" href="../index.html?tag={quote(t)}#all"'
+            f'<a class="tag-chip" href="../index.html?tag={quote(t)}#all-certs"'
             f' title="「{esc(t)}」の資格を探す">{esc(t)}</a>' for t in tags)
         spec.append(("特徴・目的タグ", chips))
     src = row.get("source_checked_at", "")
@@ -712,18 +808,14 @@ def build_detail(row) -> str:
            if (st_h := (STUDY.get(row["slug"], {}) or {}).get("study_hours", "")) else "")
         + '</div></div>')
 
-    # 公式サイトへの導線（CTA）と出典・注意書き
+    # 公式サイトへの導線（detail-official に出力）
     if row["official_url"]:
         u = esc(row["official_url"])
-        cta = (f'<p class="official-cta"><a class="btn-official" href="{u}" '
-               f'rel="nofollow noopener" target="_blank">公式サイトで最新情報を確認 ↗</a></p>')
+        detail_official = (
+            f'<div class="detail-official"><a class="btn" href="{u}" '
+            f'rel="nofollow noopener" target="_blank">公式サイトで最新情報を確認 ↗</a></div>')
     else:
-        cta = ""
-    provenance = (
-        '<p class="provenance">受験料・試験形式・受験資格・合格率・実施団体は、'
-        '各資格の<strong>公式の一次情報</strong>に基づいて整備しています。'
-        '制度・金額・日程は改定されることがあるため、出願前に必ず公式サイトで'
-        'ご確認ください。空欄の項目は公式で確認のうえ追記します。</p>')
+        detail_official = ""
 
     # 鮮度シグナル（最終更新日の可視表示）
     jd = jp_date(src)
@@ -813,9 +905,6 @@ def build_detail(row) -> str:
     # 比較ペアは下の「よく比較される資格」で扱うため、ここでは一覧・特集への導線のみ
     rel += [("../feature/cheap.html", "受験料が安い資格ランキング"),
             ("../feature/high-pass.html", "合格率が高い資格")]
-    more_links = ('<nav class="more-links" aria-label="もっと探す"><h3>もっと探す</h3><ul>'
-                  + "".join(f'<li><a href="{u}">{esc(t)}</a></li>' for u, t in rel)
-                  + "</ul></nav>")
 
     # FAQ 構造化データ
     qa = []
@@ -866,8 +955,6 @@ def build_detail(row) -> str:
 
     _mat = materials_section_html(row["slug"])
     _mat_block = ("\n" + _mat) if _mat else ""
-    _rel = cert_relations_html(row["slug"])
-    _rel_block = ("\n" + _rel) if _rel else ""
 
     # 関連資格との比較（この資格が含まれる比較ペア＝静的vsページへ）
     vs_pairs = []
@@ -875,12 +962,8 @@ def build_detail(row) -> str:
         if other in INDEXABLE_SLUGS:
             on = re.sub(r"[（(].*?[）)]", "", NAME_BY_SLUG.get(other, other)).strip() or other
             vs_pairs.append((ps, on))
-    compare_block = ""
-    if vs_pairs:
-        links = " ・ ".join(f'<a href="../vs/{esc(ps)}.html">{esc(on)}との違い</a>'
-                            for ps, on in vs_pairs[:5])
-        compare_block = ('<div class="more-compare"><h3>よく比較される資格</h3>'
-                         f'<p>よく一緒に比較されます： {links}</p></div>')
+
+    detail_nav = detail_nav_html(row["slug"], cat, rel, vs_pairs)
 
     # 出典・最終確認日（フッターだけでなく資格ごとに明示）
     if row["official_url"]:
@@ -943,34 +1026,16 @@ def build_detail(row) -> str:
 <h1 class="detail-title">{esc(name)}</h1>
 <p class="detail-audience">{lead}</p>
 {facts_grid}
-<div class="detail-actions"><button type="button" class="cmp-add-btn" data-slug="{esc(row["slug"])}" data-name="{esc(re.sub(r"[（(].*?[）)]", "", name).strip() or name)}">＋ 比較</button>{cta}</div>
 {points_html}
 {partner_detail}
 <section class="detail-spec" aria-labelledby="ds-h">
 <h2 class="detail-section-title" id="ds-h">詳細情報</h2>
-<table class="spec">{rows_html}</table></section>
-{provenance}
+<div class="spec-wrap"><table class="spec">{rows_html}</table></div></section>
 {faq_html}
-{careers_section}{_mat_block}{_rel_block}
-<section class="detail-related" aria-labelledby="dr2-h">
-<h2 class="detail-section-title" id="dr2-h">ほかの資格を見る・比較する</h2>
-<div class="more-same"><h3>同じ分野の他の資格</h3><ul id="related"></ul></div>
-{compare_block}
-{more_links}
-</section>
+{careers_section}{_mat_block}
 {source_aside}
-<script>
-fetch("../data/certifications.json").then(r=>r.json()).then(all=>{{
-  const cat={json.dumps(cat, ensure_ascii=False)}, me={json.dumps(row["slug"], ensure_ascii=False)};
-  const ul=document.getElementById("related");
-  all.filter(x=>x.category===cat&&x.slug!==me).slice(0,12).forEach(x=>{{
-    const li=document.createElement("li");
-    li.innerHTML='<a href="'+x.slug+'.html">'+x.name+'</a>';
-    ul.appendChild(li);
-  }});
-  if(!ul.children.length) ul.innerHTML='<li class="muted">なし</li>';
-}});
-</script>
+{detail_official}
+{detail_nav}
 {recent_js}
 """
     # meta description は各ページで一意になるよう、必ず固有の資格名で始め、
@@ -2373,6 +2438,16 @@ def build_index(rows) -> str:
         if _n >= 6:
             break
 
+    PURPOSE_ICON_JOB = ('<svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"'
+                        ' stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+                        '<path d="M12 3L2 8l10 5 10-5-10-5z"/><path d="M5 11v5c0 2.5 3.5 5 7 5s7-2.5 7-5v-5"/><path d="M22 8v6"/></svg>')
+    PURPOSE_ICON_CHANGE = ('<svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"'
+                           ' stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+                           '<path d="M4 9h12l-3-3"/><path d="M20 9V5"/><path d="M20 15H8l3 3"/><path d="M4 15v4"/></svg>')
+    PURPOSE_ICON_SKILL = ('<svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"'
+                          ' stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+                          '<path d="M4 18h16"/><path d="M7 15l4-6 3 3 5-7"/></svg>')
+
     body = f"""<section class="hero">
   <h1><span class="hero-h1-line">就職・転職・スキルアップの</span><span class="hero-h1-line">資格情報サイト</span></h1>
   <p class="hero-sub">日本国内の資格を <strong id="count">{len(rows)}</strong> 件以上掲載。受験料・受験資格・試験形式・合格率・公式サイトを、公式の一次情報に基づいて整理しています。</p>
@@ -2380,13 +2455,43 @@ def build_index(rows) -> str:
     <span class="ico"><svg class="ico-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/></svg></span>
     <input id="q" type="search" placeholder="資格名で検索（例: 簿記, 宅建, ITパスポート）" aria-label="資格名で検索">
   </div>
-  <p class="hero-hint">または <a href="#fields">分野から探す</a>・<a href="#all">条件で絞り込む</a></p>
+  <p class="hero-hint">または <a href="#purpose">目的から探す</a>・<a href="#fields">分野から探す</a></p>
   <p class="hero-result" id="heroResult" hidden></p>
 </section>
 
+<section class="block block-primary" id="purpose">
+  <div class="block-head"><h2>目的から探す</h2></div>
+  <div class="purpose-grid">
+    <a class="purpose-card" href="feature/job-hunting.html">
+      <div class="icon">{PURPOSE_ICON_JOB}</div>
+      <div class="purpose-card-body">
+        <h3>就職</h3>
+        <p class="purpose-card-for">就活・新卒・第二新卒で、はじめて資格を選ぶ方</p>
+        <ul class="purpose-card-examples" aria-label="職種の例"><li>事務・経理</li><li>IT・情報技術</li><li>営業・販売</li><li>未経験OK</li></ul>
+      </div>
+    </a>
+    <a class="purpose-card" href="feature/job-hunting.html">
+      <div class="icon">{PURPOSE_ICON_CHANGE}</div>
+      <div class="purpose-card-body">
+        <h3>転職</h3>
+        <p class="purpose-card-for">業界や職種を変えたい社会人向け</p>
+        <ul class="purpose-card-examples" aria-label="職種の例"><li>事務・経理</li><li>IT・情報技術</li><li>不動産</li><li>医療・介護</li></ul>
+      </div>
+    </a>
+    <a class="purpose-card" href="feature/working-adults.html">
+      <div class="icon">{PURPOSE_ICON_SKILL}</div>
+      <div class="purpose-card-body">
+        <h3>スキルアップ</h3>
+        <p class="purpose-card-for">今の仕事に活かせる資格を探す方</p>
+        <ul class="purpose-card-examples" aria-label="職種の例"><li>事務・経理</li><li>IT・情報技術</li><li>管理・マネジメント</li><li>営業・販売</li></ul>
+      </div>
+    </a>
+  </div>
+</section>
+
 <section class="block block-secondary" id="recentBlock" hidden>
-  <div class="block-head"><h2>最近見た資格</h2><p>このブラウザの閲覧履歴</p></div>
-  <div class="popular-grid" id="recentGrid"></div>
+  <div class="block-head"><h2>最近見た資格</h2></div>
+  <ul class="recent-list" id="recentGrid"></ul>
 </section>
 
 <section class="block block-primary">
@@ -2398,7 +2503,7 @@ def build_index(rows) -> str:
 <section class="block block-secondary" id="fields">
   <div class="block-head"><h2>分野から探す</h2></div>
   <div class="field-grid">{fld_html}</div>
-  <p class="field-more"><a href="#all">すべての分野・条件で絞り込む →</a></p>
+  <p class="field-more"><a href="#all-certs">すべての分野・条件で絞り込む →</a></p>
 </section>
 
 <section class="block block-secondary block-compare" id="compare">
@@ -2406,36 +2511,35 @@ def build_index(rows) -> str:
   <div class="compare-grid">{cmp_html}</div>
 </section>
 
-<section class="block block-primary" id="all">
+<section class="block block-secondary block-all-certs" id="all-certs">
   <div class="block-head"><h2>すべての資格から探す</h2><p>分野・区分・条件で絞り込み</p></div>
-  <div class="controls">
-    <label class="ctl"><span class="ctl-l">分野</span><select id="major" aria-label="分野で絞り込み"><option value="">すべて</option></select></label>
-    <label class="ctl"><span class="ctl-l">区分</span><select id="type" aria-label="区分で絞り込み"><option value="">すべて</option></select></label>
-    <label class="ctl"><span class="ctl-l">活かせる業界</span><select id="industry" aria-label="活かせる業界で絞り込み"><option value="">すべて</option></select></label>
-    <label class="ctl"><span class="ctl-l">学習時間の目安</span><select id="study" aria-label="学習時間の目安で絞り込み">
+  <div class="all-certs-filters">
+    <div class="filter-field"><label for="major">分野</label><select id="major" aria-label="分野で絞り込み"><option value="">すべて</option></select></div>
+    <div class="filter-field"><label for="type">区分</label><select id="type" aria-label="区分で絞り込み"><option value="">すべて</option></select></div>
+    <div class="filter-field"><label for="industry">活かせる業界</label><select id="industry" aria-label="活かせる業界で絞り込み"><option value="">すべて</option></select></div>
+    <div class="filter-field"><label for="study">学習時間の目安</label><select id="study" aria-label="学習時間の目安で絞り込み">
       <option value="">すべて</option>
       <option value="0-50">〜50時間</option>
       <option value="50-100">50〜100時間</option>
       <option value="100-300">100〜300時間</option>
       <option value="300-1000">300〜1000時間</option>
       <option value="1000-">1000時間以上</option>
-    </select></label>
-    <label class="ctl"><span class="ctl-l">並び順</span><select id="sort" aria-label="並び順">
+    </select></div>
+    <div class="filter-field"><label for="sort">並び順</label><select id="sort" aria-label="並び順">
       <option value="">標準（人気を上位）</option>
       <option value="fee-asc">受験料が安い順</option>
       <option value="fee-desc">受験料が高い順</option>
       <option value="pass-desc">合格率が高い順</option>
       <option value="pass-asc">合格率が低い順</option>
       <option value="app-desc">受験者数が多い順（人気）</option>
-    </select></label>
+    </select></div>
   </div>
-  <div class="filters">
-    <label><input type="checkbox" id="f-pub"> データ掲載のみ</label>
-    <span class="muted" id="studynote" style="display:none">学習時間は編集部調べの目安（非公式）</span>
-  </div>
-  <div class="results-bar"><p id="status" class="muted"></p><button type="button" id="clearFilters" class="clear-filters" hidden>× 条件をクリア</button></div>
-  <p class="muted hint">各行の「＋比較」で資格を選ぶと、画面下の比較バーから最大4件まで並べて比較できます。</p>
-  <ul id="results" class="results"><li class="muted">読み込み中…</li></ul>
+  <label class="all-certs-check"><input type="checkbox" id="f-pub"> データ掲載のみ</label>
+  <span class="muted" id="studynote" style="display:none">学習時間は編集部調べの目安（非公式）</span>
+  <div class="results-bar"><button type="button" id="clearFilters" class="clear-filters" hidden>× 条件をクリア</button></div>
+  <p class="all-certs-count" id="allCertsCount"></p>
+  <ul id="results" class="all-certs-grid"><li class="muted" style="grid-column:1/-1">読み込み中…</li></ul>
+  <nav class="pagination" id="pagination" aria-label="資格一覧のページ送り" hidden></nav>
 </section>
 
 <section class="block block-secondary" id="partners">
@@ -2494,10 +2598,12 @@ SEARCH_JS = """(function(){
       fPub=document.getElementById('f-pub'),
       studyNote=document.getElementById('studynote'),
       results=document.getElementById('results'),
-      status=document.getElementById('status'),count=document.getElementById('count'),
+      countEl=document.getElementById('allCertsCount'),
+      pagination=document.getElementById('pagination'),
+      count=document.getElementById('count'),
       heroResult=document.getElementById('heroResult'),
       clearBtn=document.getElementById('clearFilters');
-  var DATA=[], activeTags=new Set();
+  var DATA=[], activeTags=new Set(), currentPage=1, PAGE_SIZE=20, resetPage=true;
   function esc(s){return (s||'').replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
   function shortName(n){return (n||'').replace(/[（(][^）)]*[）)]/g,'').trim()||n;}
   function opt(sel,v){var o=document.createElement('option');o.value=v;o.textContent=v;sel.appendChild(o);}
@@ -2516,6 +2622,7 @@ SEARCH_JS = """(function(){
       if(sortSel.value)p.set('sort',sortSel.value);
       if(fPub.checked)p.set('pub','1');
       if(activeTags.size)p.set('tag',[].slice.call(activeTags).join(','));
+      if(currentPage>1)p.set('page',String(currentPage));
       var qs=p.toString();
       history.replaceState(null,'',qs?('?'+qs):location.pathname);
     }catch(e){}
@@ -2525,10 +2632,33 @@ SEARCH_JS = """(function(){
     var p=band.split('-'),lo=parseInt(p[0],10),hi=p[1]===''?Infinity:parseInt(p[1],10);
     return v>=lo&&v<hi;
   }
+  function renderPagination(total){
+    if(!pagination)return;
+    var pages=Math.max(1,Math.ceil(total/PAGE_SIZE));
+    if(total<=PAGE_SIZE){pagination.innerHTML='';pagination.hidden=true;return;}
+    pagination.hidden=false;
+    if(currentPage>pages)currentPage=pages;
+    var start=(currentPage-1)*PAGE_SIZE+1;
+    var end=Math.min(currentPage*PAGE_SIZE,total);
+    var links='';
+    links+='<button type="button" class="pagination-btn'+(currentPage<=1?' is-disabled':'')+'" data-page="'+(currentPage-1)+'"'+(currentPage<=1?' aria-disabled="true"':'')+'>← 前へ</button>';
+    var nums=[];
+    for(var i=1;i<=pages;i++){
+      if(i===1||i===pages||Math.abs(i-currentPage)<=1)nums.push(i);
+      else if(nums[nums.length-1]!=='…')nums.push('…');
+    }
+    nums.forEach(function(n){
+      if(n==='…')links+='<span class="pagination-ellipsis" aria-hidden="true">…</span>';
+      else links+='<button type="button" class="pagination-num'+(n===currentPage?' is-current':'')+'" data-page="'+n+'"'+(n===currentPage?' aria-current="page"':'')+'>'+n+'</button>';
+    });
+    links+='<button type="button" class="pagination-btn'+(currentPage>=pages?' is-disabled':'')+'" data-page="'+(currentPage+1)+'"'+(currentPage>=pages?' aria-disabled="true"':'')+'>次へ →</button>';
+    pagination.innerHTML='<span class="pagination-status">'+start+'–'+end+'件 / 全'+total+'件</span><div class="pagination-links">'+links+'</div>';
+  }
   function render(){
+    if(resetPage){currentPage=1;resetPage=false;}
     var t=(q.value||'').trim().toLowerCase(),mj=majorSel.value,tp=typeSel.value,sk=sortSel.value,
         ind=industrySel.value,band=studySel.value;
-    studyNote.style.display=band?'inline':'none';
+    if(studyNote)studyNote.style.display=band?'inline':'none';
     var out=DATA.filter(function(x){
       if(mj&&x.major!==mj)return false;
       if(tp&&x.type!==tp)return false;
@@ -2552,36 +2682,46 @@ SEARCH_JS = """(function(){
         return asc?va-vb:vb-va;
       });
     } else {
-      // 既定: 定番（受験者数の多い人気資格）を上位に。残りは元の分野順を維持。
       out=out.slice().sort(function(a,b){
         var pa=a.popular?1:0,pb=b.popular?1:0;
         if(pa!==pb)return pb-pa;
         return (appNum(b)||0)-(appNum(a)||0);
       });
     }
-    status.textContent=out.length+' 件';
+    var pages=Math.max(1,Math.ceil(out.length/PAGE_SIZE));
+    if(currentPage>pages)currentPage=pages;
+    var sliceStart=(currentPage-1)*PAGE_SIZE;
+    var pageItems=out.slice(sliceStart,sliceStart+PAGE_SIZE);
     var anyFilter=t||mj||tp||ind||band||activeTags.size||fPub.checked;
     if(clearBtn)clearBtn.hidden=!anyFilter;
+    if(countEl){
+      if(out.length){
+        countEl.innerHTML='全 <strong>'+out.length+'</strong> 件 · '+(sliceStart+1)+'–'+(sliceStart+pageItems.length)+'件を表示';
+      } else countEl.textContent='該当する資格はありません';
+    }
     if(heroResult){
       if(anyFilter){
         heroResult.hidden=false;
         heroResult.innerHTML=(t?'「<strong>'+esc(t)+'</strong>」を含む資格 ':'絞り込み結果 ')+
-          '<strong>'+out.length+'</strong> 件 <a href="#all">一覧へ ↓</a>';
+          '<strong>'+out.length+'</strong> 件 <a href="#all-certs">一覧へ ↓</a>';
       } else { heroResult.hidden=true; heroResult.innerHTML=''; }
     }
-    results.innerHTML=out.slice(0,300).map(function(x){
-      var extra=x.status==='published'?[feeNum(x)!==null?esc(x.fee):'',passNum(x)!==null?'合格率'+esc(x.pass_rate):''].filter(Boolean).join(' / '):'';
-      return '<li><div class="result-main">'+
-        '<a href="c/'+x.slug+'.html">'+esc(x.name)+'</a>'+(x.popular?' <span class="result-label">定番</span>':'')+
-        '<span class="meta"><span class="badge b-'+x.type+'">'+x.type+'</span> '+esc(x.major)+' / '+esc(x.category)+(extra?' ・ '+extra:'')+'</span>'+
-        '</div>'+
-        '<button type="button" class="cmp-add-btn" data-slug="'+x.slug+'" data-name="'+esc(shortName(x.name))+'">＋ 比較</button>'+
-        '</li>';
-    }).join('')||'<li class="empty-state">条件に一致する資格が見つかりませんでした。<br>キーワードを短くするか、上の「× 条件をクリア」で絞り込みを解除してください。</li>';
-    if(out.length>300) results.innerHTML+='<li class="muted">…他 '+(out.length-300)+' 件。さらに絞り込むと見つけやすくなります。</li>';
-    if(window.CmpBar)window.CmpBar.refresh();
+    results.innerHTML=pageItems.map(function(x){
+      return '<li><a class="all-certs-card" href="c/'+x.slug+'.html">'+
+        '<span class="all-certs-card-title">'+esc(shortName(x.name))+'</span>'+
+        '<span class="all-certs-card-sub">'+esc(x.major)+' · '+esc(x.type)+'</span></a></li>';
+    }).join('')||'<li class="muted" style="grid-column:1/-1">条件に一致する資格が見つかりませんでした。<br>キーワードを短くするか、上の「× 条件をクリア」で絞り込みを解除してください。</li>';
+    renderPagination(out.length);
     syncURL();
   }
+  if(pagination)pagination.addEventListener('click',function(e){
+    var btn=e.target.closest('[data-page]');
+    if(!btn||btn.classList.contains('is-disabled'))return;
+    var p=parseInt(btn.getAttribute('data-page'),10);
+    if(!p||p===currentPage)return;
+    currentPage=p; render();
+    var sec=document.getElementById('all-certs'); if(sec)sec.scrollIntoView({behavior:'smooth',block:'start'});
+  });
   fetch('data/certifications.json').then(function(r){return r.json();}).then(function(all){
     DATA=all; if(count)count.textContent=all.length;
     var majors={},types={},inds={};
@@ -2598,18 +2738,20 @@ SEARCH_JS = """(function(){
     if(p.get('study'))studySel.value=p.get('study');
     if(p.get('sort'))sortSel.value=p.get('sort');
     if(p.get('pub')==='1')fPub.checked=true;
+    if(p.get('page'))currentPage=Math.max(1,parseInt(p.get('page'),10)||1);
     if(p.get('tag')){p.get('tag').split(',').forEach(function(tg){activeTags.add(tg);});}
+    if(location.hash==='#all')location.hash='#all-certs';
     render();
   });
-  [q,majorSel,typeSel,sortSel,industrySel,studySel].forEach(function(el){el.addEventListener('input',render);});
-  fPub.addEventListener('change',render);
+  function onFilter(){resetPage=true;render();}
+  [q,majorSel,typeSel,sortSel,industrySel,studySel].forEach(function(el){el.addEventListener('input',onFilter);});
+  fPub.addEventListener('change',onFilter);
   q.addEventListener('keydown',function(e){
-    if(e.key==='Enter'){var a=document.getElementById('all');if(a){e.preventDefault();a.scrollIntoView();}}
+    if(e.key==='Enter'){var a=document.getElementById('all-certs');if(a){e.preventDefault();a.scrollIntoView();}}
   });
   if(clearBtn)clearBtn.addEventListener('click',function(){
     q.value='';majorSel.value='';typeSel.value='';industrySel.value='';studySel.value='';sortSel.value='';fPub.checked=false;
-    activeTags.clear();
-    render();
+    activeTags.clear();resetPage=true;render();
   });
   (function renderRecent(){
     try{
@@ -2617,7 +2759,7 @@ SEARCH_JS = """(function(){
       var blk=document.getElementById('recentBlock'),grid=document.getElementById('recentGrid');
       if(!blk||!grid||!a.length)return;
       grid.innerHTML=a.slice(0,8).map(function(x){
-        return '<a class="pop-card card-link" href="c/'+esc(x.s)+'.html"><div class="pop-card-name">'+esc(x.n)+'</div></a>';
+        return '<li><a href="c/'+esc(x.s)+'.html">'+esc(x.n)+'</a></li>';
       }).join('');
       blk.hidden=false;
     }catch(e){}
@@ -2771,7 +2913,7 @@ APP_CSS = """:root{
 /* タイプスケール（7段階に統一）: hero / page(h1) / section(h2) / 1.1(小見出し・カード見出し) / 1.0(本文) / .9(メタ・補助) / .8(バッジ・細字） */
 --text-hero:clamp(1.5rem,5vw,2.4rem);--text-page:clamp(1.35rem,4.4vw,1.6rem);--text-section:1.3rem;--text-section-sub:1.1rem;
 --text-card-title:1.1rem;--text-lead:1rem;--text-input:1rem;--text-body:1rem;--text-ui:1rem;
---text-nav:.9rem;--text-sm:.9rem;--text-xs:.8rem;--text-2xs:.8rem;--text-chip:.8rem}
+--text-nav:.9rem;--text-sm:.88rem;--text-xs:.84rem;--text-2xs:.8rem;--text-chip:.78rem;--page-gutter:32px}
 *{box-sizing:border-box}
 html{font-size:16px}
 body{margin:0;min-height:100vh;display:flex;flex-direction:column;font-family:"Noto Sans JP",system-ui,-apple-system,"Hiragino Kaku Gothic ProN",Meiryo,sans-serif;font-size:var(--text-ui);color:var(--ink);background:var(--page-bg);line-height:1.7;-webkit-font-smoothing:antialiased;overflow-wrap:break-word}
@@ -2784,7 +2926,7 @@ img{max-width:100%}
 .site-header{background:var(--ink-deep);color:#fff;border-bottom:1px solid var(--gray-800);position:sticky;top:0;z-index:30}
 @media(prefers-reduced-motion:no-preference){html{scroll-behavior:smooth}}
 html{scroll-padding-top:64px}
-.header-inner{max-width:1200px;margin:0 auto;padding:12px 24px;display:flex;align-items:center;gap:16px;min-width:0}
+.header-inner{max-width:1200px;margin:0 auto;padding:12px var(--page-gutter);display:flex;align-items:center;gap:16px;min-width:0}
 .header-brand{flex-shrink:0;display:flex;flex-direction:column;gap:2px}
 .logo{color:#fff;font-weight:700;font-size:1.2rem;text-decoration:none;letter-spacing:.02em}
 .logo:hover{color:var(--gray-300);text-decoration:none}
@@ -2801,19 +2943,19 @@ html{scroll-padding-top:64px}
 .header-search-panel,.header-menu-panel{display:none;border-top:1px solid var(--gray-800);background:var(--ink-deep)}
 .site-header--search-open .header-search-panel{display:block}
 .site-header--menu-open .header-menu-panel{display:flex}
-.header-search-panel{padding:12px 16px 14px}
+.header-search-panel{padding:12px var(--page-gutter) 14px}
 .header-search-form{max-width:1200px;margin:0 auto;display:flex;gap:8px;min-width:0}
 .header-search-form input{flex:1;min-width:0;padding:10px 14px;border:1px solid var(--gray-700);border-radius:var(--radius);background:rgba(255,255,255,.06);color:#fff;font-size:var(--text-input);font-family:inherit}
 .header-search-form input::placeholder{color:var(--gray-500)}
 .header-search-form button{padding:10px 16px;background:var(--accent);color:#fff;border:none;border-radius:var(--radius);font-family:inherit;font-weight:600;cursor:pointer;white-space:nowrap}
 .header-search-form button:hover{background:var(--accent-hover)}
-.header-menu-panel{flex-direction:column;max-width:1200px;margin:0 auto;padding:4px 16px 10px;width:100%}
+.header-menu-panel{flex-direction:column;max-width:1200px;margin:0 auto;padding:4px var(--page-gutter) 10px;width:100%}
 .header-menu-panel a{color:var(--gray-300);text-decoration:none;padding:12px 4px;border-bottom:1px solid var(--gray-800);font-size:var(--text-ui)}
 .header-menu-panel a:last-child{border-bottom:none}
 .header-menu-panel a:hover{color:#fff;text-decoration:none}
-@media(max-width:768px){.header-nav{display:none}.header-actions{display:flex}.header-inner{padding:10px 16px}.site-tagline{display:none}.container{padding:20px 16px 36px}.block-compare{margin-left:-16px;margin-right:-16px;padding-left:16px;padding-right:16px}}
+@media(max-width:768px){.header-nav{display:none}.header-actions{display:flex}.header-inner{padding:10px 16px;--page-gutter:16px}.site-tagline{display:none}.container{padding:20px 16px 36px}.block-compare,.block-all-certs{margin-left:-16px;margin-right:-16px;padding-left:16px;padding-right:16px}}
 
-.container{max-width:1200px;margin:0 auto;padding:24px 24px 40px;width:100%;flex:1 0 auto;min-width:0;background:#fff;box-shadow:0 0 24px rgba(0,0,0,.05)}
+.container{max-width:1200px;margin:0 auto;padding:28px var(--page-gutter) 36px;width:100%;flex:1 0 auto;min-width:0;background:#fff;box-shadow:0 0 24px rgba(0,0,0,.05)}
 
 /* Hero */
 .hero{padding:28px 0 4px;margin-bottom:8px}
@@ -2835,10 +2977,11 @@ html{scroll-padding-top:64px}
 /* Blocks */
 .block{margin-bottom:28px}.block-primary{margin-bottom:40px}.block-secondary{margin-bottom:34px}
 .block-head{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:12px;gap:8px;flex-wrap:wrap}
-.block-primary .block-head h2{font-size:var(--text-section);font-weight:700;color:var(--ink-deep);margin:0}
-.block-secondary .block-head h2{font-size:var(--text-section-sub);font-weight:600;color:var(--gray-800);margin:0}
+.block-head h2{font-size:var(--text-section);font-weight:700;color:var(--ink-deep);margin:0}
 .block-head p{font-size:var(--text-nav);color:var(--gray-500);margin:0}
-.block-compare{background:var(--gray-50);margin-left:-24px;margin-right:-24px;padding:26px 24px 30px;border-top:1px solid var(--gray-200);margin-bottom:0}
+.block-compare{background:var(--gray-50);margin-left:calc(-1*var(--page-gutter));margin-right:calc(-1*var(--page-gutter));padding:28px var(--page-gutter) 32px;border-top:1px solid var(--gray-200);margin-bottom:0}
+.block-all-certs{margin-left:calc(-1*var(--page-gutter));margin-right:calc(-1*var(--page-gutter));padding:40px var(--page-gutter) 48px;border-top:1px solid var(--gray-200);margin-bottom:36px;background:#fff}
+.block-all-certs .block-head{margin-bottom:20px}
 .card-link{position:relative}
 .card-link::after{content:"→";position:absolute;right:12px;top:14px;font-size:var(--text-nav);font-weight:600;color:var(--gray-400);opacity:0;transition:opacity .15s,color .15s;pointer-events:none}
 .card-link:hover::after,.card-link:focus-visible::after{opacity:1;color:var(--accent)}
@@ -2847,7 +2990,6 @@ html{scroll-padding-top:64px}
 
 /* Popular */
 .popular-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
-@media(max-width:720px){.popular-grid{grid-template-columns:repeat(2,1fr);gap:10px}.pop-card--more{display:none}}
 .pop-card{display:flex;flex-direction:column;background:#fff;color:var(--gray-900);border-radius:var(--radius);padding:14px 32px 12px 13px;text-decoration:none;border:1px solid var(--gray-200);transition:border-color .15s,background .15s}
 .pop-card-name{font-size:var(--text-body);font-weight:700;line-height:1.35;margin-bottom:6px;color:var(--ink-deep)}
 #recentGrid .pop-card-name{font-size:var(--text-sm);font-weight:400;margin-bottom:0}
@@ -2855,8 +2997,46 @@ html{scroll-padding-top:64px}
 .pop-card-facts{list-style:none;margin:auto 0 0;padding:10px 0 0;border-top:1px solid var(--gray-200);display:flex;flex-direction:column;gap:5px}
 .pop-card-facts li{display:grid;grid-template-columns:4.8em 1fr;gap:4px;font-size:var(--text-xs);line-height:1.45}
 .pop-card-facts .k{color:var(--gray-500)}.pop-card-facts .v{color:var(--gray-800);font-weight:600}
-.popular-more,.field-more,.compare-more{margin-top:12px;text-align:right}
+@media(max-width:720px){.popular-grid{grid-template-columns:repeat(2,1fr);gap:10px}.pop-card--more{display:none}.popular-more{display:block}}
+.popular-more,.field-more,.compare-more{margin-top:12px;text-align:right;display:none}
 .popular-more a,.field-more a,.compare-more a{font-size:var(--text-ui);font-weight:600;color:var(--gray-800);text-decoration:underline;text-underline-offset:2px}
+@media(max-width:720px){.popular-more{display:block}}
+.purpose-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+@media(max-width:640px){.purpose-grid{grid-template-columns:1fr}}
+.purpose-card{display:flex;align-items:flex-start;gap:12px;background:#fff;border:1px solid var(--gray-200);border-radius:var(--radius);padding:16px 36px 16px 14px;text-decoration:none;color:inherit;transition:border-color .15s,background .15s;position:relative}
+.purpose-card .icon{flex-shrink:0;width:44px;height:44px;display:flex;align-items:center;justify-content:center;background:var(--gray-100);border-radius:var(--radius);color:var(--gray-700)}
+.purpose-card .icon-svg{width:26px;height:26px}
+.purpose-card-body{min-width:0;flex:1}
+.purpose-card h3{font-size:var(--text-card-title);font-weight:700;margin:0 0 4px;color:var(--ink-deep)}
+.purpose-card-for{font-size:var(--text-sm);color:var(--gray-600);line-height:1.5;margin:0 0 8px}
+.purpose-card-examples{display:flex;flex-wrap:wrap;gap:5px;list-style:none;margin:0;padding:0}
+.purpose-card-examples li{font-size:var(--text-chip);color:var(--gray-700);background:var(--accent-light);border:1px solid rgba(42,122,110,.15);border-radius:6px;padding:2px 7px;line-height:1.45}
+.purpose-card::after{content:"→";position:absolute;right:12px;top:14px;font-size:var(--text-nav);font-weight:600;color:var(--gray-400);opacity:0;transition:opacity .15s,color .15s;pointer-events:none}
+.purpose-card:hover::after,.purpose-card:focus-visible::after{opacity:1;color:var(--accent)}
+.purpose-card:hover,.purpose-card:focus-visible{border-color:var(--gray-500);background:var(--accent-light);text-decoration:none}
+.recent-list{list-style:none;display:flex;flex-wrap:wrap;gap:8px;margin:0;padding:0}
+.recent-list a{display:inline-block;padding:8px 12px;border:1px solid var(--gray-200);border-radius:var(--radius);font-size:var(--text-sm);font-weight:600;color:var(--ink-deep);text-decoration:none;background:#fff}
+.recent-list a:hover{border-color:var(--gray-500);text-decoration:none}
+.all-certs-filters{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:14px 12px;margin-bottom:16px}
+.filter-field label{display:block;font-size:var(--text-2xs);color:var(--gray-500);margin-bottom:6px;font-weight:600}
+.filter-field select{width:100%;padding:7px 26px 7px 9px;border:1px solid var(--gray-300);border-radius:4px;font-size:var(--text-xs);font-family:inherit;background:#fff;color:var(--ink)}
+.all-certs-check{display:inline-flex;align-items:center;gap:6px;font-size:var(--text-xs);color:var(--gray-700);margin-bottom:24px;cursor:pointer}
+.all-certs-check input{width:15px;height:15px;accent-color:var(--accent)}
+.all-certs-count{font-size:var(--text-xs);color:var(--gray-600);margin-bottom:14px}
+.all-certs-grid{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.all-certs-card{display:block;padding:13px 14px;border:1px solid var(--gray-200);border-radius:var(--radius);background:#fff;text-decoration:none;color:inherit;transition:border-color .15s,background .15s}
+.all-certs-card:hover{border-color:var(--gray-400);background:var(--gray-50);text-decoration:none}
+.all-certs-card-title{display:block;font-size:var(--text-sm);font-weight:600;line-height:1.4;color:var(--ink-deep);margin-bottom:5px}
+.all-certs-card-sub{display:block;font-size:var(--text-2xs);color:var(--gray-500);line-height:1.45}
+.pagination{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin-top:28px;padding-top:4px}
+.pagination-status{font-size:var(--text-xs);color:var(--gray-600)}
+.pagination-links{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.pagination-btn,.pagination-num{display:inline-flex;align-items:center;justify-content:center;min-width:34px;min-height:34px;padding:0 9px;font-size:var(--text-xs);font-weight:600;border:1px solid var(--gray-200);border-radius:4px;background:#fff;color:var(--ink-deep);text-decoration:none;line-height:1;cursor:pointer;font-family:inherit}
+.pagination-btn:hover,.pagination-num:hover{border-color:var(--gray-400);text-decoration:none}
+.pagination-num.is-current{background:var(--ink-deep);color:#fff;border-color:var(--ink-deep)}
+.pagination-btn.is-disabled,.pagination-num.is-disabled{opacity:.4;pointer-events:none}
+.pagination-ellipsis{font-size:var(--text-sm);color:var(--gray-500);padding:0 2px}
+@media(max-width:720px){.all-certs-filters{grid-template-columns:repeat(2,minmax(0,1fr))}.all-certs-grid{grid-template-columns:1fr}.pagination{flex-direction:column;align-items:stretch}.pagination-links{justify-content:center}}
 
 /* Fields */
 .field-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
@@ -2941,7 +3121,10 @@ h2{color:var(--ink-deep)}
 .badge-overseas{color:#6a4a8a;background:#f3eef8;border-color:#ddd0ea}
 
 /* Spec table (detail) */
-table.spec{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--gray-200);border-radius:10px;overflow:hidden;font-size:var(--text-ui)}
+table.spec{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--gray-200);border-radius:var(--radius);overflow:hidden;font-size:var(--text-ui)}
+.spec-wrap{border:1px solid var(--gray-200);border-radius:var(--radius);overflow:hidden;background:#fff}
+.spec-wrap table.spec{border:none;border-radius:0}
+table.spec tr:last-child th,table.spec tr:last-child td{border-bottom:none}
 table.spec th,table.spec td{text-align:left;padding:10px 14px;border-bottom:1px solid var(--gray-200);vertical-align:top}
 table.spec th{width:34%;background:var(--gray-100);color:var(--gray-800);font-weight:600;white-space:nowrap}
 @media(max-width:480px){table.spec th,table.spec td{display:block;width:auto}table.spec th{white-space:normal;border-bottom:none;padding:9px 14px 1px}table.spec td{padding:1px 14px 11px}}
@@ -3018,7 +3201,7 @@ a.rm-name:hover{text-decoration:underline}
 .cmp-add{margin-right:9px;cursor:pointer}.cmp-add input{width:16px;height:16px;vertical-align:middle;cursor:pointer}
 .cmpbar{position:fixed;left:0;right:0;bottom:0;background:var(--ink-deep);color:#fff;display:none;z-index:20;border-top:1px solid var(--gray-800)}
 .cmpbar.on{display:block}
-.cmpbar-inner{max-width:1200px;margin:0 auto;padding:10px 20px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.cmpbar-inner{max-width:1200px;margin:0 auto;padding:10px var(--page-gutter);display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .cmpbar-lbl{font-size:var(--text-xs);color:var(--gray-400)}
 .cmpbar .pill{display:inline-flex;align-items:center;gap:5px;background:var(--gray-800);padding:4px 10px;border-radius:999px;font-size:var(--text-nav);border:1px solid var(--gray-700);color:#fff}
 .cmpbar .pill button{background:none;border:none;color:var(--gray-400);cursor:pointer;font:inherit;padding:0 0 0 2px;line-height:1}
@@ -3037,7 +3220,7 @@ table.cmp tbody th{background:var(--gray-50);color:var(--gray-800);white-space:n
 
 /* Footer */
 .site-footer{background:var(--gray-50);border-top:1px solid var(--gray-200);margin-top:auto;color:var(--gray-600)}
-.site-footer-inner{max-width:1200px;margin:0 auto;padding:24px 24px 22px}
+.site-footer-inner{max-width:1200px;margin:0 auto;padding:24px var(--page-gutter) 20px}
 .site-footer-brand{font-size:var(--text-body);font-weight:700;color:var(--ink-deep);margin:0 0 10px}
 .site-footer-nav{display:flex;flex-wrap:wrap;gap:6px 18px;margin-bottom:12px}
 .site-footer-nav a{font-size:var(--text-sm);color:var(--gray-700);text-decoration:none}
@@ -3068,7 +3251,28 @@ table.cmp tbody th{background:var(--gray-50);color:var(--gray-800);white-space:n
 .partner-note{font-size:var(--text-2xs);margin:8px 0 0}
 /* Detail */
 .detail-title{font-size:var(--text-page);font-weight:700;color:var(--ink-deep);line-height:1.35;margin:.1em 0 8px}
-.detail-audience{font-size:var(--text-lead);color:var(--gray-700);line-height:1.65;margin:0 0 18px;max-width:42em}
+.detail-audience{font-size:var(--text-lead);color:var(--gray-700);line-height:1.65;margin:0 0 18px}
+.detail-official{margin-top:28px;padding-top:24px;border-top:1px solid var(--gray-200)}
+.detail-official .btn{padding:10px 18px;font-size:var(--text-sm)}
+.detail-nav{margin-top:36px;padding-top:32px;border-top:1px solid var(--gray-200)}
+.detail-nav-block+.detail-nav-block{margin-top:32px;padding-top:32px;border-top:1px solid var(--gray-200)}
+.detail-nav-heading,.detail-nav-head{font-size:var(--text-nav);font-weight:700;color:var(--ink-deep);margin:0 0 18px;line-height:1.35}
+.detail-nav-subhead{font-size:var(--text-xs);font-weight:600;color:var(--gray-700);margin:0 0 10px}
+.detail-nav-subhead+.detail-nav-subhead,.detail-link-list+.detail-nav-subhead,.detail-link-grid+.detail-nav-subhead,.detail-compare-row+.detail-nav-subhead{margin-top:22px}
+.detail-link-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
+.detail-link-item{font-size:var(--text-sm);line-height:1.55;color:var(--gray-600)}
+.detail-link-item a{color:var(--accent);font-weight:600;text-decoration:none}
+.detail-link-item a:hover{text-decoration:underline;text-underline-offset:2px}
+.detail-link-desc{color:var(--gray-500);font-weight:400}
+.detail-link-grid{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 20px}
+.detail-link-grid a{display:block;font-size:var(--text-sm);font-weight:600;color:var(--accent);text-decoration:none;line-height:1.45;padding:2px 0}
+.detail-link-grid a:hover{text-decoration:underline;text-underline-offset:2px}
+.detail-compare-row{font-size:var(--text-sm);color:var(--gray-600);line-height:1.65;margin:0}
+.detail-compare-label{color:var(--gray-500);font-weight:400}
+.detail-compare-row a{color:var(--accent);font-weight:600;text-decoration:none}
+.detail-compare-row a:hover{text-decoration:underline;text-underline-offset:2px}
+.detail-nav-note{font-size:var(--text-xs);color:var(--gray-500);margin-top:12px;line-height:1.55}
+@media(max-width:560px){.detail-link-grid{grid-template-columns:1fr}}
 .detail-facts{margin-bottom:18px}
 .facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px}
 .fact{background:var(--gray-50);border-radius:8px;padding:9px 11px;border:1px solid var(--gray-200)}
@@ -3148,6 +3352,7 @@ table.cmp tbody th{background:var(--gray-50);color:var(--gray-800);white-space:n
   /* 比較バーが内容に被らないよう余白を増やす */
   body.cmp-open{padding-bottom:96px}
 }
+
 """
 
 
