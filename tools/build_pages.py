@@ -2411,7 +2411,7 @@ def build_index(rows) -> str:
         cmp_html += (f'<a class="compare-card" href="vs/{pslug}.html">'
                      f'<span class="compare-tag">{esc(ra["major_category"])}</span>'
                      f'<div class="compare-names">{esc(_cmpname(ra))} <em>vs</em> {esc(_cmpname(rb))}</div>'
-                     f'<span class="compare-go">比較する →</span></a>')
+                     f'<span class="compare-go" aria-hidden="true">→</span></a>')
         _n += 1
         if _n >= 6:
             break
@@ -3052,12 +3052,13 @@ html{scroll-padding-top:64px}
 .compare-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
 @media(max-width:900px){.compare-grid{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:560px){.compare-grid{grid-template-columns:1fr}}
-.compare-card{display:flex;flex-direction:column;background:#fff;border:1px solid var(--gray-200);border-radius:10px;padding:14px;text-decoration:none;color:inherit;transition:border-color .15s,background .15s}
+.compare-card{display:flex;flex-direction:column;position:relative;background:#fff;border:1px solid var(--gray-200);border-radius:10px;padding:14px 40px 14px 14px;text-decoration:none;color:inherit;transition:border-color .15s,background .15s}
 .compare-card:hover,.compare-card:focus-visible{background:var(--accent-light);border-color:var(--accent);text-decoration:none}
 .compare-tag{font-size:var(--text-sm);font-weight:600;color:var(--muted);letter-spacing:.04em;margin-bottom:6px}
-.compare-names{font-size:var(--text-md);font-weight:600;line-height:1.45;color:var(--ink-deep);margin-bottom:6px;flex:1}
+.compare-names{font-size:var(--text-md);font-weight:600;line-height:1.45;color:var(--ink-deep);margin:0;flex:1}
 .compare-names em{font-style:normal;color:var(--muted);font-weight:400;font-size:var(--text-sm)}
-.compare-go{font-size:var(--text-sm);font-weight:600;color:var(--accent);text-decoration:underline;text-underline-offset:2px}
+.compare-go{position:absolute;right:14px;top:50%;transform:translateY(-50%);font-size:var(--text-md);font-weight:600;color:var(--accent);line-height:1}
+.compare-card:hover .compare-go,.compare-card:focus-visible .compare-go{color:var(--accent-hover)}
 
 /* Buttons */
 .btn{display:inline-flex;align-items:center;justify-content:center;background:var(--accent);color:#fff;padding:9px 18px;border-radius:var(--radius);font-size:var(--text-md);font-weight:600;text-decoration:none;border:none;cursor:pointer;font-family:inherit}
