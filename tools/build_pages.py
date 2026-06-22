@@ -3339,6 +3339,8 @@ table.cmp tbody th{background:var(--gray-50);color:var(--ink);white-space:nowrap
 .page-detail table.spec .spec-list li{margin:2px 0;line-height:1.55}
 .page-detail table.spec .materials{margin:.15em 0 .25em}
 .page-detail table.spec .materials li{display:block;background:none;border:none;border-radius:0;padding:2px 0;margin:0 0 4px;line-height:1.55}
+.page-detail table.spec .materials a{color:var(--accent);font-weight:600;text-decoration:none}
+.page-detail table.spec .materials a:hover{color:var(--accent-hover);text-decoration:underline;text-underline-offset:2px}
 .page-detail table.spec .mat-kind{display:inline;background:none;border:none;padding:0;margin:0;font-weight:600;color:var(--ink)}
 .page-detail table.spec .mat-kind::after{content:"："}
 .page-detail table.spec .mat-foot{margin-top:6px}
