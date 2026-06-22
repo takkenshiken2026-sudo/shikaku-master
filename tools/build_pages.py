@@ -685,10 +685,9 @@ def page_shell(title: str, body: str, depth: int, noindex: bool = True,
     <div class="header-brand"><a class="logo" href="{base}index.html">{esc(SITE_NAME)}</a></div>
     <nav class="header-nav" aria-label="サイトメニュー">
       <a href="{base}index.html#purpose">目的から探す</a><span class="header-nav-sep" aria-hidden="true">｜</span>
-      <a href="{base}index.html#guides">特集・ガイド</a><span class="header-nav-sep" aria-hidden="true">｜</span>
       <a href="{base}index.html#fields">分野から探す</a><span class="header-nav-sep" aria-hidden="true">｜</span>
       <a href="{base}index.html#all-certs">資格一覧</a><span class="header-nav-sep" aria-hidden="true">｜</span>
-      <a href="{base}index.html#compare">比較</a>
+      <a href="{base}compare.html">比較</a>
       <a href="{base}index.html#partners" class="header-nav-cta">資格対策サイト</a>
     </nav>
     <div class="header-actions">
@@ -704,13 +703,11 @@ def page_shell(title: str, body: str, depth: int, noindex: bool = True,
   </div>
   <nav class="header-menu-panel" id="hMenu" aria-label="サイトメニュー" hidden>
     <a href="{base}index.html#purpose">目的から探す</a>
-    <a href="{base}index.html#guides">特集・ガイド</a>
     <a href="{base}index.html#fields">分野から探す</a>
     <a href="{base}index.html#all-certs">資格一覧</a>
-    <a href="{base}index.html#compare">比較記事</a>
+    <a href="{base}compare.html">比較</a>
     <a href="{base}shoku/index.html">職種から探す</a>
-    <a href="{base}feature/index.html">特集・ランキング一覧</a>
-    <a href="{base}compare.html">資格を比較する</a>
+    <a href="{base}feature/index.html">特集・ランキング</a>
     <a href="{base}index.html#partners">資格対策サイト</a>
   </nav>
 </header>
@@ -724,12 +721,10 @@ def page_shell(title: str, body: str, depth: int, noindex: bool = True,
     <p class="site-footer-brand">{esc(SITE_NAME)}</p>
     <nav class="site-footer-nav" aria-label="フッターナビ">
       <a href="{base}index.html#purpose">目的から探す</a>
-      <a href="{base}index.html#guides">特集・ガイド</a>
       <a href="{base}index.html#all-certs">資格一覧</a>
       <a href="{base}index.html#fields">分野から探す</a>
       <a href="{base}shoku/index.html">職種から探す</a>
-      <a href="{base}index.html#compare">比較記事</a>
-      <a href="{base}feature/index.html">特集・ランキング</a>
+      <a href="{base}index.html#compare">よく比較される資格</a>
       <a href="{base}about.html">サイトについて・編集方針</a>
     </nav>
     <p class="site-footer-note">掲載内容は参考情報です。受験料・合格率・制度・日程等は変更される場合があるため、出願前に各資格の公式情報で必ずご確認ください。各詳細ページに最終確認日と情報源を表示しています。</p>
@@ -2168,32 +2163,6 @@ def build_comparison_pages(indexable):
             f"{na}と{nb}の違い・比較｜どっちを取る？｜{SITE_NAME}", body, depth=1,
             noindex=False, desc=desc, path=f"vs/{pslug}.html",
             jsonld=[breadcrumb, faq])
-
-    vs_items = []
-    for pslug, sa, sb, _ in COMPARE_PAIRS:
-        ra, rb = by_slug.get(sa), by_slug.get(sb)
-        if not (ra and rb and is_indexable_detail(ra) and is_indexable_detail(rb)):
-            continue
-        vs_items.append((pslug, shortname(ra), shortname(rb)))
-    vs_li = "".join(
-        f'<li><a href="{esc(pslug)}.html">{esc(na)} と {esc(nb)} の違い</a></li>'
-        for pslug, na, nb in vs_items)
-    vs_idx_body = (
-        '<nav class="crumbs"><a href="../index.html">トップ</a> › 比較記事</nav>'
-        '<h1>資格の比較記事</h1>'
-        '<p class="lead">似た資格の違い・受験料・合格率・難易度を並べて比較できる記事一覧です。'
-        '一覧にない組み合わせは、最大4件まで自由に選んで比較できます。</p>'
-        f'<ul class="feat-list">{vs_li}</ul>'
-        '<p class="guide-more"><a href="../compare.html">資格を自分で比較する（最大4件）→</a></p>')
-    vs_idx_ld = {"@context": "https://schema.org", "@type": "BreadcrumbList",
-                 "itemListElement": [
-                     {"@type": "ListItem", "position": 1, "name": "トップ",
-                      "item": BASE_URL + "/"},
-                     {"@type": "ListItem", "position": 2, "name": "比較記事"}]}
-    pages["index"] = page_shell(
-        f"資格の比較記事一覧｜{SITE_NAME}", vs_idx_body, depth=1, noindex=False,
-        desc="簿記2級と3級、ITパスポートと基本情報など、人気の資格ペアの違い・比較記事一覧。",
-        path="vs/index.html", jsonld=vs_idx_ld)
     return pages
 
 
@@ -2422,6 +2391,12 @@ def build_index(rows) -> str:
 
     def _short(r):
         return re.sub(r"[（(].*?[）)]", "", r["name"]).strip() or r["name"]
+    vs_links = ""
+    for pslug, sa, sb, _ in COMPARE_PAIRS:
+        ra, rb = by_slug.get(sa), by_slug.get(sb)
+        if ra and rb and is_indexable_detail(ra) and is_indexable_detail(rb):
+            vs_links += (f'<li><a href="vs/{pslug}.html">'
+                         f'{esc(_short(ra))} と {esc(_short(rb))} の違い</a></li>')
     # --- 人気の資格（受験者数の多い順 上位8） ---
     ranked = sorted((r for r in rows
                      if applicants_num(r) is not None and is_indexable_detail(r)),
@@ -2480,30 +2455,6 @@ def build_index(rows) -> str:
         if _n >= 6:
             break
 
-    intent_html = ""
-    for slug, label in INTENT_HUB_NAV:
-        intent_html += (f'<a class="guide-card" href="feature/{slug}.html">'
-                        f'<span class="guide-card-label">{esc(label)}</span>'
-                        f'<span class="guide-go" aria-hidden="true">→</span></a>')
-    feat_chip_slugs = [
-        ("popular", "人気ランキング"),
-        ("cheap", "受験料が安い"),
-        ("high-pass", "合格率が高い"),
-        ("no-requirement-national", "受験資格なし・国家"),
-        ("cbt", "在宅・CBT"),
-    ]
-    feat_chips = "".join(
-        f'<a class="chip" href="feature/{slug}.html">{esc(label)}</a>'
-        for slug, label in feat_chip_slugs)
-    guides_occ = ""
-    if OCC:
-        guides_occ = (
-            f'<a class="guide-banner" href="shoku/index.html">'
-            f'<span class="guide-banner-title">職種から探す</span>'
-            f'<span class="guide-banner-desc">目指す仕事に活かせる資格を'
-            f'{len(OCC):,}件の職種から逆引き</span>'
-            f'<span class="guide-go" aria-hidden="true">→</span></a>')
-
     PURPOSE_ICON_JOB = ('<svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"'
                         ' stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
                         '<path d="M12 3L2 8l10 5 10-5-10-5z"/><path d="M5 11v5c0 2.5 3.5 5 7 5s7-2.5 7-5v-5"/><path d="M22 8v6"/></svg>')
@@ -2521,7 +2472,7 @@ def build_index(rows) -> str:
     <span class="ico"><svg class="ico-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/></svg></span>
     <input id="q" type="search" placeholder="資格名で検索（例: 簿記, 宅建, ITパスポート）" aria-label="資格名で検索">
   </div>
-  <p class="hero-hint">または <a href="#purpose">目的から探す</a>・<a href="#guides">特集・ガイド</a>・<a href="#fields">分野から探す</a>・<a href="#compare">比較</a></p>
+  <p class="hero-hint">または <a href="#purpose">目的から探す</a>・<a href="#fields">分野から探す</a></p>
   <p class="hero-result" id="heroResult" hidden></p>
 </section>
 
@@ -2552,16 +2503,6 @@ def build_index(rows) -> str:
   </div>
 </section>
 
-<section class="block block-band block-band--gray" id="guides">
-  <div class="block-head"><h2>特集・ガイドから探す</h2><p>目的や条件に合わせた記事・ランキング</p></div>
-  <h3 class="hub-grp">目的別ガイド</h3>
-  <div class="guide-grid">{intent_html}</div>
-  <h3 class="hub-grp">ランキング・条件で探す</h3>
-  <div class="guide-chips">{feat_chips}</div>
-  {guides_occ}
-  <p class="guide-more"><a href="feature/index.html">特集・ランキングをすべて見る →</a></p>
-</section>
-
 <section class="block block-inset" id="recentBlock" hidden>
   <div class="block-head"><h2>最近見た資格</h2></div>
   <ul class="recent-list" id="recentGrid"></ul>
@@ -2580,9 +2521,8 @@ def build_index(rows) -> str:
 </section>
 
 <section class="block block-band block-band--gray block-compare" id="compare">
-  <div class="block-head"><h2>よく比較される資格</h2><p>2つの資格の違いを記事で確認</p></div>
+  <div class="block-head"><h2>よく比較される資格</h2><p>2つ以上を並べて違いを確認</p></div>
   <div class="compare-grid">{cmp_html}</div>
-  <p class="compare-more"><a href="vs/index.html">比較記事をすべて見る →</a></p>
 </section>
 
 <section class="block block-band block-band--white block-all-certs" id="all-certs">
@@ -3000,7 +2940,7 @@ img{max-width:100%}
 .skip-link{position:absolute;left:-9999px}.skip-link:focus{left:8px;top:8px;background:#fff;padding:8px 12px;z-index:50;border-radius:6px}
 
 /* Header */
-.site-header{background:var(--header-bg);color:#fff;border-bottom:1px solid var(--gray-700);position:sticky;top:0;z-index:30}
+.site-header{background:var(--ink-deep);color:#fff;border-bottom:1px solid var(--gray-800);position:sticky;top:0;z-index:30}
 @media(prefers-reduced-motion:no-preference){html{scroll-behavior:smooth}}
 html{scroll-padding-top:64px}
 .header-inner{max-width:1200px;margin:0 auto;padding:12px var(--page-gutter);display:flex;align-items:center;gap:16px;min-width:0}
@@ -3019,7 +2959,7 @@ html{scroll-padding-top:64px}
 .header-actions{display:none;align-items:center;gap:2px;margin-left:auto;flex-shrink:0}
 .header-icon-btn{display:inline-flex;align-items:center;justify-content:center;background:transparent;border:none;color:var(--on-dark);cursor:pointer;padding:8px;border-radius:6px;line-height:0;font-family:inherit}
 .header-icon-btn:hover{color:#fff;background:rgba(255,255,255,.08)}
-.header-search-panel,.header-menu-panel{display:none;border-top:1px solid var(--gray-700);background:var(--header-bg)}
+.header-search-panel,.header-menu-panel{display:none;border-top:1px solid var(--gray-800);background:var(--ink-deep)}
 .site-header--search-open .header-search-panel{display:block}
 .site-header--menu-open .header-menu-panel{display:flex}
 .header-search-panel{padding:12px var(--page-gutter) 14px}
@@ -3079,24 +3019,9 @@ html{scroll-padding-top:64px}
 .pop-card-facts li{display:grid;grid-template-columns:4.8em 1fr;gap:4px;font-size:var(--text-sm);line-height:1.45}
 .pop-card-facts .k{color:var(--muted)}.pop-card-facts .v{color:var(--ink);font-weight:600}
 @media(max-width:720px){.popular-grid{grid-template-columns:repeat(2,1fr);gap:10px}.pop-card--more{display:none}.popular-more{display:block}}
-.popular-more,.field-more,.compare-more,.guide-more{margin-top:12px;text-align:right}
-.popular-more a,.field-more a,.compare-more a,.guide-more a{font-size:var(--text-md);font-weight:600;color:var(--ink);text-decoration:underline;text-underline-offset:2px}
+.popular-more,.field-more,.compare-more{margin-top:12px;text-align:right;display:none}
+.popular-more a,.field-more a,.compare-more a{font-size:var(--text-md);font-weight:600;color:var(--ink);text-decoration:underline;text-underline-offset:2px}
 @media(max-width:720px){.popular-more{display:block}}
-.guide-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:0 0 14px}
-@media(min-width:900px){.guide-grid{grid-template-columns:repeat(3,1fr)}}
-.guide-card{display:flex;flex-direction:column;position:relative;background:#fff;border:1px solid var(--gray-200);border-radius:10px;padding:14px 40px 14px 14px;text-decoration:none;color:inherit;transition:border-color .15s,background .15s}
-.guide-card:hover,.guide-card:focus-visible{background:var(--accent-light);border-color:var(--accent);text-decoration:none}
-.guide-card-label{font-size:var(--text-md);font-weight:600;line-height:1.45;color:var(--ink-deep)}
-.guide-go{position:absolute;right:14px;top:50%;transform:translateY(-50%);font-size:var(--text-sm);font-weight:600;color:var(--muted)}
-.guide-card:hover .guide-go,.guide-card:focus-visible .guide-go{color:var(--accent)}
-.guide-chips{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 14px}
-.guide-chips .chip{text-decoration:none;transition:border-color .15s,background .15s}
-.guide-chips .chip:hover{border-color:var(--accent);background:var(--accent-light);text-decoration:none}
-.guide-banner{display:flex;flex-direction:column;gap:4px;position:relative;background:#fff;border:1px solid var(--gray-200);border-radius:10px;padding:14px 40px 14px 14px;text-decoration:none;color:inherit;margin:0 0 4px;transition:border-color .15s,background .15s}
-.guide-banner:hover,.guide-banner:focus-visible{background:var(--accent-light);border-color:var(--accent);text-decoration:none}
-.guide-banner-title{font-size:var(--text-md);font-weight:700;color:var(--ink-deep)}
-.guide-banner-desc{font-size:var(--text-sm);color:var(--muted);line-height:1.5}
-.guide-banner:hover .guide-go,.guide-banner:focus-visible .guide-go{color:var(--accent)}
 .purpose-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
 @media(max-width:640px){.purpose-grid{grid-template-columns:1fr}}
 .purpose-card{display:flex;align-items:flex-start;gap:12px;background:#fff;border:1px solid var(--gray-200);border-radius:var(--radius);padding:16px 36px 16px 14px;text-decoration:none;color:inherit;transition:border-color .15s,background .15s;position:relative}
@@ -3210,7 +3135,7 @@ h2{color:var(--ink-deep)}
 .clear-filters{background:none;border:none;color:var(--accent);font-family:inherit;font-size:var(--text-sm);font-weight:600;cursor:pointer;padding:0;text-decoration:underline;text-underline-offset:2px}
 .clear-filters:hover{color:var(--accent-hover)}
 .muted,.note-muted{color:var(--muted)}
-.pop-card,.field-card,.compare-card,.guide-card,.guide-banner,.faq-item,table.spec,.results li,.occ-list li{box-shadow:0 1px 3px rgba(0,0,0,.07)}
+.pop-card,.field-card,.compare-card,.faq-item,table.spec,.results li,.occ-list li{box-shadow:0 1px 3px rgba(0,0,0,.07)}
 .crumbs{font-size:var(--text-sm);color:var(--muted);margin-bottom:10px}
 .crumbs a{color:var(--ink)}
 
