@@ -429,6 +429,47 @@ table.cmp tbody th{background:var(--gray-50);color:var(--gray-800);white-space:n
 .cmp-verdict-card .pickname{font-size:var(--text-body);font-weight:700;color:var(--ink-deep);line-height:1.4}
 .cmp-verdict-card .pickname a{color:var(--ink-deep);text-decoration:underline;text-underline-offset:2px}
 .cmp-verdict-card .why{font-size:var(--text-xs);color:var(--gray-600);margin-top:3px;line-height:1.5}
+/* Detail page typography（詳細ページのフォント・色統一） */
+.page-detail{font-size:var(--text-sm);color:var(--gray-800);line-height:1.65}
+.page-detail .detail-title{font-size:var(--text-page);color:var(--ink-deep);margin:.1em 0 6px}
+.page-detail .detail-audience{font-size:var(--text-sm);color:var(--gray-800);line-height:1.65;margin:0 0 16px}
+.page-detail .crumbs{font-size:var(--text-sm);color:var(--gray-600);margin-bottom:8px}
+.page-detail .crumbs a{color:var(--gray-700)}
+.page-detail .note-muted,.page-detail .muted{font-size:inherit;color:var(--gray-600);font-weight:400}
+.page-detail .fact .l{font-size:var(--text-sm);color:var(--gray-600)}
+.page-detail .fact .v{font-size:var(--text-sm);font-weight:600;color:var(--gray-800)}
+.page-detail .detail-section-title{font-size:var(--text-section-sub);font-weight:700;color:var(--ink-deep);margin:0 0 10px}
+.page-detail table.spec{font-size:var(--text-sm)}
+.page-detail table.spec th{background:var(--gray-50);color:var(--gray-700);font-weight:600;font-size:var(--text-sm)}
+.page-detail table.spec td{color:var(--gray-800);font-size:var(--text-sm)}
+.page-detail .tag-chip{font-size:var(--text-sm);background:var(--gray-50);color:var(--gray-700);border-color:var(--gray-200)}
+.page-detail .tag-ind{background:var(--gray-50);color:var(--gray-700);border-color:var(--gray-200)}
+.page-detail a.tag-chip:hover{background:var(--gray-100);border-color:var(--gray-300)}
+.page-detail .point-list li{font-size:var(--text-sm);color:var(--gray-800);background:var(--gray-50);border-color:var(--gray-200)}
+.page-detail .point-list li::before{color:var(--gray-600)}
+.page-detail .faq-item summary{font-size:var(--text-sm);color:var(--gray-800)}
+.page-detail .faq-a{font-size:var(--text-sm);color:var(--gray-700)}
+.page-detail .detail-nav-heading,.page-detail .detail-nav-head{font-size:var(--text-sm);font-weight:700;color:var(--ink-deep)}
+.page-detail .detail-nav-subhead{font-size:var(--text-sm);font-weight:600;color:var(--gray-700)}
+.page-detail .detail-link-item,.page-detail .detail-link-grid a,.page-detail .detail-compare-row{font-size:var(--text-sm);color:var(--gray-700)}
+.page-detail .detail-link-desc,.page-detail .detail-nav-note,.page-detail .detail-source-note{font-size:var(--text-sm);color:var(--gray-600)}
+.page-detail .detail-source{font-size:var(--text-sm);color:var(--gray-700)}
+.page-detail .careers-sec,.page-detail .materials-sec{margin-top:20px;padding-top:14px}
+.page-detail .careers-sec h2,.page-detail .materials-sec h2{margin:.2em 0 .5em}
+.page-detail .careers li,.page-detail .jobtag{font-size:var(--text-sm);color:var(--gray-800)}
+.page-detail .careers-src,.page-detail .mat-foot{font-size:var(--text-sm);color:var(--gray-600)}
+.page-detail .mat-kind{background:var(--gray-100);color:var(--gray-700);border-color:var(--gray-200);font-size:var(--text-xs)}
+.page-detail .mat-body{font-size:var(--text-sm)}
+.page-detail .mat-note{font-size:var(--text-sm);color:var(--gray-600)}
+.page-detail .ad-disclosure{font-size:var(--text-sm);color:var(--gray-600);background:var(--gray-50);border-color:var(--gray-200)}
+.page-detail .partner-detail .detail-section-title{font-size:var(--text-section-sub)}
+.page-detail .pd-name{font-size:var(--text-sm);font-weight:700;color:var(--gray-800)}
+.page-detail .pd-tag{font-size:var(--text-sm);color:var(--gray-600)}
+.page-detail .partner-note{font-size:var(--text-sm);color:var(--gray-600)}
+.page-detail .roadmap h3{font-size:var(--text-sm);font-weight:600;color:var(--gray-800)}
+.page-detail .detail-related .more-compare p{font-size:var(--text-sm);color:var(--gray-700)}
+.page-detail .provenance{font-size:var(--text-sm);color:var(--gray-600)}
+.page-detail .updated{font-size:var(--text-sm);color:var(--gray-600)}
 /* ===== モバイル最適化（可読性・余白・タップ領域） ===== */
 @media(max-width:600px){
   /* 小さめの文字を底上げして読みやすく（キャプション・メタ・バッジ等） */
@@ -450,9 +491,10 @@ table.cmp tbody th{background:var(--gray-50);color:var(--gray-800);white-space:n
   /* 一覧・ランキングのタップ領域と余白 */
   .cl-link{padding:13px 14px}
   /* 詳細：本文サイズと余白 */
-  .detail-audience{font-size:var(--text-body);line-height:1.7}
-  .point-list li{font-size:var(--text-body)}
-  .faq-item summary,.faq-a{font-size:var(--text-body)}
+  .page-detail .detail-audience{font-size:var(--text-body);line-height:1.7}
+  .page-detail .point-list li{font-size:var(--text-body)}
+  .page-detail .faq-item summary,.page-detail .faq-a{font-size:var(--text-body)}
+  .page-detail table.spec th,.page-detail table.spec td{font-size:var(--text-body)}
   /* 比較バーが内容に被らないよう余白を増やす */
   body.cmp-open{padding-bottom:96px}
 }

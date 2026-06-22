@@ -595,7 +595,7 @@ def materials_section_html(slug):
         '掲載は編集部の選定によるもので、内容の正確性・価格は各提供元の公式情報をご確認ください。</p>'
         if has_aff else "")
     return (
-        f'<section class="materials-sec"><h2>おすすめテキスト・講座{pr}</h2>'
+        f'<section class="materials-sec"><h2 class="detail-section-title">おすすめテキスト・講座{pr}</h2>'
         f'{disclosure}'
         f'<ul class="materials">{"".join(items)}</ul>'
         '<p class="muted mat-foot">編集部が選んだ学習教材・講座の例です。最新の価格・改訂版・'
@@ -766,29 +766,28 @@ def build_detail(row) -> str:
     if diff:
         dlabel, dcls = diff
         spec.append(("難易度の目安",
-                     f'<span class="diff-badge {dcls}">{esc(dlabel)}</span>'
-                     f' <span class="muted">（公表合格率 {esc(fmt_nums_in_text(row["pass_rate"]))} に基づく簡易目安）</span>'))
+                     esc(dlabel)
+                     + f' <span class="note-muted">（公表合格率 {esc(fmt_nums_in_text(row["pass_rate"]))} に基づく簡易目安）</span>'))
     dr = DIFFICULTY_RANK.get(row["slug"])
     if dr:
-        badges = [f'<span class="diff-rank">掲載資格中 上位{dr["pct"]}%</span>']
+        rank_parts = [f'掲載資格中 上位{dr["pct"]}%']
         if dr.get("fpct"):
-            badges.append(f'<span class="diff-rank diff-rank-field">'
-                          f'{esc(dr["fname"])}分野内 上位{dr["fpct"]}%</span>')
+            rank_parts.append(f'{dr["fname"]}分野内 上位{dr["fpct"]}%')
         conf_note = {"高": "高（主要指標2つ以上で算出）",
                      "中": "中（単一指標ベースの参考値）"}.get(dr["conf"], dr["conf"])
         meta = (f'信頼度: {conf_note}／スコア算出{dr["total"]}件中{dr["rank"]}位相当。'
                 f'{"・".join(dr["srcs"])}から算出した編集部の総合スコアで、'
                 f'難易度の絶対指標ではありません。')
         spec.append(("総合難易度（目安）",
-                     " ".join(badges)
-                     + f'<div class="muted diff-meta">{meta}</div>'))
+                     esc(" / ".join(rank_parts))
+                     + f'<div class="note-muted">{esc(meta)}</div>'))
     if ed.get("exam_subjects"):
         spec.append(("試験科目・出題範囲", esc(ed["exam_subjects"])))
     st = STUDY.get(row["slug"], {})
     if st.get("study_hours"):
         spec.append(("学習時間の目安",
                      esc(fmt_nums_in_text(st["study_hours"]))
-                     + ' <span class="muted">（編集部調べの目安。個人差があり、公式の数値ではありません）</span>'))
+                     + ' <span class="note-muted">（編集部調べの目安。個人差があり、公式の数値ではありません）</span>'))
     inds = industry_tags(row)
     if inds:
         chips = "".join(
@@ -803,7 +802,7 @@ def build_detail(row) -> str:
         spec.append(("特徴・目的タグ", chips))
     src = row.get("source_checked_at", "")
     if src:
-        spec.append(("情報確認日", esc(src) + ' <span class="muted">（公式の一次情報に基づき確認）</span>'))
+        spec.append(("情報確認日", esc(src) + ' <span class="note-muted">（公式の一次情報に基づき確認）</span>'))
     # ページ上部の「基本情報」グリッドに出す項目は詳細表から省いて重複を避ける
     _grid_keys = {"資格区分", "受験料", "実施頻度"}
     rows_html = "".join(f"<tr><th>{esc(k)}</th><td>{v}</td></tr>"
@@ -891,7 +890,7 @@ def build_detail(row) -> str:
                         '職業は個別に精査中です。関連する職業は、厚生労働省の職業情報提供'
                         'サイト（job tag）で資格名から検索できます。</p>')
     careers_section = (
-        '<section class="careers-sec"><h2>活かせる仕事・キャリア</h2>'
+        '<section class="careers-sec"><h2 class="detail-section-title">活かせる仕事・キャリア</h2>'
         + careers_body
         + f'<p class="jobtag"><a href="{JOBTAG_URL}" rel="nofollow noopener" '
           f'target="_blank">厚生労働省 job tag で関連職業を調べる ↗</a></p></section>')
@@ -1041,7 +1040,8 @@ def build_detail(row) -> str:
                  f"a.unshift({{s:'{esc(row['slug'])}',n:'{_rn}'}});a=a.slice(0,8);"
                  "localStorage.setItem(k,JSON.stringify(a));}catch(e){}})();</script>")
     partner_detail = partner_detail_html(row["slug"])
-    body = f"""<nav class="crumbs"><a href="../index.html">トップ</a> ›
+    body = f"""<div class="page-detail">
+<nav class="crumbs"><a href="../index.html">トップ</a> ›
 <a href="../bunya/{esc(bslug)}.html">{esc(major)}</a> › {esc(name)}</nav>
 <h1 class="detail-title">{esc(name)}</h1>
 <p class="detail-audience">{lead}</p>
@@ -1057,7 +1057,7 @@ def build_detail(row) -> str:
 {detail_official}
 {detail_nav}
 {recent_js}
-"""
+</div>"""
     # meta description は各ページで一意になるよう、必ず固有の資格名で始め、
     # 固有の事実（受験料・合格率・実施団体）を添える（家族で共通の説明文の重複を回避）。
     _short = re.sub(r"[（(].*?[）)]", "", name).strip() or name
@@ -3355,6 +3355,47 @@ table.cmp tbody th{background:var(--gray-50);color:var(--gray-800);white-space:n
 .cmp-verdict-card .pickname{font-size:var(--text-body);font-weight:700;color:var(--ink-deep);line-height:1.4}
 .cmp-verdict-card .pickname a{color:var(--ink-deep);text-decoration:underline;text-underline-offset:2px}
 .cmp-verdict-card .why{font-size:var(--text-xs);color:var(--gray-600);margin-top:3px;line-height:1.5}
+/* Detail page typography（詳細ページのフォント・色統一） */
+.page-detail{font-size:var(--text-sm);color:var(--gray-800);line-height:1.65}
+.page-detail .detail-title{font-size:var(--text-page);color:var(--ink-deep);margin:.1em 0 6px}
+.page-detail .detail-audience{font-size:var(--text-sm);color:var(--gray-800);line-height:1.65;margin:0 0 16px}
+.page-detail .crumbs{font-size:var(--text-sm);color:var(--gray-600);margin-bottom:8px}
+.page-detail .crumbs a{color:var(--gray-700)}
+.page-detail .note-muted,.page-detail .muted{font-size:inherit;color:var(--gray-600);font-weight:400}
+.page-detail .fact .l{font-size:var(--text-sm);color:var(--gray-600)}
+.page-detail .fact .v{font-size:var(--text-sm);font-weight:600;color:var(--gray-800)}
+.page-detail .detail-section-title{font-size:var(--text-section-sub);font-weight:700;color:var(--ink-deep);margin:0 0 10px}
+.page-detail table.spec{font-size:var(--text-sm)}
+.page-detail table.spec th{background:var(--gray-50);color:var(--gray-700);font-weight:600;font-size:var(--text-sm)}
+.page-detail table.spec td{color:var(--gray-800);font-size:var(--text-sm)}
+.page-detail .tag-chip{font-size:var(--text-sm);background:var(--gray-50);color:var(--gray-700);border-color:var(--gray-200)}
+.page-detail .tag-ind{background:var(--gray-50);color:var(--gray-700);border-color:var(--gray-200)}
+.page-detail a.tag-chip:hover{background:var(--gray-100);border-color:var(--gray-300)}
+.page-detail .point-list li{font-size:var(--text-sm);color:var(--gray-800);background:var(--gray-50);border-color:var(--gray-200)}
+.page-detail .point-list li::before{color:var(--gray-600)}
+.page-detail .faq-item summary{font-size:var(--text-sm);color:var(--gray-800)}
+.page-detail .faq-a{font-size:var(--text-sm);color:var(--gray-700)}
+.page-detail .detail-nav-heading,.page-detail .detail-nav-head{font-size:var(--text-sm);font-weight:700;color:var(--ink-deep)}
+.page-detail .detail-nav-subhead{font-size:var(--text-sm);font-weight:600;color:var(--gray-700)}
+.page-detail .detail-link-item,.page-detail .detail-link-grid a,.page-detail .detail-compare-row{font-size:var(--text-sm);color:var(--gray-700)}
+.page-detail .detail-link-desc,.page-detail .detail-nav-note,.page-detail .detail-source-note{font-size:var(--text-sm);color:var(--gray-600)}
+.page-detail .detail-source{font-size:var(--text-sm);color:var(--gray-700)}
+.page-detail .careers-sec,.page-detail .materials-sec{margin-top:20px;padding-top:14px}
+.page-detail .careers-sec h2,.page-detail .materials-sec h2{margin:.2em 0 .5em}
+.page-detail .careers li,.page-detail .jobtag{font-size:var(--text-sm);color:var(--gray-800)}
+.page-detail .careers-src,.page-detail .mat-foot{font-size:var(--text-sm);color:var(--gray-600)}
+.page-detail .mat-kind{background:var(--gray-100);color:var(--gray-700);border-color:var(--gray-200);font-size:var(--text-xs)}
+.page-detail .mat-body{font-size:var(--text-sm)}
+.page-detail .mat-note{font-size:var(--text-sm);color:var(--gray-600)}
+.page-detail .ad-disclosure{font-size:var(--text-sm);color:var(--gray-600);background:var(--gray-50);border-color:var(--gray-200)}
+.page-detail .partner-detail .detail-section-title{font-size:var(--text-section-sub)}
+.page-detail .pd-name{font-size:var(--text-sm);font-weight:700;color:var(--gray-800)}
+.page-detail .pd-tag{font-size:var(--text-sm);color:var(--gray-600)}
+.page-detail .partner-note{font-size:var(--text-sm);color:var(--gray-600)}
+.page-detail .roadmap h3{font-size:var(--text-sm);font-weight:600;color:var(--gray-800)}
+.page-detail .detail-related .more-compare p{font-size:var(--text-sm);color:var(--gray-700)}
+.page-detail .provenance{font-size:var(--text-sm);color:var(--gray-600)}
+.page-detail .updated{font-size:var(--text-sm);color:var(--gray-600)}
 /* ===== モバイル最適化（可読性・余白・タップ領域） ===== */
 @media(max-width:600px){
   /* 小さめの文字を底上げして読みやすく（キャプション・メタ・バッジ等） */
@@ -3376,9 +3417,10 @@ table.cmp tbody th{background:var(--gray-50);color:var(--gray-800);white-space:n
   /* 一覧・ランキングのタップ領域と余白 */
   .cl-link{padding:13px 14px}
   /* 詳細：本文サイズと余白 */
-  .detail-audience{font-size:var(--text-body);line-height:1.7}
-  .point-list li{font-size:var(--text-body)}
-  .faq-item summary,.faq-a{font-size:var(--text-body)}
+  .page-detail .detail-audience{font-size:var(--text-body);line-height:1.7}
+  .page-detail .point-list li{font-size:var(--text-body)}
+  .page-detail .faq-item summary,.page-detail .faq-a{font-size:var(--text-body)}
+  .page-detail table.spec th,.page-detail table.spec td{font-size:var(--text-body)}
   /* 比較バーが内容に被らないよう余白を増やす */
   body.cmp-open{padding-bottom:96px}
 }
