@@ -144,6 +144,10 @@ html{scroll-padding-top:64px}
 .pagination-ellipsis{font-size:var(--text-sm);color:var(--muted);padding:0 2px}
 @media(max-width:720px){.all-certs-filters{grid-template-columns:repeat(2,minmax(0,1fr))}.pagination{flex-direction:column;align-items:stretch}.pagination-links{justify-content:center}}
 
+/* 分野別一覧（表形式） */
+.page-bunya .bunya-table-wrap{margin-top:8px}
+.page-bunya .bunya-cat{white-space:normal;min-width:8em;max-width:14em}
+
 /* Fields */
 .field-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
 @media(max-width:900px){.field-grid{grid-template-columns:repeat(2,1fr)}}

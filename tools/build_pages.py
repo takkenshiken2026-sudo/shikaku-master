@@ -1375,6 +1375,45 @@ def _list_items(items, depth, ranked=False):
     return f'<ul class="{cls}">' + "".join(out) + "</ul>"
 
 
+def _category_table(items, depth=1):
+    """分野別一覧ページ用の表形式HTML。"""
+    base = "../" * depth
+    rows = []
+    for r in items:
+        fee = fmt_nums_in_text(r.get("fee") or "") or "—"
+        pr = pass_rate_display(r.get("pass_rate", "")) or "—"
+        label = TYPE_BADGE.get(r["type"], ("区分要確認", ""))[0]
+        rows.append(
+            f'<tr class="cert-row" tabindex="0" data-href="{base}c/{esc(r["slug"])}.html">'
+            f'<td class="all-certs-name"><span class="all-certs-name-text">{esc(r["name"])}</span></td>'
+            f'<td class="all-certs-cell">{esc(label)}</td>'
+            f'<td class="all-certs-cell bunya-cat">{esc(r["category"])}</td>'
+            f'<td class="all-certs-cell all-certs-num">{esc(fee)}</td>'
+            f'<td class="all-certs-cell all-certs-num">{esc(pr)}</td></tr>')
+    table = (
+        '<div class="all-certs-table-wrap bunya-table-wrap">'
+        '<table class="all-certs-table bunya-table">'
+        '<thead><tr>'
+        '<th scope="col">資格名</th><th scope="col">種別</th>'
+        '<th scope="col">カテゴリ</th><th scope="col">受験料</th>'
+        '<th scope="col">合格率</th></tr></thead>'
+        f'<tbody id="bunyaCerts">{"".join(rows)}</tbody></table></div>')
+    script = """<script>
+(function(){
+  var tb=document.getElementById('bunyaCerts');
+  if(!tb)return;
+  function go(tr){var h=tr.getAttribute('data-href');if(h)location.href=h;}
+  tb.addEventListener('click',function(e){var tr=e.target.closest('tr.cert-row');if(tr)go(tr);});
+  tb.addEventListener('keydown',function(e){
+    if(e.key!=='Enter'&&e.key!==' ')return;
+    var tr=e.target.closest('tr.cert-row');if(!tr)return;
+    e.preventDefault();go(tr);
+  });
+})();
+</script>"""
+    return table + script
+
+
 # 大分類のページslug（安定・ローマ字キー）
 MAJOR_SLUGS = {
     "IT・情報処理": "it", "法律・法務・知財": "law", "会計・金融・経営": "finance",
@@ -1442,6 +1481,7 @@ def build_category_pages(indexable):
                           if tc.get(t))
         cats = sorted({r["category"] for r in items})
         body = (
+            f'<div class="page-bunya">'
             f'<nav class="crumbs"><a href="../index.html">トップ</a> › {esc(major)}</nav>'
             f"<h1>{esc(major)}の資格一覧</h1>"
             f'<p class="lead">「{esc(major)}」分野の資格 {len(items)} 件'
@@ -1449,7 +1489,8 @@ def build_category_pages(indexable):
             f"合格率・実施団体・公式サイトを詳細ページで確認できます。</p>"
             f'<p class="muted">区分の内訳: {esc(tparts)}。'
             f"主なカテゴリ: {esc('、'.join(cats[:12]))}{'ほか' if len(cats) > 12 else ''}。</p>"
-            + _list_items(items, depth=1)
+            + _category_table(items, depth=1)
+            + "</div>"
         )
         ld = [
             {"@context": "https://schema.org", "@type": "BreadcrumbList",
@@ -3104,6 +3145,10 @@ html{scroll-padding-top:64px}
 .pagination-btn.is-disabled,.pagination-num.is-disabled{opacity:.4;pointer-events:none}
 .pagination-ellipsis{font-size:var(--text-sm);color:var(--muted);padding:0 2px}
 @media(max-width:720px){.all-certs-filters{grid-template-columns:repeat(2,minmax(0,1fr))}.pagination{flex-direction:column;align-items:stretch}.pagination-links{justify-content:center}}
+
+/* 分野別一覧（表形式） */
+.page-bunya .bunya-table-wrap{margin-top:8px}
+.page-bunya .bunya-cat{white-space:normal;min-width:8em;max-width:14em}
 
 /* Fields */
 .field-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
