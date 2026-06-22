@@ -117,8 +117,7 @@
       var fee=x.fee?esc(x.fee):'—';
       var pass=x.pass_rate?esc(x.pass_rate):'—';
       return '<tr>'+
-        '<td class="all-certs-name"><a href="c/'+x.slug+'.html">'+esc(shortName(x.name))+'</a>'+
-        (x.popular?' <span class="result-label">定番</span>':'')+'</td>'+
+        '<td class="all-certs-name"><a href="c/'+x.slug+'.html">'+esc(shortName(x.name))+'</a></td>'+
         '<td>'+esc(x.major)+'</td>'+
         '<td><span class="badge b-'+x.type+'">'+esc(x.type)+'</span></td>'+
         '<td class="all-certs-num">'+fee+'</td>'+

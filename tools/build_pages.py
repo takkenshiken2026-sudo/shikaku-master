@@ -2715,8 +2715,7 @@ SEARCH_JS = """(function(){
       var fee=x.fee?esc(x.fee):'—';
       var pass=x.pass_rate?esc(x.pass_rate):'—';
       return '<tr>'+
-        '<td class="all-certs-name"><a href="c/'+x.slug+'.html">'+esc(shortName(x.name))+'</a>'+
-        (x.popular?' <span class="result-label">定番</span>':'')+'</td>'+
+        '<td class="all-certs-name"><a href="c/'+x.slug+'.html">'+esc(shortName(x.name))+'</a></td>'+
         '<td>'+esc(x.major)+'</td>'+
         '<td><span class="badge b-'+x.type+'">'+esc(x.type)+'</span></td>'+
         '<td class="all-certs-num">'+fee+'</td>'+
@@ -3034,15 +3033,14 @@ html{scroll-padding-top:64px}
 .all-certs-check{display:inline-flex;align-items:center;gap:6px;font-size:var(--text-xs);color:var(--gray-700);margin-bottom:24px;cursor:pointer}
 .all-certs-check input{width:15px;height:15px;accent-color:var(--accent)}
 .all-certs-count{font-size:var(--text-xs);color:var(--gray-600);margin-bottom:14px}
-.all-certs-table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
-.all-certs-table{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--gray-200);border-radius:var(--radius);overflow:hidden;font-size:var(--text-sm);box-shadow:0 1px 3px rgba(0,0,0,.07)}
-.all-certs-table thead th{text-align:left;padding:10px 14px;background:var(--gray-100);color:var(--gray-800);font-weight:600;font-size:var(--text-xs);border-bottom:1px solid var(--gray-200);white-space:nowrap}
+.all-certs-table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;border:1px solid var(--gray-300);border-radius:var(--radius);background:#fff}
+.all-certs-table{width:100%;border-collapse:collapse;background:#fff;border:none;border-radius:0;font-size:var(--text-sm)}
+.all-certs-table thead th{text-align:left;padding:10px 14px;background:var(--gray-100);color:var(--gray-800);font-weight:600;font-size:var(--text-xs);border-bottom:1px solid var(--gray-300);white-space:nowrap}
 .all-certs-table tbody td{padding:10px 14px;border-bottom:1px solid var(--gray-200);vertical-align:middle;line-height:1.45;white-space:nowrap}
 .all-certs-table tbody tr:last-child td{border-bottom:none}
 .all-certs-table tbody tr:hover{background:var(--gray-50)}
 .all-certs-name{min-width:12em}
-.all-certs-name a,.all-certs-name .result-label{white-space:nowrap}
-.all-certs-name a{font-weight:600;color:var(--ink-deep);text-decoration:none}
+.all-certs-name a{white-space:nowrap;font-weight:600;color:var(--ink-deep);text-decoration:none}
 .all-certs-name a:hover{color:var(--accent);text-decoration:none}
 .all-certs-num{font-variant-numeric:tabular-nums;color:var(--gray-800)}
 .all-certs-table .empty-state{white-space:normal;text-align:center;color:var(--gray-600);background:var(--gray-50);padding:22px 16px;line-height:1.75}
