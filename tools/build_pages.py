@@ -876,8 +876,25 @@ def build_detail(row) -> str:
         _mat_pr = ' <span class="pr-badge">PR</span>' if _mat_aff else ""
         spec.append((f"おすすめテキスト・講座{_mat_pr}", _mat_cell))
 
-    if src:
-        spec.append(("情報確認日", esc(src) + ' <span class="note-muted">（公式の一次情報に基づき確認）</span>'))
+    jd = jp_date(src)
+    if row["official_url"]:
+        u = esc(row["official_url"])
+        official_src = f'<a href="{u}" rel="nofollow noopener" target="_blank">公式サイト</a>'
+        if row["authority"]:
+            official_src += f'（{esc(row["authority"])}）'
+    elif row["authority"]:
+        official_src = esc(row["authority"])
+    else:
+        official_src = "各資格の公式情報"
+    if jd:
+        spec.append(("最終確認日", esc(jd)))
+    elif src:
+        spec.append(("最終確認日", esc(src)))
+    spec.append(("情報源", official_src))
+    spec.append(("データの注記",
+                 '<p class="detail-source-note">受験料・受験資格・試験形式・合格率・実施団体は公式の一次情報に基づきます。'
+                 '学習時間・難易度・総合スコアは編集部による目安で、公式の数値ではありません。'
+                 '制度・金額・日程は改定されることがあるため、出願前に必ず公式サイトでご確認ください。</p>'))
 
     rows_html = "".join(f"<tr><th>{esc(k)}</th><td>{v}</td></tr>" for k, v in spec)
 
@@ -889,11 +906,6 @@ def build_detail(row) -> str:
             f'rel="nofollow noopener" target="_blank">公式サイトで最新情報を確認 ↗</a></div>')
     else:
         detail_official = ""
-
-    # 鮮度シグナル（最終更新日の可視表示）
-    jd = jp_date(src)
-    updated_html = (f'<p class="updated">最終更新: {esc(jd)}'
-                    f'<span class="muted">（公式の一次情報に基づき確認）</span></p>\n') if jd else ""
 
     # ユニーク本文（概要）— 手書きの独自解説があれば優先、なければテンプレート生成
     hand_desc = DESC.get(row["slug"], "")
@@ -993,25 +1005,6 @@ def build_detail(row) -> str:
 
     detail_nav = detail_nav_html(row["slug"], cat, rel, vs_pairs)
 
-    # 出典・最終確認日（フッターだけでなく資格ごとに明示）
-    if row["official_url"]:
-        u = esc(row["official_url"])
-        official_src = f'<a href="{u}" rel="nofollow noopener" target="_blank">公式サイト</a>'
-        if row["authority"]:
-            official_src += f'（{esc(row["authority"])}）'
-    elif row["authority"]:
-        official_src = esc(row["authority"])
-    else:
-        official_src = "各資格の公式情報"
-    source_aside = (
-        '<aside class="detail-source" aria-label="情報の出典">'
-        f'<p><span class="k">最終確認日：</span>{esc(jd) if jd else "—"}</p>'
-        f'<p><span class="k">情報源：</span>{official_src}</p>'
-        '<p class="detail-source-note">受験料・受験資格・試験形式・合格率・実施団体は公式の一次情報に基づきます。'
-        '学習時間・難易度・総合スコアは編集部による目安で、公式の数値ではありません。'
-        '制度・金額・日程は改定されることがあるため、出願前に必ず公式サイトでご確認ください。</p>'
-        '</aside>')
-
     # 「最近見た資格」記録（localStorage）
     _rn = esc(re.sub(r"[（(].*?[）)]", "", name).strip() or name)
     recent_js = ("<script>(function(){try{var k='recent',a=JSON.parse(localStorage.getItem(k)||'[]');"
@@ -1028,7 +1021,6 @@ def build_detail(row) -> str:
 <section class="detail-spec" aria-labelledby="ds-h">
 <h2 class="detail-section-title" id="ds-h">資格情報</h2>
 <div class="spec-wrap"><table class="spec">{rows_html}</table></div></section>
-{source_aside}
 {detail_official}
 {detail_nav}
 {recent_js}
@@ -3348,6 +3340,7 @@ table.cmp tbody th{background:var(--gray-50);color:var(--gray-800);white-space:n
 .page-detail table.spec .materials{margin-top:.25em}
 .page-detail table.spec .ad-disclosure{margin:0 0 8px}
 .page-detail table.spec .careers-src,.page-detail table.spec .jobtag,.page-detail table.spec .mat-foot{margin-top:6px}
+.page-detail table.spec .detail-source-note{margin:0;font-size:var(--text-sm);color:var(--gray-600);line-height:1.65}
 .page-detail .tag-chip{font-size:var(--text-sm);background:var(--gray-50);color:var(--gray-700);border-color:var(--gray-200)}
 .page-detail .tag-ind{background:var(--gray-50);color:var(--gray-700);border-color:var(--gray-200)}
 .page-detail a.tag-chip:hover{background:var(--gray-100);border-color:var(--gray-300)}

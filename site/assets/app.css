@@ -447,6 +447,7 @@ table.cmp tbody th{background:var(--gray-50);color:var(--gray-800);white-space:n
 .page-detail table.spec .materials{margin-top:.25em}
 .page-detail table.spec .ad-disclosure{margin:0 0 8px}
 .page-detail table.spec .careers-src,.page-detail table.spec .jobtag,.page-detail table.spec .mat-foot{margin-top:6px}
+.page-detail table.spec .detail-source-note{margin:0;font-size:var(--text-sm);color:var(--gray-600);line-height:1.65}
 .page-detail .tag-chip{font-size:var(--text-sm);background:var(--gray-50);color:var(--gray-700);border-color:var(--gray-200)}
 .page-detail .tag-ind{background:var(--gray-50);color:var(--gray-700);border-color:var(--gray-200)}
 .page-detail a.tag-chip:hover{background:var(--gray-100);border-color:var(--gray-300)}
