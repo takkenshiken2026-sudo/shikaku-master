@@ -486,7 +486,6 @@ def detail_nav_html(slug, cat, rel_links, vs_pairs):
     block1 = ""
     if rel:
         chain = step_up_chain(slug)
-        rm = roadmap_html(slug, chain)
         chain_set = set(chain)
         subs = []
         branch_up = [(s, n) for s, n in rel["up"] if s not in chain_set]
@@ -516,11 +515,11 @@ def detail_nav_html(slug, cat, rel_links, vs_pairs):
                 '<ul class="detail-link-list">'
                 + "".join(_detail_link_item(s, n) for s, n in rel["combo"])
                 + "</ul>")
-        if rm or subs:
+        if subs:
             block1 = (
                 '<div class="detail-nav-block">'
                 '<h2 class="detail-nav-head">ステップアップ・上位資格を目指す</h2>'
-                + rm + "".join(subs)
+                + "".join(subs)
                 + '<p class="detail-nav-note">※免除・受験資格の要件は変更されることがあります。'
                   '出願前に必ず各資格の公式情報でご確認ください。</p>'
                 '</div>')
@@ -1012,12 +1011,17 @@ def build_detail(row) -> str:
                  f"a.unshift({{s:'{esc(row['slug'])}',n:'{_rn}'}});a=a.slice(0,8);"
                  "localStorage.setItem(k,JSON.stringify(a));}catch(e){}})();</script>")
     partner_detail = partner_detail_html(row["slug"])
+    _rm_chain = step_up_chain(row["slug"])
+    _roadmap_block = roadmap_html(row["slug"], _rm_chain)
+    if _roadmap_block:
+        _roadmap_block = f'<section class="detail-roadmap">{_roadmap_block}</section>'
     body = f"""<div class="page-detail">
 <nav class="crumbs"><a href="../index.html">トップ</a> ›
 <a href="../bunya/{esc(bslug)}.html">{esc(major)}</a> › {esc(name)}</nav>
 <h1 class="detail-title">{esc(name)}</h1>
 <p class="detail-audience">{lead}</p>
 {partner_detail}
+{_roadmap_block}
 <section class="detail-spec" aria-labelledby="ds-h">
 <h2 class="detail-section-title" id="ds-h">資格情報</h2>
 <div class="spec-wrap"><table class="spec">{rows_html}</table></div></section>
@@ -3365,6 +3369,9 @@ table.cmp tbody th{background:var(--gray-50);color:var(--gray-800);white-space:n
 .page-detail .pd-name{font-size:var(--text-sm);font-weight:700;color:var(--gray-800)}
 .page-detail .pd-tag{font-size:var(--text-sm);color:var(--gray-600)}
 .page-detail .partner-note{font-size:var(--text-sm);color:var(--gray-600)}
+.page-detail .detail-roadmap{margin:0 0 20px}
+.page-detail .detail-roadmap .roadmap{margin:0}
+.page-detail .detail-roadmap .roadmap h3{font-size:var(--text-section-sub);font-weight:700;color:var(--ink-deep);margin:0 0 10px}
 .page-detail .roadmap h3{font-size:var(--text-sm);font-weight:600;color:var(--gray-800)}
 .page-detail .detail-related .more-compare p{font-size:var(--text-sm);color:var(--gray-700)}
 .page-detail .provenance{font-size:var(--text-sm);color:var(--gray-600)}

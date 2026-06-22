@@ -472,6 +472,9 @@ table.cmp tbody th{background:var(--gray-50);color:var(--gray-800);white-space:n
 .page-detail .pd-name{font-size:var(--text-sm);font-weight:700;color:var(--gray-800)}
 .page-detail .pd-tag{font-size:var(--text-sm);color:var(--gray-600)}
 .page-detail .partner-note{font-size:var(--text-sm);color:var(--gray-600)}
+.page-detail .detail-roadmap{margin:0 0 20px}
+.page-detail .detail-roadmap .roadmap{margin:0}
+.page-detail .detail-roadmap .roadmap h3{font-size:var(--text-section-sub);font-weight:700;color:var(--ink-deep);margin:0 0 10px}
 .page-detail .roadmap h3{font-size:var(--text-sm);font-weight:600;color:var(--gray-800)}
 .page-detail .detail-related .more-compare p{font-size:var(--text-sm);color:var(--gray-700)}
 .page-detail .provenance{font-size:var(--text-sm);color:var(--gray-600)}
