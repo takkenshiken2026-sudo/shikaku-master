@@ -78,7 +78,7 @@
 fetch("../data/certifications.json").then(r=>r.json()).then(all=>{
   const cat="金属溶接・溶断", me="c-5514";
   const ul=document.getElementById("relatedGrid");
-  all.filter(x=>x.category===cat&&x.slug!==me).slice(0,12).forEach(x=>{
+  all.filter(x=>x.category===cat&&x.slug!==me).slice(0,8).forEach(x=>{
     const li=document.createElement("li");
     li.className="detail-link-item";
     li.innerHTML='<a href="'+x.slug+'.html">'+x.name+'</a>';

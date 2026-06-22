@@ -481,11 +481,10 @@ def _detail_link_item(slug, note=""):
 def detail_nav_html(slug, cat, rel_links, vs_pairs):
     """UI spec v2.8: detail-nav（ステップアップ + ほかの資格を見る）。"""
     rel = CERT_RELATIONS.get(slug)
-    block1 = ""
+    subs = []
     if rel:
         chain = step_up_chain(slug)
         chain_set = set(chain)
-        subs = []
         branch_up = [(s, n) for s, n in rel["up"] if s not in chain_set]
         branch_down = [(s, n) for s, n in rel["down"] if s not in chain_set]
         if branch_up:
@@ -513,14 +512,6 @@ def detail_nav_html(slug, cat, rel_links, vs_pairs):
                 '<ul class="detail-link-list">'
                 + "".join(_detail_link_item(s, n) for s, n in rel["combo"])
                 + "</ul>")
-        if subs:
-            block1 = (
-                '<div class="detail-nav-block">'
-                '<h2 class="detail-nav-head">ステップアップ・上位資格を目指す</h2>'
-                + "".join(subs)
-                + '<p class="detail-nav-note">※免除・受験資格の要件は変更されることがあります。'
-                  '出願前に必ず各資格の公式情報でご確認ください。</p>'
-                '</div>')
 
     compare_row = ""
     if vs_pairs:
@@ -530,6 +521,18 @@ def detail_nav_html(slug, cat, rel_links, vs_pairs):
         compare_row = (
             '<h3 class="detail-nav-subhead">よく比較される資格</h3>'
             f'<div class="detail-compare-row">{links}</div>')
+        subs.append(compare_row)
+
+    block1 = ""
+    if subs:
+        note = ('<p class="detail-nav-note">※免除・受験資格の要件は変更されることがあります。'
+                '出願前に必ず各資格の公式情報でご確認ください。</p>' if rel else "")
+        block1 = (
+            '<div class="detail-nav-block">'
+            '<h2 class="detail-nav-head">ステップアップ・上位資格を目指す</h2>'
+            + "".join(subs)
+            + note
+            + '</div>')
 
     more_grid = (
         '<h3 class="detail-nav-subhead">もっと探す</h3>'
@@ -543,7 +546,7 @@ def detail_nav_html(slug, cat, rel_links, vs_pairs):
 fetch("../data/certifications.json").then(r=>r.json()).then(all=>{{
   const cat={json.dumps(cat, ensure_ascii=False)}, me={json.dumps(slug, ensure_ascii=False)};
   const ul=document.getElementById("relatedGrid");
-  all.filter(x=>x.category===cat&&x.slug!==me).slice(0,12).forEach(x=>{{
+  all.filter(x=>x.category===cat&&x.slug!==me).slice(0,8).forEach(x=>{{
     const li=document.createElement("li");
     li.className="detail-link-item";
     li.innerHTML='<a href="'+x.slug+'.html">'+x.name+'</a>';
@@ -558,7 +561,7 @@ fetch("../data/certifications.json").then(r=>r.json()).then(all=>{{
         '<h2 class="detail-nav-head">ほかの資格を見る・比較する</h2>'
         '<h3 class="detail-nav-subhead">同じ分野の他の資格</h3>'
         '<ul class="detail-link-grid" id="relatedGrid"></ul>'
-        + compare_row + more_grid
+        + more_grid
         + '</div>'
         + related_js)
 
