@@ -3021,7 +3021,7 @@ html{scroll-padding-top:64px}
 .hero-h1-line{display:block;font-size:var(--text-xl);font-weight:700;color:var(--ink-deep);letter-spacing:.02em}
 .hero-h1-line+.hero-h1-line{margin-top:2px}
 .hero-sub{font-size:var(--text-md);color:var(--ink);line-height:1.75;max-width:40em;margin:0}
-.hero-sub #count{color:var(--accent);font-weight:700}
+.hero-sub #count{color:var(--accent);font-weight:700;text-decoration:underline;text-underline-offset:3px}
 .hero-search{margin-top:18px;max-width:520px;position:relative}
 .hero-search input{width:100%;padding:12px 16px 12px 42px;border:1px solid var(--gray-300);border-radius:var(--radius);font-size:var(--text-md);background:#fff;color:var(--ink);font-family:inherit}
 .hero-search input::placeholder{color:var(--muted)}
