@@ -15,7 +15,7 @@
   var legacyType='',legacyIndustry='';
   function esc(s){return (s||'').replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
   function fmtN(n){return Number(n).toLocaleString('ja-JP');}
-  function shortName(n){return (n||'').replace(/[（(][^）)]*[）)]/g,'').trim()||n;}
+  function certDisplayName(x){return (x&&(x.display_name||x.name))||'';}
   function opt(sel,v){var o=document.createElement('option');o.value=v;o.textContent=v;sel.appendChild(o);}
   function passNum(x){var m=(x.pass_rate||'').replace(/,/g,'').match(/([0-9]+(?:\.[0-9]+)?)\s*%/);return m?parseFloat(m[1]):null;}
   function studyLow(x){var m=(x.study_hours||'').replace(/,/g,'').match(/([0-9]+)/);return m?parseInt(m[1],10):null;}
@@ -143,7 +143,7 @@
       return '<tr class="cert-row" tabindex="0" data-href="c/'+esc(x.slug)+'.html">'+
         '<td class="all-certs-name"><span class="all-certs-name-inner">'+
         (x.popular?TROPHY:'')+
-        '<span class="all-certs-name-text">'+esc(shortName(x.name))+'</span></span></td>'+
+        '<span class="all-certs-name-text">'+esc(certDisplayName(x))+'</span></span></td>'+
         '<td class="all-certs-cell all-certs-cell--major">'+esc(x.major)+'</td>'+
         '<td class="all-certs-cell all-certs-num all-certs-cell--study">'+study+'</td>'+
         '<td class="all-certs-cell all-certs-num all-certs-cell--pass">'+pass+'</td>'+
@@ -222,10 +222,13 @@
       var a=JSON.parse(localStorage.getItem('recent')||'[]');
       var blk=document.getElementById('recentBlock'),grid=document.getElementById('recentGrid');
       if(!blk||!grid||!a.length)return;
-      grid.innerHTML=a.slice(0,8).map(function(x){
-        return '<li><a href="c/'+esc(x.s)+'.html">'+esc(x.n)+'</a></li>';
-      }).join('');
-      blk.hidden=false;
+      fetch('data/certifications.json').then(function(r){return r.json();}).then(function(all){
+        var nm={};all.forEach(function(x){nm[x.slug]=x.display_name||x.name;});
+        grid.innerHTML=a.slice(0,8).map(function(x){
+          return '<li><a href="c/'+esc(x.s)+'.html">'+esc(nm[x.s]||x.n)+'</a></li>';
+        }).join('');
+        blk.hidden=false;
+      });
     }catch(e){}
   })();
 })();

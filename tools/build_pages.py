@@ -1003,7 +1003,7 @@ def build_detail(row, popular_slugs=None) -> str:
     vs_pairs = []
     for ps, other in COMPARE_INDEX.get(row["slug"], []):
         if other in INDEXABLE_SLUGS:
-            on = re.sub(r"[（(].*?[）)]", "", NAME_BY_SLUG.get(other, other)).strip() or other
+            on = _rel_name(other)
             vs_pairs.append((ps, on))
 
     # FAQ 構造化データ（表示は表に統合、JSON-LD のみ出力）
@@ -1048,7 +1048,7 @@ def build_detail(row, popular_slugs=None) -> str:
     detail_nav = detail_nav_html(row["slug"], cat, rel, vs_pairs)
 
     # 「最近見た資格」記録（localStorage）
-    _rn = esc(re.sub(r"[（(].*?[）)]", "", name).strip() or name)
+    _rn = esc(_rel_name(row["slug"]))
     recent_js = ("<script>(function(){try{var k='recent',a=JSON.parse(localStorage.getItem(k)||'[]');"
                  f"a=a.filter(function(x){{return x.s!=='{esc(row['slug'])}';}});"
                  f"a.unshift({{s:'{esc(row['slug'])}',n:'{_rn}'}});a=a.slice(0,8);"
@@ -2747,7 +2747,7 @@ def build_index(rows) -> str:
     by_slug = {r["slug"]: r for r in rows}
 
     def _short(r):
-        return re.sub(r"[（(].*?[）)]", "", r["name"]).strip() or r["name"]
+        return _rel_name(r["slug"])
     vs_links = ""
     for pslug, sa, sb, _ in COMPARE_PAIRS:
         ra, rb = by_slug.get(sa), by_slug.get(sb)
@@ -2999,7 +2999,7 @@ SEARCH_JS = """(function(){
   var legacyType='',legacyIndustry='';
   function esc(s){return (s||'').replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
   function fmtN(n){return Number(n).toLocaleString('ja-JP');}
-  function shortName(n){return (n||'').replace(/[（(][^）)]*[）)]/g,'').trim()||n;}
+  function certDisplayName(x){return (x&&(x.display_name||x.name))||'';}
   function opt(sel,v){var o=document.createElement('option');o.value=v;o.textContent=v;sel.appendChild(o);}
   function passNum(x){var m=(x.pass_rate||'').replace(/,/g,'').match(/([0-9]+(?:\\.[0-9]+)?)\\s*%/);return m?parseFloat(m[1]):null;}
   function studyLow(x){var m=(x.study_hours||'').replace(/,/g,'').match(/([0-9]+)/);return m?parseInt(m[1],10):null;}
@@ -3127,7 +3127,7 @@ SEARCH_JS = """(function(){
       return '<tr class="cert-row" tabindex="0" data-href="c/'+esc(x.slug)+'.html">'+
         '<td class="all-certs-name"><span class="all-certs-name-inner">'+
         (x.popular?TROPHY:'')+
-        '<span class="all-certs-name-text">'+esc(shortName(x.name))+'</span></span></td>'+
+        '<span class="all-certs-name-text">'+esc(certDisplayName(x))+'</span></span></td>'+
         '<td class="all-certs-cell all-certs-cell--major">'+esc(x.major)+'</td>'+
         '<td class="all-certs-cell all-certs-num all-certs-cell--study">'+study+'</td>'+
         '<td class="all-certs-cell all-certs-num all-certs-cell--pass">'+pass+'</td>'+
@@ -3206,10 +3206,13 @@ SEARCH_JS = """(function(){
       var a=JSON.parse(localStorage.getItem('recent')||'[]');
       var blk=document.getElementById('recentBlock'),grid=document.getElementById('recentGrid');
       if(!blk||!grid||!a.length)return;
-      grid.innerHTML=a.slice(0,8).map(function(x){
-        return '<li><a href="c/'+esc(x.s)+'.html">'+esc(x.n)+'</a></li>';
-      }).join('');
-      blk.hidden=false;
+      fetch('data/certifications.json').then(function(r){return r.json();}).then(function(all){
+        var nm={};all.forEach(function(x){nm[x.slug]=x.display_name||x.name;});
+        grid.innerHTML=a.slice(0,8).map(function(x){
+          return '<li><a href="c/'+esc(x.s)+'.html">'+esc(nm[x.s]||x.n)+'</a></li>';
+        }).join('');
+        blk.hidden=false;
+      });
     }catch(e){}
   })();
 })();
@@ -3984,7 +3987,9 @@ def main() -> int:
     popular_set = {r["slug"] for r in _pop_ranked[:80]}
     payload = [{
         "popular": (r["slug"] in popular_set),
-        "slug": r["slug"], "name": r["name"], "major": r["major_category"],
+        "slug": r["slug"], "name": r["name"],
+        "display_name": _rel_name(r["slug"]),
+        "major": r["major_category"],
         "category": r["category"], "type": r["type"],
         "authority": r["authority"], "official_url": r["official_url"],
         "eligibility": r["eligibility"], "exam_format": r["exam_format"],
