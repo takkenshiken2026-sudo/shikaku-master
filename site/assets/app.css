@@ -79,9 +79,6 @@ html{scroll-padding-top:64px}
 .block-inset{margin:8px 0 20px;padding:0 2px}
 .block-head{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:18px;gap:8px;flex-wrap:wrap}
 .block-head h2{font-size:var(--text-lg);font-weight:700;color:var(--ink-deep);margin:0}
-.block-head-title{display:flex;align-items:center;gap:8px}
-.block-head-icon{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;color:var(--accent);flex-shrink:0}
-.block-head-icon .icon-svg{width:22px;height:22px}
 .block-head p{font-size:var(--text-sm);color:var(--muted);margin:0}
 .block-all-certs{padding:52px var(--page-gutter) 56px;margin-bottom:0}
 .block-all-certs .block-head{margin-bottom:24px}
@@ -460,6 +457,10 @@ table.cmp tbody th{background:var(--gray-50);color:var(--ink);white-space:nowrap
 .page-detail .detail-section-title{font-size:var(--text-lg);font-weight:700;color:var(--ink-deep);margin:0 0 10px}
 .page-detail table.spec{font-size:var(--text-md)}
 .page-detail table.spec th{background:var(--gray-50);color:var(--ink);font-weight:450;font-size:var(--text-md)}
+.page-detail table.spec th .spec-th-inner{display:inline-flex;align-items:flex-start;gap:7px}
+.page-detail table.spec th .spec-th-icon{flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;margin-top:1px;color:var(--muted)}
+.page-detail table.spec th .spec-th-icon .icon-svg{width:16px;height:16px}
+.page-detail table.spec th .spec-th-text{font-weight:inherit;line-height:1.45}
 .page-detail table.spec td{color:var(--ink);font-size:var(--text-md);font-weight:400}
 .page-detail table.spec tr.spec-row{cursor:pointer;transition:background-color .12s ease}
 .page-detail table.spec tr.spec-row:hover th,.page-detail table.spec tr.spec-row:hover td{background:var(--gray-100)}

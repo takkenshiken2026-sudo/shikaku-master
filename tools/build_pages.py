@@ -1153,7 +1153,7 @@ def spec_row_html(label, value, href=""):
     href_attr = f' data-href="{esc(href)}"' if href else ""
     return (
         f'<tr class="spec-row" tabindex="0"{href_attr}>'
-        f"<th>{esc(label)}</th><td>{value}</td></tr>")
+        f"<th>{spec_label_html(label)}</th><td>{value}</td></tr>")
 
 
 def difficulty(r):
@@ -1546,7 +1546,92 @@ _FIELD_ICON_DEFAULT = _icon_svg(
 def field_icon(major):
     return FIELD_ICONS.get(major, _FIELD_ICON_DEFAULT)
 
-# 業界レイヤー（分野とは別軸）。分野→業界の対応＋全業界で通用する汎用資格。
+
+SPEC_ICONS = {
+    "資格区分": _icon_svg('<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>'),
+    "分野（大分類）": _icon_svg(
+        '<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>'
+        '<rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>'),
+    "カテゴリ": _icon_svg(
+        '<path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/>'
+        '<circle cx="7" cy="7" r="1.5"/>'),
+    "実施団体": _icon_svg(
+        '<path d="M3 21h18"/><path d="M5 21V7l7-4 7 4v14"/>'
+        '<path d="M9 21v-6h6v6"/>'),
+    "公式サイト": _icon_svg(
+        '<path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>'
+        '<path d="M15 3h6v6"/><path d="M10 14L21 3"/>'),
+    "受験資格": _icon_svg(
+        '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>'
+        '<circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/>'
+        '<path d="M16 3.13a4 4 0 0 1 0 7.75"/>'),
+    "試験形式": _icon_svg(
+        '<path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/>'),
+    "受験料": _icon_svg(
+        '<circle cx="12" cy="12" r="9"/>'
+        '<path d="M9 8.5c0-1.5 1.3-2.5 3-2.5s3 1 3 2.5c0 2-3 2-3 4"/>'
+        '<path d="M12 17v.5"/>'),
+    "合格率": _icon_svg(
+        '<circle cx="12" cy="12" r="9"/><path d="M8 12l3 3 5-6"/>'),
+    "実施頻度": _icon_svg(
+        '<rect x="3" y="4" width="18" height="18" rx="2"/>'
+        '<path d="M16 2v4M8 2v4M3 10h18"/>'),
+    "ハローワークコード": _icon_svg('<path d="M4 9h16M4 15h16"/>'),
+    "受験者数": _icon_svg(
+        '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>'
+        '<circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/>'
+        '<path d="M16 3.13a4 4 0 0 1 0 7.75"/>'),
+    "難易度の目安": _icon_svg(
+        '<path d="M3 3v18h18"/><path d="M7 16l4-5 4 3 5-7"/>'),
+    "総合難易度（目安）": _icon_svg('<path d="M3 3v18h18"/><path d="M7 14l3-3 3 2 5-6"/>'),
+    "試験科目・出題範囲": _icon_svg(
+        '<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>'
+        '<path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>'),
+    "学習時間の目安": _icon_svg('<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>'),
+    "活かせる業界": _icon_svg(
+        '<rect x="2" y="7" width="20" height="14" rx="2"/>'
+        '<path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/>'),
+    "特徴・目的タグ": _icon_svg(
+        '<path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/>'
+        '<circle cx="7" cy="7" r="1.5"/>'),
+    "この資格のポイント": _icon_svg(
+        '<path d="M9 18h6"/><path d="M10 22h4"/>'
+        '<path d="M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2z"/>'),
+    "活かせる仕事・キャリア": _icon_svg(
+        '<rect x="2" y="7" width="20" height="14" rx="2"/>'
+        '<path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/>'),
+    "おすすめテキスト・講座": _icon_svg(
+        '<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>'
+        '<path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>'),
+    "最終確認日": _icon_svg(
+        '<rect x="3" y="4" width="18" height="18" rx="2"/>'
+        '<path d="M16 2v4M8 2v4M3 10h18"/><path d="M9 16l2 2 4-4"/>'),
+    "情報源": _icon_svg('<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>'
+                      '<path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>'),
+    "最新情報の確認": _icon_svg(
+        '<path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>'),
+    "データの注記": _icon_svg(
+        '<circle cx="12" cy="12" r="9"/><path d="M12 8v4"/><path d="M12 16h.01"/>'),
+}
+
+
+def _spec_label_key(label):
+    """PRバッジ等のHTML付きラベルから照合用の純テキストを取り出す。"""
+    return re.sub(r"<.*", "", label, flags=re.DOTALL).strip()
+
+
+def spec_label_html(label):
+    key = _spec_label_key(label)
+    suffix = label[len(key):] if len(label) > len(key) else ""
+    text = esc(key) + suffix
+    icon = SPEC_ICONS.get(key)
+    if not icon:
+        return text
+    return (
+        f'<span class="spec-th-inner">'
+        f'<span class="spec-th-icon" aria-hidden="true">{icon}</span>'
+        f'<span class="spec-th-text">{text}</span></span>')
+
 MAJOR_INDUSTRY = {
     "IT・情報処理": "IT・通信", "法律・法務・知財": "法律・士業",
     "会計・金融・経営": "金融・会計", "不動産": "不動産",
@@ -3590,6 +3675,10 @@ table.cmp tbody th{background:var(--gray-50);color:var(--ink);white-space:nowrap
 .page-detail .detail-section-title{font-size:var(--text-lg);font-weight:700;color:var(--ink-deep);margin:0 0 10px}
 .page-detail table.spec{font-size:var(--text-md)}
 .page-detail table.spec th{background:var(--gray-50);color:var(--ink);font-weight:450;font-size:var(--text-md)}
+.page-detail table.spec th .spec-th-inner{display:inline-flex;align-items:flex-start;gap:7px}
+.page-detail table.spec th .spec-th-icon{flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;margin-top:1px;color:var(--muted)}
+.page-detail table.spec th .spec-th-icon .icon-svg{width:16px;height:16px}
+.page-detail table.spec th .spec-th-text{font-weight:inherit;line-height:1.45}
 .page-detail table.spec td{color:var(--ink);font-size:var(--text-md);font-weight:400}
 .page-detail table.spec tr.spec-row{cursor:pointer;transition:background-color .12s ease}
 .page-detail table.spec tr.spec-row:hover th,.page-detail table.spec tr.spec-row:hover td{background:var(--gray-100)}
