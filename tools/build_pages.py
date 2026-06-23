@@ -1466,36 +1466,32 @@ def _certs_name_cell(r, popular_slugs=None):
         f'{trophy}<span class="all-certs-name-text">{esc(r["name"])}</span></span></td>')
 
 
-def _certs_table(items, depth=1, *, show_major=False, show_category=False,
+def _certs_table(items, depth=1, *, show_major=False,
                  with_script=True, popular_slugs=None):
     """資格一覧の表形式HTML（分野・目的別ガイドなどで共用）。"""
     base = "../" * depth
     headers = ['<th scope="col">資格名</th>']
     if show_major:
         headers.append('<th scope="col">分野</th>')
-    headers.append('<th scope="col">種別</th>')
-    if show_category:
-        headers.append('<th scope="col">カテゴリ</th>')
-    headers.extend(['<th scope="col">受験料</th>', '<th scope="col">合格率</th>'])
+    headers.extend([
+        '<th scope="col">学習時間</th>',
+        '<th scope="col">合格率</th>',
+        '<th scope="col">実施頻度</th>',
+    ])
     rows = []
     for r in items:
-        fee = fmt_nums_in_text(r.get("fee") or "") or "—"
         pr = pass_rate_display(r.get("pass_rate", "")) or "—"
-        label = TYPE_BADGE.get(r["type"], ("区分要確認", ""))[0]
+        study = fmt_nums_in_text((STUDY.get(r["slug"], {}) or {}).get("study_hours", "")) or "—"
+        freq_raw = (r.get("frequency") or "").strip()
+        freq = esc(freq_raw) if freq_raw else "—"
         cells = [_certs_name_cell(r, popular_slugs)]
         if show_major:
             cells.append(
                 f'<td class="all-certs-cell">{esc(r["major_category"])}</td>')
         cells.extend([
-            f'<td class="all-certs-cell">{esc(label)}</td>',
-        ])
-        if show_category:
-            cells.append(
-                f'<td class="all-certs-cell all-certs-cell--cat">'
-                f'{esc(r["category"])}</td>')
-        cells.extend([
-            f'<td class="all-certs-cell all-certs-num">{esc(fee)}</td>',
+            f'<td class="all-certs-cell all-certs-num">{esc(study)}</td>',
             f'<td class="all-certs-cell all-certs-num">{esc(pr)}</td>',
+            f'<td class="all-certs-cell all-certs-cell--freq">{freq}</td>',
         ])
         rows.append(
             f'<tr class="cert-row" tabindex="0" data-href="{base}c/{esc(r["slug"])}.html">'
@@ -2267,8 +2263,7 @@ def build_feature_pages(indexable, popular_slugs=None):
             listing = ""
             for major, its in by_major.items():
                 listing += (f'<h2 class="hub-grp">{esc(major)}</h2>'
-                            + _certs_table(its, depth=1, show_category=True,
-                                           with_script=False,
+                            + _certs_table(its, depth=1, with_script=False,
                                            popular_slugs=popular_slugs))
             listing += _CERTS_TABLE_SCRIPT
         else:
