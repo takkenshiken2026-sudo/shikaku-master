@@ -2906,10 +2906,9 @@ def build_index(rows) -> str:
           <th scope="col">学習時間</th>
           <th scope="col">合格率</th>
           <th scope="col">実施頻度</th>
-          <th scope="col">受験者数</th>
         </tr>
       </thead>
-      <tbody id="results"><tr><td colspan="6" class="muted">読み込み中…</td></tr></tbody>
+      <tbody id="results"><tr><td colspan="5" class="muted">読み込み中…</td></tr></tbody>
     </table>
   </div>
   <nav class="pagination" id="pagination" aria-label="資格一覧のページ送り" hidden></nav>
@@ -3068,7 +3067,6 @@ SEARCH_JS = """(function(){
       var study=x.study_hours?esc(x.study_hours):'—';
       var pass=x.pass_rate?esc(x.pass_rate):'—';
       var freq=x.frequency?esc(x.frequency):'—';
-      var app=x.applicants?esc(x.applicants):'—';
       return '<tr class="cert-row" tabindex="0" data-href="c/'+esc(x.slug)+'.html">'+
         '<td class="all-certs-name"><span class="all-certs-name-inner">'+
         (x.popular?TROPHY:'')+
@@ -3076,9 +3074,8 @@ SEARCH_JS = """(function(){
         '<td class="all-certs-cell">'+esc(x.major)+'</td>'+
         '<td class="all-certs-cell all-certs-num">'+study+'</td>'+
         '<td class="all-certs-cell all-certs-num">'+pass+'</td>'+
-        '<td class="all-certs-cell all-certs-cell--freq">'+freq+'</td>'+
-        '<td class="all-certs-cell all-certs-num">'+app+'</td></tr>';
-    }).join('')||'<tr><td colspan="6" class="empty-state">条件に一致する資格が見つかりませんでした。<br>キーワードを短くするか、上の「× 条件をクリア」で絞り込みを解除してください。</td></tr>';
+        '<td class="all-certs-cell all-certs-cell--freq">'+freq+'</td></tr>';
+    }).join('')||'<tr><td colspan="5" class="empty-state">条件に一致する資格が見つかりませんでした。<br>キーワードを短くするか、上の「× 条件をクリア」で絞り込みを解除してください。</td></tr>';
     renderPagination(out.length);
     syncURL();
   }

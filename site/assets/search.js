@@ -110,7 +110,6 @@
       var study=x.study_hours?esc(x.study_hours):'—';
       var pass=x.pass_rate?esc(x.pass_rate):'—';
       var freq=x.frequency?esc(x.frequency):'—';
-      var app=x.applicants?esc(x.applicants):'—';
       return '<tr class="cert-row" tabindex="0" data-href="c/'+esc(x.slug)+'.html">'+
         '<td class="all-certs-name"><span class="all-certs-name-inner">'+
         (x.popular?TROPHY:'')+
@@ -118,9 +117,8 @@
         '<td class="all-certs-cell">'+esc(x.major)+'</td>'+
         '<td class="all-certs-cell all-certs-num">'+study+'</td>'+
         '<td class="all-certs-cell all-certs-num">'+pass+'</td>'+
-        '<td class="all-certs-cell all-certs-cell--freq">'+freq+'</td>'+
-        '<td class="all-certs-cell all-certs-num">'+app+'</td></tr>';
-    }).join('')||'<tr><td colspan="6" class="empty-state">条件に一致する資格が見つかりませんでした。<br>キーワードを短くするか、上の「× 条件をクリア」で絞り込みを解除してください。</td></tr>';
+        '<td class="all-certs-cell all-certs-cell--freq">'+freq+'</td></tr>';
+    }).join('')||'<tr><td colspan="5" class="empty-state">条件に一致する資格が見つかりませんでした。<br>キーワードを短くするか、上の「× 条件をクリア」で絞り込みを解除してください。</td></tr>';
     renderPagination(out.length);
     syncURL();
   }
