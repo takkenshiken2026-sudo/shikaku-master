@@ -791,29 +791,31 @@ def build_detail(row) -> str:
     else:
         official = '<span class="muted">未登録（一次情報で確認予定）</span>'
 
-    spec = [
+    spec_basic = [
         ("資格区分", f'<span class="badge {cls}">{esc(label)}</span>'
                     + type_reason_note(row["type"], label, row["type_reason"])),
         ("分野（大分類）", esc(major)),
         ("カテゴリ", esc(cat)),
         ("実施団体", field(row["authority"])),
         ("公式サイト", official),
+        ("ハローワークコード", esc(row["hellowork_code"])),
+    ]
+    spec_exam = [
         ("受験資格", field(row["eligibility"])),
         ("試験形式", field(row["exam_format"])),
         ("受験料", field(row["fee"])),
         ("合格率", field(pass_rate_display(row["pass_rate"]) or row["pass_rate"])),
         ("実施頻度", field(row["frequency"])),
-        ("ハローワークコード", esc(row["hellowork_code"])),
     ]
     ed = EXAM.get(row["slug"], {})
     if ed.get("applicants"):
-        spec.append(("受験者数", esc(fmt_nums_in_text(ed["applicants"]))))
+        spec_exam.append(("受験者数", esc(fmt_nums_in_text(ed["applicants"]))))
     diff = difficulty(row)
     if diff:
         dlabel, dcls = diff
-        spec.append(("難易度の目安",
-                     esc(dlabel)
-                     + f' <span class="note-muted">（公表合格率 {esc(pass_rate_display(row["pass_rate"]))} に基づく簡易目安）</span>'))
+        spec_exam.append(("難易度の目安",
+                          esc(dlabel)
+                          + f' <span class="note-muted">（公表合格率 {esc(pass_rate_display(row["pass_rate"]))} に基づく簡易目安）</span>'))
     dr = DIFFICULTY_RANK.get(row["slug"])
     if dr:
         rank_parts = [f'掲載資格中 上位{dr["pct"]}%']
@@ -824,31 +826,33 @@ def build_detail(row) -> str:
         meta = (f'信頼度: {conf_note}／スコア算出{dr["total"]}件中{dr["rank"]}位相当。'
                 f'{"・".join(dr["srcs"])}から算出した編集部の総合スコアで、'
                 f'難易度の絶対指標ではありません。')
-        spec.append(("総合難易度（目安）",
-                     esc(" / ".join(rank_parts))
-                     + f'<div class="note-muted">{esc(meta)}</div>'))
+        spec_exam.append(("総合難易度（目安）",
+                          esc(" / ".join(rank_parts))
+                          + f'<div class="note-muted">{esc(meta)}</div>'))
     if ed.get("exam_subjects"):
-        spec.append(("試験科目・出題範囲", esc(ed["exam_subjects"])))
+        spec_exam.append(("試験科目・出題範囲", esc(ed["exam_subjects"])))
     st = STUDY.get(row["slug"], {})
     if st.get("study_hours"):
-        spec.append(("学習時間の目安",
-                     esc(fmt_nums_in_text(st["study_hours"]))
-                     + ' <span class="note-muted">（編集部調べの目安。個人差があり、公式の数値ではありません）</span>'))
+        spec_exam.append(("学習時間の目安",
+                          esc(fmt_nums_in_text(st["study_hours"]))
+                          + ' <span class="note-muted">（編集部調べの目安。個人差があり、公式の数値ではありません）</span>'))
+
+    spec_use = []
     inds = industry_tags(row)
     if inds:
         chips = "".join(
             f'<a class="tag-chip tag-ind" href="../index.html?industry={quote(t)}#all-certs"'
             f' title="「{esc(t)}」で活かせる資格を探す">{esc(t)}</a>' for t in inds)
-        spec.append(("活かせる業界", chips))
+        spec_use.append(("活かせる業界", chips))
     tags = cert_tags(row)
     if tags:
         chips = "".join(
             f'<a class="tag-chip" href="../index.html?tag={quote(t)}#all-certs"'
             f' title="「{esc(t)}」の資格を探す">{esc(t)}</a>' for t in tags)
-        spec.append(("特徴・目的タグ", chips))
+        spec_use.append(("特徴・目的タグ", chips))
     src = row.get("source_checked_at", "")
 
-    # この資格のポイント（表内1行に統合）
+    # この資格のポイント
     pts = []
     if is_noreq(row):
         pts.append("受験資格の制限がなく、誰でも受験できます")
@@ -873,10 +877,10 @@ def build_detail(row) -> str:
     pts = pts[:5]
     if pts:
         _lis = "".join(f"<li>{esc(p)}</li>" for p in pts)
-        spec.append(("この資格のポイント",
-                     f'<ul class="spec-list">{_lis}</ul>'))
+        spec_use.append(("この資格のポイント",
+                         f'<ul class="spec-list">{_lis}</ul>'))
 
-    # 活かせる仕事・キャリア（表内1行に統合）
+    # 活かせる仕事・キャリア
     cur = CAREERS.get(row["slug"])
     if cur:
         items = []
@@ -904,14 +908,15 @@ def build_detail(row) -> str:
                         'サイト（job tag）で資格名から検索できます。</p>')
     careers_cell += (f'<p class="jobtag"><a href="{JOBTAG_URL}" rel="nofollow noopener" '
                      f'target="_blank">厚生労働省 job tag で関連職業を調べる ↗</a></p>')
-    spec.append(("活かせる仕事・キャリア", careers_cell))
+    spec_use.append(("活かせる仕事・キャリア", careers_cell))
 
-    # おすすめ教材（表内1行に統合）
+    spec_ref = []
+    # おすすめ教材
     _mat_cell = materials_cell_html(row["slug"])
     if _mat_cell:
         _mat_aff = any(m["affiliate"] for m in (MATERIALS.get(row["slug"]) or []))
         _mat_pr = ' <span class="pr-badge">PR</span>' if _mat_aff else ""
-        spec.append((f"おすすめテキスト・講座{_mat_pr}", _mat_cell))
+        spec_ref.append((f"おすすめテキスト・講座{_mat_pr}", _mat_cell))
 
     jd = jp_date(src)
     if row["official_url"]:
@@ -924,44 +929,26 @@ def build_detail(row) -> str:
     else:
         official_src = "各資格の公式情報"
     if jd:
-        spec.append(("最終確認日", esc(jd)))
+        spec_ref.append(("最終確認日", esc(jd)))
     elif src:
-        spec.append(("最終確認日", esc(src)))
-    spec.append(("情報源", official_src))
+        spec_ref.append(("最終確認日", esc(src)))
+    spec_ref.append(("情報源", official_src))
     if row["official_url"]:
         u = esc(row["official_url"])
-        spec.append(("最新情報の確認",
-                     f'<a href="{u}" rel="nofollow noopener" target="_blank">'
-                     f'公式サイトで最新情報を確認 ↗</a>'))
-    spec.append(("データの注記",
-                 '<p class="detail-source-note">受験料・受験資格・試験形式・合格率・実施団体は公式の一次情報に基づきます。'
-                 '学習時間・難易度・総合スコアは編集部による目安で、公式の数値ではありません。'
-                 '制度・金額・日程は改定されることがあるため、出願前に必ず公式サイトでご確認ください。</p>'))
+        spec_ref.append(("最新情報の確認",
+                         f'<a href="{u}" rel="nofollow noopener" target="_blank">'
+                         f'公式サイトで最新情報を確認 ↗</a>'))
+    spec_ref.append(("データの注記",
+                     '<p class="detail-source-note">受験料・受験資格・試験形式・合格率・実施団体は公式の一次情報に基づきます。'
+                     '学習時間・難易度・総合スコアは編集部による目安で、公式の数値ではありません。'
+                     '制度・金額・日程は改定されることがあるため、出願前に必ず公式サイトでご確認ください。</p>'))
 
-    rows_html = "".join(
-        spec_row_html(k, v, row["official_url"] if k in ("公式サイト", "最新情報の確認") and row.get("official_url") else "")
-        for k, v in spec)
-
-    spec_js = """<script>
-(function(){
-  var tbl=document.querySelector(".page-detail table.spec");
-  if(!tbl)return;
-  tbl.querySelectorAll("tr.spec-row").forEach(function(tr){
-    tr.addEventListener("click",function(e){
-      if(e.target.closest("a"))return;
-      var href=tr.getAttribute("data-href");
-      if(href){window.open(href,"_blank","noopener");return;}
-      tbl.querySelectorAll("tr.spec-row.is-active").forEach(function(r){
-        if(r!==tr)r.classList.remove("is-active");
-      });
-      tr.classList.toggle("is-active");
-    });
-    tr.addEventListener("keydown",function(e){
-      if(e.key==="Enter"||e.key===" "){e.preventDefault();tr.click();}
-    });
-  });
-})();
-</script>"""
+    spec_html = spec_sections_html([
+        ("基本情報", "spec-basic", spec_basic),
+        ("試験・学習", "spec-exam", spec_exam),
+        ("活かし方", "spec-use", spec_use),
+        ("参考・出典", "spec-ref", spec_ref),
+    ], row.get("official_url") or "")
 
     # ユニーク本文（概要）— 手書きの独自解説があれば優先、なければテンプレート生成
     hand_desc = DESC.get(row["slug"], "")
@@ -1081,7 +1068,7 @@ def build_detail(row) -> str:
 {_roadmap_block}
 <section class="detail-spec" aria-labelledby="ds-h">
 <h2 class="detail-section-title" id="ds-h">資格情報</h2>
-<div class="spec-wrap"><table class="spec">{rows_html}</table></div>{spec_js}</section>
+<div class="spec-sections">{spec_html}</div>{SPEC_TABLE_JS}</section>
 {detail_nav}
 {recent_js}
 </div>"""
@@ -1175,6 +1162,58 @@ def spec_row_html(label, value, href=""):
     return (
         f'<tr class="spec-row" tabindex="0"{href_attr}>'
         f"<th>{spec_label_html(label)}</th><td>{value}</td></tr>")
+
+
+_SPEC_LINK_LABELS = frozenset({"公式サイト", "最新情報の確認"})
+
+
+def spec_table_html(rows, official_url=""):
+    """行リストから spec 表の tbody 相当 HTML を生成。"""
+    return "".join(
+        spec_row_html(
+            k, v,
+            official_url if k in _SPEC_LINK_LABELS and official_url else "",
+        )
+        for k, v in rows
+    )
+
+
+def spec_sections_html(section_rows, official_url=""):
+    """セクション見出し付きの資格情報表ブロックを生成。"""
+    parts = []
+    for title, sid, rows in section_rows:
+        if not rows:
+            continue
+        parts.append(
+            f'<div class="spec-section" id="{esc(sid)}">'
+            f'<h3 class="spec-section-title">{esc(title)}</h3>'
+            f'<div class="spec-wrap"><table class="spec">'
+            f'{spec_table_html(rows, official_url)}'
+            f'</table></div></div>'
+        )
+    return "".join(parts)
+
+
+SPEC_TABLE_JS = """<script>
+(function(){
+  document.querySelectorAll(".page-detail table.spec").forEach(function(tbl){
+    tbl.querySelectorAll("tr.spec-row").forEach(function(tr){
+      tr.addEventListener("click",function(e){
+        if(e.target.closest("a"))return;
+        var href=tr.getAttribute("data-href");
+        if(href){window.open(href,"_blank","noopener");return;}
+        tbl.querySelectorAll("tr.spec-row.is-active").forEach(function(r){
+          if(r!==tr)r.classList.remove("is-active");
+        });
+        tr.classList.toggle("is-active");
+      });
+      tr.addEventListener("keydown",function(e){
+        if(e.key==="Enter"||e.key===" "){e.preventDefault();tr.click();}
+      });
+    });
+  });
+})();
+</script>"""
 
 
 def difficulty(r):
@@ -3653,6 +3692,9 @@ table.cmp tbody th{background:var(--gray-50);color:var(--ink);white-space:nowrap
 .detail-related .more-same li{break-inside:avoid;margin:2px 0}
 @media(max-width:560px){.detail-related .more-same ul{columns:1}}
 .detail-spec{margin-bottom:4px}
+.spec-sections{display:flex;flex-direction:column;gap:24px}
+.spec-section{margin:0}
+.spec-section-title{font-size:var(--text-md);font-weight:var(--fw-semibold);color:var(--ink-deep);margin:0 0 8px;line-height:1.4}
 .detail-source{margin-top:22px;padding:14px 0 0;border-top:1px solid var(--gray-200);font-size:var(--text-sm);color:var(--muted);line-height:1.65}
 .detail-source p{margin:0 0 5px}.detail-source .k{font-weight:600;color:var(--muted)}
 .detail-source a{color:var(--ink);text-decoration:underline;text-underline-offset:2px}

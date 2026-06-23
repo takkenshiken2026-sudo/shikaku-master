@@ -415,6 +415,9 @@ table.cmp tbody th{background:var(--gray-50);color:var(--ink);white-space:nowrap
 .detail-related .more-same li{break-inside:avoid;margin:2px 0}
 @media(max-width:560px){.detail-related .more-same ul{columns:1}}
 .detail-spec{margin-bottom:4px}
+.spec-sections{display:flex;flex-direction:column;gap:24px}
+.spec-section{margin:0}
+.spec-section-title{font-size:var(--text-md);font-weight:var(--fw-semibold);color:var(--ink-deep);margin:0 0 8px;line-height:1.4}
 .detail-source{margin-top:22px;padding:14px 0 0;border-top:1px solid var(--gray-200);font-size:var(--text-sm);color:var(--muted);line-height:1.65}
 .detail-source p{margin:0 0 5px}.detail-source .k{font-weight:600;color:var(--muted)}
 .detail-source a{color:var(--ink);text-decoration:underline;text-underline-offset:2px}
