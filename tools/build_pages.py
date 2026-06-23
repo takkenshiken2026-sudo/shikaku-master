@@ -1188,6 +1188,7 @@ def spec_sections_html(section_rows, official_url=""):
             f'<div class="spec-section" id="{esc(sid)}">'
             f'<h3 class="spec-section-title">{esc(title)}</h3>'
             f'<div class="spec-wrap"><table class="spec">'
+            f'<colgroup><col class="spec-col-label"><col class="spec-col-value"></colgroup>'
             f'{spec_table_html(rows, official_url)}'
             f'</table></div></div>'
         )
@@ -3771,6 +3772,11 @@ table.cmp tbody th{background:var(--gray-50);color:var(--ink);white-space:nowrap
 .detail-spec{margin-bottom:4px}
 .spec-sections{display:flex;flex-direction:column;gap:24px}
 .spec-section{margin:0}
+.page-detail .spec-sections table.spec{table-layout:fixed;width:100%}
+.page-detail .spec-sections table.spec col.spec-col-label{width:38%}
+.page-detail .spec-sections table.spec col.spec-col-value{width:62%}
+.page-detail .spec-sections table.spec th{width:38%;box-sizing:border-box}
+.page-detail .spec-sections table.spec td{width:62%;box-sizing:border-box}
 .spec-section-title{font-size:var(--text-md);font-weight:var(--fw-semibold);color:var(--ink-deep);margin:0 0 8px;line-height:1.4}
 .detail-source{margin-top:22px;padding:14px 0 0;border-top:1px solid var(--gray-200);font-size:var(--text-sm);color:var(--muted);line-height:1.65}
 .detail-source p{margin:0 0 5px}.detail-source .k{font-weight:600;color:var(--muted)}
