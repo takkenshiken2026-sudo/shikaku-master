@@ -296,6 +296,8 @@ a.rm-name:hover{text-decoration:underline}
 .materials li{display:flex;gap:10px;align-items:flex-start;background:#fff;border:1px solid var(--gray-200);border-radius:8px;padding:9px 12px;margin-bottom:7px}
 .mat-kind{flex:0 0 auto;background:var(--accent-light);color:var(--accent-hover);border:1px solid rgba(42,122,110,.18);border-radius:6px;font-size:var(--text-sm);font-weight:var(--fw-semibold);padding:2px 8px;margin-top:2px}
 .mat-body{flex:1}.mat-note{display:block;color:var(--muted);font-size:var(--text-sm);margin-top:2px}
+.materials a{color:var(--accent);font-weight:var(--fw-semibold);text-decoration:underline;text-underline-offset:2px}
+.materials a:hover{color:var(--accent-hover)}
 .mat-foot{font-size:var(--text-sm);margin:.4em 0 0}
 .rel-certs h3{font-size:var(--text-lg);font-weight:var(--fw-semibold);margin:.7em 0 .2em;color:var(--ink-deep)}
 .occ-meta{background:var(--gray-50);border:1px solid var(--gray-200);border-radius:8px;padding:10px 13px;margin:10px 0}
@@ -483,8 +485,10 @@ table.cmp tbody th{background:var(--gray-50);color:var(--ink);white-space:nowrap
 .page-detail table.spec .spec-list li{margin:2px 0;line-height:inherit;font-size:inherit;color:var(--ink)}
 .page-detail table.spec .materials{margin:.15em 0 .25em;font-size:inherit}
 .page-detail table.spec .materials li{display:block;background:none;border:none;border-radius:0;padding:2px 0;margin:0 0 4px;line-height:inherit;font-size:inherit;font-weight:var(--fw-regular);color:var(--ink)}
-.page-detail table.spec .materials a,.page-detail table.spec .spec-list a,.page-detail table.spec .jobtag a{color:var(--ink);font-weight:var(--fw-regular);font-size:inherit;text-decoration:underline;text-underline-offset:2px}
-.page-detail table.spec .materials a:hover,.page-detail table.spec .spec-list a:hover,.page-detail table.spec .jobtag a:hover{color:var(--ink);opacity:.85}
+.page-detail table.spec .materials a{color:var(--accent);font-weight:var(--fw-semibold);font-size:inherit;text-decoration:underline;text-underline-offset:2px}
+.page-detail table.spec .spec-list a,.page-detail table.spec .jobtag a{color:var(--ink);font-weight:var(--fw-regular);font-size:inherit;text-decoration:underline;text-underline-offset:2px}
+.page-detail table.spec .materials a:hover{color:var(--accent-hover);opacity:1}
+.page-detail table.spec .spec-list a:hover,.page-detail table.spec .jobtag a:hover{color:var(--ink);opacity:.85}
 .page-detail table.spec .mat-kind{display:inline;background:none;border:none;padding:0;margin:0;font-weight:var(--fw-regular);font-size:inherit;color:var(--ink)}
 .page-detail table.spec a{font-weight:var(--fw-regular);color:var(--ink)}
 .page-detail table.spec .mat-kind::after{content:"："}
