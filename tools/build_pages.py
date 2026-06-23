@@ -775,7 +775,7 @@ def page_shell(title: str, body: str, depth: int, noindex: bool = True,
 """
 
 
-def build_detail(row) -> str:
+def build_detail(row, popular_slugs=None) -> str:
     name = row["name"]
     label, cls = TYPE_BADGE.get(row["type"], ("区分要確認", "badge-unknown"))
     major = row["major_category"]
@@ -1062,7 +1062,7 @@ def build_detail(row) -> str:
     body = f"""<div class="page-detail">
 <nav class="crumbs"><a href="../index.html">トップ</a> ›
 <a href="../bunya/{esc(bslug)}.html">{esc(major)}</a> › {esc(name)}</nav>
-<h1 class="detail-title">{esc(name)}</h1>
+{detail_title_html(name, row["slug"], popular_slugs)}
 <p class="detail-audience">{lead}</p>
 {partner_detail}
 {_roadmap_block}
@@ -1536,6 +1536,19 @@ ICON_TROPHY = _icon_svg(
     '<path d="M7 4h10v5a5 5 0 0 1-10 0V4z"/>'
     '<path d="M5 5H3v2a3 3 0 0 0 3 3"/>'
     '<path d="M19 5h2v2a3 3 0 0 1-3 3"/>')
+
+
+def detail_title_html(name, slug, popular_slugs=None):
+    """詳細ページ h1。人気資格（受験者数上位）にはトロフィーを付ける。"""
+    text = esc(name)
+    if popular_slugs and slug in popular_slugs:
+        return (
+            f'<h1 class="detail-title">'
+            f'<span class="detail-title-inner">'
+            f'<span class="detail-title-trophy" aria-hidden="true">{ICON_TROPHY}</span>'
+            f'<span>{text}</span></span></h1>'
+        )
+    return f'<h1 class="detail-title">{text}</h1>'
 
 FIELD_ICONS = {
     "IT・情報処理": _icon_svg(
@@ -3652,6 +3665,9 @@ table.cmp tbody th{background:var(--gray-50);color:var(--ink);white-space:nowrap
 .partner-note{font-size:var(--text-sm);margin:8px 0 0}
 /* Detail */
 .detail-title{font-size:var(--text-xl);font-weight:700;color:var(--ink-deep);line-height:1.35;margin:.1em 0 8px}
+.detail-title-inner{display:inline-flex;align-items:center;gap:10px}
+.detail-title-trophy{flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;color:#b8860b;background:#f7f3e8;border-radius:var(--radius)}
+.detail-title-trophy .icon-svg{width:18px;height:18px}
 .detail-audience{font-size:var(--text-md);color:var(--muted);line-height:1.65;margin:0 0 18px}
 .detail-official{margin-top:28px;padding-top:24px;border-top:1px solid var(--gray-200)}
 .detail-official .btn{padding:10px 18px;font-size:var(--text-sm)}
@@ -3882,7 +3898,7 @@ def main() -> int:
     (SITE / "compare.html").write_text(build_compare(), encoding="utf-8")
 
     for r in indexable:
-        (SITE / "c" / f'{r["slug"]}.html').write_text(build_detail(r), encoding="utf-8")
+        (SITE / "c" / f'{r["slug"]}.html').write_text(build_detail(r, popular_set), encoding="utf-8")
 
     # 集約: 分野別一覧
     (SITE / "bunya").mkdir()

@@ -375,6 +375,9 @@ table.cmp tbody th{background:var(--gray-50);color:var(--ink);white-space:nowrap
 .partner-note{font-size:var(--text-sm);margin:8px 0 0}
 /* Detail */
 .detail-title{font-size:var(--text-xl);font-weight:700;color:var(--ink-deep);line-height:1.35;margin:.1em 0 8px}
+.detail-title-inner{display:inline-flex;align-items:center;gap:10px}
+.detail-title-trophy{flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;color:#b8860b;background:#f7f3e8;border-radius:var(--radius)}
+.detail-title-trophy .icon-svg{width:18px;height:18px}
 .detail-audience{font-size:var(--text-md);color:var(--muted);line-height:1.65;margin:0 0 18px}
 .detail-official{margin-top:28px;padding-top:24px;border-top:1px solid var(--gray-200)}
 .detail-official .btn{padding:10px 18px;font-size:var(--text-sm)}
