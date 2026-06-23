@@ -738,10 +738,6 @@ def page_shell(title: str, body: str, depth: int, noindex: bool = True,
   <div class="site-footer-inner">
     <p class="site-footer-brand">{esc(SITE_NAME)}</p>
     <nav class="site-footer-nav" aria-label="フッターナビ">
-      <a href="{base}index.html#purpose">目的から探す</a>
-      <a href="{base}index.html#all-certs">資格一覧</a>
-      <a href="{base}index.html#fields">分野から探す</a>
-      <a href="{base}shoku/index.html">職種から探す</a>
       <a href="{base}index.html#compare">よく比較される資格</a>
       <a href="{base}about.html">サイトについて・編集方針</a>
     </nav>
