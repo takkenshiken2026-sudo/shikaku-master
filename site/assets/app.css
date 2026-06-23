@@ -9,14 +9,14 @@
 --radius:8px;
 /* テキスト色（3段階）: ink-deep=見出し / ink=本文 / muted=補足。on-dark*=ヘッダー等 */
 /* タイプスケール（4段階）: xl=大見出し / lg=セクション見出し / md=本文・小見出し / sm=補助・メタ */
---text-xl:clamp(1.375rem,4vw,2.25rem);--text-lg:1.125rem;--text-md:1.0625rem;--text-sm:0.875rem;
+--text-xl:clamp(1.375rem,4vw,2.25rem);--text-lg:1.25rem;--text-md:1.0625rem;--text-sm:0.875rem;
 /* フォントウェイト: regular=本文 / semibold=ラベル・カード名・h3 / bold=見出し・強調 */
 --fw-regular:400;--fw-semibold:600;--fw-bold:700;--page-gutter:32px}
 *{box-sizing:border-box}
 html{font-size:16px}
 body{margin:0;min-height:100vh;display:flex;flex-direction:column;font-family:"Noto Sans JP",system-ui,-apple-system,"Hiragino Kaku Gothic ProN",Meiryo,sans-serif;font-size:var(--text-md);font-weight:var(--fw-regular);color:var(--ink);background:var(--page-bg);line-height:1.7;-webkit-font-smoothing:antialiased;overflow-wrap:break-word}
 h2{font-size:var(--text-lg);font-weight:var(--fw-bold);color:var(--ink-deep)}
-h3{font-size:var(--text-md);font-weight:var(--fw-semibold);color:var(--ink-deep)}
+h3{font-size:var(--text-lg);font-weight:var(--fw-semibold);color:var(--ink-deep)}
 a{color:var(--ink)}a:hover{text-decoration:underline}
 img{max-width:100%}
 :focus-visible{outline:3px solid var(--accent-ring);outline-offset:2px}
@@ -172,7 +172,7 @@ html{scroll-padding-top:64px}
 .field-card .icon-svg{width:22px;height:22px}
 .field-card-body{min-width:0;flex:1}
 .field-card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin:0 0 4px}
-.field-card h3{font-size:var(--text-md);font-weight:var(--fw-semibold);line-height:1.35;color:var(--ink-deep);margin:0}
+.field-card h3{font-size:var(--text-lg);font-weight:var(--fw-semibold);line-height:1.35;color:var(--ink-deep);margin:0}
 .field-count{flex-shrink:0;margin-top:1px;padding:3px 7px;border-radius:4px;font-size:var(--text-sm);font-weight:600;color:var(--muted);background:var(--gray-100);border:1px solid var(--gray-200);line-height:1.2;white-space:nowrap}
 .field-examples{font-size:var(--text-sm);color:var(--muted);line-height:1.45;margin:0}
 
@@ -297,7 +297,7 @@ a.rm-name:hover{text-decoration:underline}
 .mat-kind{flex:0 0 auto;background:var(--accent-light);color:var(--accent-hover);border:1px solid rgba(42,122,110,.18);border-radius:6px;font-size:var(--text-sm);font-weight:var(--fw-semibold);padding:2px 8px;margin-top:2px}
 .mat-body{flex:1}.mat-note{display:block;color:var(--muted);font-size:var(--text-sm);margin-top:2px}
 .mat-foot{font-size:var(--text-sm);margin:.4em 0 0}
-.rel-certs h3{font-size:var(--text-md);font-weight:var(--fw-semibold);margin:.7em 0 .2em;color:var(--ink-deep)}
+.rel-certs h3{font-size:var(--text-lg);font-weight:var(--fw-semibold);margin:.7em 0 .2em;color:var(--ink-deep)}
 .occ-meta{background:var(--gray-50);border:1px solid var(--gray-200);border-radius:8px;padding:10px 13px;margin:10px 0}
 .occ-stats{margin:0 0 6px}.occ-fields{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px}
 .occ-stats-label{font-size:var(--text-sm);color:var(--muted);font-weight:600;margin-right:4px}
@@ -315,7 +315,7 @@ a.rm-name:hover{text-decoration:underline}
 .vs-cta{margin:14px 0;display:flex;gap:10px;flex-wrap:wrap}
 .feature-nav{margin-top:0;padding-top:0}
 .feature-nav h2{font-size:var(--text-lg);margin:.6em 0 .3em}
-.feature-nav h3{font-size:var(--text-md);font-weight:600;color:var(--ink);margin:.9em 0 .3em}
+.feature-nav h3{font-size:var(--text-lg);font-weight:600;color:var(--ink);margin:.9em 0 .3em}
 .feature-nav ul{margin:.2em 0 .6em;padding-left:1.1em}
 .chips{display:flex;flex-wrap:wrap;gap:8px}
 .chip{display:inline-block;padding:5px 11px;border:1px solid var(--gray-300);background:#fff;border-radius:999px;font-size:var(--text-sm);color:var(--ink)}
@@ -384,7 +384,7 @@ table.cmp tbody th{background:var(--gray-50);color:var(--ink);white-space:nowrap
 .detail-nav{margin-top:36px;padding-top:32px;border-top:1px solid var(--gray-200)}
 .detail-nav-block+.detail-nav-block{margin-top:32px;padding-top:32px;border-top:1px solid var(--gray-200)}
 .detail-nav-heading,.detail-nav-head{font-size:var(--text-lg);font-weight:var(--fw-bold);color:var(--ink-deep);margin:0 0 18px;line-height:1.35}
-.detail-nav-subhead{font-size:var(--text-md);font-weight:var(--fw-semibold);color:var(--muted);margin:0 0 10px}
+.detail-nav-subhead{font-size:var(--text-lg);font-weight:var(--fw-semibold);color:var(--muted);margin:0 0 10px}
 .detail-nav-subhead-title{font-size:var(--text-lg);font-weight:var(--fw-bold);color:var(--ink-deep);margin:0 0 12px}
 .detail-nav-subhead+.detail-nav-subhead,.detail-link-list+.detail-nav-subhead,.detail-link-grid+.detail-nav-subhead,.detail-compare-row+.detail-nav-subhead{margin-top:22px}
 .detail-link-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
@@ -410,7 +410,7 @@ table.cmp tbody th{background:var(--gray-50);color:var(--ink);white-space:nowrap
 .detail-actions .official-cta{margin:0}
 .detail-section-title{font-size:var(--text-lg);font-weight:var(--fw-bold);color:var(--ink-deep);margin:0 0 10px}
 .detail-related{margin:18px 0 0;border-top:1px solid var(--gray-200);padding-top:14px}
-.detail-related h3{font-size:var(--text-md);font-weight:var(--fw-semibold);margin:.9em 0 .35em;color:var(--ink-deep)}
+.detail-related h3{font-size:var(--text-lg);font-weight:var(--fw-semibold);margin:.9em 0 .35em;color:var(--ink-deep)}
 .detail-related h3:first-of-type{margin-top:.2em}
 .detail-related ul{margin:.2em 0;padding-left:1.1em}
 .detail-related .more-compare p{margin:.2em 0;line-height:1.55;color:var(--muted);font-size:var(--text-md)}
@@ -421,7 +421,7 @@ table.cmp tbody th{background:var(--gray-50);color:var(--ink);white-space:nowrap
 .detail-spec{margin-bottom:4px}
 .spec-sections{display:flex;flex-direction:column;gap:24px}
 .spec-section{margin:0}
-.spec-section-title{font-size:var(--text-md);font-weight:var(--fw-semibold);color:var(--ink-deep);margin:0 0 8px;line-height:1.4}
+.spec-section-title{font-size:var(--text-lg);font-weight:var(--fw-semibold);color:var(--ink-deep);margin:0 0 8px;line-height:1.4}
 .detail-source{margin-top:22px;padding:14px 0 0;border-top:1px solid var(--gray-200);font-size:var(--text-sm);color:var(--muted);line-height:1.65}
 .detail-source p{margin:0 0 5px}.detail-source .k{font-weight:600;color:var(--muted)}
 .detail-source a{color:var(--ink);text-decoration:underline;text-underline-offset:2px}
