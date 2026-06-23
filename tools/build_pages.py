@@ -3434,7 +3434,6 @@ html{scroll-padding-top:64px}
 .all-certs-table tbody tr.cert-row:hover .all-certs-name-text{color:var(--accent)}
 .all-certs-cell{font-weight:400;color:var(--ink)}
 .all-certs-num{font-variant-numeric:tabular-nums;color:var(--ink)}
-.block-all-certs .all-certs-cell--freq{white-space:normal;min-width:5.5em;max-width:12em}
 .all-certs-table .empty-state{white-space:normal;text-align:center;color:var(--muted);background:var(--gray-50);padding:22px 16px;line-height:1.75;font-size:var(--text-sm)}
 .pagination{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin-top:28px;padding-top:4px}
 .block-all-certs .pagination-status{font-size:var(--text-sm);color:var(--muted)}
