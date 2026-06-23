@@ -3432,18 +3432,18 @@ html{scroll-padding-top:64px}
 .header-menu-panel a{color:var(--ink);text-decoration:none;padding:12px 4px;border-bottom:1px solid var(--gray-200);font-size:var(--text-md)}
 .header-menu-panel a:last-child{border-bottom:none}
 .header-menu-panel a:hover{color:var(--ink-deep);background:var(--gray-50);text-decoration:none}
-@media(max-width:768px){.header-nav{display:none}.header-actions{display:flex}.header-inner{padding:10px 16px;--page-gutter:16px}.logo-mark{min-width:48px;min-height:32px;padding:5px 8px 4px}.logo-mark-line{font-size:11px}.logo-mark-line--sub{font-size:10px}.logo-text{font-size:15px}.logo-sub{font-size:9px;max-width:min(200px,58vw)}.site-tagline{display:none}.container{padding:20px 16px 36px}.hero{margin-top:-20px;padding-top:32px}.block-band{margin-left:-16px;margin-right:-16px;padding:32px 16px 36px}.block-all-certs{padding:40px 16px 44px}}
+@media(max-width:768px){.header-nav{display:none}.header-actions{display:flex}.header-inner{padding:10px 16px;--page-gutter:16px}.logo-mark{min-width:48px;min-height:32px;padding:5px 8px 4px}.logo-mark-line{font-size:11px}.logo-mark-line--sub{font-size:10px}.logo-text{font-size:15px}.logo-sub{font-size:9px;max-width:min(200px,58vw)}.site-tagline{display:none}.container{padding:20px 16px 36px}.block-band{margin-left:-16px;margin-right:-16px;padding:32px 16px 36px}.block-all-certs{padding:40px 16px 44px}}
 
 .container{max-width:1200px;margin:0 auto;padding:28px var(--page-gutter) 36px;width:100%;flex:1 0 auto;min-width:0;background:#fff;box-shadow:0 0 24px rgba(0,0,0,.05)}
 
 /* Hero */
-.hero{margin:-28px calc(-1*var(--page-gutter)) 0;padding:40px var(--page-gutter) 28px;margin-bottom:0;text-align:center;background:var(--accent-light)}
-.hero h1{font-weight:700;line-height:1.4;margin:0 0 12px;letter-spacing:.02em}
+.hero{margin:-28px calc(-1*var(--page-gutter)) 0;padding:64px var(--page-gutter) 48px;margin-bottom:0;text-align:center;background:var(--accent-light)}
+.hero h1{font-weight:700;line-height:1.4;margin:0 0 16px;letter-spacing:.02em}
 .hero-h1-line{display:block;font-size:var(--text-xl);font-weight:700;color:var(--ink-deep);letter-spacing:.02em}
 .hero-h1-line+.hero-h1-line{margin-top:2px}
 .hero-sub{font-size:var(--text-md);color:var(--ink);line-height:1.75;max-width:40em;margin:0 auto}
 .hero-sub #count{color:var(--accent);font-weight:700;text-decoration:underline;text-underline-offset:3px}
-.hero-search{margin:18px auto 0;max-width:520px;position:relative;text-align:left}
+.hero-search{margin:24px auto 0;max-width:520px;position:relative;text-align:left}
 .hero-search input{width:100%;padding:12px 16px 12px 42px;border:1px solid #c5dbd6;border-radius:var(--radius);font-size:var(--text-md);background:#fff;color:var(--ink);font-family:inherit}
 .hero-search input::placeholder{color:var(--muted)}
 .hero-search input:focus,.hero-search input:focus-visible{border-color:var(--accent);outline:3px solid var(--accent-ring);outline-offset:2px}
@@ -3451,6 +3451,7 @@ html{scroll-padding-top:64px}
 .hero-result{margin-top:12px;font-size:var(--text-sm);color:var(--muted)}
 .hero-result a{color:var(--accent);font-weight:600;text-decoration:underline;text-underline-offset:2px}
 .hero-result strong{color:var(--ink-deep)}
+@media(max-width:768px){.hero{margin-top:-20px}}
 
 /* Blocks */
 .block{margin-bottom:28px}.block-primary{margin-bottom:40px}.block-secondary{margin-bottom:34px}
@@ -3933,11 +3934,11 @@ table.cmp tbody th{background:var(--gray-50);color:var(--ink);white-space:nowrap
 @media(max-width:600px){
   /* 小さめの文字を底上げして読みやすく（キャプション・メタ・バッジ等） */
   :root{--text-sm:0.9375rem}
-  /* ヒーロー：余白を詰め、本文を読みやすいサイズに */
-  .hero{padding:28px var(--page-gutter) 18px}
-  .hero h1{margin-bottom:10px}
+  /* ヒーロー：余白を広げつつモバイルでも読みやすく */
+  .hero{padding:44px var(--page-gutter) 32px}
+  .hero h1{margin-bottom:12px}
   .hero-sub{font-size:var(--text-md);line-height:1.7}
-  .hero-search{margin-top:14px;max-width:min(520px,100%)}
+  .hero-search{margin-top:20px;max-width:min(520px,100%)}
   /* セクション間隔をモバイル向けに調整 */
   .block{margin-bottom:24px}.block-primary{margin-bottom:30px}.block-secondary{margin-bottom:26px}
   .block-head{margin-bottom:10px}
