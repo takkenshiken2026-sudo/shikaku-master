@@ -90,7 +90,7 @@ html{scroll-padding-top:64px}
 .hero+.block-band{border-top:none}
 .block-band--gray{background:var(--gray-50)}
 .block-band--white{background:#fff}
-.recent-inset{margin-top:32px;padding-top:32px;border-top:1px solid var(--gray-200)}
+.recent-inset{margin-top:32px;padding-top:32px}
 .recent-inset .block-head{margin-bottom:14px}
 .block-head{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:18px;gap:8px;flex-wrap:wrap}
 .block-head h2{font-size:var(--text-lg);font-weight:700;color:var(--ink-deep);margin:0}
