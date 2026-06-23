@@ -62,14 +62,14 @@ html{scroll-padding-top:64px}
 .header-menu-panel a{color:var(--ink);text-decoration:none;padding:12px 4px;border-bottom:1px solid var(--gray-200);font-size:var(--text-md)}
 .header-menu-panel a:last-child{border-bottom:none}
 .header-menu-panel a:hover{color:var(--ink-deep);background:var(--gray-50);text-decoration:none}
-@media(max-width:768px){.header-nav{display:none}.header-actions{display:flex}.header-inner{padding:10px 16px;--page-gutter:16px}.logo-mark{min-width:48px;min-height:32px;padding:5px 8px 4px}.logo-mark-line{font-size:11px}.logo-mark-line--sub{font-size:10px}.logo-text{font-size:15px}.logo-sub{font-size:9px;max-width:min(200px,58vw)}.site-tagline{display:none}.container{padding:20px 16px 36px}.block-band{margin-left:-16px;margin-right:-16px;padding:32px 16px 36px}.block-all-certs{padding:40px 16px 44px}}
+@media(max-width:768px){.header-nav{display:none}.header-actions{display:flex}.header-inner{padding:10px 16px;--page-gutter:16px}.logo-mark{min-width:48px;min-height:32px;padding:5px 8px 4px}.logo-mark-line{font-size:11px}.logo-mark-line--sub{font-size:10px}.logo-text{font-size:15px}.logo-sub{font-size:9px;max-width:min(200px,58vw)}.site-tagline{display:none}.container{padding:20px 16px 36px}.block-band{margin-left:-16px;margin-right:-16px;padding:32px 16px}.block-all-certs{padding:40px 16px}}
 
 .container{max-width:1200px;margin:0 auto;padding:28px var(--page-gutter) 36px;width:100%;flex:1 0 auto;min-width:0;background:#fff;box-shadow:0 0 24px rgba(0,0,0,.05)}
 
 /* Hero */
 .hero{margin:-28px calc(-1*var(--page-gutter)) 0;padding:64px var(--page-gutter) 48px;margin-bottom:0;text-align:center;background:var(--page-bg)}
 .hero h1{font-weight:700;line-height:1.4;margin:0 0 16px;letter-spacing:.02em}
-.hero-h1-line{display:block;font-size:var(--text-xl);font-weight:700;color:var(--ink-deep);letter-spacing:.02em}
+.hero-h1-line{display:block;font-size:var(--text-xl);font-weight:700;color:var(--ink-deep);letter-spacing:.02em;text-decoration:underline;text-decoration-color:var(--accent);text-underline-offset:6px;text-decoration-thickness:2px}
 .hero-h1-line+.hero-h1-line{margin-top:2px}
 .hero-sub{font-size:var(--text-md);color:var(--ink);line-height:1.75;max-width:40em;margin:0 auto}
 .hero-sub #count{color:var(--accent);font-weight:700;text-decoration:underline;text-underline-offset:3px}
@@ -84,16 +84,18 @@ html{scroll-padding-top:64px}
 @media(max-width:768px){.hero{margin-top:-20px}}
 
 /* Blocks */
-.block{margin-bottom:28px}.block-primary{margin-bottom:40px}.block-secondary{margin-bottom:34px}
-.block-band{margin-left:calc(-1*var(--page-gutter));margin-right:calc(-1*var(--page-gutter));padding:40px var(--page-gutter) 44px;border-top:1px solid var(--gray-200);margin-bottom:0}
+.block{margin-bottom:0}
+.block-primary{margin-bottom:40px}.block-secondary{margin-bottom:34px}
+.block-band{margin-left:calc(-1*var(--page-gutter));margin-right:calc(-1*var(--page-gutter));padding:40px var(--page-gutter);border-top:1px solid var(--gray-200);margin-bottom:0}
 .hero+.block-band{border-top:none}
 .block-band--gray{background:var(--gray-50)}
 .block-band--white{background:#fff}
-.block-inset{margin:8px 0 20px;padding:0 2px}
+.recent-inset{margin-top:32px;padding-top:32px;border-top:1px solid var(--gray-200)}
+.recent-inset .block-head{margin-bottom:14px}
 .block-head{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:18px;gap:8px;flex-wrap:wrap}
 .block-head h2{font-size:var(--text-lg);font-weight:700;color:var(--ink-deep);margin:0}
 .block-head p{font-size:var(--text-sm);color:var(--muted);margin:0}
-.block-all-certs{padding:52px var(--page-gutter) 56px;margin-bottom:0}
+.block-all-certs{padding:48px var(--page-gutter);margin-bottom:0}
 .block-all-certs .block-head{margin-bottom:24px}
 .card-link{position:relative}
 .card-link::after{content:"→";position:absolute;right:12px;top:14px;font-size:var(--text-sm);font-weight:600;color:var(--muted);opacity:0;transition:opacity .15s,color .15s;pointer-events:none}
@@ -112,7 +114,7 @@ html{scroll-padding-top:64px}
 .pop-card-facts li{display:grid;grid-template-columns:4.8em 1fr;gap:4px;font-size:var(--text-sm);line-height:1.45}
 .pop-card-facts .k{color:var(--muted)}.pop-card-facts .v{color:var(--ink);font-weight:600}
 @media(max-width:720px){.popular-grid{grid-template-columns:repeat(2,1fr);gap:10px}.pop-card--more{display:none}.popular-more{display:block}}
-.popular-more,.field-more,.compare-more{margin-top:12px;text-align:right;display:none}
+.popular-more,.field-more,.compare-more{margin:16px 0 0;text-align:right;display:none}
 .popular-more a,.field-more a,.compare-more a{font-size:var(--text-sm);font-weight:var(--fw-semibold);color:var(--ink);text-decoration:underline;text-underline-offset:2px}
 @media(max-width:720px){.popular-more{display:block}}
 .purpose-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
@@ -570,8 +572,10 @@ table.cmp tbody th{background:var(--gray-50);color:var(--ink);white-space:nowrap
   .hero-sub{font-size:var(--text-md);line-height:1.7}
   .hero-search{margin-top:20px;max-width:min(520px,100%)}
   /* セクション間隔をモバイル向けに調整 */
-  .block{margin-bottom:24px}.block-primary{margin-bottom:30px}.block-secondary{margin-bottom:26px}
-  .block-head{margin-bottom:10px}
+  .block-primary{margin-bottom:30px}.block-secondary{margin-bottom:26px}
+  .recent-inset{margin-top:24px;padding-top:24px}
+  .recent-inset .block-head{margin-bottom:12px}
+  .block-head{margin-bottom:14px}
   /* 人気の資格は1列にして各カードの情報を見やすく */
   .popular-grid{grid-template-columns:1fr;gap:10px}
   .pop-card{padding:14px 16px}
