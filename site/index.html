@@ -138,8 +138,8 @@
     </select></div>
     <div class="filter-field"><label for="sort">並び順</label><select id="sort" aria-label="並び順">
       <option value="app-desc" selected>受験者数が多い順</option>
-      <option value="fee-asc">受験料が安い順</option>
-      <option value="fee-desc">受験料が高い順</option>
+      <option value="study-asc">学習時間が短い順</option>
+      <option value="study-desc">学習時間が長い順</option>
       <option value="pass-desc">合格率が高い順</option>
       <option value="pass-asc">合格率が低い順</option>
     </select></div>
@@ -154,12 +154,13 @@
         <tr>
           <th scope="col">資格名</th>
           <th scope="col">分野</th>
-          <th scope="col">種別</th>
-          <th scope="col">受験料</th>
+          <th scope="col">学習時間</th>
           <th scope="col">合格率</th>
+          <th scope="col">実施頻度</th>
+          <th scope="col">受験者数</th>
         </tr>
       </thead>
-      <tbody id="results"><tr><td colspan="5" class="muted">読み込み中…</td></tr></tbody>
+      <tbody id="results"><tr><td colspan="6" class="muted">読み込み中…</td></tr></tbody>
     </table>
   </div>
   <nav class="pagination" id="pagination" aria-label="資格一覧のページ送り" hidden></nav>

@@ -2887,8 +2887,8 @@ def build_index(rows) -> str:
     </select></div>
     <div class="filter-field"><label for="sort">並び順</label><select id="sort" aria-label="並び順">
       <option value="app-desc" selected>受験者数が多い順</option>
-      <option value="fee-asc">受験料が安い順</option>
-      <option value="fee-desc">受験料が高い順</option>
+      <option value="study-asc">学習時間が短い順</option>
+      <option value="study-desc">学習時間が長い順</option>
       <option value="pass-desc">合格率が高い順</option>
       <option value="pass-asc">合格率が低い順</option>
     </select></div>
@@ -2903,12 +2903,13 @@ def build_index(rows) -> str:
         <tr>
           <th scope="col">資格名</th>
           <th scope="col">分野</th>
-          <th scope="col">種別</th>
-          <th scope="col">受験料</th>
+          <th scope="col">学習時間</th>
           <th scope="col">合格率</th>
+          <th scope="col">実施頻度</th>
+          <th scope="col">受験者数</th>
         </tr>
       </thead>
-      <tbody id="results"><tr><td colspan="5" class="muted">読み込み中…</td></tr></tbody>
+      <tbody id="results"><tr><td colspan="6" class="muted">読み込み中…</td></tr></tbody>
     </table>
   </div>
   <nav class="pagination" id="pagination" aria-label="資格一覧のページ送り" hidden></nav>
@@ -3038,7 +3039,7 @@ SEARCH_JS = """(function(){
       }
       return true;
     });
-    var key=sk.indexOf('app')===0?appNum:(sk.indexOf('fee')===0?feeNum:passNum), asc=sk.indexOf('asc')>=0;
+    var key=sk.indexOf('app')===0?appNum:(sk.indexOf('study')===0?studyLow:(sk.indexOf('pass')===0?passNum:appNum)), asc=sk.indexOf('asc')>=0;
     out=out.slice().sort(function(a,b){
       var va=key(a),vb=key(b);
       if(va===null&&vb===null)return 0;
@@ -3064,17 +3065,20 @@ SEARCH_JS = """(function(){
       } else { heroResult.hidden=true; heroResult.innerHTML=''; }
     }
     results.innerHTML=pageItems.map(function(x){
-      var fee=x.fee?esc(x.fee):'—';
+      var study=x.study_hours?esc(x.study_hours):'—';
       var pass=x.pass_rate?esc(x.pass_rate):'—';
+      var freq=x.frequency?esc(x.frequency):'—';
+      var app=x.applicants?esc(x.applicants):'—';
       return '<tr class="cert-row" tabindex="0" data-href="c/'+esc(x.slug)+'.html">'+
         '<td class="all-certs-name"><span class="all-certs-name-inner">'+
         (x.popular?TROPHY:'')+
         '<span class="all-certs-name-text">'+esc(shortName(x.name))+'</span></span></td>'+
         '<td class="all-certs-cell">'+esc(x.major)+'</td>'+
-        '<td class="all-certs-cell">'+esc(x.type)+'</td>'+
-        '<td class="all-certs-cell all-certs-num">'+fee+'</td>'+
-        '<td class="all-certs-cell all-certs-num">'+pass+'</td></tr>';
-    }).join('')||'<tr><td colspan="5" class="empty-state">条件に一致する資格が見つかりませんでした。<br>キーワードを短くするか、上の「× 条件をクリア」で絞り込みを解除してください。</td></tr>';
+        '<td class="all-certs-cell all-certs-num">'+study+'</td>'+
+        '<td class="all-certs-cell all-certs-num">'+pass+'</td>'+
+        '<td class="all-certs-cell all-certs-cell--freq">'+freq+'</td>'+
+        '<td class="all-certs-cell all-certs-num">'+app+'</td></tr>';
+    }).join('')||'<tr><td colspan="6" class="empty-state">条件に一致する資格が見つかりませんでした。<br>キーワードを短くするか、上の「× 条件をクリア」で絞り込みを解除してください。</td></tr>';
     renderPagination(out.length);
     syncURL();
   }
@@ -3433,6 +3437,7 @@ html{scroll-padding-top:64px}
 .all-certs-table tbody tr.cert-row:hover .all-certs-name-text{color:var(--accent)}
 .all-certs-cell{font-weight:400;color:var(--ink)}
 .all-certs-num{font-variant-numeric:tabular-nums;color:var(--ink)}
+.block-all-certs .all-certs-cell--freq{white-space:normal;min-width:5.5em;max-width:12em}
 .all-certs-table .empty-state{white-space:normal;text-align:center;color:var(--muted);background:var(--gray-50);padding:22px 16px;line-height:1.75;font-size:var(--text-sm)}
 .pagination{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin-top:28px;padding-top:4px}
 .block-all-certs .pagination-status{font-size:var(--text-sm);color:var(--muted)}
