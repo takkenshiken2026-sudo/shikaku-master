@@ -2698,7 +2698,7 @@ def build_index(rows) -> str:
 </section>
 
 <section class="block block-band block-band--gray">
-  <div class="block-head"><h2 class="block-head-title"><span class="block-head-icon" aria-hidden="true">{ICON_TROPHY}</span>人気の資格</h2><p>受験者数の多い順</p></div>
+  <div class="block-head"><h2>人気の資格</h2><p>受験者数の多い順</p></div>
   <div class="popular-grid">{pop_html}</div>
   <p class="popular-more"><a href="feature/popular.html">人気資格をすべて見る →</a></p>
 </section>
@@ -3212,9 +3212,6 @@ html{scroll-padding-top:64px}
 .block-inset{margin:8px 0 20px;padding:0 2px}
 .block-head{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:18px;gap:8px;flex-wrap:wrap}
 .block-head h2{font-size:var(--text-lg);font-weight:700;color:var(--ink-deep);margin:0}
-.block-head-title{display:flex;align-items:center;gap:8px}
-.block-head-icon{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;color:var(--accent);flex-shrink:0}
-.block-head-icon .icon-svg{width:22px;height:22px}
 .block-head p{font-size:var(--text-sm);color:var(--muted);margin:0}
 .block-all-certs{padding:52px var(--page-gutter) 56px;margin-bottom:0}
 .block-all-certs .block-head{margin-bottom:24px}
