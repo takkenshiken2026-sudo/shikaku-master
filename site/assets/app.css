@@ -121,9 +121,9 @@ html{scroll-padding-top:64px}
 .recent-list{list-style:none;display:flex;flex-wrap:wrap;gap:8px;margin:0;padding:0}
 .recent-list a{display:inline-block;padding:8px 12px;border:1px solid var(--gray-200);border-radius:var(--radius);font-size:var(--text-sm);font-weight:600;color:var(--ink-deep);text-decoration:none;background:#fff}
 .recent-list a:hover{border-color:var(--muted);text-decoration:none}
-.all-certs-filters{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:14px 12px;margin-bottom:16px}
+.all-certs-filters{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:14px 12px;margin-bottom:16px}
 .block-all-certs .filter-field label{display:block;font-size:var(--text-sm);color:var(--muted);margin-bottom:6px;font-weight:600}
-.block-all-certs .filter-field select{width:100%;padding:8px 26px 8px 10px;border:1px solid var(--gray-300);border-radius:4px;font-size:var(--text-sm);font-family:inherit;background:#fff;color:var(--ink)}
+.block-all-certs .filter-field select,.block-all-certs .filter-field input[type=search]{width:100%;padding:8px 10px;border:1px solid var(--gray-300);border-radius:4px;font-size:var(--text-sm);font-family:inherit;background:#fff;color:var(--ink)}
 .block-all-certs .all-certs-check{display:inline-flex;align-items:center;gap:6px;font-size:var(--text-sm);color:var(--ink);margin-bottom:20px;cursor:pointer}
 .all-certs-check input{width:15px;height:15px;accent-color:var(--accent)}
 .block-all-certs .all-certs-count{font-size:var(--text-sm);color:var(--muted);margin-bottom:12px}
@@ -153,6 +153,7 @@ html{scroll-padding-top:64px}
 .pagination-num.is-current{background:var(--ink-deep);color:#fff;border-color:var(--ink-deep)}
 .pagination-btn.is-disabled,.pagination-num.is-disabled{opacity:.4;pointer-events:none}
 .pagination-ellipsis{font-size:var(--text-sm);color:var(--muted);padding:0 2px}
+@media(max-width:1024px){.all-certs-filters{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:720px){.all-certs-filters{grid-template-columns:repeat(2,minmax(0,1fr))}.pagination{flex-direction:column;align-items:stretch}.pagination-links{justify-content:center}}
 
 /* 分野別・目的別ガイド（トップの資格一覧表と同じデザイン） */

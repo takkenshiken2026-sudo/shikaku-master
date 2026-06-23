@@ -2872,18 +2872,35 @@ def build_index(rows) -> str:
 </section>
 
 <section class="block block-band block-band--white block-all-certs" id="all-certs">
-  <div class="block-head"><h2>すべての資格から探す</h2><p>分野・区分・条件で絞り込み</p></div>
+  <div class="block-head"><h2>すべての資格から探す</h2><p>資格名・分野・学習時間・合格率・実施頻度で絞り込み</p></div>
   <div class="all-certs-filters">
+    <div class="filter-field"><label for="list-q">資格名</label><input type="search" id="list-q" placeholder="例: 簿記、宅建" aria-label="資格名で絞り込み"></div>
     <div class="filter-field"><label for="major">分野</label><select id="major" aria-label="分野で絞り込み"><option value="">すべて</option></select></div>
-    <div class="filter-field"><label for="type">区分</label><select id="type" aria-label="区分で絞り込み"><option value="">すべて</option></select></div>
-    <div class="filter-field"><label for="industry">活かせる業界</label><select id="industry" aria-label="活かせる業界で絞り込み"><option value="">すべて</option></select></div>
-    <div class="filter-field"><label for="study">学習時間の目安</label><select id="study" aria-label="学習時間の目安で絞り込み">
+    <div class="filter-field"><label for="study">学習時間</label><select id="study" aria-label="学習時間で絞り込み">
       <option value="">すべて</option>
       <option value="0-50">〜50時間</option>
       <option value="50-100">50〜100時間</option>
       <option value="100-300">100〜300時間</option>
       <option value="300-1000">300〜1000時間</option>
       <option value="1000-">1000時間以上</option>
+    </select></div>
+    <div class="filter-field"><label for="pass">合格率</label><select id="pass" aria-label="合格率で絞り込み">
+      <option value="">すべて</option>
+      <option value="80-">80%以上</option>
+      <option value="60-80">60〜80%</option>
+      <option value="40-60">40〜60%</option>
+      <option value="20-40">20〜40%</option>
+      <option value="0-20">20%未満</option>
+      <option value="unknown">データなし</option>
+    </select></div>
+    <div class="filter-field"><label for="frequency">実施頻度</label><select id="frequency" aria-label="実施頻度で絞り込み">
+      <option value="">すべて</option>
+      <option value="anytime">通年・随時</option>
+      <option value="once">年1回</option>
+      <option value="twice">年2回</option>
+      <option value="3plus">年3回以上</option>
+      <option value="other">その他</option>
+      <option value="unknown">データなし</option>
     </select></div>
     <div class="filter-field"><label for="sort">並び順</label><select id="sort" aria-label="並び順">
       <option value="app-desc" selected>受験者数が多い順</option>
@@ -2956,9 +2973,10 @@ def build_compare() -> str:
 
 
 SEARCH_JS = """(function(){
-  var q=document.getElementById('q'),majorSel=document.getElementById('major'),
-      typeSel=document.getElementById('type'),sortSel=document.getElementById('sort'),
-      industrySel=document.getElementById('industry'),studySel=document.getElementById('study'),
+  var q=document.getElementById('q'),listQ=document.getElementById('list-q'),
+      majorSel=document.getElementById('major'),sortSel=document.getElementById('sort'),
+      studySel=document.getElementById('study'),passSel=document.getElementById('pass'),
+      freqSel=document.getElementById('frequency'),
       fPub=document.getElementById('f-pub'),
       studyNote=document.getElementById('studynote'),
       results=document.getElementById('results'),
@@ -2968,25 +2986,52 @@ SEARCH_JS = """(function(){
       heroResult=document.getElementById('heroResult'),
       clearBtn=document.getElementById('clearFilters');
   var DATA=[], activeTags=new Set(), currentPage=1, PAGE_SIZE=20, resetPage=true,TROPHY=__TROPHY_HTML__;
+  var legacyType='',legacyIndustry='';
   function esc(s){return (s||'').replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
   function fmtN(n){return Number(n).toLocaleString('ja-JP');}
   function shortName(n){return (n||'').replace(/[（(][^）)]*[）)]/g,'').trim()||n;}
   function opt(sel,v){var o=document.createElement('option');o.value=v;o.textContent=v;sel.appendChild(o);}
-  function feeNum(x){var m=(x.fee||'').replace(/,/g,'').match(/([0-9]+)\s*円/);return m?parseInt(m[1],10):null;}
-  function passNum(x){var m=(x.pass_rate||'').replace(/,/g,'').match(/([0-9]+(?:\.[0-9]+)?)\s*%/);return m?parseFloat(m[1]):null;}
+  function passNum(x){var m=(x.pass_rate||'').replace(/,/g,'').match(/([0-9]+(?:\\.[0-9]+)?)\\s*%/);return m?parseFloat(m[1]):null;}
   function studyLow(x){var m=(x.study_hours||'').replace(/,/g,'').match(/([0-9]+)/);return m?parseInt(m[1],10):null;}
-  function appNum(x){var m=(x.applicants||'').replace(/,/g,'').match(/([0-9]+)\s*[人名]/);return m?parseInt(m[1],10):null;}
+  function appNum(x){var m=(x.applicants||'').replace(/,/g,'').match(/([0-9]+)\\s*[人名]/);return m?parseInt(m[1],10):null;}
+  function queryText(){return ((q&&q.value)||(listQ&&listQ.value)||'').trim().toLowerCase();}
+  function syncQueryInputs(src){
+    var v=src?src.value:'';
+    if(q&&src!==q)q.value=v;
+    if(listQ&&src!==listQ)listQ.value=v;
+  }
+  function freqBucket(f){
+    f=(f||'').trim();
+    if(!f)return 'unknown';
+    if(/休止/.test(f))return 'other';
+    if(/通年|随時|CBT|ネット/i.test(f))return 'anytime';
+    if(/年5回|年6回|年複数|年[34]回/.test(f))return '3plus';
+    if(/年2回/.test(f))return 'twice';
+    if(/年1回/.test(f))return 'once';
+    return 'other';
+  }
+  function passHit(x,band){
+    var v=passNum(x);
+    if(band==='unknown')return v===null;
+    if(v===null)return false;
+    if(band==='80-')return v>=80;
+    var p=band.split('-'),lo=parseFloat(p[0],10),hi=p[1]===''?Infinity:parseFloat(p[1],10);
+    return v>=lo&&v<hi;
+  }
   function syncURL(){
     try{
       var p=new URLSearchParams();
-      if(q.value.trim())p.set('q',q.value.trim());
+      var qt=queryText();
+      if(qt)p.set('q',qt);
       if(majorSel.value)p.set('major',majorSel.value);
-      if(typeSel.value)p.set('type',typeSel.value);
-      if(industrySel.value)p.set('industry',industrySel.value);
       if(studySel.value)p.set('study',studySel.value);
+      if(passSel&&passSel.value)p.set('pass',passSel.value);
+      if(freqSel&&freqSel.value)p.set('frequency',freqSel.value);
       if(sortSel.value&&sortSel.value!=='app-desc')p.set('sort',sortSel.value);
       if(fPub.checked)p.set('pub','1');
       if(activeTags.size)p.set('tag',[].slice.call(activeTags).join(','));
+      if(legacyType)p.set('type',legacyType);
+      if(legacyIndustry)p.set('industry',legacyIndustry);
       if(currentPage>1)p.set('page',String(currentPage));
       var qs=p.toString();
       history.replaceState(null,'',qs?('?'+qs):location.pathname);
@@ -3021,16 +3066,18 @@ SEARCH_JS = """(function(){
   }
   function render(){
     if(resetPage){currentPage=1;resetPage=false;}
-    var t=(q.value||'').trim().toLowerCase(),mj=majorSel.value,tp=typeSel.value,sk=sortSel.value||'app-desc',
-        ind=industrySel.value,band=studySel.value;
+    var t=queryText(),mj=majorSel.value,sk=sortSel.value||'app-desc',
+        band=studySel.value,pBand=passSel?passSel.value:'',fBand=freqSel?freqSel.value:'';
     if(studyNote)studyNote.style.display=band?'inline':'none';
     var out=DATA.filter(function(x){
       if(mj&&x.major!==mj)return false;
-      if(tp&&x.type!==tp)return false;
+      if(legacyType&&x.type!==legacyType)return false;
       if(t&&x.name.toLowerCase().indexOf(t)<0)return false;
       if(fPub.checked&&x.status!=='published')return false;
-      if(ind&&(x.industries||[]).indexOf(ind)<0)return false;
+      if(legacyIndustry&&(x.industries||[]).indexOf(legacyIndustry)<0)return false;
       if(band&&!studyHit(x,band))return false;
+      if(pBand&&!passHit(x,pBand))return false;
+      if(fBand&&freqBucket(x.frequency)!==fBand)return false;
       if(activeTags.size){
         var tg=x.tags||[],ok=true;
         activeTags.forEach(function(a){if(tg.indexOf(a)<0)ok=false;});
@@ -3049,7 +3096,7 @@ SEARCH_JS = """(function(){
     if(currentPage>pages)currentPage=pages;
     var sliceStart=(currentPage-1)*PAGE_SIZE;
     var pageItems=out.slice(sliceStart,sliceStart+PAGE_SIZE);
-    var anyFilter=t||mj||tp||ind||band||activeTags.size||fPub.checked;
+    var anyFilter=t||mj||band||pBand||fBand||activeTags.size||fPub.checked||legacyType||legacyIndustry;
     if(clearBtn)clearBtn.hidden=!anyFilter;
     if(countEl){
       if(out.length){
@@ -3105,33 +3152,43 @@ SEARCH_JS = """(function(){
   }
   fetch('data/certifications.json').then(function(r){return r.json();}).then(function(all){
     DATA=all; if(count)count.textContent=fmtN(all.length);
-    var majors={},types={},inds={};
-    all.forEach(function(x){majors[x.major]=1;types[x.type]=1;(x.industries||[]).forEach(function(i){inds[i]=(inds[i]||0)+1;});});
+    var majors={};
+    all.forEach(function(x){majors[x.major]=1;});
     Object.keys(majors).sort().forEach(function(v){opt(majorSel,v);});
-    ['国家','公的','民間','要確認'].forEach(function(v){if(types[v])opt(typeSel,v);});
-    Object.keys(inds).sort(function(a,b){return inds[b]-inds[a];}).forEach(function(v){
-      var o=document.createElement('option');o.value=v;o.textContent=v+'（'+fmtN(inds[v])+'）';industrySel.appendChild(o);});
     var p=new URLSearchParams(location.search);
-    if(p.get('q'))q.value=p.get('q');
+    if(p.get('q')){syncQueryInputs({value:p.get('q')});}
     if(p.get('major'))majorSel.value=p.get('major');
-    if(p.get('type'))typeSel.value=p.get('type');
-    if(p.get('industry'))industrySel.value=p.get('industry');
     if(p.get('study'))studySel.value=p.get('study');
+    if(passSel&&p.get('pass'))passSel.value=p.get('pass');
+    if(freqSel&&p.get('frequency'))freqSel.value=p.get('frequency');
     sortSel.value=p.get('sort')||'app-desc';
     if(p.get('pub')==='1')fPub.checked=true;
     if(p.get('page'))currentPage=Math.max(1,parseInt(p.get('page'),10)||1);
     if(p.get('tag')){p.get('tag').split(',').forEach(function(tg){activeTags.add(tg);});}
+    if(p.get('type'))legacyType=p.get('type');
+    if(p.get('industry'))legacyIndustry=p.get('industry');
     if(location.hash==='#all')location.hash='#all-certs';
     render();
   });
   function onFilter(){resetPage=true;render();}
-  [q,majorSel,typeSel,sortSel,industrySel,studySel].forEach(function(el){el.addEventListener('input',onFilter);});
+  function onQueryInput(e){syncQueryInputs(e.target);onFilter();}
+  if(q)q.addEventListener('input',onQueryInput);
+  if(listQ)listQ.addEventListener('input',onQueryInput);
+  [majorSel,sortSel,studySel,passSel,freqSel].forEach(function(el){if(el)el.addEventListener('input',onFilter);});
   fPub.addEventListener('change',onFilter);
-  q.addEventListener('keydown',function(e){
+  if(q)q.addEventListener('keydown',function(e){
     if(e.key==='Enter'){var a=document.getElementById('all-certs');if(a){e.preventDefault();a.scrollIntoView();}}
   });
+  if(listQ)listQ.addEventListener('keydown',function(e){
+    if(e.key==='Enter'){e.preventDefault();onFilter();}
+  });
   if(clearBtn)clearBtn.addEventListener('click',function(){
-    q.value='';majorSel.value='';typeSel.value='';industrySel.value='';studySel.value='';sortSel.value='app-desc';fPub.checked=false;
+    syncQueryInputs({value:''});
+    majorSel.value='';studySel.value='';
+    if(passSel)passSel.value='';
+    if(freqSel)freqSel.value='';
+    sortSel.value='app-desc';fPub.checked=false;
+    legacyType='';legacyIndustry='';
     activeTags.clear();resetPage=true;render();
   });
   (function renderRecent(){
@@ -3412,9 +3469,9 @@ html{scroll-padding-top:64px}
 .recent-list{list-style:none;display:flex;flex-wrap:wrap;gap:8px;margin:0;padding:0}
 .recent-list a{display:inline-block;padding:8px 12px;border:1px solid var(--gray-200);border-radius:var(--radius);font-size:var(--text-sm);font-weight:600;color:var(--ink-deep);text-decoration:none;background:#fff}
 .recent-list a:hover{border-color:var(--muted);text-decoration:none}
-.all-certs-filters{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:14px 12px;margin-bottom:16px}
+.all-certs-filters{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:14px 12px;margin-bottom:16px}
 .block-all-certs .filter-field label{display:block;font-size:var(--text-sm);color:var(--muted);margin-bottom:6px;font-weight:600}
-.block-all-certs .filter-field select{width:100%;padding:8px 26px 8px 10px;border:1px solid var(--gray-300);border-radius:4px;font-size:var(--text-sm);font-family:inherit;background:#fff;color:var(--ink)}
+.block-all-certs .filter-field select,.block-all-certs .filter-field input[type=search]{width:100%;padding:8px 10px;border:1px solid var(--gray-300);border-radius:4px;font-size:var(--text-sm);font-family:inherit;background:#fff;color:var(--ink)}
 .block-all-certs .all-certs-check{display:inline-flex;align-items:center;gap:6px;font-size:var(--text-sm);color:var(--ink);margin-bottom:20px;cursor:pointer}
 .all-certs-check input{width:15px;height:15px;accent-color:var(--accent)}
 .block-all-certs .all-certs-count{font-size:var(--text-sm);color:var(--muted);margin-bottom:12px}
@@ -3444,6 +3501,7 @@ html{scroll-padding-top:64px}
 .pagination-num.is-current{background:var(--ink-deep);color:#fff;border-color:var(--ink-deep)}
 .pagination-btn.is-disabled,.pagination-num.is-disabled{opacity:.4;pointer-events:none}
 .pagination-ellipsis{font-size:var(--text-sm);color:var(--muted);padding:0 2px}
+@media(max-width:1024px){.all-certs-filters{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:720px){.all-certs-filters{grid-template-columns:repeat(2,minmax(0,1fr))}.pagination{flex-direction:column;align-items:stretch}.pagination-links{justify-content:center}}
 
 /* 分野別・目的別ガイド（トップの資格一覧表と同じデザイン） */

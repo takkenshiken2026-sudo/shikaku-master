@@ -123,18 +123,35 @@
 </section>
 
 <section class="block block-band block-band--white block-all-certs" id="all-certs">
-  <div class="block-head"><h2>すべての資格から探す</h2><p>分野・区分・条件で絞り込み</p></div>
+  <div class="block-head"><h2>すべての資格から探す</h2><p>資格名・分野・学習時間・合格率・実施頻度で絞り込み</p></div>
   <div class="all-certs-filters">
+    <div class="filter-field"><label for="list-q">資格名</label><input type="search" id="list-q" placeholder="例: 簿記、宅建" aria-label="資格名で絞り込み"></div>
     <div class="filter-field"><label for="major">分野</label><select id="major" aria-label="分野で絞り込み"><option value="">すべて</option></select></div>
-    <div class="filter-field"><label for="type">区分</label><select id="type" aria-label="区分で絞り込み"><option value="">すべて</option></select></div>
-    <div class="filter-field"><label for="industry">活かせる業界</label><select id="industry" aria-label="活かせる業界で絞り込み"><option value="">すべて</option></select></div>
-    <div class="filter-field"><label for="study">学習時間の目安</label><select id="study" aria-label="学習時間の目安で絞り込み">
+    <div class="filter-field"><label for="study">学習時間</label><select id="study" aria-label="学習時間で絞り込み">
       <option value="">すべて</option>
       <option value="0-50">〜50時間</option>
       <option value="50-100">50〜100時間</option>
       <option value="100-300">100〜300時間</option>
       <option value="300-1000">300〜1000時間</option>
       <option value="1000-">1000時間以上</option>
+    </select></div>
+    <div class="filter-field"><label for="pass">合格率</label><select id="pass" aria-label="合格率で絞り込み">
+      <option value="">すべて</option>
+      <option value="80-">80%以上</option>
+      <option value="60-80">60〜80%</option>
+      <option value="40-60">40〜60%</option>
+      <option value="20-40">20〜40%</option>
+      <option value="0-20">20%未満</option>
+      <option value="unknown">データなし</option>
+    </select></div>
+    <div class="filter-field"><label for="frequency">実施頻度</label><select id="frequency" aria-label="実施頻度で絞り込み">
+      <option value="">すべて</option>
+      <option value="anytime">通年・随時</option>
+      <option value="once">年1回</option>
+      <option value="twice">年2回</option>
+      <option value="3plus">年3回以上</option>
+      <option value="other">その他</option>
+      <option value="unknown">データなし</option>
     </select></div>
     <div class="filter-field"><label for="sort">並び順</label><select id="sort" aria-label="並び順">
       <option value="app-desc" selected>受験者数が多い順</option>

@@ -1,7 +1,8 @@
 (function(){
-  var q=document.getElementById('q'),majorSel=document.getElementById('major'),
-      typeSel=document.getElementById('type'),sortSel=document.getElementById('sort'),
-      industrySel=document.getElementById('industry'),studySel=document.getElementById('study'),
+  var q=document.getElementById('q'),listQ=document.getElementById('list-q'),
+      majorSel=document.getElementById('major'),sortSel=document.getElementById('sort'),
+      studySel=document.getElementById('study'),passSel=document.getElementById('pass'),
+      freqSel=document.getElementById('frequency'),
       fPub=document.getElementById('f-pub'),
       studyNote=document.getElementById('studynote'),
       results=document.getElementById('results'),
@@ -11,25 +12,52 @@
       heroResult=document.getElementById('heroResult'),
       clearBtn=document.getElementById('clearFilters');
   var DATA=[], activeTags=new Set(), currentPage=1, PAGE_SIZE=20, resetPage=true,TROPHY="<span class=\"all-certs-trophy\" aria-hidden=\"true\"><svg class=\"icon-svg\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M8 21h8\"/><path d=\"M12 17v4\"/><path d=\"M7 4h10v5a5 5 0 0 1-10 0V4z\"/><path d=\"M5 5H3v2a3 3 0 0 0 3 3\"/><path d=\"M19 5h2v2a3 3 0 0 1-3 3\"/></svg></span>";
+  var legacyType='',legacyIndustry='';
   function esc(s){return (s||'').replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
   function fmtN(n){return Number(n).toLocaleString('ja-JP');}
   function shortName(n){return (n||'').replace(/[（(][^）)]*[）)]/g,'').trim()||n;}
   function opt(sel,v){var o=document.createElement('option');o.value=v;o.textContent=v;sel.appendChild(o);}
-  function feeNum(x){var m=(x.fee||'').replace(/,/g,'').match(/([0-9]+)\s*円/);return m?parseInt(m[1],10):null;}
   function passNum(x){var m=(x.pass_rate||'').replace(/,/g,'').match(/([0-9]+(?:\.[0-9]+)?)\s*%/);return m?parseFloat(m[1]):null;}
   function studyLow(x){var m=(x.study_hours||'').replace(/,/g,'').match(/([0-9]+)/);return m?parseInt(m[1],10):null;}
   function appNum(x){var m=(x.applicants||'').replace(/,/g,'').match(/([0-9]+)\s*[人名]/);return m?parseInt(m[1],10):null;}
+  function queryText(){return ((q&&q.value)||(listQ&&listQ.value)||'').trim().toLowerCase();}
+  function syncQueryInputs(src){
+    var v=src?src.value:'';
+    if(q&&src!==q)q.value=v;
+    if(listQ&&src!==listQ)listQ.value=v;
+  }
+  function freqBucket(f){
+    f=(f||'').trim();
+    if(!f)return 'unknown';
+    if(/休止/.test(f))return 'other';
+    if(/通年|随時|CBT|ネット/i.test(f))return 'anytime';
+    if(/年5回|年6回|年複数|年[34]回/.test(f))return '3plus';
+    if(/年2回/.test(f))return 'twice';
+    if(/年1回/.test(f))return 'once';
+    return 'other';
+  }
+  function passHit(x,band){
+    var v=passNum(x);
+    if(band==='unknown')return v===null;
+    if(v===null)return false;
+    if(band==='80-')return v>=80;
+    var p=band.split('-'),lo=parseFloat(p[0],10),hi=p[1]===''?Infinity:parseFloat(p[1],10);
+    return v>=lo&&v<hi;
+  }
   function syncURL(){
     try{
       var p=new URLSearchParams();
-      if(q.value.trim())p.set('q',q.value.trim());
+      var qt=queryText();
+      if(qt)p.set('q',qt);
       if(majorSel.value)p.set('major',majorSel.value);
-      if(typeSel.value)p.set('type',typeSel.value);
-      if(industrySel.value)p.set('industry',industrySel.value);
       if(studySel.value)p.set('study',studySel.value);
+      if(passSel&&passSel.value)p.set('pass',passSel.value);
+      if(freqSel&&freqSel.value)p.set('frequency',freqSel.value);
       if(sortSel.value&&sortSel.value!=='app-desc')p.set('sort',sortSel.value);
       if(fPub.checked)p.set('pub','1');
       if(activeTags.size)p.set('tag',[].slice.call(activeTags).join(','));
+      if(legacyType)p.set('type',legacyType);
+      if(legacyIndustry)p.set('industry',legacyIndustry);
       if(currentPage>1)p.set('page',String(currentPage));
       var qs=p.toString();
       history.replaceState(null,'',qs?('?'+qs):location.pathname);
@@ -64,16 +92,18 @@
   }
   function render(){
     if(resetPage){currentPage=1;resetPage=false;}
-    var t=(q.value||'').trim().toLowerCase(),mj=majorSel.value,tp=typeSel.value,sk=sortSel.value||'app-desc',
-        ind=industrySel.value,band=studySel.value;
+    var t=queryText(),mj=majorSel.value,sk=sortSel.value||'app-desc',
+        band=studySel.value,pBand=passSel?passSel.value:'',fBand=freqSel?freqSel.value:'';
     if(studyNote)studyNote.style.display=band?'inline':'none';
     var out=DATA.filter(function(x){
       if(mj&&x.major!==mj)return false;
-      if(tp&&x.type!==tp)return false;
+      if(legacyType&&x.type!==legacyType)return false;
       if(t&&x.name.toLowerCase().indexOf(t)<0)return false;
       if(fPub.checked&&x.status!=='published')return false;
-      if(ind&&(x.industries||[]).indexOf(ind)<0)return false;
+      if(legacyIndustry&&(x.industries||[]).indexOf(legacyIndustry)<0)return false;
       if(band&&!studyHit(x,band))return false;
+      if(pBand&&!passHit(x,pBand))return false;
+      if(fBand&&freqBucket(x.frequency)!==fBand)return false;
       if(activeTags.size){
         var tg=x.tags||[],ok=true;
         activeTags.forEach(function(a){if(tg.indexOf(a)<0)ok=false;});
@@ -92,7 +122,7 @@
     if(currentPage>pages)currentPage=pages;
     var sliceStart=(currentPage-1)*PAGE_SIZE;
     var pageItems=out.slice(sliceStart,sliceStart+PAGE_SIZE);
-    var anyFilter=t||mj||tp||ind||band||activeTags.size||fPub.checked;
+    var anyFilter=t||mj||band||pBand||fBand||activeTags.size||fPub.checked||legacyType||legacyIndustry;
     if(clearBtn)clearBtn.hidden=!anyFilter;
     if(countEl){
       if(out.length){
@@ -148,33 +178,43 @@
   }
   fetch('data/certifications.json').then(function(r){return r.json();}).then(function(all){
     DATA=all; if(count)count.textContent=fmtN(all.length);
-    var majors={},types={},inds={};
-    all.forEach(function(x){majors[x.major]=1;types[x.type]=1;(x.industries||[]).forEach(function(i){inds[i]=(inds[i]||0)+1;});});
+    var majors={};
+    all.forEach(function(x){majors[x.major]=1;});
     Object.keys(majors).sort().forEach(function(v){opt(majorSel,v);});
-    ['国家','公的','民間','要確認'].forEach(function(v){if(types[v])opt(typeSel,v);});
-    Object.keys(inds).sort(function(a,b){return inds[b]-inds[a];}).forEach(function(v){
-      var o=document.createElement('option');o.value=v;o.textContent=v+'（'+fmtN(inds[v])+'）';industrySel.appendChild(o);});
     var p=new URLSearchParams(location.search);
-    if(p.get('q'))q.value=p.get('q');
+    if(p.get('q')){syncQueryInputs({value:p.get('q')});}
     if(p.get('major'))majorSel.value=p.get('major');
-    if(p.get('type'))typeSel.value=p.get('type');
-    if(p.get('industry'))industrySel.value=p.get('industry');
     if(p.get('study'))studySel.value=p.get('study');
+    if(passSel&&p.get('pass'))passSel.value=p.get('pass');
+    if(freqSel&&p.get('frequency'))freqSel.value=p.get('frequency');
     sortSel.value=p.get('sort')||'app-desc';
     if(p.get('pub')==='1')fPub.checked=true;
     if(p.get('page'))currentPage=Math.max(1,parseInt(p.get('page'),10)||1);
     if(p.get('tag')){p.get('tag').split(',').forEach(function(tg){activeTags.add(tg);});}
+    if(p.get('type'))legacyType=p.get('type');
+    if(p.get('industry'))legacyIndustry=p.get('industry');
     if(location.hash==='#all')location.hash='#all-certs';
     render();
   });
   function onFilter(){resetPage=true;render();}
-  [q,majorSel,typeSel,sortSel,industrySel,studySel].forEach(function(el){el.addEventListener('input',onFilter);});
+  function onQueryInput(e){syncQueryInputs(e.target);onFilter();}
+  if(q)q.addEventListener('input',onQueryInput);
+  if(listQ)listQ.addEventListener('input',onQueryInput);
+  [majorSel,sortSel,studySel,passSel,freqSel].forEach(function(el){if(el)el.addEventListener('input',onFilter);});
   fPub.addEventListener('change',onFilter);
-  q.addEventListener('keydown',function(e){
+  if(q)q.addEventListener('keydown',function(e){
     if(e.key==='Enter'){var a=document.getElementById('all-certs');if(a){e.preventDefault();a.scrollIntoView();}}
   });
+  if(listQ)listQ.addEventListener('keydown',function(e){
+    if(e.key==='Enter'){e.preventDefault();onFilter();}
+  });
   if(clearBtn)clearBtn.addEventListener('click',function(){
-    q.value='';majorSel.value='';typeSel.value='';industrySel.value='';studySel.value='';sortSel.value='app-desc';fPub.checked=false;
+    syncQueryInputs({value:''});
+    majorSel.value='';studySel.value='';
+    if(passSel)passSel.value='';
+    if(freqSel)freqSel.value='';
+    sortSel.value='app-desc';fPub.checked=false;
+    legacyType='';legacyIndustry='';
     activeTags.clear();resetPage=true;render();
   });
   (function renderRecent(){
