@@ -274,8 +274,8 @@ table.spec th{width:34%;background:var(--table-head-bg);color:var(--ink);font-we
 @media(max-width:480px){table.spec th,table.spec td{display:block;width:auto}table.spec th{white-space:normal;border-bottom:none;padding:9px 14px 1px}table.spec td{padding:1px 14px 11px}}
 .related{margin-top:24px}.related ul{padding-left:1.1em}
 .official-cta{margin:16px 0 6px}
-.btn-official{display:inline-block;background:var(--accent);color:#fff;font-weight:var(--fw-semibold);padding:11px 20px;border-radius:var(--radius)}
-.btn-official:hover{background:var(--accent-hover);text-decoration:none}
+.btn-official{display:inline-block;background:var(--accent);color:#fff;font-size:var(--text-table);font-weight:var(--fw-semibold);padding:11px 20px;border-radius:var(--radius);text-decoration:none}
+.btn-official:hover{background:var(--accent-hover);color:#fff;text-decoration:none}
 .provenance{font-size:var(--text-sm);color:var(--muted);background:var(--gray-50);border:1px solid var(--gray-200);border-radius:var(--radius);padding:11px 14px;margin:10px 0 0}
 .feat-list{margin:.2em 0 .6em;padding-left:1.1em}.feat-list li{margin:2px 0}
 .feat-list a{color:var(--ink)}
