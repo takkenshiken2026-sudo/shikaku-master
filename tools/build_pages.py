@@ -2513,12 +2513,7 @@ def build_comparison_pages(indexable):
             f"{table}{cards}"
             '<p class="muted" style="margin-top:14px">※受験料・合格率・受験資格は公式の'
             '一次情報に基づきますが、最新の制度・金額・日程は各資格の公式サイトで必ず'
-            'ご確認ください。難易度は公表合格率に基づく簡易目安です。</p>'
-            '<nav class="rel-links"><h2>関連リンク</h2><ul>'
-            f'<li><a href="../c/{esc(ra["slug"])}.html">{esc(na)}の詳細</a></li>'
-            f'<li><a href="../c/{esc(rb["slug"])}.html">{esc(nb)}の詳細</a></li>'
-            '<li><a href="../compare.html">資格を自分で比較する（最大4件）</a></li>'
-            "</ul></nav>")
+            'ご確認ください。難易度は公表合格率に基づく簡易目安です。</p>')
         desc = (f"{na}と{nb}の違いを比較。受験料・合格率・難易度の目安・受験資格・"
                 f"試験形式を一覧で比べ、どちらを取るべきか選ぶ参考にできます。")
         pages[pslug] = page_shell(
