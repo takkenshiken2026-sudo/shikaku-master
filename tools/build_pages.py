@@ -119,6 +119,31 @@ TYPE_BADGE = {
 }
 
 
+def type_reason_note(cert_type, badge_label, reason):
+    """バッジと重複する接頭辞を除き、補足理由だけを返す。"""
+    if not reason:
+        return ""
+    r = reason.strip()
+    prefixes = (
+        badge_label,
+        f"{cert_type}資格",
+        cert_type,
+        "民間資格",
+        "国家資格",
+        "公的資格",
+        "区分要確認",
+    )
+    for prefix in prefixes:
+        if r.startswith(prefix):
+            r = r[len(prefix):].strip()
+            break
+    if r.startswith("(") and r.endswith(")"):
+        r = r[1:-1].strip()
+    if not r or r in {badge_label, cert_type, f"{cert_type}資格"}:
+        return ""
+    return f' <span class="muted">（{esc(r)}）</span>'
+
+
 def esc(s: str) -> str:
     return html.escape(s or "", quote=True)
 
@@ -768,7 +793,7 @@ def build_detail(row) -> str:
 
     spec = [
         ("資格区分", f'<span class="badge {cls}">{esc(label)}</span>'
-                    f' <span class="muted">（{esc(row["type_reason"])}）</span>'),
+                    + type_reason_note(row["type"], label, row["type_reason"])),
         ("分野（大分類）", esc(major)),
         ("カテゴリ", esc(cat)),
         ("実施団体", field(row["authority"])),
@@ -1565,8 +1590,7 @@ SPEC_ICONS = {
         '<path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/>'),
     "受験料": _icon_svg(
         '<circle cx="12" cy="12" r="9"/>'
-        '<path d="M9 8.5c0-1.5 1.3-2.5 3-2.5s3 1 3 2.5c0 2-3 2-3 4"/>'
-        '<path d="M12 17v.5"/>'),
+        '<path d="M8.5 7.5h7M8.5 11h5.5M10 15c1.2 1 2.5 1.5 4 1.5s2.8-.5 4-1.5"/>'),
     "合格率": _icon_svg(
         '<circle cx="12" cy="12" r="9"/><path d="M8 12l3 3 5-6"/>'),
     "実施頻度": _icon_svg(
@@ -3463,7 +3487,7 @@ table.spec{width:100%;border-collapse:collapse;background:#fff;border:1px solid 
 .spec-wrap table.spec{border:none;border-radius:0}
 table.spec tr:last-child th,table.spec tr:last-child td{border-bottom:none}
 table.spec th,table.spec td{text-align:left;padding:10px 14px;border-bottom:1px solid var(--gray-200);vertical-align:top}
-table.spec th{width:34%;background:var(--gray-100);color:var(--ink);font-weight:var(--fw-semibold);font-size:var(--text-sm);white-space:nowrap}
+table.spec th{width:34%;background:var(--gray-100);color:var(--ink);font-weight:var(--fw-semibold);font-size:var(--text-md);white-space:nowrap}
 @media(max-width:480px){table.spec th,table.spec td{display:block;width:auto}table.spec th{white-space:normal;border-bottom:none;padding:9px 14px 1px}table.spec td{padding:1px 14px 11px}}
 .related{margin-top:24px}.related ul{padding-left:1.1em}
 .official-cta{margin:16px 0 6px}
@@ -3673,7 +3697,7 @@ table.cmp tbody th{background:var(--gray-50);color:var(--ink);white-space:nowrap
 .page-detail .fact .l{font-size:var(--text-sm);color:var(--muted)}
 .page-detail .fact .v{font-size:var(--text-md);font-weight:600;color:var(--ink)}
 .page-detail table.spec{font-size:var(--text-md)}
-.page-detail table.spec th{background:var(--gray-50);color:var(--ink);font-weight:var(--fw-semibold);font-size:var(--text-sm)}
+.page-detail table.spec th{background:var(--gray-50);color:var(--ink);font-weight:var(--fw-semibold);font-size:var(--text-md)}
 .page-detail table.spec th .spec-th-inner{display:inline-flex;align-items:flex-start;gap:7px}
 .page-detail table.spec th .spec-th-icon{flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;margin-top:1px;color:var(--muted)}
 .page-detail table.spec th .spec-th-icon .icon-svg{width:16px;height:16px}
