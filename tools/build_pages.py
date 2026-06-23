@@ -3386,7 +3386,7 @@ html{scroll-padding-top:64px}
 /* Popular */
 .popular-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
 .pop-card{display:flex;flex-direction:column;background:#fff;color:var(--ink);border-radius:var(--radius);padding:14px 32px 12px 13px;text-decoration:none;border:1px solid var(--gray-200);transition:border-color .15s,background .15s}
-.pop-card-head{display:flex;align-items:flex-start;gap:10px;margin-bottom:10px}
+.pop-card-head{display:flex;align-items:center;gap:10px;margin-bottom:10px}
 .pop-card-trophy{flex-shrink:0;width:36px;height:36px;display:flex;align-items:center;justify-content:center;background:#f7f3e8;border-radius:var(--radius);color:#b8860b}
 .pop-card-trophy .icon-svg{width:20px;height:20px}
 .pop-card-name{font-size:var(--text-md);font-weight:var(--fw-semibold);line-height:1.35;color:var(--ink-deep);margin:0;flex:1;min-width:0}
