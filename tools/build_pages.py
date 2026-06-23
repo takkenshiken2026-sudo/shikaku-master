@@ -1501,7 +1501,7 @@ def _certs_table(items, depth=1, *, show_major=False,
         cells = [_certs_name_cell(r, popular_slugs)]
         if show_major:
             cells.append(
-                f'<td class="all-certs-cell">{esc(r["major_category"])}</td>')
+                f'<td class="all-certs-cell all-certs-cell--major">{esc(r["major_category"])}</td>')
         cells.extend([
             f'<td class="all-certs-cell all-certs-num">{esc(study)}</td>',
             f'<td class="all-certs-cell all-certs-num">{esc(pr)}</td>',
@@ -3131,7 +3131,7 @@ SEARCH_JS = """(function(){
         '<td class="all-certs-name"><span class="all-certs-name-inner">'+
         (x.popular?TROPHY:'')+
         '<span class="all-certs-name-text">'+esc(shortName(x.name))+'</span></span></td>'+
-        '<td class="all-certs-cell">'+esc(x.major)+'</td>'+
+        '<td class="all-certs-cell all-certs-cell--major">'+esc(x.major)+'</td>'+
         '<td class="all-certs-cell all-certs-num">'+study+'</td>'+
         '<td class="all-certs-cell all-certs-num">'+pass+'</td>'+
         '<td class="all-certs-cell all-certs-cell--freq">'+freq+'</td></tr>';
@@ -3503,24 +3503,26 @@ html{scroll-padding-top:64px}
 .all-certs-table--4col col.all-certs-col-study{width:16%}
 .all-certs-table--4col col.all-certs-col-pass{width:12%}
 .all-certs-table--4col col.all-certs-col-freq{width:38%}
-.all-certs-table--5col col.all-certs-col-name{width:28%}
-.all-certs-table--5col col.all-certs-col-major{width:14%}
-.all-certs-table--5col col.all-certs-col-study{width:14%}
-.all-certs-table--5col col.all-certs-col-pass{width:10%}
+.all-certs-table--5col col.all-certs-col-name{width:26%}
+.all-certs-table--5col col.all-certs-col-major{width:18%}
+.all-certs-table--5col col.all-certs-col-study{width:13%}
+.all-certs-table--5col col.all-certs-col-pass{width:9%}
 .all-certs-table--5col col.all-certs-col-freq{width:34%}
 .all-certs-table thead th{text-align:left;padding:11px 14px;background:var(--table-head-bg);color:var(--ink);font-weight:var(--fw-regular);font-size:var(--text-table);border-bottom:1px solid var(--table-border);white-space:nowrap}
-.all-certs-table tbody td{padding:11px 14px;border-bottom:1px solid var(--table-border);vertical-align:middle;line-height:1.5;white-space:nowrap;font-size:var(--text-table);color:var(--ink)}
+.all-certs-table tbody td{padding:11px 14px;border-bottom:1px solid var(--table-border);vertical-align:middle;line-height:1.5;font-size:var(--text-table);color:var(--ink);overflow-wrap:break-word}
 .all-certs-table tbody tr.cert-row{cursor:pointer;transition:background-color .12s ease}
 .all-certs-table tbody tr.cert-row:hover td{background:var(--accent-light)}
 .all-certs-table tbody tr.cert-row:focus-visible{outline:2px solid var(--accent-ring);outline-offset:-2px}
 .all-certs-table tbody tr:last-child td{border-bottom:none}
-.all-certs-name{min-width:12em}
-.all-certs-name-inner{display:inline-flex;align-items:center;gap:6px;max-width:100%}
+.all-certs-name{min-width:12em;max-width:0}
+.all-certs-name-inner{display:inline-flex;align-items:center;gap:6px;max-width:100%;min-width:0}
 .all-certs-trophy{flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;color:#b8860b;background:#f7f3e8;border-radius:4px}
 .all-certs-trophy .icon-svg{width:14px;height:14px}
-.all-certs-name-text{white-space:nowrap;font-weight:var(--fw-semibold);color:var(--ink-deep)}
+.all-certs-name-text{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;font-weight:var(--fw-semibold);color:var(--ink-deep)}
 .all-certs-table tbody tr.cert-row:hover .all-certs-name-text{color:var(--accent)}
 .all-certs-cell{font-weight:400;color:var(--ink)}
+.all-certs-cell--major{white-space:normal}
+.all-certs-num,.all-certs-cell--freq{white-space:nowrap}
 .all-certs-num{font-variant-numeric:tabular-nums;color:var(--ink)}
 .all-certs-table .empty-state{white-space:normal;text-align:center;color:var(--muted);background:var(--gray-50);padding:22px 16px;line-height:1.75;font-size:var(--text-sm)}
 .pagination{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin-top:28px;padding-top:4px}
