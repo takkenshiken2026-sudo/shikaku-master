@@ -3738,13 +3738,13 @@ table.cmp tbody th{background:var(--gray-50);color:var(--ink);white-space:nowrap
 .page-detail .note-muted,.page-detail .muted{font-size:inherit;color:var(--muted);font-weight:400}
 .page-detail .fact .l{font-size:var(--text-sm);color:var(--muted)}
 .page-detail .fact .v{font-size:var(--text-md);font-weight:600;color:var(--ink)}
-.page-detail table.spec{font-size:var(--text-md)}
-.page-detail table.spec th{background:var(--gray-50);color:var(--ink);font-weight:var(--fw-semibold);font-size:var(--text-md)}
+.page-detail table.spec{font-size:var(--text-sm)}
+.page-detail table.spec th{background:var(--gray-50);color:var(--ink);font-weight:var(--fw-semibold);font-size:var(--text-sm)}
 .page-detail table.spec th .spec-th-inner{display:inline-flex;align-items:flex-start;gap:7px}
 .page-detail table.spec th .spec-th-icon{flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;margin-top:1px;color:var(--muted)}
 .page-detail table.spec th .spec-th-icon .icon-svg{width:16px;height:16px}
 .page-detail table.spec th .spec-th-text{font-weight:inherit;line-height:1.45}
-.page-detail table.spec td{color:var(--ink);font-size:var(--text-md);font-weight:400}
+.page-detail table.spec td{color:var(--ink);font-size:var(--text-sm);font-weight:400}
 .page-detail table.spec tr.spec-row{cursor:pointer;transition:background-color .12s ease}
 .page-detail table.spec tr.spec-row:hover th,.page-detail table.spec tr.spec-row:hover td{background:var(--gray-100)}
 .page-detail table.spec tr.spec-row.is-active th,.page-detail table.spec tr.spec-row.is-active td{background:var(--accent-light)}
@@ -3753,7 +3753,7 @@ table.cmp tbody th{background:var(--gray-50);color:var(--ink);white-space:nowrap
 .page-detail table.spec .tag-chip,.page-detail table.spec .tag-ind{font-weight:400}
 .page-detail table.spec .spec-list{list-style:disc;margin:.15em 0 .3em;padding-left:1.25em}
 .page-detail table.spec .spec-list li{margin:2px 0;line-height:1.55}
-.page-detail table.spec .materials{margin:.15em 0 .25em;font-size:var(--text-md)}
+.page-detail table.spec .materials{margin:.15em 0 .25em;font-size:inherit}
 .page-detail table.spec .materials li{display:block;background:none;border:none;border-radius:0;padding:2px 0;margin:0 0 4px;line-height:1.55;font-size:inherit;font-weight:400;color:var(--ink)}
 .page-detail table.spec .materials a{color:var(--accent);font-weight:400;font-size:inherit;text-decoration:none}
 .page-detail table.spec .materials a:hover{color:var(--accent-hover);text-decoration:underline;text-underline-offset:2px}
@@ -3761,8 +3761,8 @@ table.cmp tbody th{background:var(--gray-50);color:var(--ink);white-space:nowrap
 .page-detail table.spec a{font-weight:400}
 .page-detail table.spec .mat-kind::after{content:"："}
 .page-detail table.spec .materials .muted,.page-detail table.spec .materials .note-muted{font-size:inherit;font-weight:400;color:var(--muted)}
-.page-detail table.spec .mat-foot{margin-top:6px;font-size:var(--text-md);font-weight:400;color:var(--muted);line-height:1.55}
-.page-detail table.spec .ad-disclosure{margin:0 0 6px;padding:8px 10px;font-size:var(--text-md);font-weight:400;color:var(--muted);line-height:1.55;background:var(--gray-50);border:1px solid var(--gray-200);border-radius:var(--radius)}
+.page-detail table.spec .mat-foot{margin-top:6px;font-size:inherit;font-weight:400;color:var(--muted);line-height:1.55}
+.page-detail table.spec .ad-disclosure{margin:0 0 6px;padding:8px 10px;font-size:inherit;font-weight:400;color:var(--muted);line-height:1.55;background:var(--gray-50);border:1px solid var(--gray-200);border-radius:var(--radius)}
 .page-detail table.spec .careers-src,.page-detail table.spec .jobtag,.page-detail table.spec .mat-foot{margin-top:6px}
 .page-detail table.spec .detail-source-note{margin:0;font-size:var(--text-sm);color:var(--muted);line-height:1.65}
 .page-detail .tag-chip{font-size:var(--text-sm);background:var(--gray-50);color:var(--ink);border-color:var(--gray-200)}
@@ -3816,7 +3816,6 @@ table.cmp tbody th{background:var(--gray-50);color:var(--ink);white-space:nowrap
   .page-detail .detail-audience{font-size:var(--text-md);line-height:1.7}
   .page-detail .point-list li{font-size:var(--text-md)}
   .page-detail .faq-item summary,.page-detail .faq-a{font-size:var(--text-md)}
-  .page-detail table.spec th,.page-detail table.spec td{font-size:var(--text-md)}
   /* 比較バーが内容に被らないよう余白を増やす */
   body.cmp-open{padding-bottom:96px}
 }
