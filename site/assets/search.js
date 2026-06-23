@@ -144,9 +144,9 @@
         '<td class="all-certs-name"><span class="all-certs-name-inner">'+
         (x.popular?TROPHY:'')+
         '<span class="all-certs-name-text">'+esc(shortName(x.name))+'</span></span></td>'+
-        '<td class="all-certs-cell">'+esc(x.major)+'</td>'+
-        '<td class="all-certs-cell all-certs-num">'+study+'</td>'+
-        '<td class="all-certs-cell all-certs-num">'+pass+'</td>'+
+        '<td class="all-certs-cell all-certs-cell--major">'+esc(x.major)+'</td>'+
+        '<td class="all-certs-cell all-certs-num all-certs-cell--study">'+study+'</td>'+
+        '<td class="all-certs-cell all-certs-num all-certs-cell--pass">'+pass+'</td>'+
         '<td class="all-certs-cell all-certs-cell--freq">'+freq+'</td></tr>';
     }).join('')||'<tr><td colspan="5" class="empty-state">条件に一致する資格が見つかりませんでした。<br>キーワードを短くするか、上の「× 条件をクリア」で絞り込みを解除してください。</td></tr>';
     renderPagination(out.length);

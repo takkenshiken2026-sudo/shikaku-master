@@ -205,7 +205,7 @@ html{scroll-padding-top:64px}
 .compare-card:hover,.compare-card:focus-visible{background:var(--accent-light);border-color:var(--accent);text-decoration:none}
 .compare-tag{font-size:var(--text-sm);font-weight:600;color:var(--muted);letter-spacing:.04em;margin-bottom:6px}
 .compare-names{font-size:var(--text-md);font-weight:var(--fw-semibold);line-height:1.45;color:var(--ink-deep);margin:0;flex:1}
-.compare-names em{font-style:normal;color:var(--muted);font-weight:400;font-size:var(--text-sm)}
+.compare-names .compare-sep{color:var(--muted);font-weight:400;font-size:var(--text-sm);margin:0 .2em}
 .compare-go{position:absolute;right:14px;top:50%;transform:translateY(-50%);font-size:var(--text-md);font-weight:600;color:var(--accent);line-height:1}
 .compare-card:hover .compare-go,.compare-card:focus-visible .compare-go{color:var(--accent-hover)}
 

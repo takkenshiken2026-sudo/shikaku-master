@@ -416,7 +416,7 @@ CERT_RELATIONS = load_cert_relations()
 
 
 def _rel_name(s):
-    """関連資格・ロードマップ用の短縮名。級・種別など識別に必要な括弧書きは残す。"""
+    """関連資格・ロードマップ用の短縮名。級・種別・スコア目安など識別に必要な括弧書きは残す。"""
     n = NAME_BY_SLUG.get(s, s)
     qualifiers = re.findall(r"[（(]([^）)]+)[）)]", n)
     base = re.sub(r"[（(][^）)]+[）)]", "", n).strip() or n
@@ -426,7 +426,7 @@ def _rel_name(s):
             continue
         if re.search(r"旧|廃止|所管|法律|国家資格|検定の|誰でも|一次情報", q):
             continue
-        if re.search(r"種|級|類|号|部門|上級|中級|下級|全経|日商", q):
+        if re.search(r"種|級|類|号|部門|上級|中級|下級|全経|日商|\d+点", q):
             return f"{base}({q})"
     return base
 
@@ -2805,7 +2805,7 @@ def build_index(rows) -> str:
             continue
         cmp_html += (f'<a class="compare-card" href="vs/{pslug}.html">'
                      f'<span class="compare-tag">{esc(ra["major_category"])}</span>'
-                     f'<div class="compare-names">{esc(_cmpname(ra))} <em>vs</em> {esc(_cmpname(rb))}</div>'
+                     f'<div class="compare-names">{esc(_cmpname(ra))} <span class="compare-sep" aria-hidden="true">⇄</span> {esc(_cmpname(rb))}</div>'
                      f'<span class="compare-go" aria-hidden="true">→</span></a>')
         _n += 1
         if _n >= 6:
@@ -3572,7 +3572,7 @@ html{scroll-padding-top:64px}
 .compare-card:hover,.compare-card:focus-visible{background:var(--accent-light);border-color:var(--accent);text-decoration:none}
 .compare-tag{font-size:var(--text-sm);font-weight:600;color:var(--muted);letter-spacing:.04em;margin-bottom:6px}
 .compare-names{font-size:var(--text-md);font-weight:var(--fw-semibold);line-height:1.45;color:var(--ink-deep);margin:0;flex:1}
-.compare-names em{font-style:normal;color:var(--muted);font-weight:400;font-size:var(--text-sm)}
+.compare-names .compare-sep{color:var(--muted);font-weight:400;font-size:var(--text-sm);margin:0 .2em}
 .compare-go{position:absolute;right:14px;top:50%;transform:translateY(-50%);font-size:var(--text-md);font-weight:600;color:var(--accent);line-height:1}
 .compare-card:hover .compare-go,.compare-card:focus-visible .compare-go{color:var(--accent-hover)}
 
