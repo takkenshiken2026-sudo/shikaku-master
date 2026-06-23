@@ -9,6 +9,13 @@
   var FIELDS=[['区分','type'],['分野','major'],['カテゴリ','category'],
     ['実施団体','authority'],['受験資格','eligibility'],['試験形式','exam_format'],
     ['受験料','fee'],['合格率','pass_rate'],['実施頻度','frequency']];
+  var TYPE_BADGE={国家:['国家資格','badge-national'],公的:['公的資格','badge-public'],
+    民間:['民間資格','badge-private'],要確認:['区分要確認','badge-unknown'],
+    海外:['海外資格','badge-overseas']};
+  function typeBadge(t){
+    var b=TYPE_BADGE[t]||['区分要確認','badge-unknown'];
+    return '<span class="badge '+b[1]+'">'+esc(b[0])+'</span>';
+  }
   fetch('data/certifications.json').then(function(r){return r.json();}).then(function(all){
     var map={};all.forEach(function(x){map[x.slug]=x;});
     var items=ids.map(function(s){return map[s];}).filter(Boolean);
@@ -37,7 +44,7 @@
       h+='<tr><th>'+f[0]+'</th>';
       items.forEach(function(x){
         var v;
-        if(f[1]==='type')v='<span class="badge b-'+x.type+'">'+esc(x.type)+'</span>';
+        if(f[1]==='type')v=typeBadge(x.type);
         else v=x[f[1]]?esc(x[f[1]]):'<span class="muted">公式で確認</span>';
         h+='<td>'+v+'</td>';
       });

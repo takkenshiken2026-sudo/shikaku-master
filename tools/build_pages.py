@@ -2453,11 +2453,9 @@ def build_comparison_pages(indexable):
         if not (ra and rb and is_indexable_detail(ra) and is_indexable_detail(rb)):
             continue
         na, nb = shortname(ra), shortname(rb)
-        la = TYPE_BADGE.get(ra["type"], ("", ""))[0]
-        lb = TYPE_BADGE.get(rb["type"], ("", ""))[0]
 
         rows_spec = [
-            ("資格区分", esc(la), esc(lb)),
+            ("資格区分", _badge(ra["type"]), _badge(rb["type"])),
             ("分野", esc(ra["major_category"]), esc(rb["major_category"])),
             ("受験料", cell(ra, "fee"), cell(rb, "fee")),
             ("合格率", cell(ra, "pass_rate"), cell(rb, "pass_rate")),
@@ -3284,6 +3282,13 @@ COMPARE_JS = """(function(){
   var FIELDS=[['区分','type'],['分野','major'],['カテゴリ','category'],
     ['実施団体','authority'],['受験資格','eligibility'],['試験形式','exam_format'],
     ['受験料','fee'],['合格率','pass_rate'],['実施頻度','frequency']];
+  var TYPE_BADGE={国家:['国家資格','badge-national'],公的:['公的資格','badge-public'],
+    民間:['民間資格','badge-private'],要確認:['区分要確認','badge-unknown'],
+    海外:['海外資格','badge-overseas']};
+  function typeBadge(t){
+    var b=TYPE_BADGE[t]||['区分要確認','badge-unknown'];
+    return '<span class="badge '+b[1]+'">'+esc(b[0])+'</span>';
+  }
   fetch('data/certifications.json').then(function(r){return r.json();}).then(function(all){
     var map={};all.forEach(function(x){map[x.slug]=x;});
     var items=ids.map(function(s){return map[s];}).filter(Boolean);
@@ -3312,7 +3317,7 @@ COMPARE_JS = """(function(){
       h+='<tr><th>'+f[0]+'</th>';
       items.forEach(function(x){
         var v;
-        if(f[1]==='type')v='<span class="badge b-'+x.type+'">'+esc(x.type)+'</span>';
+        if(f[1]==='type')v=typeBadge(x.type);
         else v=x[f[1]]?esc(x[f[1]]):'<span class="muted">公式で確認</span>';
         h+='<td>'+v+'</td>';
       });
@@ -3870,7 +3875,7 @@ table.cmp tbody th{background:var(--gray-50);color:var(--ink);white-space:nowrap
 .page-detail table.spec tr.spec-row:hover th,.page-detail table.spec tr.spec-row:hover td{background:var(--table-hover-bg)}
 .page-detail table.spec tr.spec-row.is-active th,.page-detail table.spec tr.spec-row.is-active td{background:var(--accent-light)}
 .page-detail table.spec tr.spec-row:focus-visible{outline:2px solid var(--accent-ring);outline-offset:-2px}
-.page-detail table.spec .badge,.page-detail table.spec .badge-national,.page-detail table.spec .badge-public,.page-detail table.spec .badge-private,.page-detail table.spec .badge-unknown,.page-detail table.spec .badge-overseas{color:var(--ink);background:#fff;border-color:var(--table-border);font-size:inherit;font-weight:var(--fw-regular)}
+.page-detail table.spec .badge{font-size:var(--text-sm);font-weight:600;vertical-align:middle}
 .page-detail table.spec .tag-chip,.page-detail table.spec .tag-ind{font-size:inherit;font-weight:var(--fw-regular);color:var(--ink);background:var(--gray-100);border-color:var(--table-border)}
 .page-detail table.spec a.tag-chip:hover{background:var(--table-hover-bg);border-color:var(--table-border);color:var(--ink)}
 .page-detail table.spec .spec-list{list-style:disc;margin:.15em 0 .3em;padding-left:1.25em;font-size:inherit}
