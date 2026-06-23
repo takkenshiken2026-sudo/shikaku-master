@@ -10,7 +10,7 @@
       count=document.getElementById('count'),
       heroResult=document.getElementById('heroResult'),
       clearBtn=document.getElementById('clearFilters');
-  var DATA=[], activeTags=new Set(), currentPage=1, PAGE_SIZE=20, resetPage=true;
+  var DATA=[], activeTags=new Set(), currentPage=1, PAGE_SIZE=20, resetPage=true,TROPHY="<span class=\"all-certs-trophy\" aria-hidden=\"true\"><svg class=\"icon-svg\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M8 21h8\"/><path d=\"M12 17v4\"/><path d=\"M7 4h10v5a5 5 0 0 1-10 0V4z\"/><path d=\"M5 5H3v2a3 3 0 0 0 3 3\"/><path d=\"M19 5h2v2a3 3 0 0 1-3 3\"/></svg></span>";
   function esc(s){return (s||'').replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
   function fmtN(n){return Number(n).toLocaleString('ja-JP');}
   function shortName(n){return (n||'').replace(/[（(][^）)]*[）)]/g,'').trim()||n;}
@@ -110,7 +110,9 @@
       var fee=x.fee?esc(x.fee):'—';
       var pass=x.pass_rate?esc(x.pass_rate):'—';
       return '<tr class="cert-row" tabindex="0" data-href="c/'+esc(x.slug)+'.html">'+
-        '<td class="all-certs-name"><span class="all-certs-name-text">'+esc(shortName(x.name))+'</span></td>'+
+        '<td class="all-certs-name"><span class="all-certs-name-inner">'+
+        (x.popular?TROPHY:'')+
+        '<span class="all-certs-name-text">'+esc(shortName(x.name))+'</span></span></td>'+
         '<td class="all-certs-cell">'+esc(x.major)+'</td>'+
         '<td class="all-certs-cell">'+esc(x.type)+'</td>'+
         '<td class="all-certs-cell all-certs-num">'+fee+'</td>'+

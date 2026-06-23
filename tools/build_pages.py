@@ -630,6 +630,13 @@ def applicants_num(r):
     return int(m.group(1).replace(",", "")) if m else None
 
 
+def popular_slug_set(rows, limit=80):
+    """受験者数の多い上位資格の slug 集合（一覧の人気マーク用）。"""
+    ranked = sorted((r for r in rows if applicants_num(r) is not None),
+                    key=lambda r: (-(applicants_num(r) or 0), r["name"]))
+    return {r["slug"] for r in ranked[:limit]}
+
+
 def fmt_nums_in_text(s: str) -> str:
     """文字列内の4桁以上の整数に3桁カンマを付与（小数部・年数は除外）。"""
     if not s:
@@ -1390,8 +1397,17 @@ _CERTS_TABLE_SCRIPT = """<script>
 </script>"""
 
 
+def _certs_name_cell(r, popular_slugs=None):
+    trophy = ""
+    if popular_slugs and r["slug"] in popular_slugs:
+        trophy = f'<span class="all-certs-trophy" aria-hidden="true">{ICON_TROPHY}</span>'
+    return (
+        f'<td class="all-certs-name"><span class="all-certs-name-inner">'
+        f'{trophy}<span class="all-certs-name-text">{esc(r["name"])}</span></span></td>')
+
+
 def _certs_table(items, depth=1, *, show_major=False, show_category=False,
-                 with_script=True):
+                 with_script=True, popular_slugs=None):
     """資格一覧の表形式HTML（分野・目的別ガイドなどで共用）。"""
     base = "../" * depth
     headers = ['<th scope="col">資格名</th>']
@@ -1406,9 +1422,7 @@ def _certs_table(items, depth=1, *, show_major=False, show_category=False,
         fee = fmt_nums_in_text(r.get("fee") or "") or "—"
         pr = pass_rate_display(r.get("pass_rate", "")) or "—"
         label = TYPE_BADGE.get(r["type"], ("区分要確認", ""))[0]
-        cells = [
-            f'<td class="all-certs-name"><span class="all-certs-name-text">'
-            f'{esc(r["name"])}</span></td>']
+        cells = [_certs_name_cell(r, popular_slugs)]
         if show_major:
             cells.append(
                 f'<td class="all-certs-cell">{esc(r["major_category"])}</td>')
@@ -1434,9 +1448,9 @@ def _certs_table(items, depth=1, *, show_major=False, show_category=False,
     return table + (_CERTS_TABLE_SCRIPT if with_script else "")
 
 
-def _category_table(items, depth=1):
+def _category_table(items, depth=1, popular_slugs=None):
     """分野別一覧ページ用の表形式HTML（トップの資格一覧と同じ列構成）。"""
-    return _certs_table(items, depth, show_major=True)
+    return _certs_table(items, depth, show_major=True, popular_slugs=popular_slugs)
 
 
 # 大分類のページslug（安定・ローマ字キー）
@@ -1571,7 +1585,7 @@ def industry_tags(r):
     return out
 
 
-def build_category_pages(indexable):
+def build_category_pages(indexable, popular_slugs=None):
     """大分類ごとの一覧ページ（site/bunya/<slug>.html）。"""
     pages = {}
     by_major = {}
@@ -1595,7 +1609,7 @@ def build_category_pages(indexable):
             f"合格率・実施団体・公式サイトを詳細ページで確認できます。</p>"
             f'<p class="muted">区分の内訳: {esc(tparts)}。'
             f"主なカテゴリ: {esc('、'.join(cats[:12]))}{'ほか' if len(cats) > 12 else ''}。</p>"
-            + _category_table(items, depth=1)
+            + _category_table(items, depth=1, popular_slugs=popular_slugs)
             + "</div>"
         )
         ld = [
@@ -1961,7 +1975,7 @@ NAME_BY_SLUG = {}
 INDEXABLE_SLUGS = set()
 
 
-def build_feature_pages(indexable):
+def build_feature_pages(indexable, popular_slugs=None):
     """特集・ランキングページ（site/feature/<slug>.html）。"""
     pub = [r for r in indexable if r["status"] == "published"]
     pages = {}
@@ -2097,10 +2111,12 @@ def build_feature_pages(indexable):
             for major, its in by_major.items():
                 listing += (f'<h2 class="hub-grp">{esc(major)}</h2>'
                             + _certs_table(its, depth=1, show_category=True,
-                                           with_script=False))
+                                           with_script=False,
+                                           popular_slugs=popular_slugs))
             listing += _CERTS_TABLE_SCRIPT
         else:
-            listing = _certs_table(items, depth=1, show_major=True)
+            listing = _certs_table(items, depth=1, show_major=True,
+                                   popular_slugs=popular_slugs)
         body = (
             f'<div class="page-feature">'
             f'<nav class="crumbs"><a href="../index.html">トップ</a> › ガイド</nav>'
@@ -2794,7 +2810,7 @@ SEARCH_JS = """(function(){
       count=document.getElementById('count'),
       heroResult=document.getElementById('heroResult'),
       clearBtn=document.getElementById('clearFilters');
-  var DATA=[], activeTags=new Set(), currentPage=1, PAGE_SIZE=20, resetPage=true;
+  var DATA=[], activeTags=new Set(), currentPage=1, PAGE_SIZE=20, resetPage=true,TROPHY=__TROPHY_HTML__;
   function esc(s){return (s||'').replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
   function fmtN(n){return Number(n).toLocaleString('ja-JP');}
   function shortName(n){return (n||'').replace(/[（(][^）)]*[）)]/g,'').trim()||n;}
@@ -2894,7 +2910,9 @@ SEARCH_JS = """(function(){
       var fee=x.fee?esc(x.fee):'—';
       var pass=x.pass_rate?esc(x.pass_rate):'—';
       return '<tr class="cert-row" tabindex="0" data-href="c/'+esc(x.slug)+'.html">'+
-        '<td class="all-certs-name"><span class="all-certs-name-text">'+esc(shortName(x.name))+'</span></td>'+
+        '<td class="all-certs-name"><span class="all-certs-name-inner">'+
+        (x.popular?TROPHY:'')+
+        '<span class="all-certs-name-text">'+esc(shortName(x.name))+'</span></span></td>'+
         '<td class="all-certs-cell">'+esc(x.major)+'</td>'+
         '<td class="all-certs-cell">'+esc(x.type)+'</td>'+
         '<td class="all-certs-cell all-certs-num">'+fee+'</td>'+
@@ -2971,6 +2989,10 @@ SEARCH_JS = """(function(){
   })();
 })();
 """
+
+SEARCH_JS = SEARCH_JS.replace(
+    "__TROPHY_HTML__",
+    json.dumps(f'<span class="all-certs-trophy" aria-hidden="true">{ICON_TROPHY}</span>'))
 
 
 COMPARE_BAR_JS = """(function(){
@@ -3245,6 +3267,9 @@ html{scroll-padding-top:64px}
 .all-certs-table tbody tr.cert-row:focus-visible{outline:2px solid var(--accent-ring);outline-offset:-2px}
 .all-certs-table tbody tr:last-child td{border-bottom:none}
 .all-certs-name{min-width:12em}
+.all-certs-name-inner{display:inline-flex;align-items:center;gap:6px;max-width:100%}
+.all-certs-trophy{flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;color:#b8860b;background:#f7f3e8;border-radius:4px}
+.all-certs-trophy .icon-svg{width:14px;height:14px}
 .all-certs-name-text{white-space:nowrap;font-weight:600;color:var(--ink-deep)}
 .all-certs-table tbody tr.cert-row:hover .all-certs-name-text{color:var(--accent)}
 .all-certs-cell{font-weight:400;color:var(--ink)}
@@ -3675,12 +3700,11 @@ def main() -> int:
     def _diff_label(r):
         d = difficulty(r)
         return d[0] if d else ""
-    # 「定番」マーク: 受験者数の多い上位80件（一覧で目印として表示）
     _pop_ranked = sorted((r for r in indexable if applicants_num(r) is not None),
-                         key=lambda r: -(applicants_num(r) or 0))
-    POPULAR_SET = set(r["slug"] for r in _pop_ranked[:80])
+                         key=lambda r: (-(applicants_num(r) or 0), r["name"]))
+    popular_set = {r["slug"] for r in _pop_ranked[:80]}
     payload = [{
-        "popular": (r["slug"] in POPULAR_SET),
+        "popular": (r["slug"] in popular_set),
         "slug": r["slug"], "name": r["name"], "major": r["major_category"],
         "category": r["category"], "type": r["type"],
         "authority": r["authority"], "official_url": r["official_url"],
@@ -3716,13 +3740,13 @@ def main() -> int:
 
     # 集約: 分野別一覧
     (SITE / "bunya").mkdir()
-    cat_pages = build_category_pages(indexable)
+    cat_pages = build_category_pages(indexable, popular_set)
     for slug, htmlc in cat_pages.items():
         (SITE / "bunya" / f"{slug}.html").write_text(htmlc, encoding="utf-8")
 
     # 特集
     (SITE / "feature").mkdir()
-    feat_pages = build_feature_pages(indexable)
+    feat_pages = build_feature_pages(indexable, popular_set)
     for slug, htmlc in feat_pages.items():
         (SITE / "feature" / f"{slug}.html").write_text(htmlc, encoding="utf-8")
 

@@ -134,6 +134,9 @@ html{scroll-padding-top:64px}
 .all-certs-table tbody tr.cert-row:focus-visible{outline:2px solid var(--accent-ring);outline-offset:-2px}
 .all-certs-table tbody tr:last-child td{border-bottom:none}
 .all-certs-name{min-width:12em}
+.all-certs-name-inner{display:inline-flex;align-items:center;gap:6px;max-width:100%}
+.all-certs-trophy{flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;color:#b8860b;background:#f7f3e8;border-radius:4px}
+.all-certs-trophy .icon-svg{width:14px;height:14px}
 .all-certs-name-text{white-space:nowrap;font-weight:600;color:var(--ink-deep)}
 .all-certs-table tbody tr.cert-row:hover .all-certs-name-text{color:var(--accent)}
 .all-certs-cell{font-weight:400;color:var(--ink)}
