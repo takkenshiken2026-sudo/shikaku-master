@@ -3298,8 +3298,8 @@ APP_CSS = """:root{
 --accent:#236f64;--accent-hover:#1c5a51;--accent-light:#e6f1ef;--accent-ring:rgba(35,111,100,.22);
 --radius:8px;
 /* テキスト色（3段階）: ink-deep=見出し / ink=本文 / muted=補足。on-dark*=ヘッダー等 */
-/* タイプスケール（4段階）: xl=大見出し / lg=セクション見出し / md=本文・小見出し / sm=補助・メタ */
---text-xl:clamp(1.375rem,4vw,2.25rem);--text-lg:1.25rem;--text-md:1.0625rem;--text-sm:0.875rem;
+/* タイプスケール: xl=大見出し / lg=セクション見出し(20px) / md=本文 / sm=補助・メタ / table=表(15px) */
+--text-xl:clamp(1.375rem,4vw,2.25rem);--text-lg:1.25rem;--text-md:1.0625rem;--text-sm:0.875rem;--text-table:0.9375rem;
 /* フォントウェイト: regular=本文 / semibold=ラベル・カード名・h3 / bold=見出し・強調 */
 --fw-regular:400;--fw-semibold:600;--fw-bold:700;--page-gutter:32px}
 *{box-sizing:border-box}
@@ -3418,9 +3418,9 @@ html{scroll-padding-top:64px}
 .all-certs-check input{width:15px;height:15px;accent-color:var(--accent)}
 .block-all-certs .all-certs-count{font-size:var(--text-sm);color:var(--muted);margin-bottom:12px}
 .all-certs-table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;border:1px solid var(--table-border);border-radius:var(--radius);background:#fff}
-.all-certs-table{width:100%;border-collapse:collapse;background:#fff;border:none;border-radius:0;font-size:var(--text-sm);color:var(--ink)}
-.all-certs-table thead th{text-align:left;padding:11px 14px;background:var(--table-head-bg);color:var(--muted);font-weight:600;font-size:var(--text-sm);border-bottom:1px solid var(--table-border);white-space:nowrap}
-.all-certs-table tbody td{padding:11px 14px;border-bottom:1px solid var(--table-border);vertical-align:middle;line-height:1.5;white-space:nowrap;font-size:var(--text-sm);color:var(--ink)}
+.all-certs-table{width:100%;border-collapse:collapse;background:#fff;border:none;border-radius:0;font-size:var(--text-table);color:var(--ink)}
+.all-certs-table thead th{text-align:left;padding:11px 14px;background:var(--table-head-bg);color:var(--muted);font-weight:600;font-size:var(--text-table);border-bottom:1px solid var(--table-border);white-space:nowrap}
+.all-certs-table tbody td{padding:11px 14px;border-bottom:1px solid var(--table-border);vertical-align:middle;line-height:1.5;white-space:nowrap;font-size:var(--text-table);color:var(--ink)}
 .all-certs-table tbody tr.cert-row{cursor:pointer;transition:background-color .12s ease}
 .all-certs-table tbody tr.cert-row:hover td{background:var(--accent-light)}
 .all-certs-table tbody tr.cert-row:focus-visible{outline:2px solid var(--accent-ring);outline-offset:-2px}
@@ -3755,13 +3755,13 @@ table.cmp tbody th{background:var(--gray-50);color:var(--ink);white-space:nowrap
 .page-detail .note-muted,.page-detail .muted{font-size:inherit;color:var(--muted);font-weight:400}
 .page-detail .fact .l{font-size:var(--text-sm);color:var(--muted)}
 .page-detail .fact .v{font-size:var(--text-md);font-weight:600;color:var(--ink)}
-.page-detail table.spec{font-size:var(--text-sm)}
-.page-detail table.spec th{background:var(--table-head-bg);color:var(--ink);font-weight:var(--fw-semibold);font-size:var(--text-sm)}
+.page-detail table.spec{font-size:var(--text-table)}
+.page-detail table.spec th{background:var(--table-head-bg);color:var(--ink);font-weight:var(--fw-semibold);font-size:var(--text-table)}
 .page-detail table.spec th .spec-th-inner{display:inline-flex;align-items:center;gap:7px}
 .page-detail table.spec th .spec-th-icon{flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;color:var(--muted)}
 .page-detail table.spec th .spec-th-icon .icon-svg{width:16px;height:16px}
 .page-detail table.spec th .spec-th-text{font-weight:inherit;line-height:1.45}
-.page-detail table.spec td{color:var(--ink);font-size:var(--text-sm);font-weight:400;vertical-align:middle}
+.page-detail table.spec td{color:var(--ink);font-size:var(--text-table);font-weight:400;vertical-align:middle}
 .page-detail table.spec tr.spec-row{cursor:pointer;transition:background-color .12s ease}
 .page-detail table.spec tr.spec-row:hover th,.page-detail table.spec tr.spec-row:hover td{background:var(--table-hover-bg)}
 .page-detail table.spec tr.spec-row.is-active th,.page-detail table.spec tr.spec-row.is-active td{background:var(--accent-light)}
@@ -3781,7 +3781,7 @@ table.cmp tbody th{background:var(--gray-50);color:var(--ink);white-space:nowrap
 .page-detail table.spec .mat-foot{margin-top:6px;font-size:inherit;font-weight:400;color:var(--muted);line-height:1.55}
 .page-detail table.spec .ad-disclosure{margin:0 0 6px;padding:8px 10px;font-size:inherit;font-weight:400;color:var(--muted);line-height:1.55;background:var(--table-head-bg);border:1px solid var(--table-border);border-radius:var(--radius)}
 .page-detail table.spec .careers-src,.page-detail table.spec .jobtag,.page-detail table.spec .mat-foot{margin-top:6px}
-.page-detail table.spec .detail-source-note{margin:0;font-size:var(--text-sm);color:var(--muted);line-height:1.65}
+.page-detail table.spec .detail-source-note{margin:0;font-size:inherit;color:var(--muted);line-height:1.65}
 .page-detail .tag-chip{font-size:var(--text-sm);background:var(--gray-50);color:var(--ink);border-color:var(--gray-200)}
 .page-detail .tag-ind{background:var(--gray-50);color:var(--ink);border-color:var(--gray-200)}
 .page-detail a.tag-chip:hover{background:var(--gray-100);border-color:var(--gray-300)}
