@@ -1467,10 +1467,23 @@ def _certs_name_cell(r, popular_slugs=None):
         f'{trophy}<span class="all-certs-name-text">{esc(r["name"])}</span></span></td>')
 
 
+def _all_certs_colgroup(show_major=False):
+    cols = ['<col class="all-certs-col-name">']
+    if show_major:
+        cols.append('<col class="all-certs-col-major">')
+    cols.extend([
+        '<col class="all-certs-col-study">',
+        '<col class="all-certs-col-pass">',
+        '<col class="all-certs-col-freq">',
+    ])
+    return "".join(cols)
+
+
 def _certs_table(items, depth=1, *, show_major=False,
                  with_script=True, popular_slugs=None):
     """資格一覧の表形式HTML（分野・目的別ガイドなどで共用）。"""
     base = "../" * depth
+    col_mod = "all-certs-table--5col" if show_major else "all-certs-table--4col"
     headers = ['<th scope="col">資格名</th>']
     if show_major:
         headers.append('<th scope="col">分野</th>')
@@ -1499,7 +1512,8 @@ def _certs_table(items, depth=1, *, show_major=False,
             + "".join(cells) + "</tr>")
     table = (
         '<div class="all-certs-table-wrap">'
-        '<table class="all-certs-table">'
+        f'<table class="all-certs-table {col_mod}">'
+        f'<colgroup>{_all_certs_colgroup(show_major)}</colgroup>'
         f'<thead><tr>{"".join(headers)}</tr></thead>'
         f'<tbody>{"".join(rows)}</tbody></table></div>')
     return table + (_CERTS_TABLE_SCRIPT if with_script else "")
@@ -2911,7 +2925,8 @@ def build_index(rows) -> str:
   <div class="results-bar"><button type="button" id="clearFilters" class="clear-filters" hidden>× 条件をクリア</button></div>
   <p class="all-certs-count" id="allCertsCount"></p>
   <div class="all-certs-table-wrap">
-    <table class="all-certs-table">
+    <table class="all-certs-table all-certs-table--5col">
+      <colgroup><col class="all-certs-col-name"><col class="all-certs-col-major"><col class="all-certs-col-study"><col class="all-certs-col-pass"><col class="all-certs-col-freq"></colgroup>
       <thead>
         <tr>
           <th scope="col">資格名</th>
@@ -3479,7 +3494,16 @@ html{scroll-padding-top:64px}
 .all-certs-check input{width:15px;height:15px;accent-color:var(--accent)}
 .block-all-certs .all-certs-count{font-size:var(--text-sm);color:var(--muted);margin-bottom:12px}
 .all-certs-table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;border:1px solid var(--table-border);border-radius:var(--radius);background:#fff}
-.all-certs-table{width:100%;border-collapse:collapse;background:#fff;border:none;border-radius:0;font-size:var(--text-table);color:var(--ink)}
+.all-certs-table{width:100%;border-collapse:collapse;background:#fff;border:none;border-radius:0;font-size:var(--text-table);color:var(--ink);table-layout:fixed}
+.all-certs-table--4col col.all-certs-col-name{width:34%}
+.all-certs-table--4col col.all-certs-col-study{width:16%}
+.all-certs-table--4col col.all-certs-col-pass{width:12%}
+.all-certs-table--4col col.all-certs-col-freq{width:38%}
+.all-certs-table--5col col.all-certs-col-name{width:28%}
+.all-certs-table--5col col.all-certs-col-major{width:14%}
+.all-certs-table--5col col.all-certs-col-study{width:14%}
+.all-certs-table--5col col.all-certs-col-pass{width:10%}
+.all-certs-table--5col col.all-certs-col-freq{width:34%}
 .all-certs-table thead th{text-align:left;padding:11px 14px;background:var(--table-head-bg);color:var(--ink);font-weight:var(--fw-regular);font-size:var(--text-table);border-bottom:1px solid var(--table-border);white-space:nowrap}
 .all-certs-table tbody td{padding:11px 14px;border-bottom:1px solid var(--table-border);vertical-align:middle;line-height:1.5;white-space:nowrap;font-size:var(--text-table);color:var(--ink)}
 .all-certs-table tbody tr.cert-row{cursor:pointer;transition:background-color .12s ease}
@@ -3775,13 +3799,13 @@ table.cmp tbody th{background:var(--gray-50);color:var(--ink);white-space:nowrap
 .detail-related .more-same li{break-inside:avoid;margin:2px 0}
 @media(max-width:560px){.detail-related .more-same ul{columns:1}}
 .detail-spec{margin-bottom:4px}
-.spec-sections{display:flex;flex-direction:column;gap:24px}
+.spec-sections{display:flex;flex-direction:column;gap:24px;--spec-label-w:14.5rem}
 .spec-section{margin:0}
 .page-detail .spec-sections table.spec{table-layout:fixed;width:100%}
-.page-detail .spec-sections table.spec col.spec-col-label{width:38%}
-.page-detail .spec-sections table.spec col.spec-col-value{width:62%}
-.page-detail .spec-sections table.spec th{width:38%;box-sizing:border-box}
-.page-detail .spec-sections table.spec td{width:62%;box-sizing:border-box}
+.page-detail .spec-sections table.spec col.spec-col-label{width:var(--spec-label-w)}
+.page-detail .spec-sections table.spec col.spec-col-value{width:auto}
+.page-detail .spec-sections table.spec th{width:var(--spec-label-w);box-sizing:border-box}
+.page-detail .spec-sections table.spec td{box-sizing:border-box;width:auto}
 .spec-section-title{font-size:var(--text-md);font-weight:var(--fw-semibold);color:var(--ink-deep);margin:0 0 8px;line-height:1.4}
 .detail-source{margin-top:22px;padding:14px 0 0;border-top:1px solid var(--gray-200);font-size:var(--text-sm);color:var(--muted);line-height:1.65}
 .detail-source p{margin:0 0 5px}.detail-source .k{font-weight:600;color:var(--muted)}
