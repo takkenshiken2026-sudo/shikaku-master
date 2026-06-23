@@ -510,6 +510,7 @@ table.cmp tbody th{background:var(--gray-50);color:var(--ink);white-space:nowrap
 .page-detail table.spec tr.spec-row.is-active th,.page-detail table.spec tr.spec-row.is-active td{background:var(--accent-light)}
 .page-detail table.spec tr.spec-row:focus-visible{outline:2px solid var(--accent-ring);outline-offset:-2px}
 .page-detail table.spec .badge{font-size:var(--text-sm);font-weight:600;vertical-align:middle}
+.page-detail table.spec .diff-badge{vertical-align:middle}
 .page-detail table.spec .tag-chip,.page-detail table.spec .tag-ind{font-size:inherit;font-weight:var(--fw-regular);color:var(--ink);background:var(--gray-100);border-color:var(--table-border)}
 .page-detail table.spec a.tag-chip:hover{background:var(--table-hover-bg);border-color:var(--table-border);color:var(--ink)}
 .page-detail table.spec .spec-list{list-style:disc;margin:.15em 0 .3em;padding-left:1.25em;font-size:inherit}

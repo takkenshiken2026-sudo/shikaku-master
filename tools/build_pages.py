@@ -812,9 +812,8 @@ def build_detail(row, popular_slugs=None) -> str:
         spec_exam.append(("受験者数", esc(fmt_nums_in_text(ed["applicants"]))))
     diff = difficulty(row)
     if diff:
-        dlabel, dcls = diff
         spec_exam.append(("難易度の目安",
-                          esc(dlabel)
+                          _diff_badge_html(row)
                           + f' <span class="note-muted">（公表合格率 {esc(pass_rate_display(row["pass_rate"]))} に基づく簡易目安）</span>'))
     dr = DIFFICULTY_RANK.get(row["slug"])
     if dr:
@@ -1235,6 +1234,14 @@ def difficulty(r):
     if p < 80:
         return ("比較的やさしい", "diff-easy")
     return ("入門〜標準", "diff-veryeasy")
+
+
+def _diff_badge_html(r):
+    d = difficulty(r)
+    if not d:
+        return ""
+    label, cls = d
+    return f'<span class="diff-badge {cls}">{esc(label)}</span>'
 
 
 def study_hours_max(slug):
@@ -2442,11 +2449,8 @@ def build_comparison_pages(indexable):
         return esc(v) if v else f'<span class="muted">{fallback}</span>'
 
     def diff_cell(r):
-        d = difficulty(r)
-        if not d:
-            return '<span class="muted">―</span>'
-        label, cls = d
-        return f'<span class="diff-badge {cls}">{esc(label)}</span>'
+        html = _diff_badge_html(r)
+        return html if html else '<span class="muted">―</span>'
 
     for pslug, sa, sb, intro in COMPARE_PAIRS:
         ra, rb = by_slug.get(sa), by_slug.get(sb)
@@ -3878,6 +3882,7 @@ table.cmp tbody th{background:var(--gray-50);color:var(--ink);white-space:nowrap
 .page-detail table.spec tr.spec-row.is-active th,.page-detail table.spec tr.spec-row.is-active td{background:var(--accent-light)}
 .page-detail table.spec tr.spec-row:focus-visible{outline:2px solid var(--accent-ring);outline-offset:-2px}
 .page-detail table.spec .badge{font-size:var(--text-sm);font-weight:600;vertical-align:middle}
+.page-detail table.spec .diff-badge{vertical-align:middle}
 .page-detail table.spec .tag-chip,.page-detail table.spec .tag-ind{font-size:inherit;font-weight:var(--fw-regular);color:var(--ink);background:var(--gray-100);border-color:var(--table-border)}
 .page-detail table.spec a.tag-chip:hover{background:var(--table-hover-bg);border-color:var(--table-border);color:var(--ink)}
 .page-detail table.spec .spec-list{list-style:disc;margin:.15em 0 .3em;padding-left:1.25em;font-size:inherit}
