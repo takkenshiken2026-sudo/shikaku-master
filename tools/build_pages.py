@@ -3437,7 +3437,7 @@ html{scroll-padding-top:64px}
 .container{max-width:1200px;margin:0 auto;padding:28px var(--page-gutter) 36px;width:100%;flex:1 0 auto;min-width:0;background:#fff;box-shadow:0 0 24px rgba(0,0,0,.05)}
 
 /* Hero */
-.hero{margin:-28px calc(-1*var(--page-gutter)) 0;padding:64px var(--page-gutter) 48px;margin-bottom:0;text-align:center;background:var(--gray-50)}
+.hero{margin:-28px calc(-1*var(--page-gutter)) 0;padding:64px var(--page-gutter) 48px;margin-bottom:0;text-align:center;background:var(--page-bg)}
 .hero h1{font-weight:700;line-height:1.4;margin:0 0 16px;letter-spacing:.02em}
 .hero-h1-line{display:block;font-size:var(--text-xl);font-weight:700;color:var(--ink-deep);letter-spacing:.02em}
 .hero-h1-line+.hero-h1-line{margin-top:2px}
