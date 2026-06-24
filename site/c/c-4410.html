@@ -94,19 +94,7 @@
   });
 })();
 </script></section>
-<nav class="detail-nav" aria-label="関連する資格への導線"><div class="detail-nav-block"><h2 class="detail-nav-head">ほかの資格を見る・比較する</h2><h3 class="detail-nav-subhead">同じ分野の他の資格</h3><ul class="detail-link-grid" id="relatedGrid"></ul><h3 class="detail-nav-subhead">もっと探す</h3><ul class="detail-link-grid"><li class="detail-link-item"><a href="../bunya/food.html">食品・調理・栄養の資格一覧</a></li><li class="detail-link-item"><a href="../feature/cbt.html">在宅・CBTで受けられる資格</a></li><li class="detail-link-item"><a href="../feature/cheap.html">受験料が安い資格ランキング</a></li><li class="detail-link-item"><a href="../feature/high-pass.html">合格率が高い資格</a></li></ul></div><script>
-fetch("../data/certifications.json").then(r=>r.json()).then(all=>{
-  const cat="調理等", me="c-4410";
-  const ul=document.getElementById("relatedGrid");
-  all.filter(x=>x.category===cat&&x.slug!==me).slice(0,8).forEach(x=>{
-    const li=document.createElement("li");
-    li.className="detail-link-item";
-    li.innerHTML='<a href="'+x.slug+'.html">'+x.name+'</a>';
-    ul.appendChild(li);
-  });
-  if(!ul.children.length) ul.innerHTML='<li class="detail-link-item muted">なし</li>';
-});
-</script></nav>
+<nav class="detail-nav" aria-label="関連する資格への導線"><div class="detail-nav-block"><h2 class="detail-nav-head">ほかの資格を見る・比較する</h2><h3 class="detail-nav-subhead">同じ分野の他の資格</h3><ul class="detail-link-grid"><li class="detail-link-item"><a href="c-4403.html">ふぐ調理師</a></li><li class="detail-link-item"><a href="c-4413.html">ソムリエ</a></li><li class="detail-link-item"><a href="c-4412.html">三級惣菜管理士</a></li><li class="detail-link-item"><a href="c-4411.html">二級惣菜管理士</a></li><li class="detail-link-item"><a href="c-4402.html">専門調理師・調理技能士</a></li><li class="detail-link-item"><a href="c-4401.html">調理師</a></li><li class="detail-link-item"><a href="c-4414.html">野菜ソムリエ</a></li><li class="detail-link-item"><a href="c-4404.html">鮮魚士(1級)</a></li></ul><h3 class="detail-nav-subhead">もっと探す</h3><ul class="detail-link-grid"><li class="detail-link-item"><a href="../bunya/food.html">食品・調理・栄養の資格一覧</a></li><li class="detail-link-item"><a href="../feature/cbt.html">在宅・CBTで受けられる資格</a></li><li class="detail-link-item"><a href="../feature/cheap.html">受験料が安い資格ランキング</a></li><li class="detail-link-item"><a href="../feature/high-pass.html">合格率が高い資格</a></li></ul></div></nav>
 <script>(function(){try{var k='recent',a=JSON.parse(localStorage.getItem(k)||'[]');a=a.filter(function(x){return x.s!=='c-4410';});a.unshift({s:'c-4410',n:'一級惣菜管理士'});a=a.slice(0,8);localStorage.setItem(k,JSON.stringify(a));}catch(e){}})();</script>
 </div>
 </main>

@@ -93,19 +93,7 @@
   });
 })();
 </script></section>
-<nav class="detail-nav" aria-label="関連する資格への導線"><div class="detail-nav-block"><h2 class="detail-nav-head">ほかの資格を見る・比較する</h2><h3 class="detail-nav-subhead">同じ分野の他の資格</h3><ul class="detail-link-grid" id="relatedGrid"></ul><h3 class="detail-nav-subhead">もっと探す</h3><ul class="detail-link-grid"><li class="detail-link-item"><a href="../bunya/electric.html">電気・通信の資格一覧</a></li><li class="detail-link-item"><a href="../feature/national.html">国家資格の一覧</a></li><li class="detail-link-item"><a href="../feature/no-requirement.html">受験資格なしで受けられる資格</a></li><li class="detail-link-item"><a href="../feature/cheap.html">受験料が安い資格ランキング</a></li><li class="detail-link-item"><a href="../feature/high-pass.html">合格率が高い資格</a></li></ul></div><script>
-fetch("../data/certifications.json").then(r=>r.json()).then(all=>{
-  const cat="通信", me="c-5004";
-  const ul=document.getElementById("relatedGrid");
-  all.filter(x=>x.category===cat&&x.slug!==me).slice(0,8).forEach(x=>{
-    const li=document.createElement("li");
-    li.className="detail-link-item";
-    li.innerHTML='<a href="'+x.slug+'.html">'+x.name+'</a>';
-    ul.appendChild(li);
-  });
-  if(!ul.children.length) ul.innerHTML='<li class="detail-link-item muted">なし</li>';
-});
-</script></nav>
+<nav class="detail-nav" aria-label="関連する資格への導線"><div class="detail-nav-block"><h2 class="detail-nav-head">ほかの資格を見る・比較する</h2><h3 class="detail-nav-subhead">同じ分野の他の資格</h3><ul class="detail-link-grid"><li class="detail-link-item"><a href="c-5011.html">国内電信級陸上特殊無線技士</a></li><li class="detail-link-item"><a href="c-5001.html">第1級総合無線通信士</a></li><li class="detail-link-item"><a href="c-5002.html">第2級総合無線通信士</a></li><li class="detail-link-item"><a href="c-5003.html">第3級総合無線通信士</a></li><li class="detail-link-item"><a href="c-5006.html">第一級陸上無線技術士</a></li><li class="detail-link-item"><a href="c-5008.html">第一級陸上特殊無線技士</a></li><li class="detail-link-item"><a href="c-5010.html">第三級陸上特殊無線技士</a></li><li class="detail-link-item"><a href="c-5007.html">第二級陸上無線技術士</a></li></ul><h3 class="detail-nav-subhead">もっと探す</h3><ul class="detail-link-grid"><li class="detail-link-item"><a href="../bunya/electric.html">電気・通信の資格一覧</a></li><li class="detail-link-item"><a href="../feature/national.html">国家資格の一覧</a></li><li class="detail-link-item"><a href="../feature/no-requirement.html">受験資格なしで受けられる資格</a></li><li class="detail-link-item"><a href="../feature/cheap.html">受験料が安い資格ランキング</a></li><li class="detail-link-item"><a href="../feature/high-pass.html">合格率が高い資格</a></li></ul></div></nav>
 <script>(function(){try{var k='recent',a=JSON.parse(localStorage.getItem(k)||'[]');a=a.filter(function(x){return x.s!=='c-5004';});a.unshift({s:'c-5004',n:'航空無線通信士'});a=a.slice(0,8);localStorage.setItem(k,JSON.stringify(a));}catch(e){}})();</script>
 </div>
 </main>

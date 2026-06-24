@@ -93,19 +93,7 @@
   });
 })();
 </script></section>
-<nav class="detail-nav" aria-label="関連する資格への導線"><div class="detail-nav-block"><h2 class="detail-nav-head">ほかの資格を見る・比較する</h2><h3 class="detail-nav-subhead">同じ分野の他の資格</h3><ul class="detail-link-grid" id="relatedGrid"></ul><h3 class="detail-nav-subhead">もっと探す</h3><ul class="detail-link-grid"><li class="detail-link-item"><a href="../bunya/manufacturing.html">機械・電気・ものづくりの資格一覧</a></li><li class="detail-link-item"><a href="../feature/national.html">国家資格の一覧</a></li><li class="detail-link-item"><a href="../feature/cheap.html">受験料が安い資格ランキング</a></li><li class="detail-link-item"><a href="../feature/high-pass.html">合格率が高い資格</a></li></ul></div><script>
-fetch("../data/certifications.json").then(r=>r.json()).then(all=>{
-  const cat="輸送用機械組立・修理・検査", me="c-5814";
-  const ul=document.getElementById("relatedGrid");
-  all.filter(x=>x.category===cat&&x.slug!==me).slice(0,8).forEach(x=>{
-    const li=document.createElement("li");
-    li.className="detail-link-item";
-    li.innerHTML='<a href="'+x.slug+'.html">'+x.name+'</a>';
-    ul.appendChild(li);
-  });
-  if(!ul.children.length) ul.innerHTML='<li class="detail-link-item muted">なし</li>';
-});
-</script></nav>
+<nav class="detail-nav" aria-label="関連する資格への導線"><div class="detail-nav-block"><h2 class="detail-nav-head">ほかの資格を見る・比較する</h2><h3 class="detail-nav-subhead">同じ分野の他の資格</h3><ul class="detail-link-grid"><li class="detail-link-item"><a href="c-5808.html">1級産業車両整備技能士</a></li><li class="detail-link-item"><a href="c-5810.html">1級鉄道車両製造・整備技能士</a></li><li class="detail-link-item"><a href="c-5809.html">2級産業車両整備技能士</a></li><li class="detail-link-item"><a href="c-5811.html">2級鉄道車両製造・整備技能士</a></li><li class="detail-link-item"><a href="c-5804.html">一等航空整備士</a></li><li class="detail-link-item"><a href="c-5824.html">一級大型自動車整備士</a></li><li class="detail-link-item"><a href="c-5825.html">一級小型自動車整備士</a></li><li class="detail-link-item"><a href="c-5815.html">三級自動車ガソリン・エンジン整備士</a></li></ul><h3 class="detail-nav-subhead">もっと探す</h3><ul class="detail-link-grid"><li class="detail-link-item"><a href="../bunya/manufacturing.html">機械・電気・ものづくりの資格一覧</a></li><li class="detail-link-item"><a href="../feature/national.html">国家資格の一覧</a></li><li class="detail-link-item"><a href="../feature/cheap.html">受験料が安い資格ランキング</a></li><li class="detail-link-item"><a href="../feature/high-pass.html">合格率が高い資格</a></li></ul></div></nav>
 <script>(function(){try{var k='recent',a=JSON.parse(localStorage.getItem(k)||'[]');a=a.filter(function(x){return x.s!=='c-5814';});a.unshift({s:'c-5814',n:'二級ジーゼル自動車整備士'});a=a.slice(0,8);localStorage.setItem(k,JSON.stringify(a));}catch(e){}})();</script>
 </div>
 </main>

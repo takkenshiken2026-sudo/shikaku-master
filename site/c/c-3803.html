@@ -93,19 +93,7 @@
   });
 })();
 </script></section>
-<nav class="detail-nav" aria-label="関連する資格への導線"><div class="detail-nav-block"><h2 class="detail-nav-head">ほかの資格を見る・比較する</h2><h3 class="detail-nav-subhead">同じ分野の他の資格</h3><ul class="detail-link-grid" id="relatedGrid"></ul><h3 class="detail-nav-subhead">もっと探す</h3><ul class="detail-link-grid"><li class="detail-link-item"><a href="../bunya/it.html">IT・情報処理の資格一覧</a></li><li class="detail-link-item"><a href="../feature/cheap.html">受験料が安い資格ランキング</a></li><li class="detail-link-item"><a href="../feature/high-pass.html">合格率が高い資格</a></li></ul></div><script>
-fetch("../data/certifications.json").then(r=>r.json()).then(all=>{
-  const cat="OA機器操作", me="c-3803";
-  const ul=document.getElementById("relatedGrid");
-  all.filter(x=>x.category===cat&&x.slug!==me).slice(0,8).forEach(x=>{
-    const li=document.createElement("li");
-    li.className="detail-link-item";
-    li.innerHTML='<a href="'+x.slug+'.html">'+x.name+'</a>';
-    ul.appendChild(li);
-  });
-  if(!ul.children.length) ul.innerHTML='<li class="detail-link-item muted">なし</li>';
-});
-</script></nav>
+<nav class="detail-nav" aria-label="関連する資格への導線"><div class="detail-nav-block"><h2 class="detail-nav-head">ほかの資格を見る・比較する</h2><h3 class="detail-nav-subhead">同じ分野の他の資格</h3><ul class="detail-link-grid"><li class="detail-link-item"><a href="c-3848.html">Accessビジネスデータベース技能認定試験</a></li><li class="detail-link-item"><a href="c-3849.html">Excel表計算処理技能認定試験1級</a></li><li class="detail-link-item"><a href="c-3850.html">Excel表計算処理技能認定試験2級</a></li><li class="detail-link-item"><a href="c-3851.html">Excel表計算処理技能認定試験3級</a></li><li class="detail-link-item"><a href="c-3812.html">ICTプロフィシエンシー検定(P検)1級</a></li><li class="detail-link-item"><a href="c-3813.html">ICTプロフィシエンシー検定(P検)2級</a></li><li class="detail-link-item"><a href="c-3814.html">ICTプロフィシエンシー検定(P検)3級</a></li><li class="detail-link-item"><a href="c-3839.html">MOS Access</a></li></ul><h3 class="detail-nav-subhead">もっと探す</h3><ul class="detail-link-grid"><li class="detail-link-item"><a href="../bunya/it.html">IT・情報処理の資格一覧</a></li><li class="detail-link-item"><a href="../feature/cheap.html">受験料が安い資格ランキング</a></li><li class="detail-link-item"><a href="../feature/high-pass.html">合格率が高い資格</a></li></ul></div></nav>
 <script>(function(){try{var k='recent',a=JSON.parse(localStorage.getItem(k)||'[]');a=a.filter(function(x){return x.s!=='c-3803';});a.unshift({s:'c-3803',n:'日本語ワープロ検定3級'});a=a.slice(0,8);localStorage.setItem(k,JSON.stringify(a));}catch(e){}})();</script>
 </div>
 </main>

@@ -93,19 +93,7 @@
   });
 })();
 </script></section>
-<nav class="detail-nav" aria-label="関連する資格への導線"><div class="detail-nav-block"><h3 class="detail-nav-subhead detail-nav-subhead-title">あわせて取りたい資格</h3><ul class="detail-link-list"><li class="detail-link-item"><a href="c-3322.html">TOEIC(730点~)</a><span class="detail-link-desc">スコア×級認定の両面で語学力を証明できる</span></li></ul><h3 class="detail-nav-subhead detail-nav-subhead-title">よく比較される資格</h3><div class="detail-compare-row"><a href="../vs/toeic-eiken.html">TOEIC(730点~)との違い</a></div><p class="detail-nav-note">※免除・受験資格の要件は変更されることがあります。出願前に必ず各資格の公式情報でご確認ください。</p></div><div class="detail-nav-block"><h2 class="detail-nav-head">ほかの資格を見る・比較する</h2><h3 class="detail-nav-subhead">同じ分野の他の資格</h3><ul class="detail-link-grid" id="relatedGrid"></ul><h3 class="detail-nav-subhead">もっと探す</h3><ul class="detail-link-grid"><li class="detail-link-item"><a href="../bunya/language.html">語学・コミュニケーションの資格一覧</a></li><li class="detail-link-item"><a href="../feature/public.html">公的資格の一覧</a></li><li class="detail-link-item"><a href="../feature/no-requirement.html">受験資格なしで受けられる資格</a></li><li class="detail-link-item"><a href="../feature/cheap.html">受験料が安い資格ランキング</a></li><li class="detail-link-item"><a href="../feature/high-pass.html">合格率が高い資格</a></li></ul></div><script>
-fetch("../data/certifications.json").then(r=>r.json()).then(all=>{
-  const cat="翻訳・語学", me="c-3308";
-  const ul=document.getElementById("relatedGrid");
-  all.filter(x=>x.category===cat&&x.slug!==me).slice(0,8).forEach(x=>{
-    const li=document.createElement("li");
-    li.className="detail-link-item";
-    li.innerHTML='<a href="'+x.slug+'.html">'+x.name+'</a>';
-    ul.appendChild(li);
-  });
-  if(!ul.children.length) ul.innerHTML='<li class="detail-link-item muted">なし</li>';
-});
-</script></nav>
+<nav class="detail-nav" aria-label="関連する資格への導線"><div class="detail-nav-block"><h3 class="detail-nav-subhead detail-nav-subhead-title">あわせて取りたい資格</h3><ul class="detail-link-list"><li class="detail-link-item"><a href="c-3322.html">TOEIC(730点~)</a><span class="detail-link-desc">スコア×級認定の両面で語学力を証明できる</span></li></ul><h3 class="detail-nav-subhead detail-nav-subhead-title">よく比較される資格</h3><div class="detail-compare-row"><a href="../vs/toeic-eiken.html">TOEIC(730点~)との違い</a></div><p class="detail-nav-note">※免除・受験資格の要件は変更されることがあります。出願前に必ず各資格の公式情報でご確認ください。</p></div><div class="detail-nav-block"><h2 class="detail-nav-head">ほかの資格を見る・比較する</h2><h3 class="detail-nav-subhead">同じ分野の他の資格</h3><ul class="detail-link-grid"><li class="detail-link-item"><a href="c-3334.html">HSK漢語水平考試</a></li><li class="detail-link-item"><a href="c-3324.html">TOEIC(470点~)</a></li><li class="detail-link-item"><a href="c-3323.html">TOEIC(600点~)</a></li><li class="detail-link-item"><a href="c-3322.html">TOEIC(730点~)</a></li><li class="detail-link-item"><a href="c-3327.html">ドイツ語技能検定1級</a></li><li class="detail-link-item"><a href="c-3328.html">ドイツ語技能検定2級</a></li><li class="detail-link-item"><a href="c-3331.html">ハングル能力検定1級</a></li><li class="detail-link-item"><a href="c-3332.html">ハングル能力検定2級</a></li></ul><h3 class="detail-nav-subhead">もっと探す</h3><ul class="detail-link-grid"><li class="detail-link-item"><a href="../bunya/language.html">語学・コミュニケーションの資格一覧</a></li><li class="detail-link-item"><a href="../feature/public.html">公的資格の一覧</a></li><li class="detail-link-item"><a href="../feature/no-requirement.html">受験資格なしで受けられる資格</a></li><li class="detail-link-item"><a href="../feature/cheap.html">受験料が安い資格ランキング</a></li><li class="detail-link-item"><a href="../feature/high-pass.html">合格率が高い資格</a></li></ul></div></nav>
 <script>(function(){try{var k='recent',a=JSON.parse(localStorage.getItem(k)||'[]');a=a.filter(function(x){return x.s!=='c-3308';});a.unshift({s:'c-3308',n:'実用英語技能検定準1級'});a=a.slice(0,8);localStorage.setItem(k,JSON.stringify(a));}catch(e){}})();</script>
 </div>
 </main>
