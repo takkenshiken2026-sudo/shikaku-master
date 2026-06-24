@@ -224,7 +224,7 @@ def load_guides():
             s = (r.get("slug") or "").strip()
             if not s:
                 continue
-            g = {k: (r.get(k) or "").strip() for k in ("suited", "study", "career")}
+            g = {k: (r.get(k) or "").strip() for k in ("suited", "study", "career", "steps")}
             if any(g.values()):
                 out[s] = g
     return out
@@ -1090,6 +1090,13 @@ def build_detail(row, popular_slugs=None) -> str:
                                if key == "suited" else
                                f'<h3 class="guide-h">{esc(head)}</h3>')
                 _blocks.append(f'<p>{esc(_g[key])}</p>')
+            # 勉強法の直後に学習ステップ（番号付き手順）を挿入
+            if key == "study" and _g.get("steps"):
+                _steps = [s.strip() for s in _g["steps"].split("|") if s.strip()]
+                if _steps:
+                    _li = "".join(f"<li>{esc(s)}</li>" for s in _steps)
+                    _blocks.append('<h3 class="guide-h">学習ステップの目安</h3>'
+                                   f'<ol class="guide-steps">{_li}</ol>')
         guide_html = (f'<section class="detail-guide" aria-labelledby="guide-h">'
                       f'<h2 class="detail-section-title" id="guide-h">{esc(name)}の受験・活用ガイド</h2>'
                       f'{"".join(_blocks)}'
@@ -3857,6 +3864,8 @@ html{scroll-padding-top:64px}
 .detail-guide .guide-h{font-size:1.02rem;margin:14px 0 4px;color:var(--ink-deep)}
 .detail-guide p{line-height:1.85;color:var(--ink,#333);margin:.2em 0 .6em}
 .detail-guide .guide-note{font-size:var(--text-sm);color:var(--muted)}
+.guide-steps{margin:.3em 0 .8em;padding-left:1.4em}
+.guide-steps li{line-height:1.8;color:var(--ink,#333);margin:.2em 0}
 .finder-grid{list-style:none;padding:0;display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:10px 0}
 .finder-card a{display:flex;flex-direction:column;gap:3px;padding:13px 15px;background:var(--gray-50);border:1px solid var(--gray-200);border-radius:var(--radius);text-decoration:none;height:100%}
 .finder-card a:hover{border-color:var(--accent,#2a7a6e)}
