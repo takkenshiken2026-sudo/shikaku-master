@@ -682,12 +682,12 @@ def fmt_nums_in_text(s: str) -> str:
 
 
 def page_shell(title: str, body: str, depth: int, noindex: bool = True,
-               desc: str = "", path: str = "", jsonld=None) -> str:
+               desc: str = "", path: str = "", jsonld=None, og_image: str = "") -> str:
     base = "../" * depth
     robots = ('<meta name="robots" content="noindex">\n' if noindex else "")
     desc = desc or SITE_DESC
     canon = BASE_URL + "/" + path
-    og_img = BASE_URL + "/assets/og.png"
+    og_img = og_image or (BASE_URL + "/assets/og.png")
     og = (f'<link rel="canonical" href="{esc(canon)}">\n'
           f'<meta property="og:type" content="website">\n'
           f'<meta property="og:site_name" content="{esc(SITE_NAME)}">\n'
@@ -1114,9 +1114,13 @@ def build_detail(row, popular_slugs=None) -> str:
     if ed.get("exam_subjects"):
         credential["competencyRequired"] = ed["exam_subjects"][:300]
     ld = [breadcrumb, credential] + ([faq] if faq else [])
+    indexable = is_indexable_detail(row)
+    # index対象の詳細ページは資格ごとの個別OG画像を使う（build_og.pyがCIで生成）
+    og_image = (f"{BASE_URL}/assets/ogp/{row['slug']}.png" if indexable else "")
     return page_shell(f"{name}｜{SITE_NAME}", body, depth=1,
-                      noindex=(not is_indexable_detail(row)),
-                      desc=desc, path=f'c/{row["slug"]}.html', jsonld=ld)
+                      noindex=(not indexable),
+                      desc=desc, path=f'c/{row["slug"]}.html', jsonld=ld,
+                      og_image=og_image)
 
 
 def fee_yen(r):
