@@ -577,28 +577,22 @@ def detail_nav_html(slug, cat, rel_links, vs_pairs):
             for u, t in rel_links)
         + "</ul>")
 
-    related_js = f"""<script>
-fetch("../data/certifications.json").then(r=>r.json()).then(all=>{{
-  const cat={json.dumps(cat, ensure_ascii=False)}, me={json.dumps(slug, ensure_ascii=False)};
-  const ul=document.getElementById("relatedGrid");
-  all.filter(x=>x.category===cat&&x.slug!==me).slice(0,8).forEach(x=>{{
-    const li=document.createElement("li");
-    li.className="detail-link-item";
-    li.innerHTML='<a href="'+x.slug+'.html">'+x.name+'</a>';
-    ul.appendChild(li);
-  }});
-  if(!ul.children.length) ul.innerHTML='<li class="detail-link-item muted">なし</li>';
-}});
-</script>"""
+    # 同分野の関連資格はビルド時に静的生成（787KBのJSON fetchを排除し、クローラビリティとLCPを改善）
+    related_peers = [(s, n) for s, n in CERTS_BY_CATEGORY.get(cat, []) if s != slug][:8]
+    if related_peers:
+        related_items = "".join(
+            f'<li class="detail-link-item"><a href="{esc(s)}.html">{esc(n)}</a></li>'
+            for s, n in related_peers)
+    else:
+        related_items = '<li class="detail-link-item muted">なし</li>'
 
     block2 = (
         '<div class="detail-nav-block">'
         '<h2 class="detail-nav-head">ほかの資格を見る・比較する</h2>'
         '<h3 class="detail-nav-subhead">同じ分野の他の資格</h3>'
-        '<ul class="detail-link-grid" id="relatedGrid"></ul>'
+        f'<ul class="detail-link-grid">{related_items}</ul>'
         + more_grid
-        + '</div>'
-        + related_js)
+        + '</div>')
 
     return f'<nav class="detail-nav" aria-label="関連する資格への導線">{block1}{block2}</nav>'
 
@@ -2152,6 +2146,8 @@ for _ps, _a, _b, _ in COMPARE_PAIRS:
 # main() で設定（詳細→比較リンクの表示名・存在判定に使用）
 NAME_BY_SLUG = {}
 INDEXABLE_SLUGS = set()
+# category → [(slug, name), ...]（同分野の関連資格を静的生成するための索引。main()で投入）
+CERTS_BY_CATEGORY = {}
 
 
 def build_feature_pages(indexable, popular_slugs=None):
@@ -3973,6 +3969,11 @@ def main() -> int:
     indexable = [r for r in rows
                  if r["is_bucket"] == "0" and r["is_duplicate"] == "0"
                  and r["scope"] == "domestic"]
+
+    # 同分野の関連資格を静的生成するための索引（787KB JSONのfetchを詳細ページから排除）
+    CERTS_BY_CATEGORY.clear()
+    for r in sorted(indexable, key=lambda x: (x["major_category"], x["category"], x["name"])):
+        CERTS_BY_CATEGORY.setdefault(r["category"], []).append((r["slug"], r["name"]))
 
     # 詳細→比較ページの相互リンク用グローバルを設定
     NAME_BY_SLUG.update({r["slug"]: r["name"] for r in rows})

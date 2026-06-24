@@ -93,19 +93,7 @@
   });
 })();
 </script></section>
-<nav class="detail-nav" aria-label="関連する資格への導線"><div class="detail-nav-block"><h2 class="detail-nav-head">ほかの資格を見る・比較する</h2><h3 class="detail-nav-subhead">同じ分野の他の資格</h3><ul class="detail-link-grid" id="relatedGrid"></ul><h3 class="detail-nav-subhead">もっと探す</h3><ul class="detail-link-grid"><li class="detail-link-item"><a href="../bunya/manufacturing.html">機械・電気・ものづくりの資格一覧</a></li><li class="detail-link-item"><a href="../feature/national.html">国家資格の一覧</a></li><li class="detail-link-item"><a href="../feature/cheap.html">受験料が安い資格ランキング</a></li><li class="detail-link-item"><a href="../feature/high-pass.html">合格率が高い資格</a></li></ul></div><script>
-fetch("../data/certifications.json").then(r=>r.json()).then(all=>{
-  const cat="その他の製造・制作", me="c-6609";
-  const ul=document.getElementById("relatedGrid");
-  all.filter(x=>x.category===cat&&x.slug!==me).slice(0,8).forEach(x=>{
-    const li=document.createElement("li");
-    li.className="detail-link-item";
-    li.innerHTML='<a href="'+x.slug+'.html">'+x.name+'</a>';
-    ul.appendChild(li);
-  });
-  if(!ul.children.length) ul.innerHTML='<li class="detail-link-item muted">なし</li>';
-});
-</script></nav>
+<nav class="detail-nav" aria-label="関連する資格への導線"><div class="detail-nav-block"><h2 class="detail-nav-head">ほかの資格を見る・比較する</h2><h3 class="detail-nav-subhead">同じ分野の他の資格</h3><ul class="detail-link-grid"><li class="detail-link-item"><a href="c-6625.html">1級テクニカルイラストレーション技能士</a></li><li class="detail-link-item"><a href="c-6603.html">1級塗装技能士</a></li><li class="detail-link-item"><a href="c-6635.html">1級工業包装技能士</a></li><li class="detail-link-item"><a href="c-6606.html">1級広告美術仕上げ技能士</a></li><li class="detail-link-item"><a href="c-6630.html">1級機械・プラント製図技能士</a></li><li class="detail-link-item"><a href="c-6601.html">1級表装技能士</a></li><li class="detail-link-item"><a href="c-6632.html">1級電気製図技能士</a></li><li class="detail-link-item"><a href="c-6626.html">2級テクニカルイラストレーション技能士</a></li></ul><h3 class="detail-nav-subhead">もっと探す</h3><ul class="detail-link-grid"><li class="detail-link-item"><a href="../bunya/manufacturing.html">機械・電気・ものづくりの資格一覧</a></li><li class="detail-link-item"><a href="../feature/national.html">国家資格の一覧</a></li><li class="detail-link-item"><a href="../feature/cheap.html">受験料が安い資格ランキング</a></li><li class="detail-link-item"><a href="../feature/high-pass.html">合格率が高い資格</a></li></ul></div></nav>
 <script>(function(){try{var k='recent',a=JSON.parse(localStorage.getItem(k)||'[]');a=a.filter(function(x){return x.s!=='c-6609';});a.unshift({s:'c-6609',n:'1級写真技能士'});a=a.slice(0,8);localStorage.setItem(k,JSON.stringify(a));}catch(e){}})();</script>
 </div>
 </main>
