@@ -186,6 +186,25 @@ html{scroll-padding-top:64px}
 .page-bunya .all-certs-cell--cat,
 .page-feature .all-certs-cell--cat{white-space:normal;min-width:8em;max-width:14em}
 
+/* Stats page */
+.stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:16px 0}
+.stat-card{display:flex;flex-direction:column;gap:2px;background:var(--gray-50);border:1px solid var(--gray-200);border-radius:var(--radius);padding:14px 16px}
+.stat-val{font-size:1.5rem;font-weight:700;color:var(--accent,#2a7a6e)}
+.stat-label{font-size:var(--text-sm);font-weight:600;color:var(--ink-deep)}
+.stat-note{font-size:var(--text-xs,.78rem);color:var(--muted)}
+.stats-table th{text-align:left}.stats-table td{text-align:right;white-space:nowrap}
+@media(max-width:640px){.stats-grid{grid-template-columns:repeat(2,1fr)}}
+.cal-nav{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0}
+.cal-nav a{font-size:var(--text-sm);padding:5px 11px;background:var(--gray-50);border:1px solid var(--gray-200);border-radius:999px;text-decoration:none;color:var(--ink-deep)}
+.cal-month{margin:18px 0}.cal-month h2{font-size:1.1rem}
+.finder-grid{list-style:none;padding:0;display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:10px 0}
+.finder-card a{display:flex;flex-direction:column;gap:3px;padding:13px 15px;background:var(--gray-50);border:1px solid var(--gray-200);border-radius:var(--radius);text-decoration:none;height:100%}
+.finder-card a:hover{border-color:var(--accent,#2a7a6e)}
+.finder-card-t{font-weight:700;color:var(--ink-deep)}.finder-card-d{font-size:var(--text-sm);color:var(--muted)}
+.finder-chips,.finder-grid{margin:10px 0}.finder-chips{list-style:none;padding:0;display:flex;flex-wrap:wrap;gap:8px}
+.finder-chip a{display:inline-block;padding:7px 13px;background:var(--gray-50);border:1px solid var(--gray-200);border-radius:999px;text-decoration:none;color:var(--ink-deep);font-size:var(--text-sm)}
+@media(max-width:640px){.finder-grid{grid-template-columns:1fr}}
+
 /* Fields */
 .field-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
 @media(max-width:900px){.field-grid{grid-template-columns:repeat(2,1fr)}}

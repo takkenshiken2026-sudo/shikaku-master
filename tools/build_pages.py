@@ -757,7 +757,11 @@ def page_shell(title: str, body: str, depth: int, noindex: bool = True,
   <div class="site-footer-inner">
     <p class="site-footer-brand">{esc(SITE_NAME)}</p>
     <nav class="site-footer-nav" aria-label="フッターナビ">
+      <a href="{base}finder.html">資格の選び方・診断</a>
       <a href="{base}index.html#compare">よく比較される資格</a>
+      <a href="{base}feature/index.html">特集・ランキング</a>
+      <a href="{base}toukei.html">資格データ統計</a>
+      <a href="{base}calendar.html">試験月カレンダー</a>
       <a href="{base}about.html">サイトについて・編集方針</a>
     </nav>
     <p class="site-footer-copy">© {esc(SITE_NAME)}／一覧データ出典: 厚生労働省 ハローワーク「免許・資格コード一覧」ほか、各資格の公式の一次情報に基づき整備。</p>
@@ -1108,6 +1112,15 @@ def build_detail(row, popular_slugs=None) -> str:
     if ed.get("exam_subjects"):
         credential["competencyRequired"] = ed["exam_subjects"][:300]
     ld = [breadcrumb, credential] + ([faq] if faq else [])
+    # 情報の鮮度シグナル（最終確認日）をWebPageとして明示
+    _checked = (row.get("source_checked_at") or "").strip()
+    if re.match(r"^\d{4}-\d{2}-\d{2}$", _checked):
+        ld.append({"@context": "https://schema.org", "@type": "WebPage",
+                   "url": f"{BASE_URL}/c/{row['slug']}.html",
+                   "name": f"{name}｜{SITE_NAME}",
+                   "dateModified": _checked,
+                   "isPartOf": {"@type": "WebSite", "name": SITE_NAME,
+                                "url": BASE_URL + "/"}})
     indexable = is_indexable_detail(row)
     # index対象の詳細ページは資格ごとの個別OG画像を使う（build_og.pyがCIで生成）
     og_image = (f"{BASE_URL}/assets/ogp/{row['slug']}.png" if indexable else "")
@@ -2148,6 +2161,218 @@ NAME_BY_SLUG = {}
 INDEXABLE_SLUGS = set()
 # category → [(slug, name), ...]（同分野の関連資格を静的生成するための索引。main()で投入）
 CERTS_BY_CATEGORY = {}
+
+
+def build_stats_page(indexable):
+    """資格データの集計・統計ページ（被リンク資産＋内部リンクハブ）。
+
+    公開資格の実データのみを集計（捏造なし）。受験料・合格率・受験者数の
+    平均/中央値/分布や、分野・区分別の件数をまとめる。引用されやすい一次集計。
+    """
+    import statistics as _st
+    pub = [r for r in indexable if r["status"] == "published"]
+    n_pub = len(pub)
+    n_idx = sum(1 for r in pub if is_indexable_detail(r))
+
+    def _median(xs):
+        return int(_st.median(xs)) if xs else None
+
+    fees = [fee_yen(r) for r in pub if fee_yen(r) is not None]
+    rates = [pass_pct(r) for r in pub if pass_pct(r) is not None]
+    apps = [(r["name"], r["slug"], applicants_num(r)) for r in pub
+            if applicants_num(r) is not None]
+
+    # 区分別・分野別の件数
+    from collections import Counter
+    by_type = Counter(r["type"] for r in pub)
+    by_major = Counter(r["major_category"] for r in pub)
+    n_national = by_type.get("国家", 0)
+    n_noreq = sum(1 for r in pub if is_noreq(r))
+    n_cbt = sum(1 for r in pub if is_cbt(r))
+
+    def stat_card(label, value, note=""):
+        note_h = f'<span class="stat-note">{esc(note)}</span>' if note else ""
+        return (f'<div class="stat-card"><span class="stat-val">{esc(str(value))}</span>'
+                f'<span class="stat-label">{esc(label)}</span>{note_h}</div>')
+
+    cards = [
+        stat_card("掲載資格数", f"{len(indexable):,}件", "国内の資格を横断収録"),
+        stat_card("情報整備済み", f"{n_pub:,}件", "公式一次情報で整備"),
+    ]
+    if fees:
+        cards.append(stat_card("受験料の中央値", f"{_median(fees):,}円",
+                               f"最安{min(fees):,}円〜最高{max(fees):,}円"))
+    if rates:
+        cards.append(stat_card("公表合格率の平均", f"{round(_st.mean(rates),1)}%",
+                               f"{len(rates)}件の公表値より"))
+    cards.append(stat_card("受験資格なしの資格", f"{n_noreq:,}件", "誰でも受験できる"))
+    cards.append(stat_card("CBT・ネット試験対応", f"{n_cbt:,}件", "在宅・テストセンター受験"))
+
+    # 区分別テーブル
+    type_rows = "".join(
+        f"<tr><th>{esc(t)}資格</th><td>{by_type.get(t,0):,}件</td></tr>"
+        for t in ("国家", "公的", "民間") if by_type.get(t))
+    # 分野別テーブル（多い順）
+    major_rows = "".join(
+        f'<tr><th><a href="bunya/{esc(MAJOR_SLUGS.get(m, "other"))}.html">{esc(m)}</a></th>'
+        f"<td>{c:,}件</td></tr>"
+        for m, c in by_major.most_common())
+
+    body = f"""<nav class="crumbs"><a href="index.html">トップ</a> › 資格データ統計</nav>
+<h1>資格データ統計・ランキングまとめ</h1>
+<p class="lead">国内の資格 {len(indexable):,} 件を横断収録する「{esc(SITE_NAME)}」のデータを集計しました。
+受験料・合格率・受験者数などの一次集計と、用途別ランキングへの早見表です。
+数値は公式の一次情報に基づく公開分の集計で、制度・金額・日程は各資格の公式サイトでご確認ください。</p>
+<section class="stats-grid">{''.join(cards)}</section>
+
+<h2>資格区分別の件数</h2>
+<table class="spec stats-table"><tbody>{type_rows}</tbody></table>
+
+<h2>分野別の資格件数</h2>
+<table class="spec stats-table"><tbody>{major_rows}</tbody></table>
+
+<h2>データから探す（ランキング）</h2>
+<ul class="detail-link-list">
+<li><a href="feature/popular.html">受験者数が多い人気資格ランキング</a></li>
+<li><a href="feature/cheap.html">受験料が安い資格ランキング</a></li>
+<li><a href="feature/high-pass.html">合格率が高い資格</a></li>
+<li><a href="feature/hard.html">合格率が低い難関資格</a></li>
+<li><a href="feature/no-requirement.html">受験資格なしで受けられる資格</a></li>
+<li><a href="feature/cbt.html">在宅・CBTで受けられる資格</a></li>
+</ul>
+<p class="muted" style="margin-top:14px">※本ページの集計値は公開・整備済みデータに基づく参考値です。
+出典として引用される場合は「{esc(SITE_NAME)}（{BASE_URL}）」とご記載ください。</p>"""
+
+    ld = [
+        {"@context": "https://schema.org", "@type": "BreadcrumbList",
+         "itemListElement": [
+             {"@type": "ListItem", "position": 1, "name": "トップ", "item": BASE_URL + "/"},
+             {"@type": "ListItem", "position": 2, "name": "資格データ統計"}]},
+        {"@context": "https://schema.org", "@type": "Dataset",
+         "name": "資格データ統計（資格マスター）",
+         "description": f"国内の資格{len(indexable)}件の受験料・合格率・受験者数・分野・区分の集計データ。",
+         "creator": {"@type": "Organization", "name": SITE_NAME},
+         "url": BASE_URL + "/toukei.html"},
+    ]
+    return page_shell(f"資格データ統計・ランキングまとめ｜{SITE_NAME}", body, depth=0,
+                      noindex=False,
+                      desc=f"国内の資格{len(indexable)}件を集計。受験料の中央値・平均合格率・"
+                           "分野別/区分別件数・用途別ランキングをまとめた資格データ統計。",
+                      path="toukei.html", jsonld=ld)
+
+
+def build_finder_page(indexable):
+    """資格の選び方・診断ハブ。目的・条件・分野から最適な一覧へ誘導する内部リンク資産。"""
+    pub = [r for r in indexable if r["status"] == "published"]
+
+    def card(href, title, desc):
+        return (f'<li class="finder-card"><a href="{href}"><span class="finder-card-t">'
+                f'{esc(title)}</span><span class="finder-card-d">{esc(desc)}</span></a></li>')
+
+    purpose = "".join(card(h, t, d) for h, t, d in [
+        ("feature/job-hunting.html", "就職・転職に役立つ資格", "採用で評価されやすい資格から"),
+        ("feature/independence.html", "独立・開業を目指せる資格", "独立につながる資格から"),
+        ("feature/remote-work.html", "在宅・リモートで活かせる資格", "在宅ワーク向けの資格から"),
+        ("feature/skilled-trade.html", "手に職をつけられる資格", "専門技能が身につく資格から"),
+        ("feature/it-beginner.html", "未経験からITを目指す資格", "IT入門の資格から"),
+        ("feature/senior.html", "定年後・シニアに役立つ資格", "セカンドキャリア向けから"),
+        ("feature/working-adults.html", "働きながら取れる資格", "社会人が取りやすい資格から"),
+    ])
+    cond = "".join(card(h, t, d) for h, t, d in [
+        ("feature/no-requirement.html", "受験資格なしで受けられる", "誰でも挑戦できる資格"),
+        ("feature/cbt.html", "在宅・CBTで受けられる", "テストセンター・在宅受験"),
+        ("feature/cheap.html", "受験料が安い", "コストを抑えて取得"),
+        ("feature/high-pass.html", "合格率が高い", "比較的取りやすい資格"),
+        ("feature/hard.html", "難関資格に挑戦", "合格率が低い難関から"),
+        ("feature/popular.html", "人気資格から選ぶ", "受験者数が多い順"),
+    ])
+    field = "".join(
+        f'<li class="finder-chip"><a href="bunya/{esc(MAJOR_SLUGS.get(m,"other"))}.html">'
+        f'{esc(m)}</a></li>'
+        for m in dict.fromkeys(r["major_category"] for r in pub))
+
+    body = f"""<nav class="crumbs"><a href="index.html">トップ</a> › 資格の選び方</nav>
+<h1>資格の選び方・かんたん診断</h1>
+<p class="lead">「どの資格を取ればいいか分からない」という方へ。目的・条件・分野の3つの切り口から、
+あなたに合った資格の一覧へご案内します。{len(indexable):,}件の資格データから絞り込めます。</p>
+
+<h2>① 目的から選ぶ</h2>
+<ul class="finder-grid">{purpose}</ul>
+
+<h2>② 条件から選ぶ</h2>
+<ul class="finder-grid">{cond}</ul>
+
+<h2>③ 分野から選ぶ</h2>
+<ul class="finder-chips">{field}</ul>
+
+<p class="muted" style="margin-top:14px">さらに細かく探すなら
+<a href="index.html#all-certs">キーワード・条件での絞り込み検索</a>や
+<a href="compare.html">資格の比較</a>もご利用ください。</p>"""
+
+    ld = {"@context": "https://schema.org", "@type": "BreadcrumbList",
+          "itemListElement": [
+              {"@type": "ListItem", "position": 1, "name": "トップ", "item": BASE_URL + "/"},
+              {"@type": "ListItem", "position": 2, "name": "資格の選び方"}]}
+    return page_shell(f"資格の選び方・かんたん診断｜{SITE_NAME}", body, depth=0,
+                      noindex=False,
+                      desc="目的・条件・分野から自分に合った資格を見つける選び方ガイド。"
+                           "就職・独立・在宅・受験資格なしなど切り口別に資格を案内します。",
+                      path="finder.html", jsonld=ld)
+
+
+def build_calendar_page(indexable):
+    """試験月カレンダー：実施頻度の記載から月を抽出し、月別に資格を一覧する。
+
+    抽出元は frequency テキストで、試験・申込・口述などの月が混在しうるため
+    「目安」と明示し、正確な日程は各資格ページ／公式で確認する導線にする。
+    """
+    pub = [r for r in indexable if r["status"] == "published"
+           and is_indexable_detail(r) and r.get("frequency", "").strip()]
+
+    def months(s):
+        return sorted(set(int(m) for m in re.findall(r"(\d{1,2})月", s)
+                          if 1 <= int(m) <= 12))
+
+    by_month = {m: [] for m in range(1, 13)}
+    for r in pub:
+        for m in months(r["frequency"]):
+            by_month[m].append(r)
+
+    sections = []
+    for m in range(1, 13):
+        certs = sorted(by_month[m], key=lambda r: (r["major_category"], r["name"]))
+        if not certs:
+            continue
+        items = "".join(
+            f'<li class="detail-link-item"><a href="c/{esc(r["slug"])}.html">'
+            f'{esc(r["name"])}</a> <span class="muted">（{esc(r["frequency"][:28])}）</span></li>'
+            for r in certs)
+        sections.append(
+            f'<section class="cal-month"><h2 id="m{m}">{m}月に試験・申込がある資格'
+            f'（{len(certs)}件）</h2><ul class="detail-link-list">{items}</ul></section>')
+
+    nav = '<nav class="cal-nav">' + "".join(
+        f'<a href="#m{m}">{m}月</a>' for m in range(1, 13) if by_month[m]) + "</nav>"
+
+    body = f"""<nav class="crumbs"><a href="index.html">トップ</a> › 試験月カレンダー</nav>
+<h1>資格試験 月別カレンダー</h1>
+<p class="lead">資格試験を「実施・申込の月」から探せるカレンダーです。各資格の実施頻度の記載から
+月を抽出した目安で、試験日・申込・口述などの月が含まれます。正確な日程・申込期限は
+各資格ページおよび公式サイトで必ずご確認ください。</p>
+{nav}
+{''.join(sections)}
+<p class="muted" style="margin-top:14px">※月は実施頻度の記載からの抽出による目安です。
+年度により変動するため、出願前に各資格の公式情報をご確認ください。</p>"""
+
+    ld = {"@context": "https://schema.org", "@type": "BreadcrumbList",
+          "itemListElement": [
+              {"@type": "ListItem", "position": 1, "name": "トップ", "item": BASE_URL + "/"},
+              {"@type": "ListItem", "position": 2, "name": "試験月カレンダー"}]}
+    return page_shell(f"資格試験 月別カレンダー｜{SITE_NAME}", body, depth=0,
+                      noindex=False,
+                      desc="資格試験を実施・申込の月から探せる月別カレンダー。"
+                           "何月に試験がある資格かを一覧。正確な日程は公式でご確認ください。",
+                      path="calendar.html", jsonld=ld)
 
 
 def build_feature_pages(indexable, popular_slugs=None):
@@ -3555,6 +3780,25 @@ html{scroll-padding-top:64px}
 .page-bunya .all-certs-cell--cat,
 .page-feature .all-certs-cell--cat{white-space:normal;min-width:8em;max-width:14em}
 
+/* Stats page */
+.stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:16px 0}
+.stat-card{display:flex;flex-direction:column;gap:2px;background:var(--gray-50);border:1px solid var(--gray-200);border-radius:var(--radius);padding:14px 16px}
+.stat-val{font-size:1.5rem;font-weight:700;color:var(--accent,#2a7a6e)}
+.stat-label{font-size:var(--text-sm);font-weight:600;color:var(--ink-deep)}
+.stat-note{font-size:var(--text-xs,.78rem);color:var(--muted)}
+.stats-table th{text-align:left}.stats-table td{text-align:right;white-space:nowrap}
+@media(max-width:640px){.stats-grid{grid-template-columns:repeat(2,1fr)}}
+.cal-nav{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0}
+.cal-nav a{font-size:var(--text-sm);padding:5px 11px;background:var(--gray-50);border:1px solid var(--gray-200);border-radius:999px;text-decoration:none;color:var(--ink-deep)}
+.cal-month{margin:18px 0}.cal-month h2{font-size:1.1rem}
+.finder-grid{list-style:none;padding:0;display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:10px 0}
+.finder-card a{display:flex;flex-direction:column;gap:3px;padding:13px 15px;background:var(--gray-50);border:1px solid var(--gray-200);border-radius:var(--radius);text-decoration:none;height:100%}
+.finder-card a:hover{border-color:var(--accent,#2a7a6e)}
+.finder-card-t{font-weight:700;color:var(--ink-deep)}.finder-card-d{font-size:var(--text-sm);color:var(--muted)}
+.finder-chips,.finder-grid{margin:10px 0}.finder-chips{list-style:none;padding:0;display:flex;flex-wrap:wrap;gap:8px}
+.finder-chip a{display:inline-block;padding:7px 13px;background:var(--gray-50);border:1px solid var(--gray-200);border-radius:999px;text-decoration:none;color:var(--ink-deep);font-size:var(--text-sm)}
+@media(max-width:640px){.finder-grid{grid-template-columns:1fr}}
+
 /* Fields */
 .field-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
 @media(max-width:900px){.field-grid{grid-template-columns:repeat(2,1fr)}}
@@ -4027,6 +4271,9 @@ def main() -> int:
         shutil.copy2(BRAND / "favicon.ico", SITE / "favicon.ico")
     (SITE / "index.html").write_text(build_index(indexable), encoding="utf-8")
     (SITE / "compare.html").write_text(build_compare(), encoding="utf-8")
+    (SITE / "toukei.html").write_text(build_stats_page(indexable), encoding="utf-8")
+    (SITE / "calendar.html").write_text(build_calendar_page(indexable), encoding="utf-8")
+    (SITE / "finder.html").write_text(build_finder_page(indexable), encoding="utf-8")
 
     for r in indexable:
         (SITE / "c" / f'{r["slug"]}.html').write_text(build_detail(r, popular_set), encoding="utf-8")
@@ -4072,7 +4319,8 @@ def main() -> int:
     today = date.today().isoformat()
     # (path, lastmod, priority)
     entries = [("", today, "1.0"), ("compare.html", today, "0.7"),
-               ("about.html", today, "0.5")]
+               ("toukei.html", today, "0.7"), ("calendar.html", today, "0.7"),
+               ("finder.html", today, "0.8"), ("about.html", today, "0.5")]
     entries += [(f"bunya/{s}.html", today, "0.8") for s in cat_pages]
     entries += [(f"feature/{s}.html", today, "0.8") for s in feat_pages]
     entries += [(f"vs/{s}.html", today, "0.7") for s in vs_pages]
