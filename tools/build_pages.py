@@ -209,6 +209,30 @@ def load_descriptions():
 DESC = load_descriptions()
 
 
+def load_guides():
+    """slug → {suited, study, career} 主要資格の編集ガイダンス（手書き・定性的）。
+
+    勉強法の考え方・向いている人・取得後の活かし方など、データ生成では書けない
+    読者価値の高い解説。具体的な数値（年収・合格点等）は扱わず一般知識の範囲で記述。
+    """
+    path = ROOT / "data" / "guides.csv"
+    if not path.exists():
+        return {}
+    out = {}
+    with path.open(encoding="utf-8") as f:
+        for r in csv.DictReader(f):
+            s = (r.get("slug") or "").strip()
+            if not s:
+                continue
+            g = {k: (r.get(k) or "").strip() for k in ("suited", "study", "career")}
+            if any(g.values()):
+                out[s] = g
+    return out
+
+
+GUIDES = load_guides()
+
+
 def load_study_time():
     """slug → {study_hours, source}。学習時間の目安（編集値・公式の一次情報ではない）。"""
     if not STUDY_CSV.exists():
@@ -1054,6 +1078,26 @@ def build_detail(row, popular_slugs=None) -> str:
     else:
         faq_html = ""
 
+    # 編集ガイダンス（主要資格のみ・手書き／向いている人・勉強法・活かし方）
+    _g = GUIDES.get(row["slug"])
+    if _g:
+        _blocks = []
+        for key, head in (("suited", "こんな人に向いている"),
+                          ("study", "学習の進め方・勉強法"),
+                          ("career", "取得後の活かし方・キャリア")):
+            if _g.get(key):
+                _blocks.append(f'<h3 class="guide-h">{esc(name)}は{esc(head)}</h3>'
+                               if key == "suited" else
+                               f'<h3 class="guide-h">{esc(head)}</h3>')
+                _blocks.append(f'<p>{esc(_g[key])}</p>')
+        guide_html = (f'<section class="detail-guide" aria-labelledby="guide-h">'
+                      f'<h2 class="detail-section-title" id="guide-h">{esc(name)}の受験・活用ガイド</h2>'
+                      f'{"".join(_blocks)}'
+                      f'<p class="muted guide-note">※学習の進め方や向き・不向きは一般的な傾向の解説です。'
+                      f'最新の制度・出題内容は公式サイトでご確認ください。</p></section>')
+    else:
+        guide_html = ""
+
     detail_nav = detail_nav_html(row["slug"], cat, rel, vs_pairs)
 
     # 「最近見た資格」記録（localStorage）
@@ -1077,6 +1121,7 @@ def build_detail(row, popular_slugs=None) -> str:
 <section class="detail-spec" aria-labelledby="ds-h">
 <h2 class="detail-section-title" id="ds-h">資格情報</h2>
 <div class="spec-sections">{spec_html}</div>{SPEC_TABLE_JS}</section>
+{guide_html}
 {faq_html}
 {detail_nav}
 {recent_js}
@@ -3808,6 +3853,10 @@ html{scroll-padding-top:64px}
 .faq-item summary{cursor:pointer;padding:12px 15px;font-weight:600;color:var(--ink-deep);list-style-position:inside}
 .faq-item summary:hover{color:var(--accent,#2a7a6e)}
 .faq-item .faq-a{padding:0 15px 13px;color:var(--ink,#333);line-height:1.7}
+.detail-guide{margin:18px 0}
+.detail-guide .guide-h{font-size:1.02rem;margin:14px 0 4px;color:var(--ink-deep)}
+.detail-guide p{line-height:1.85;color:var(--ink,#333);margin:.2em 0 .6em}
+.detail-guide .guide-note{font-size:var(--text-sm);color:var(--muted)}
 .finder-grid{list-style:none;padding:0;display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:10px 0}
 .finder-card a{display:flex;flex-direction:column;gap:3px;padding:13px 15px;background:var(--gray-50);border:1px solid var(--gray-200);border-radius:var(--radius);text-decoration:none;height:100%}
 .finder-card a:hover{border-color:var(--accent,#2a7a6e)}
