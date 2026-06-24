@@ -1042,6 +1042,17 @@ def build_detail(row, popular_slugs=None) -> str:
             "mainEntity": [{"@type": "Question", "name": q,
                             "acceptedAnswer": {"@type": "Answer", "text": a}}
                            for q, a in qa]} if qa else None)
+    # 可視FAQ（読者の可読性＋FAQリッチリザルト適格化：JSON-LDと同内容をHTMLでも表示）
+    if qa:
+        faq_items = "".join(
+            f'<details class="faq-item"><summary>{esc(q)}</summary>'
+            f'<div class="faq-a">{esc(fmt_nums_in_text(a))}</div></details>'
+            for q, a in qa)
+        faq_html = (f'<section class="detail-faq" aria-labelledby="faq-h">'
+                    f'<h2 class="detail-section-title" id="faq-h">{esc(name)}のよくある質問</h2>'
+                    f'{faq_items}</section>')
+    else:
+        faq_html = ""
 
     detail_nav = detail_nav_html(row["slug"], cat, rel, vs_pairs)
 
@@ -1066,6 +1077,7 @@ def build_detail(row, popular_slugs=None) -> str:
 <section class="detail-spec" aria-labelledby="ds-h">
 <h2 class="detail-section-title" id="ds-h">資格情報</h2>
 <div class="spec-sections">{spec_html}</div>{SPEC_TABLE_JS}</section>
+{faq_html}
 {detail_nav}
 {recent_js}
 </div>"""
@@ -3791,6 +3803,11 @@ html{scroll-padding-top:64px}
 .cal-nav{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0}
 .cal-nav a{font-size:var(--text-sm);padding:5px 11px;background:var(--gray-50);border:1px solid var(--gray-200);border-radius:999px;text-decoration:none;color:var(--ink-deep)}
 .cal-month{margin:18px 0}.cal-month h2{font-size:1.1rem}
+.detail-faq{margin:18px 0}
+.faq-item{border:1px solid var(--gray-200);border-radius:var(--radius);margin:8px 0;background:var(--gray-50)}
+.faq-item summary{cursor:pointer;padding:12px 15px;font-weight:600;color:var(--ink-deep);list-style-position:inside}
+.faq-item summary:hover{color:var(--accent,#2a7a6e)}
+.faq-item .faq-a{padding:0 15px 13px;color:var(--ink,#333);line-height:1.7}
 .finder-grid{list-style:none;padding:0;display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:10px 0}
 .finder-card a{display:flex;flex-direction:column;gap:3px;padding:13px 15px;background:var(--gray-50);border:1px solid var(--gray-200);border-radius:var(--radius);text-decoration:none;height:100%}
 .finder-card a:hover{border-color:var(--accent,#2a7a6e)}
