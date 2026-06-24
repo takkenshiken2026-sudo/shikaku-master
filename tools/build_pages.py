@@ -4252,18 +4252,22 @@ table.cmp tbody th{background:var(--gray-50);color:var(--ink);white-space:nowrap
 .page-detail .updated{font-size:var(--text-sm);color:var(--muted)}
 /* ===== モバイル最適化（可読性・余白・タップ領域） ===== */
 @media(max-width:600px){
-  /* 小さめの文字を底上げして読みやすく（キャプション・メタ・バッジ等） */
-  :root{--text-sm:0.9375rem}
-  /* ヒーロー：余白を広げつつモバイルでも読みやすく */
-  .hero{padding:44px var(--page-gutter) 32px}
-  .hero h1{margin-bottom:12px}
-  .hero-sub{font-size:var(--text-md);line-height:1.7}
-  .hero-search{margin-top:20px;max-width:min(520px,100%)}
-  /* セクション間隔をモバイル向けに調整 */
-  .block-primary{margin-bottom:30px}.block-secondary{margin-bottom:26px}
-  .recent-inset{margin-top:24px;padding-top:24px}
-  .recent-inset .block-head{margin-bottom:12px}
-  .block-head{margin-bottom:14px}
+  /* タイプスケールを引き締めて1画面の情報量を増やす（本文17→16px・見出し20→18px・行間も圧縮） */
+  :root{--text-md:1rem;--text-lg:1.125rem;--text-table:0.875rem}
+  body{line-height:1.6}
+  h2,h3{line-height:1.35}
+  /* ヒーロー：余白を圧縮 */
+  .hero{padding:28px var(--page-gutter) 24px}
+  .hero h1{margin-bottom:10px}
+  .hero-sub{font-size:var(--text-md);line-height:1.6}
+  .hero-search{margin-top:16px;max-width:min(520px,100%)}
+  /* セクション間隔を圧縮 */
+  .block-primary{margin-bottom:22px}.block-secondary{margin-bottom:20px}
+  .recent-inset{margin-top:18px;padding-top:18px}
+  .recent-inset .block-head{margin-bottom:10px}
+  .block-head{margin-bottom:10px}
+  /* コンテナ余白を圧縮 */
+  .container{padding:16px 14px 28px}
   /* 人気の資格は1列にして各カードの情報を見やすく */
   .popular-grid{grid-template-columns:1fr;gap:10px}
   .pop-card{padding:14px 16px}
@@ -4272,10 +4276,20 @@ table.cmp tbody th{background:var(--gray-50);color:var(--ink);white-space:nowrap
   .compare-names{font-size:var(--text-md)}
   /* 一覧・ランキングのタップ領域と余白 */
   .cl-link{padding:13px 14px}
-  /* 詳細：本文サイズと余白 */
-  .page-detail .detail-audience{font-size:var(--text-md);line-height:1.7}
+  /* 詳細：本文サイズと余白を圧縮 */
+  .page-detail .detail-title{margin-bottom:6px}
+  .page-detail .detail-audience{font-size:var(--text-md);line-height:1.6;margin-bottom:14px}
   .page-detail .point-list li{font-size:var(--text-md)}
   .page-detail .faq-item summary,.page-detail .faq-a{font-size:var(--text-md)}
+  /* 受験・活用ガイドの行間・余白を詰める */
+  .page-detail .detail-guide p{line-height:1.65;margin:.15em 0 .5em}
+  .page-detail .detail-guide .guide-h{margin:10px 0 3px}
+  .page-detail .guide-steps li{line-height:1.6;margin:.1em 0}
+  /* セクション間の区切り余白を圧縮 */
+  .page-detail .detail-faq,.page-detail .detail-guide{margin:14px 0}
+  .page-detail .detail-official{margin-top:20px;padding-top:18px}
+  .page-detail .detail-nav{margin-top:26px;padding-top:22px}
+  .page-detail .detail-nav-block+.detail-nav-block{margin-top:22px;padding-top:22px}
   /* 比較バーが内容に被らないよう余白を増やす */
   body.cmp-open{padding-bottom:96px}
 }
