@@ -11,6 +11,7 @@
 事実値(受験料/合格率/公式URL)は未検証なら「公式で確認」を促す。
 """
 import csv
+import hashlib
 import html
 import json
 import math
@@ -28,6 +29,12 @@ STUDY_CSV = ROOT / "data" / "study_time.csv"
 DIFFICULTY_CSV = ROOT / "data" / "difficulty.csv"
 SITE = ROOT / "site"
 BRAND = ROOT / "brand"
+ASSET_V = ""
+
+
+def asset_url(base: str, path: str) -> str:
+    href = f"{base}{path}"
+    return f"{href}?v={ASSET_V}" if ASSET_V else href
 
 # 厚労省 職業情報提供サイト（job tag）— 関連職業の公式ディスカバリ導線
 JOBTAG_URL = "https://shigoto.mhlw.go.jp/User/Search/Top"
@@ -737,7 +744,7 @@ def page_shell(title: str, body: str, depth: int, noindex: bool = True,
 <link rel="icon" href="{base}assets/favicon.ico" sizes="32x32">
 <link rel="icon" href="{base}assets/favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="{base}assets/apple-touch-icon.png">
-<link rel="stylesheet" href="{base}assets/app.css">
+<link rel="stylesheet" href="{asset_url(base, 'assets/app.css')}">
 {ld}</head>
 <body>
 <a class="skip-link" href="#main">本文へスキップ</a>
@@ -776,7 +783,7 @@ def page_shell(title: str, body: str, depth: int, noindex: bool = True,
 {body}
 </main>
 <div id="cmpbar" class="cmpbar" data-base="{base}" aria-live="polite"></div>
-<script src="{base}assets/compare-bar.js"></script>
+<script src="{asset_url(base, 'assets/compare-bar.js')}"></script>
 <footer class="site-footer">
   <div class="site-footer-inner">
     <p class="site-footer-brand">{esc(SITE_NAME)}</p>
@@ -3024,7 +3031,7 @@ def build_occupation_pages(indexable):
         '<p class="muted" style="margin-top:14px">※職種データは厚生労働省の職業情報提供サイト'
         '（job tag）等を出所に各資格の関連職業を整理・正規化したものです。'
         '検索は全職種が対象です（関連資格1件のみの職種も含みます）。</p>'
-        '<script src="../assets/occ-search.js"></script>'
+        '<script src="' + asset_url("../", "assets/occ-search.js") + '"></script>'
     )
     index_html = page_shell(f"職種から資格を探す｜{SITE_NAME}", idx_body, depth=1,
                             noindex=False,
@@ -3237,7 +3244,7 @@ def build_index(rows) -> str:
   <div class="block-head"><h2>おすすめの資格対策サイト</h2><p>当サイト運営者が制作している資格別の学習・対策サイト</p></div>
   <div class="partner-grid">{partner_cards_html()}</div>
 </section>
-<script src="assets/search.js"></script>
+<script src="{asset_url('', 'assets/search.js')}"></script>
 """
     site_ld = [
         {"@context": "https://schema.org", "@type": "WebSite",
@@ -3267,7 +3274,7 @@ def build_compare() -> str:
 <div id="cmpVerdict"></div>
 <div id="cmp" class="cmp-wrap"><p class="muted">読み込み中…</p></div>
 <p style="margin-top:18px"><a href="index.html">← 検索に戻って選び直す</a></p>
-<script src="assets/compare.js"></script>
+<script src="{asset_url('', 'assets/compare.js')}"></script>
 """
     return page_shell(f"資格を比較｜{SITE_NAME}", body, depth=0, noindex=False,
                       desc="選んだ資格を受験料・試験形式・受験資格・合格率などで横並びに比較できます。",
@@ -4315,6 +4322,7 @@ table.cmp tbody th{background:var(--gray-50);color:var(--ink);white-space:nowrap
 
 
 def main() -> int:
+    global ASSET_V
     rows = load_rows()
     indexable = [r for r in rows
                  if r["is_bucket"] == "0" and r["is_duplicate"] == "0"
@@ -4330,6 +4338,10 @@ def main() -> int:
     INDEXABLE_SLUGS.update(r["slug"] for r in indexable if is_indexable_detail(r))
     # 総合難易度ランキング（合格率・学習時間ベース）を算出
     build_difficulty_rank(indexable)
+
+    ASSET_V = hashlib.sha256(
+        (APP_CSS + SEARCH_JS + COMPARE_JS + COMPARE_BAR_JS + OCC_SEARCH_JS).encode()
+    ).hexdigest()[:10]
 
     if SITE.exists():
         shutil.rmtree(SITE)
