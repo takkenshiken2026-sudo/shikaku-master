@@ -3855,13 +3855,14 @@ html{scroll-padding-top:64px}
 .cal-nav{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0}
 .cal-nav a{font-size:var(--text-sm);padding:5px 11px;background:var(--gray-50);border:1px solid var(--gray-200);border-radius:999px;text-decoration:none;color:var(--ink-deep)}
 .cal-month{margin:18px 0}.cal-month h2{font-size:1.1rem}
-.detail-faq{margin:18px 0}
+.detail-faq{margin:32px 0}
 .faq-item{border:1px solid var(--gray-200);border-radius:var(--radius);margin:8px 0;background:var(--gray-50)}
 .faq-item summary{cursor:pointer;padding:12px 15px;font-weight:600;color:var(--ink-deep);list-style-position:inside}
 .faq-item summary:hover{color:var(--accent,#2a7a6e)}
 .faq-item .faq-a{padding:0 15px 13px;color:var(--ink,#333);line-height:1.7}
-.detail-guide{margin:18px 0}
-.detail-guide .guide-h{font-size:1.02rem;margin:14px 0 4px;color:var(--ink-deep)}
+.detail-guide{margin:32px 0}
+.detail-guide .guide-h{font-size:1.02rem;margin:22px 0 8px;color:var(--ink-deep)}
+.detail-guide .guide-h:first-of-type{margin-top:6px}
 .detail-guide p{line-height:1.85;color:var(--ink,#333);margin:.2em 0 .6em}
 .detail-guide .guide-note{font-size:var(--text-sm);color:var(--muted)}
 .guide-steps{margin:.3em 0 .8em;padding-left:1.4em}
@@ -4105,10 +4106,10 @@ table.cmp tbody th{background:var(--gray-50);color:var(--ink);white-space:nowrap
 .detail-official .btn{padding:10px 18px;font-size:var(--text-sm)}
 .detail-nav{margin-top:36px;padding-top:32px;border-top:1px solid var(--gray-200)}
 .detail-nav-block+.detail-nav-block{margin-top:32px;padding-top:32px;border-top:1px solid var(--gray-200)}
-.detail-nav-heading,.detail-nav-head{font-size:var(--text-lg);font-weight:var(--fw-bold);color:var(--ink-deep);margin:0 0 18px;line-height:1.35}
-.detail-nav-subhead{font-size:var(--text-lg);font-weight:var(--fw-semibold);color:var(--muted);margin:0 0 10px}
-.detail-nav-subhead-title{font-size:var(--text-lg);font-weight:var(--fw-bold);color:var(--ink-deep);margin:0 0 12px}
-.detail-nav-subhead+.detail-nav-subhead,.detail-link-list+.detail-nav-subhead,.detail-link-grid+.detail-nav-subhead,.detail-compare-row+.detail-nav-subhead{margin-top:22px}
+.detail-nav-heading,.detail-nav-head{font-size:var(--text-lg);font-weight:var(--fw-bold);color:var(--ink-deep);margin:0 0 22px;line-height:1.35}
+.detail-nav-subhead{font-size:var(--text-lg);font-weight:var(--fw-semibold);color:var(--muted);margin:0 0 12px}
+.detail-nav-subhead-title{font-size:var(--text-lg);font-weight:var(--fw-bold);color:var(--ink-deep);margin:0 0 14px}
+.detail-nav-subhead+.detail-nav-subhead,.detail-link-list+.detail-nav-subhead,.detail-link-grid+.detail-nav-subhead,.detail-compare-row+.detail-nav-subhead{margin-top:28px}
 .detail-link-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
 .detail-link-item{font-size:var(--text-sm);line-height:1.55;color:var(--muted)}
 .detail-link-item a{color:var(--accent);font-weight:600;text-decoration:none}
@@ -4130,7 +4131,7 @@ table.cmp tbody th{background:var(--gray-50);color:var(--ink);white-space:nowrap
 .fact .v{font-size:var(--text-md);font-weight:var(--fw-semibold);color:var(--ink-deep)}
 .detail-actions{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:22px;align-items:center}
 .detail-actions .official-cta{margin:0}
-.detail-section-title{font-size:var(--text-lg);font-weight:var(--fw-bold);color:var(--ink-deep);margin:0 0 10px}
+.detail-section-title{font-size:var(--text-lg);font-weight:var(--fw-bold);color:var(--ink-deep);margin:0 0 16px}
 .detail-related{margin:18px 0 0;border-top:1px solid var(--gray-200);padding-top:14px}
 .detail-related h3{font-size:var(--text-lg);font-weight:var(--fw-semibold);margin:.9em 0 .35em;color:var(--ink-deep)}
 .detail-related h3:first-of-type{margin-top:.2em}
@@ -4140,15 +4141,15 @@ table.cmp tbody th{background:var(--gray-50);color:var(--ink);white-space:nowrap
 .detail-related .more-same ul{columns:2;column-gap:22px}
 .detail-related .more-same li{break-inside:avoid;margin:2px 0}
 @media(max-width:560px){.detail-related .more-same ul{columns:1}}
-.detail-spec{margin-bottom:4px}
-.spec-sections{display:flex;flex-direction:column;gap:24px;--spec-label-w:14.5rem}
+.detail-spec{margin-bottom:8px}
+.spec-sections{display:flex;flex-direction:column;gap:32px;--spec-label-w:14.5rem}
 .spec-section{margin:0}
 .page-detail .spec-sections table.spec{table-layout:fixed;width:100%}
 .page-detail .spec-sections table.spec col.spec-col-label{width:var(--spec-label-w)}
 .page-detail .spec-sections table.spec col.spec-col-value{width:auto}
 .page-detail .spec-sections table.spec th{width:var(--spec-label-w);box-sizing:border-box}
 .page-detail .spec-sections table.spec td{box-sizing:border-box;width:auto}
-.spec-section-title{font-size:var(--text-md);font-weight:var(--fw-semibold);color:var(--ink-deep);margin:0 0 8px;line-height:1.4}
+.spec-section-title{font-size:var(--text-md);font-weight:var(--fw-semibold);color:var(--ink-deep);margin:0 0 12px;line-height:1.4}
 .detail-source{margin-top:22px;padding:14px 0 0;border-top:1px solid var(--gray-200);font-size:var(--text-sm);color:var(--muted);line-height:1.65}
 .detail-source p{margin:0 0 5px}.detail-source .k{font-weight:600;color:var(--muted)}
 .detail-source a{color:var(--ink);text-decoration:underline;text-underline-offset:2px}
@@ -4244,9 +4245,9 @@ table.cmp tbody th{background:var(--gray-50);color:var(--ink);white-space:nowrap
 .page-detail .pd-name{font-size:var(--text-md);font-weight:var(--fw-semibold);color:var(--ink)}
 .page-detail .pd-tag{font-size:var(--text-sm);color:var(--muted)}
 .page-detail .partner-note{font-size:var(--text-sm);color:var(--muted)}
-.page-detail .detail-roadmap{margin:0 0 20px}
+.page-detail .detail-roadmap{margin:0 0 28px}
 .page-detail .detail-roadmap .roadmap{margin:0}
-.page-detail .detail-roadmap .roadmap h3{margin:0 0 10px}
+.page-detail .detail-roadmap .roadmap h3{margin:0 0 14px}
 .page-detail .detail-related .more-compare p{font-size:var(--text-sm);color:var(--muted)}
 .page-detail .provenance{font-size:var(--text-sm);color:var(--muted)}
 .page-detail .updated{font-size:var(--text-sm);color:var(--muted)}
@@ -4283,10 +4284,10 @@ table.cmp tbody th{background:var(--gray-50);color:var(--ink);white-space:nowrap
   .page-detail .faq-item summary,.page-detail .faq-a{font-size:var(--text-md)}
   /* 受験・活用ガイドの行間・余白を詰める */
   .page-detail .detail-guide p{line-height:1.65;margin:.15em 0 .5em}
-  .page-detail .detail-guide .guide-h{margin:10px 0 3px}
+  .page-detail .detail-guide .guide-h{margin:14px 0 5px}
   .page-detail .guide-steps li{line-height:1.6;margin:.1em 0}
   /* セクション間の区切り余白を圧縮 */
-  .page-detail .detail-faq,.page-detail .detail-guide{margin:14px 0}
+  .page-detail .detail-faq,.page-detail .detail-guide{margin:22px 0}
   .page-detail .detail-official{margin-top:20px;padding-top:18px}
   .page-detail .detail-nav{margin-top:26px;padding-top:22px}
   .page-detail .detail-nav-block+.detail-nav-block{margin-top:22px;padding-top:22px}
