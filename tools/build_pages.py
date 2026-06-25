@@ -110,10 +110,10 @@ def partner_detail_html(slug):
         f'<a class="partner-detail-card" href="{esc(p["url"])}" target="_blank" rel="noopener">'
         f'<span class="pd-name">{esc(p["name"])}<span class="partner-ext" aria-hidden="true">↗</span></span>'
         f'<span class="pd-tag">{esc(p["tagline"])}</span></a>' for p in ps)
-    return ('<section class="partner-detail" aria-labelledby="pd-h">'
+    return ('<section class="detail-section detail-section--partner" aria-labelledby="pd-h">'
             '<h2 class="detail-section-title" id="pd-h">この資格の対策サイト</h2>'
             f'<div class="partner-detail-grid">{items}</div>'
-            '<p class="muted partner-note">当サイト運営者が制作している学習・対策サイトです。</p>'
+            '<p class="detail-footnote">当サイト運営者が制作している学習・対策サイトです。</p>'
             '</section>')
 
 
@@ -496,7 +496,7 @@ def roadmap_html(slug, chain):
         else:
             steps.append(f'<li class="rm-step">{num}'
                          f'<a class="rm-name" href="{esc(s)}.html">{esc(_rel_name(s))}</a></li>')
-    return ('<div class="roadmap"><h3>取得ロードマップ</h3>'
+    return ('<div class="roadmap"><h3 class="detail-subhead">取得ロードマップ</h3>'
             '<ol class="rm-track">' + "".join(steps) + "</ol></div>")
 
 
@@ -592,7 +592,7 @@ def detail_nav_html(slug, cat, rel_links, vs_pairs):
 
     block1 = ""
     if subs:
-        note = ('<p class="detail-nav-note">※免除・受験資格の要件は変更されることがあります。'
+        note = ('<p class="detail-footnote">※免除・受験資格の要件は変更されることがあります。'
                 '出願前に必ず各資格の公式情報でご確認ください。</p>' if rel else "")
         block1 = (
             '<div class="detail-nav-block">'
@@ -1079,9 +1079,9 @@ def build_detail(row, popular_slugs=None) -> str:
             f'<details class="faq-item"><summary>{esc(q)}</summary>'
             f'<div class="faq-a">{esc(fmt_nums_in_text(a))}</div></details>'
             for q, a in qa)
-        faq_html = (f'<section class="detail-faq" aria-labelledby="faq-h">'
+        faq_html = (f'<section class="detail-section detail-section--faq detail-section--alt" aria-labelledby="faq-h">'
                     f'<h2 class="detail-section-title" id="faq-h">{esc(name)}のよくある質問</h2>'
-                    f'{faq_items}</section>')
+                    f'<div class="faq-list">{faq_items}</div></section>')
     else:
         faq_html = ""
 
@@ -1095,21 +1095,21 @@ def build_detail(row, popular_slugs=None) -> str:
             if _g.get(key):
                 _title = (f"{name}は{head}" if key == "suited" else head)
                 _blocks.append(
-                    f'<article class="guide-card guide-card--{key}">'
+                    f'<div class="guide-block">'
                     f'<h3 class="guide-h">{esc(_title)}</h3>'
-                    f'<div class="guide-card-body"><p>{esc(_g[key])}</p></div></article>')
+                    f'<p>{esc(_g[key])}</p></div>')
             if key == "study" and _g.get("steps"):
                 _steps = [s.strip() for s in _g["steps"].split("|") if s.strip()]
                 if _steps:
                     _li = "".join(f"<li>{esc(s)}</li>" for s in _steps)
                     _blocks.append(
-                        '<article class="guide-card guide-card--steps">'
+                        '<div class="guide-block">'
                         '<h3 class="guide-h">学習ステップの目安</h3>'
-                        f'<ol class="guide-steps">{_li}</ol></article>')
-        guide_html = (f'<section class="detail-guide" aria-labelledby="guide-h">'
+                        f'<ol class="guide-steps">{_li}</ol></div>')
+        guide_html = (f'<section class="detail-section detail-section--guide detail-section--alt" aria-labelledby="guide-h">'
                       f'<h2 class="detail-section-title" id="guide-h">{esc(name)}の受験・活用ガイド</h2>'
-                      f'<div class="guide-cards">{"".join(_blocks)}</div>'
-                      f'<p class="guide-note">※学習の進め方や向き・不向きは一般的な傾向の解説です。'
+                      f'<div class="guide-panel">{"".join(_blocks)}</div>'
+                      f'<p class="detail-footnote">※学習の進め方や向き・不向きは一般的な傾向の解説です。'
                       f'最新の制度・出題内容は公式サイトでご確認ください。</p></section>')
     else:
         guide_html = ""
@@ -1126,7 +1126,7 @@ def build_detail(row, popular_slugs=None) -> str:
     _rm_chain = step_up_chain(row["slug"])
     _roadmap_block = roadmap_html(row["slug"], _rm_chain)
     if _roadmap_block:
-        _roadmap_block = f'<section class="detail-roadmap">{_roadmap_block}</section>'
+        _roadmap_block = f'<section class="detail-section detail-section--roadmap">{_roadmap_block}</section>'
     body = f"""<div class="page-detail">
 <nav class="crumbs"><a href="../index.html">トップ</a> ›
 <a href="../bunya/{esc(bslug)}.html">{esc(major)}</a> › {esc(name)}</nav>
@@ -1136,7 +1136,7 @@ def build_detail(row, popular_slugs=None) -> str:
 </header>
 {partner_detail}
 {_roadmap_block}
-<section class="detail-spec" aria-labelledby="ds-h">
+<section class="detail-section detail-section--spec" aria-labelledby="ds-h">
 <h2 class="detail-section-title" id="ds-h">資格情報</h2>
 <div class="spec-sections">{spec_html}</div>{SPEC_TABLE_JS}</section>
 {guide_html}
@@ -3871,15 +3871,6 @@ html{scroll-padding-top:64px}
 .faq-item summary{cursor:pointer;padding:12px 15px;font-weight:600;color:var(--ink-deep);list-style-position:inside}
 .faq-item summary:hover{color:var(--accent,#2a7a6e)}
 .faq-item .faq-a{padding:0 15px 13px;color:var(--ink,#333);line-height:1.7}
-.detail-guide{margin:32px 0}
-.guide-cards{display:flex;flex-direction:column;gap:12px;margin-top:2px}
-.guide-card{background:#fff;border:1px solid var(--gray-200);border-radius:0;padding:16px 18px}
-.detail-guide .guide-h{font-size:var(--text-md);font-weight:var(--fw-bold);color:var(--ink-deep);margin:0 0 10px;padding-bottom:8px;border-bottom:1px solid var(--gray-200);line-height:1.4}
-.guide-card-body p{margin:0;line-height:1.75;color:var(--ink)}
-.detail-guide .guide-note{font-size:var(--text-sm);color:var(--muted);margin:14px 0 0;padding:12px 14px;background:#fff;border:1px solid var(--gray-200);border-radius:0;line-height:1.65}
-.guide-steps{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px;counter-reset:guide-step}
-.guide-steps li{position:relative;margin:0;padding:10px 12px 10px 44px;background:#fff;border:1px solid var(--gray-200);border-radius:0;line-height:1.65;color:var(--ink);counter-increment:guide-step}
-.guide-steps li::before{content:counter(guide-step);position:absolute;left:12px;top:10px;width:24px;height:24px;display:flex;align-items:center;justify-content:center;background:var(--accent);color:#fff;font-size:var(--text-sm);font-weight:700;border-radius:50%;line-height:1}
 .finder-grid{list-style:none;padding:0;display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:10px 0}
 .finder-card a{display:flex;flex-direction:column;gap:3px;padding:13px 15px;background:var(--gray-50);border:1px solid var(--gray-200);border-radius:var(--radius);text-decoration:none;height:100%}
 .finder-card a:hover{border-color:var(--accent,#2a7a6e)}
@@ -4101,38 +4092,54 @@ table.cmp tbody th{background:var(--gray-50);color:var(--ink);white-space:nowrap
 .partner-card-name{font-size:var(--text-sm);font-weight:var(--fw-semibold);color:var(--ink-deep);line-height:1.35}
 .partner-card-tag{font-size:var(--text-sm);color:var(--muted);line-height:1.45}
 .partner-ext{font-size:.78em;color:var(--accent);margin-left:5px;font-weight:700}
-.partner-detail{margin:0 0 22px;background:var(--accent-light);border:1px solid rgba(35,111,100,.2);border-radius:var(--radius);padding:14px 16px}
-.partner-detail .detail-section-title{margin-bottom:8px}
 .partner-detail-grid{display:flex;flex-wrap:wrap;gap:10px}
-.partner-detail-card{display:flex;flex-direction:column;gap:2px;flex:1 1 220px;background:#fff;border:1px solid rgba(35,111,100,.25);border-radius:var(--radius);padding:11px 13px;text-decoration:none;color:inherit;transition:border-color .15s}
+.partner-detail-card{display:flex;flex-direction:column;gap:2px;flex:1 1 220px;background:#fff;border:1px solid var(--table-border);border-radius:0;padding:12px 14px;text-decoration:none;color:inherit;transition:border-color .15s}
 .partner-detail-card:hover{border-color:var(--accent)}
 .pd-name{font-size:var(--text-md);font-weight:var(--fw-semibold);color:var(--accent-hover)}
 .pd-tag{font-size:var(--text-sm);color:var(--muted);line-height:1.45}
 .partner-note{font-size:var(--text-sm);margin:8px 0 0}
 /* Detail */
-.detail-intro{background:#fff;border:1px solid var(--gray-200);border-radius:0;padding:20px 22px 18px;margin:0 0 24px}
-.detail-title{font-size:var(--text-xl);font-weight:700;color:var(--ink-deep);line-height:1.35;margin:0 0 10px}
+.detail-intro{padding:0 0 28px;margin:0;border:none;background:transparent}
+.detail-title{font-size:var(--text-xl);font-weight:700;color:var(--ink-deep);line-height:1.35;margin:0 0 12px}
 .detail-title-inner{display:inline-flex;align-items:center;gap:10px}
 .detail-title-trophy{flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;color:#b8860b;background:#f7f3e8;border-radius:var(--radius)}
 .detail-title-trophy .icon-svg{width:18px;height:18px}
-.detail-audience{font-size:var(--text-md);color:var(--muted);line-height:1.65;margin:0}
+.detail-audience{font-size:var(--text-md);color:var(--ink);line-height:1.75;margin:0}
 .detail-official{margin-top:28px;padding-top:24px;border-top:1px solid var(--gray-200)}
 .detail-official .btn{padding:10px 18px;font-size:var(--text-sm)}
-.detail-nav{margin-top:36px;padding-top:32px;border-top:1px solid var(--gray-200)}
-.detail-nav-block+.detail-nav-block{margin-top:32px;padding-top:32px;border-top:1px solid var(--gray-200)}
-.detail-nav-heading,.detail-nav-head{font-size:var(--text-lg);font-weight:var(--fw-bold);color:var(--ink-deep);margin:0 0 22px;line-height:1.35}
-.detail-nav-subhead{font-size:var(--text-lg);font-weight:var(--fw-semibold);color:var(--muted);margin:0 0 12px}
-.detail-nav-subhead-title{font-size:var(--text-lg);font-weight:var(--fw-bold);color:var(--ink-deep);margin:0 0 14px}
-.detail-nav-subhead+.detail-nav-subhead,.detail-link-list+.detail-nav-subhead,.detail-link-grid+.detail-nav-subhead,.detail-compare-row+.detail-nav-subhead{margin-top:28px}
-.detail-link-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
-.detail-link-item{font-size:var(--text-sm);line-height:1.55;color:var(--muted)}
+.page-detail .detail-section{padding:32px 0 8px;border-top:1px solid var(--gray-200)}
+.page-detail .detail-section--alt{margin-left:calc(-1*var(--page-gutter));margin-right:calc(-1*var(--page-gutter));padding-left:var(--page-gutter);padding-right:var(--page-gutter);background:var(--gray-50)}
+.page-detail .detail-section-title{font-size:1.375rem;font-weight:var(--fw-bold);color:var(--ink-deep);margin:0 0 20px;line-height:1.35;padding-bottom:10px;border-bottom:2px solid var(--table-border)}
+.page-detail .detail-subhead{font-size:var(--text-md);font-weight:var(--fw-bold);color:var(--ink-deep);margin:0 0 14px;line-height:1.4}
+.page-detail .detail-footnote{font-size:var(--text-sm);color:var(--muted);margin:16px 0 0;line-height:1.65}
+.page-detail .guide-panel{border:1px solid var(--table-border);background:#fff}
+.page-detail .guide-block{padding:18px 20px;border-bottom:1px solid var(--gray-200)}
+.page-detail .guide-block:last-child{border-bottom:none}
+.page-detail .guide-h{font-size:var(--text-md);font-weight:var(--fw-bold);color:var(--ink-deep);margin:0 0 10px;line-height:1.4}
+.page-detail .guide-block p{margin:0;line-height:1.75;color:var(--ink)}
+.page-detail .guide-steps{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px;counter-reset:guide-step}
+.page-detail .guide-steps li{position:relative;margin:0;padding:10px 12px 10px 44px;background:var(--gray-50);border:1px solid var(--gray-200);border-radius:0;line-height:1.65;color:var(--ink);counter-increment:guide-step}
+.page-detail .guide-steps li::before{content:counter(guide-step);position:absolute;left:12px;top:10px;width:24px;height:24px;display:flex;align-items:center;justify-content:center;background:var(--accent);color:#fff;font-size:var(--text-sm);font-weight:700;border-radius:50%;line-height:1}
+.page-detail .faq-list{border:1px solid var(--table-border);background:#fff}
+.page-detail .faq-item{border:none;border-radius:0;margin:0;border-bottom:1px solid var(--gray-200);background:#fff}
+.page-detail .faq-item:last-child{border-bottom:none}
+.page-detail .faq-item summary{font-size:var(--text-md);font-weight:var(--fw-semibold);color:var(--ink-deep)}
+.page-detail .faq-item .faq-a{color:var(--ink);font-size:var(--text-md);line-height:1.7}
+.detail-nav{margin-top:0;padding:32px 0 8px;border-top:1px solid var(--gray-200)}
+.detail-nav-block+.detail-nav-block{margin-top:28px;padding-top:28px;border-top:1px solid var(--gray-200)}
+.detail-nav-heading,.detail-nav-head{font-size:1.375rem;font-weight:var(--fw-bold);color:var(--ink-deep);margin:0 0 18px;line-height:1.35;padding-bottom:10px;border-bottom:2px solid var(--table-border)}
+.detail-nav-subhead{font-size:var(--text-md);font-weight:var(--fw-semibold);color:var(--ink-deep);margin:0 0 10px}
+.detail-nav-subhead-title{font-size:var(--text-md);font-weight:var(--fw-bold);color:var(--ink-deep);margin:0 0 12px}
+.detail-nav-subhead+.detail-nav-subhead,.detail-link-list+.detail-nav-subhead,.detail-link-grid+.detail-nav-subhead,.detail-compare-row+.detail-nav-subhead{margin-top:24px}
+.detail-link-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.detail-link-item{font-size:var(--text-md);line-height:1.55;color:var(--ink)}
 .detail-link-item a{color:var(--accent);font-weight:600;text-decoration:none}
 .detail-link-item a:hover{text-decoration:underline;text-underline-offset:2px}
 .detail-link-desc{color:var(--muted);font-weight:400}
-.detail-link-grid{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 20px}
-.detail-link-grid a{display:block;font-size:var(--text-sm);font-weight:600;color:var(--accent);text-decoration:none;line-height:1.45;padding:2px 0}
+.detail-link-grid{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px 20px}
+.detail-link-grid a{display:block;font-size:var(--text-md);font-weight:600;color:var(--accent);text-decoration:none;line-height:1.45;padding:2px 0}
 .detail-link-grid a:hover{text-decoration:underline;text-underline-offset:2px}
-.detail-compare-row{font-size:var(--text-sm);color:var(--muted);line-height:1.65;margin:0}
+.detail-compare-row{font-size:var(--text-md);color:var(--ink);line-height:1.65;margin:0}
 .detail-compare-label{color:var(--muted);font-weight:400}
 .detail-compare-row a{color:var(--accent);font-weight:600;text-decoration:none}
 .detail-compare-row a:hover{text-decoration:underline;text-underline-offset:2px}
@@ -4156,14 +4163,15 @@ table.cmp tbody th{background:var(--gray-50);color:var(--ink);white-space:nowrap
 .detail-related .more-same li{break-inside:avoid;margin:2px 0}
 @media(max-width:560px){.detail-related .more-same ul{columns:1}}
 .detail-spec{margin-bottom:8px}
-.spec-sections{display:flex;flex-direction:column;gap:32px;--spec-label-w:14.5rem}
+.spec-sections{display:flex;flex-direction:column;gap:28px;--spec-label-w:14.5rem}
 .spec-section{margin:0}
 .page-detail .spec-sections table.spec{table-layout:fixed;width:100%}
 .page-detail .spec-sections table.spec col.spec-col-label{width:var(--spec-label-w)}
 .page-detail .spec-sections table.spec col.spec-col-value{width:auto}
 .page-detail .spec-sections table.spec th{width:var(--spec-label-w);box-sizing:border-box}
 .page-detail .spec-sections table.spec td{box-sizing:border-box;width:auto}
-.spec-section-title{font-size:var(--text-md);font-weight:var(--fw-semibold);color:var(--ink-deep);margin:0 0 12px;line-height:1.4}
+.spec-section-title{font-size:var(--text-md);font-weight:var(--fw-bold);color:var(--ink-deep);margin:0 0 12px;line-height:1.4}
+.page-detail .spec-wrap,.page-detail table.spec{border-radius:0}
 .detail-source{margin-top:22px;padding:14px 0 0;border-top:1px solid var(--gray-200);font-size:var(--text-sm);color:var(--muted);line-height:1.65}
 .detail-source p{margin:0 0 5px}.detail-source .k{font-weight:600;color:var(--muted)}
 .detail-source a{color:var(--ink);text-decoration:underline;text-underline-offset:2px}
@@ -4200,12 +4208,15 @@ table.cmp tbody th{background:var(--gray-50);color:var(--ink);white-space:nowrap
 .cmp-verdict-card .why{font-size:var(--text-sm);color:var(--muted);margin-top:3px;line-height:1.5}
 /* Detail page typography（詳細ページのフォント・色統一） */
 .page-detail{font-size:var(--text-md);color:var(--ink);line-height:1.7;font-weight:var(--fw-regular)}
-.page-detail .detail-intro{margin:0 0 24px}
-.page-detail .detail-title{font-size:var(--text-xl);color:var(--ink-deep);margin:0 0 10px}
-.page-detail .detail-audience{font-size:var(--text-md);color:var(--ink);line-height:1.7;margin:0}
-.page-detail .crumbs{font-size:var(--text-sm);color:var(--muted);margin-bottom:8px}
+.page-detail .detail-intro{margin:0;padding-bottom:28px}
+.page-detail .detail-title{font-size:var(--text-xl);color:var(--ink-deep);margin:0 0 12px}
+.page-detail .detail-audience{font-size:var(--text-md);color:var(--ink);line-height:1.75;margin:0}
+.page-detail .crumbs{font-size:var(--text-sm);color:var(--muted);margin-bottom:12px}
 .page-detail .crumbs a{color:var(--ink)}
 .page-detail .note-muted,.page-detail .muted{font-size:inherit;color:var(--muted);font-weight:400}
+.page-detail .roadmap{margin:0}
+.page-detail .rm-step{border-radius:0;box-shadow:none;border:1px solid var(--gray-200)}
+.page-detail .rm-cur{box-shadow:none}
 .page-detail .fact .l{font-size:var(--text-sm);color:var(--muted)}
 .page-detail .fact .v{font-size:var(--text-md);font-weight:600;color:var(--ink)}
 .page-detail table.spec{font-size:var(--text-table);color:var(--ink);line-height:1.55}
@@ -4243,9 +4254,6 @@ table.cmp tbody th{background:var(--gray-50);color:var(--ink);white-space:nowrap
 .page-detail a.tag-chip:hover{background:var(--gray-100);border-color:var(--gray-300)}
 .page-detail .point-list li{font-size:var(--text-md);color:var(--ink);background:var(--gray-50);border-color:var(--gray-200)}
 .page-detail .point-list li::before{color:var(--muted)}
-.page-detail .faq-item summary{font-size:var(--text-md);color:var(--ink)}
-.page-detail .faq-a{font-size:var(--text-md);color:var(--muted)}
-.page-detail .detail-link-item,.page-detail .detail-link-grid a,.page-detail .detail-compare-row{font-size:var(--text-sm);color:var(--muted)}
 .page-detail .detail-link-desc,.page-detail .detail-nav-note,.page-detail .detail-source-note{font-size:var(--text-sm);color:var(--muted)}
 .page-detail .detail-source{font-size:var(--text-sm);color:var(--muted)}
 .page-detail .careers-sec,.page-detail .materials-sec{margin-top:20px;padding-top:14px}
@@ -4259,10 +4267,6 @@ table.cmp tbody th{background:var(--gray-50);color:var(--ink);white-space:nowrap
 .page-detail .ad-disclosure{font-size:var(--text-sm);color:var(--muted);background:var(--gray-50);border-color:var(--gray-200)}
 .page-detail .pd-name{font-size:var(--text-md);font-weight:var(--fw-semibold);color:var(--ink)}
 .page-detail .pd-tag{font-size:var(--text-sm);color:var(--muted)}
-.page-detail .partner-note{font-size:var(--text-sm);color:var(--muted)}
-.page-detail .detail-roadmap{margin:0 0 28px}
-.page-detail .detail-roadmap .roadmap{margin:0}
-.page-detail .detail-roadmap .roadmap h3{margin:0 0 14px}
 .page-detail .detail-related .more-compare p{font-size:var(--text-sm);color:var(--muted)}
 .page-detail .provenance{font-size:var(--text-sm);color:var(--muted)}
 .page-detail .updated{font-size:var(--text-sm);color:var(--muted)}
@@ -4292,23 +4296,19 @@ table.cmp tbody th{background:var(--gray-50);color:var(--ink);white-space:nowrap
   .compare-names{font-size:var(--text-md)}
   /* 一覧・ランキングのタップ領域と余白 */
   .cl-link{padding:13px 14px}
-  /* 詳細：本文サイズと余白を圧縮 */
-  .page-detail .detail-intro{padding:14px 16px 12px;margin-bottom:18px}
-  .page-detail .detail-title{margin-bottom:8px}
-  .page-detail .detail-audience{font-size:var(--text-md);line-height:1.6}
-  .page-detail .point-list li{font-size:var(--text-md)}
-  .page-detail .faq-item summary,.page-detail .faq-a{font-size:var(--text-md)}
-  /* 受験・活用ガイド */
-  .page-detail .guide-card{padding:14px 14px 12px}
-  .page-detail .detail-guide .guide-h{margin-bottom:8px;padding-bottom:6px}
-  .page-detail .guide-card-body p{line-height:1.65}
-  .page-detail .guide-steps li{padding:9px 10px 9px 40px;line-height:1.6}
+  /* 詳細ページ */
+  .page-detail .detail-intro{padding-bottom:20px}
+  .page-detail .detail-section{padding:24px 0 6px}
+  .page-detail .detail-section--alt{padding-left:var(--page-gutter);padding-right:var(--page-gutter)}
+  .page-detail .detail-section-title{font-size:1.125rem;margin-bottom:16px;padding-bottom:8px}
+  .page-detail .guide-block{padding:14px 16px}
+  .page-detail .guide-block p,.page-detail .guide-steps li{line-height:1.65}
+  .page-detail .guide-steps li{padding:9px 10px 9px 40px}
   .page-detail .guide-steps li::before{left:10px;top:9px;width:22px;height:22px}
-  .page-detail .detail-guide .guide-note{margin-top:12px;padding:10px 12px}
-  .page-detail .detail-faq,.page-detail .detail-guide{margin:22px 0}
-  .page-detail .detail-official{margin-top:20px;padding-top:18px}
-  .page-detail .detail-nav{margin-top:26px;padding-top:22px}
+  .page-detail .detail-nav{padding-top:24px}
   .page-detail .detail-nav-block+.detail-nav-block{margin-top:22px;padding-top:22px}
+  .page-detail .point-list li{font-size:var(--text-md)}
+  .page-detail .faq-item summary,.page-detail .faq-item .faq-a{font-size:var(--text-md)}
   /* 比較バーが内容に被らないよう余白を増やす */
   body.cmp-open{padding-bottom:96px}
 }
