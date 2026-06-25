@@ -203,12 +203,19 @@ html{scroll-padding-top:64px}
 .faq-item summary:hover{color:var(--accent,#2a7a6e)}
 .faq-item .faq-a{padding:0 15px 13px;color:var(--ink,#333);line-height:1.7}
 .detail-guide{margin:32px 0}
-.detail-guide .guide-h{font-size:1.02rem;margin:22px 0 8px;color:var(--ink-deep)}
-.detail-guide .guide-h:first-of-type{margin-top:6px}
-.detail-guide p{line-height:1.85;color:var(--ink,#333);margin:.2em 0 .6em}
-.detail-guide .guide-note{font-size:var(--text-sm);color:var(--muted)}
-.guide-steps{margin:.3em 0 .8em;padding-left:1.4em}
-.guide-steps li{line-height:1.8;color:var(--ink,#333);margin:.2em 0}
+.guide-cards{display:flex;flex-direction:column;gap:12px;margin-top:2px}
+.guide-card{background:#fff;border:1px solid var(--gray-200);border-left:3px solid var(--gray-300);border-radius:var(--radius);padding:16px 18px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.guide-card--suited{border-left-color:#6a9e94}
+.guide-card--study{border-left-color:var(--accent)}
+.guide-card--steps{background:var(--accent-light);border-color:rgba(35,111,100,.18);border-left-color:var(--accent)}
+.guide-card--career{border-left-color:#8a9478}
+.detail-guide .guide-h{font-size:var(--text-md);font-weight:var(--fw-bold);color:var(--ink-deep);margin:0 0 10px;padding-bottom:8px;border-bottom:1px solid var(--gray-200);line-height:1.4}
+.guide-card--steps .guide-h{border-bottom-color:rgba(35,111,100,.15)}
+.guide-card-body p{margin:0;line-height:1.75;color:var(--ink)}
+.detail-guide .guide-note{font-size:var(--text-sm);color:var(--muted);margin:14px 0 0;padding:12px 14px;background:var(--gray-50);border:1px solid var(--gray-200);border-radius:var(--radius);line-height:1.65}
+.guide-steps{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px;counter-reset:guide-step}
+.guide-steps li{position:relative;margin:0;padding:10px 12px 10px 44px;background:#fff;border:1px solid rgba(35,111,100,.14);border-radius:var(--radius);line-height:1.65;color:var(--ink);counter-increment:guide-step}
+.guide-steps li::before{content:counter(guide-step);position:absolute;left:12px;top:10px;width:24px;height:24px;display:flex;align-items:center;justify-content:center;background:var(--accent);color:#fff;font-size:var(--text-sm);font-weight:700;border-radius:50%;line-height:1}
 .finder-grid{list-style:none;padding:0;display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:10px 0}
 .finder-card a{display:flex;flex-direction:column;gap:3px;padding:13px 15px;background:var(--gray-50);border:1px solid var(--gray-200);border-radius:var(--radius);text-decoration:none;height:100%}
 .finder-card a:hover{border-color:var(--accent,#2a7a6e)}
@@ -627,11 +634,13 @@ table.cmp tbody th{background:var(--gray-50);color:var(--ink);white-space:nowrap
   .page-detail .detail-audience{font-size:var(--text-md);line-height:1.6}
   .page-detail .point-list li{font-size:var(--text-md)}
   .page-detail .faq-item summary,.page-detail .faq-a{font-size:var(--text-md)}
-  /* 受験・活用ガイドの行間・余白を詰める */
-  .page-detail .detail-guide p{line-height:1.65;margin:.15em 0 .5em}
-  .page-detail .detail-guide .guide-h{margin:14px 0 5px}
-  .page-detail .guide-steps li{line-height:1.6;margin:.1em 0}
-  /* セクション間の区切り余白を圧縮 */
+  /* 受験・活用ガイド */
+  .page-detail .guide-card{padding:14px 14px 12px}
+  .page-detail .detail-guide .guide-h{margin-bottom:8px;padding-bottom:6px}
+  .page-detail .guide-card-body p{line-height:1.65}
+  .page-detail .guide-steps li{padding:9px 10px 9px 40px;line-height:1.6}
+  .page-detail .guide-steps li::before{left:10px;top:9px;width:22px;height:22px}
+  .page-detail .detail-guide .guide-note{margin-top:12px;padding:10px 12px}
   .page-detail .detail-faq,.page-detail .detail-guide{margin:22px 0}
   .page-detail .detail-official{margin-top:20px;padding-top:18px}
   .page-detail .detail-nav{margin-top:26px;padding-top:22px}
