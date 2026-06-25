@@ -11,7 +11,7 @@
 /* タイプスケール: xl=大見出し / lg=セクション見出し(20px) / md=本文 / sm=補助・メタ / table=表(15px) */
 --text-xl:clamp(1.375rem,4vw,2.25rem);--text-lg:1.25rem;--text-md:1.0625rem;--text-sm:0.875rem;--text-table:0.9375rem;
 /* フォントウェイト: regular=本文 / semibold=ラベル・カード名・h3 / bold=見出し・強調 */
---fw-regular:400;--fw-semibold:600;--fw-bold:700;--page-gutter:32px}
+--fw-regular:400;--fw-semibold:600;--fw-bold:700;--page-gutter:36px}
 *{box-sizing:border-box}
 html{font-size:16px}
 body{margin:0;min-height:100vh;display:flex;flex-direction:column;font-family:"Noto Sans JP",system-ui,-apple-system,"Hiragino Kaku Gothic ProN",Meiryo,sans-serif;font-size:var(--text-md);font-weight:var(--fw-regular);color:var(--ink);background:var(--page-bg);line-height:1.7;-webkit-font-smoothing:antialiased;overflow-wrap:break-word}
@@ -62,7 +62,7 @@ html{scroll-padding-top:64px}
 .header-menu-panel a{color:var(--ink);text-decoration:none;padding:12px 4px;border-bottom:1px solid var(--gray-200);font-size:var(--text-md)}
 .header-menu-panel a:last-child{border-bottom:none}
 .header-menu-panel a:hover{color:var(--ink-deep);background:var(--gray-50);text-decoration:none}
-@media(max-width:768px){.header-nav{display:none}.header-actions{display:flex}.header-inner{padding:10px 16px;--page-gutter:16px}.logo-mark{min-width:48px;min-height:32px;padding:5px 8px 4px}.logo-mark-line{font-size:11px}.logo-mark-line--sub{font-size:10px}.logo-text{font-size:15px}.logo-sub{font-size:9px;max-width:min(200px,58vw)}.site-tagline{display:none}.container{padding:20px 16px 36px}.block-band{margin-left:-16px;margin-right:-16px;padding:32px 16px}.block-all-certs{padding:40px 16px}}
+@media(max-width:768px){:root{--page-gutter:20px}.header-nav{display:none}.header-actions{display:flex}.header-inner{padding:10px var(--page-gutter)}.logo-mark{min-width:48px;min-height:32px;padding:5px 8px 4px}.logo-mark-line{font-size:11px}.logo-mark-line--sub{font-size:10px}.logo-text{font-size:15px}.logo-sub{font-size:9px;max-width:min(200px,58vw)}.site-tagline{display:none}.container{padding:20px var(--page-gutter) 36px}.block-band{margin-left:calc(-1*var(--page-gutter));margin-right:calc(-1*var(--page-gutter));padding:32px var(--page-gutter)}.block-all-certs{padding:40px var(--page-gutter)}}
 
 .container{max-width:1200px;margin:0 auto;padding:28px var(--page-gutter) 36px;width:100%;flex:1 0 auto;min-width:0;background:#fff;box-shadow:0 0 24px rgba(0,0,0,.05)}
 
@@ -605,7 +605,7 @@ table.cmp tbody th{background:var(--gray-50);color:var(--ink);white-space:nowrap
 /* ===== モバイル最適化（可読性・余白・タップ領域） ===== */
 @media(max-width:600px){
   /* タイプスケールを引き締めて1画面の情報量を増やす（本文17→16px・見出し20→18px・行間も圧縮） */
-  :root{--text-md:1rem;--text-lg:1.125rem;--text-table:0.875rem}
+  :root{--text-md:1rem;--text-lg:1.125rem;--text-table:0.875rem;--page-gutter:16px}
   body{line-height:1.6}
   h2,h3{line-height:1.35}
   /* ヒーロー：余白を圧縮 */
@@ -619,7 +619,7 @@ table.cmp tbody th{background:var(--gray-50);color:var(--ink);white-space:nowrap
   .recent-inset .block-head{margin-bottom:10px}
   .block-head{margin-bottom:10px}
   /* コンテナ余白を圧縮 */
-  .container{padding:16px 14px 28px}
+  .container{padding:16px var(--page-gutter) 28px}
   /* 人気の資格は1列にして各カードの情報を見やすく */
   .popular-grid{grid-template-columns:1fr;gap:10px}
   .pop-card{padding:14px 16px}
