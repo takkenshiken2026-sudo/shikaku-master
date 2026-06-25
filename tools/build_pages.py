@@ -3873,10 +3873,10 @@ html{scroll-padding-top:64px}
 .faq-item .faq-a{padding:0 15px 13px;color:var(--ink,#333);line-height:1.7}
 .detail-guide{margin:32px 0}
 .guide-cards{display:flex;flex-direction:column;gap:12px;margin-top:2px}
-.guide-card{background:var(--gray-50);border:1px solid var(--gray-200);border-radius:0;padding:16px 18px}
+.guide-card{background:#fff;border:1px solid var(--gray-200);border-radius:0;padding:16px 18px}
 .detail-guide .guide-h{font-size:var(--text-md);font-weight:var(--fw-bold);color:var(--ink-deep);margin:0 0 10px;padding-bottom:8px;border-bottom:1px solid var(--gray-200);line-height:1.4}
 .guide-card-body p{margin:0;line-height:1.75;color:var(--ink)}
-.detail-guide .guide-note{font-size:var(--text-sm);color:var(--muted);margin:14px 0 0;padding:12px 14px;background:var(--gray-50);border:1px solid var(--gray-200);border-radius:0;line-height:1.65}
+.detail-guide .guide-note{font-size:var(--text-sm);color:var(--muted);margin:14px 0 0;padding:12px 14px;background:#fff;border:1px solid var(--gray-200);border-radius:0;line-height:1.65}
 .guide-steps{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px;counter-reset:guide-step}
 .guide-steps li{position:relative;margin:0;padding:10px 12px 10px 44px;background:#fff;border:1px solid var(--gray-200);border-radius:0;line-height:1.65;color:var(--ink);counter-increment:guide-step}
 .guide-steps li::before{content:counter(guide-step);position:absolute;left:12px;top:10px;width:24px;height:24px;display:flex;align-items:center;justify-content:center;background:var(--accent);color:#fff;font-size:var(--text-sm);font-weight:700;border-radius:50%;line-height:1}
@@ -4110,7 +4110,7 @@ table.cmp tbody th{background:var(--gray-50);color:var(--ink);white-space:nowrap
 .pd-tag{font-size:var(--text-sm);color:var(--muted);line-height:1.45}
 .partner-note{font-size:var(--text-sm);margin:8px 0 0}
 /* Detail */
-.detail-intro{background:var(--gray-50);border:1px solid var(--gray-200);border-radius:0;padding:20px 22px 18px;margin:0 0 24px}
+.detail-intro{background:#fff;border:1px solid var(--gray-200);border-radius:0;padding:20px 22px 18px;margin:0 0 24px}
 .detail-title{font-size:var(--text-xl);font-weight:700;color:var(--ink-deep);line-height:1.35;margin:0 0 10px}
 .detail-title-inner{display:inline-flex;align-items:center;gap:10px}
 .detail-title-trophy{flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;color:#b8860b;background:#f7f3e8;border-radius:var(--radius)}
