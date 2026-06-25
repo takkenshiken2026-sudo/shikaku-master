@@ -4108,7 +4108,7 @@ table.cmp tbody th{background:var(--gray-50);color:var(--ink);white-space:nowrap
 .pd-tag{font-size:var(--text-sm);color:var(--muted);line-height:1.45}
 .partner-note{font-size:var(--text-sm);margin:8px 0 0}
 /* Detail */
-.detail-intro{background:var(--gray-50);border:1px solid var(--gray-200);border-left:4px solid var(--accent);border-radius:var(--radius);padding:20px 22px 18px;margin:0 0 24px}
+.detail-intro{background:var(--gray-50);border:1px solid var(--gray-200);border-radius:0;padding:20px 22px 18px;margin:0 0 24px}
 .detail-title{font-size:var(--text-xl);font-weight:700;color:var(--ink-deep);line-height:1.35;margin:0 0 10px}
 .detail-title-inner{display:inline-flex;align-items:center;gap:10px}
 .detail-title-trophy{flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;color:#b8860b;background:#f7f3e8;border-radius:var(--radius)}
