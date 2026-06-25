@@ -1121,8 +1121,10 @@ def build_detail(row, popular_slugs=None) -> str:
     body = f"""<div class="page-detail">
 <nav class="crumbs"><a href="../index.html">トップ</a> ›
 <a href="../bunya/{esc(bslug)}.html">{esc(major)}</a> › {esc(name)}</nav>
+<header class="detail-intro">
 {detail_title_html(name, row["slug"], popular_slugs)}
 <p class="detail-audience">{lead}</p>
+</header>
 {partner_detail}
 {_roadmap_block}
 <section class="detail-spec" aria-labelledby="ds-h">
@@ -4097,11 +4099,12 @@ table.cmp tbody th{background:var(--gray-50);color:var(--ink);white-space:nowrap
 .pd-tag{font-size:var(--text-sm);color:var(--muted);line-height:1.45}
 .partner-note{font-size:var(--text-sm);margin:8px 0 0}
 /* Detail */
-.detail-title{font-size:var(--text-xl);font-weight:700;color:var(--ink-deep);line-height:1.35;margin:.1em 0 8px}
+.detail-intro{background:var(--gray-50);border:1px solid var(--gray-200);border-left:4px solid var(--accent);border-radius:var(--radius);padding:20px 22px 18px;margin:0 0 24px}
+.detail-title{font-size:var(--text-xl);font-weight:700;color:var(--ink-deep);line-height:1.35;margin:0 0 10px}
 .detail-title-inner{display:inline-flex;align-items:center;gap:10px}
 .detail-title-trophy{flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;color:#b8860b;background:#f7f3e8;border-radius:var(--radius)}
 .detail-title-trophy .icon-svg{width:18px;height:18px}
-.detail-audience{font-size:var(--text-md);color:var(--muted);line-height:1.65;margin:0 0 18px}
+.detail-audience{font-size:var(--text-md);color:var(--muted);line-height:1.65;margin:0}
 .detail-official{margin-top:28px;padding-top:24px;border-top:1px solid var(--gray-200)}
 .detail-official .btn{padding:10px 18px;font-size:var(--text-sm)}
 .detail-nav{margin-top:36px;padding-top:32px;border-top:1px solid var(--gray-200)}
@@ -4186,8 +4189,9 @@ table.cmp tbody th{background:var(--gray-50);color:var(--ink);white-space:nowrap
 .cmp-verdict-card .why{font-size:var(--text-sm);color:var(--muted);margin-top:3px;line-height:1.5}
 /* Detail page typography（詳細ページのフォント・色統一） */
 .page-detail{font-size:var(--text-md);color:var(--ink);line-height:1.7;font-weight:var(--fw-regular)}
-.page-detail .detail-title{font-size:var(--text-xl);color:var(--ink-deep);margin:.1em 0 6px}
-.page-detail .detail-audience{font-size:var(--text-md);color:var(--ink);line-height:1.7;margin:0 0 16px}
+.page-detail .detail-intro{margin:0 0 24px}
+.page-detail .detail-title{font-size:var(--text-xl);color:var(--ink-deep);margin:0 0 10px}
+.page-detail .detail-audience{font-size:var(--text-md);color:var(--ink);line-height:1.7;margin:0}
 .page-detail .crumbs{font-size:var(--text-sm);color:var(--muted);margin-bottom:8px}
 .page-detail .crumbs a{color:var(--ink)}
 .page-detail .note-muted,.page-detail .muted{font-size:inherit;color:var(--muted);font-weight:400}
@@ -4278,8 +4282,9 @@ table.cmp tbody th{background:var(--gray-50);color:var(--ink);white-space:nowrap
   /* 一覧・ランキングのタップ領域と余白 */
   .cl-link{padding:13px 14px}
   /* 詳細：本文サイズと余白を圧縮 */
-  .page-detail .detail-title{margin-bottom:6px}
-  .page-detail .detail-audience{font-size:var(--text-md);line-height:1.6;margin-bottom:14px}
+  .page-detail .detail-intro{padding:14px 16px 12px;margin-bottom:18px}
+  .page-detail .detail-title{margin-bottom:8px}
+  .page-detail .detail-audience{font-size:var(--text-md);line-height:1.6}
   .page-detail .point-list li{font-size:var(--text-md)}
   .page-detail .faq-item summary,.page-detail .faq-a{font-size:var(--text-md)}
   /* 受験・活用ガイドの行間・余白を詰める */
