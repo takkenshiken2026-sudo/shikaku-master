@@ -645,8 +645,11 @@ def materials_cell_html(slug):
             title_html = esc(m["title"])
         prov = f' <span class="muted">／{esc(m["provider"])}</span>' if m["provider"] else ""
         note = f' <span class="note-muted">— {esc(m["note"])}</span>' if m["note"] else ""
-        items.append(f'<li><span class="mat-kind">{esc(m["kind"])}</span> '
-                     f'{title_html}{prov}{note}</li>')
+        # セクション見出しが既に「テキスト」を含むため、種別「テキスト」のラベルは省略し、
+        # 「講座」など他種別のときだけ表示する（同じ「テキスト：」が並ぶ冗長さを回避）。
+        kind_html = (f'<span class="mat-kind">{esc(m["kind"])}</span> '
+                     if m["kind"] and m["kind"] != "テキスト" else "")
+        items.append(f'<li>{kind_html}{title_html}{prov}{note}</li>')
     disclosure = (
         '<p class="ad-disclosure">本セクションには広告（アフィリエイトリンク）を含みます。'
         'リンクを経由して購入・申込みされた場合、当サイトが収益を得ることがあります。'
@@ -664,10 +667,8 @@ def materials_section_html(slug):
     cell = materials_cell_html(slug)
     if not cell:
         return ""
-    has_aff = any(m["affiliate"] for m in (MATERIALS.get(slug) or []))
-    pr = '<span class="pr-badge">PR</span>' if has_aff else ""
     return (
-        f'<section class="materials-sec"><h2 class="detail-section-title">おすすめテキスト・講座{pr}</h2>'
+        f'<section class="materials-sec"><h2 class="detail-section-title">おすすめテキスト・講座</h2>'
         f'{cell}</section>')
 
 
@@ -942,9 +943,7 @@ def build_detail(row, popular_slugs=None) -> str:
     # おすすめ教材
     _mat_cell = materials_cell_html(row["slug"])
     if _mat_cell:
-        _mat_aff = any(m["affiliate"] for m in (MATERIALS.get(row["slug"]) or []))
-        _mat_pr = ' <span class="pr-badge">PR</span>' if _mat_aff else ""
-        spec_ref.append((f"おすすめテキスト・講座{_mat_pr}", _mat_cell))
+        spec_ref.append(("おすすめテキスト・講座", _mat_cell))
 
     jd = jp_date(src)
     if row["official_url"]:
