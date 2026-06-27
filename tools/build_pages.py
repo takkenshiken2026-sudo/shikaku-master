@@ -391,7 +391,7 @@ def load_materials():
         return {}
     out = {}
     with MATERIALS_CSV.open(encoding="utf-8") as f:
-        for r in csv.DictReader(f):
+        for i, r in enumerate(csv.DictReader(f)):
             s = (r.get("slug") or "").strip()
             title = (r.get("title") or "").strip()
             if not s or not title:
@@ -403,11 +403,46 @@ def load_materials():
                 "url": (r.get("url") or "").strip(),
                 "affiliate": (r.get("affiliate") or "").strip(),
                 "note": (r.get("note") or "").strip(),
+                "sort": (r.get("sort") or "").strip(),
+                "_order": i,
             })
     return out
 
 
 MATERIALS = load_materials()
+
+
+def _material_sort_key(m):
+    """同一資格内の表示順（sort列 → CSV登録順 → 提供元 → タイトル）。"""
+    raw = m.get("sort", "")
+    try:
+        sort_n = int(raw) if raw not in ("", None) else 10_000
+    except ValueError:
+        sort_n = 10_000
+    return (sort_n, m.get("_order", 0), m.get("provider", ""), m.get("title", ""))
+
+
+def courses_for_slug(slug):
+    """1資格に紐づく講座のみを表示順で返す。"""
+    courses = [m for m in (MATERIALS.get(slug) or []) if m["kind"] == "講座"]
+    courses.sort(key=_material_sort_key)
+    return courses
+
+
+def course_item_html(m):
+    """講座1件分のHTML（coursesページ用）。"""
+    link = m["affiliate"] or m["url"]
+    rel = "sponsored nofollow noopener" if m["affiliate"] else "nofollow noopener"
+    if link:
+        title_html = (f'<a class="course-item-link" href="{esc(link)}" rel="{rel}" '
+                      f'target="_blank">{esc(m["title"])}<span class="course-ext" '
+                      f'aria-hidden="true">↗</span></a>')
+    else:
+        title_html = f'<span class="course-item-link">{esc(m["title"])}</span>'
+    prov = (f'<span class="course-provider">{esc(m["provider"])}</span>'
+            if m["provider"] else "")
+    note = f'<p class="course-note">{esc(m["note"])}</p>' if m["note"] else ""
+    return f'<li class="course-item">{title_html}{prov}{note}</li>'
 
 
 # ── 資格間の関係（ステップアップ・免除/受験資格・ダブルライセンス）──
@@ -496,8 +531,7 @@ def roadmap_html(slug, chain):
         else:
             steps.append(f'<li class="rm-step">{num}'
                          f'<a class="rm-name" href="{esc(s)}.html">{esc(_rel_name(s))}</a></li>')
-    return ('<div class="roadmap"><h3 class="detail-subhead">取得ロードマップ</h3>'
-            '<ol class="rm-track">' + "".join(steps) + "</ol></div>")
+    return '<ol class="rm-track">' + "".join(steps) + "</ol>"
 
 
 def cert_relations_html(slug):
@@ -630,7 +664,7 @@ def detail_nav_html(slug, cat, rel_links, vs_pairs):
 
 def materials_cell_html(slug):
     """おすすめ教材・講座（表セル用）。教材が無ければ空文字。"""
-    mats = MATERIALS.get(slug) or []
+    mats = sorted(MATERIALS.get(slug) or [], key=_material_sort_key)
     if not mats:
         return ""
     has_aff = any(m["affiliate"] for m in mats)
@@ -756,7 +790,7 @@ def page_shell(title: str, body: str, depth: int, noindex: bool = True,
       <a href="{base}index.html#purpose">目的から探す</a><span class="header-nav-sep" aria-hidden="true">｜</span>
       <a href="{base}index.html#fields">分野から探す</a><span class="header-nav-sep" aria-hidden="true">｜</span>
       <a href="{base}index.html#all-certs">資格一覧</a><span class="header-nav-sep" aria-hidden="true">｜</span>
-      <a href="{base}compare.html">比較</a>
+      <a href="{base}courses.html">試験対策講座</a>
       <a href="{base}index.html#partners" class="header-nav-cta">資格対策サイト</a>
     </nav>
     <div class="header-actions">
@@ -774,7 +808,7 @@ def page_shell(title: str, body: str, depth: int, noindex: bool = True,
     <a href="{base}index.html#purpose">目的から探す</a>
     <a href="{base}index.html#fields">分野から探す</a>
     <a href="{base}index.html#all-certs">資格一覧</a>
-    <a href="{base}compare.html">比較</a>
+    <a href="{base}courses.html">試験対策講座</a>
     <a href="{base}shoku/index.html">職種から探す</a>
     <a href="{base}feature/index.html">特集・ランキング</a>
     <a href="{base}index.html#partners">資格対策サイト</a>
@@ -1107,7 +1141,7 @@ def build_detail(row, popular_slugs=None) -> str:
                         f'<ol class="guide-steps">{_li}</ol></div>')
         guide_html = (f'<section class="detail-section detail-section--guide detail-section--alt" aria-labelledby="guide-h">'
                       f'<h2 class="detail-section-title" id="guide-h">{esc(name)}の受験・活用ガイド</h2>'
-                      f'<div class="guide-panel">{"".join(_blocks)}</div>'
+                      f'<div class="guide-body">{"".join(_blocks)}</div>'
                       f'<p class="detail-footnote">※学習の進め方や向き・不向きは一般的な傾向の解説です。'
                       f'最新の制度・出題内容は公式サイトでご確認ください。</p></section>')
     else:
@@ -1123,9 +1157,14 @@ def build_detail(row, popular_slugs=None) -> str:
                  "localStorage.setItem(k,JSON.stringify(a));}catch(e){}})();</script>")
     partner_detail = partner_detail_html(row["slug"])
     _rm_chain = step_up_chain(row["slug"])
-    _roadmap_block = roadmap_html(row["slug"], _rm_chain)
-    if _roadmap_block:
-        _roadmap_block = f'<section class="detail-section detail-section--roadmap">{_roadmap_block}</section>'
+    _roadmap_track = roadmap_html(row["slug"], _rm_chain)
+    if _roadmap_track:
+        _roadmap_block = (
+            '<section class="detail-section detail-section--roadmap">'
+            '<h2 class="detail-section-title">取得ロードマップ</h2>'
+            f'<div class="roadmap">{_roadmap_track}</div></section>')
+    else:
+        _roadmap_block = ""
     body = f"""<div class="page-detail">
 <nav class="crumbs"><a href="../index.html">トップ</a> ›
 <a href="../bunya/{esc(bslug)}.html">{esc(major)}</a> › {esc(name)}</nav>
@@ -3064,7 +3103,8 @@ def build_index(rows) -> str:
         facts = ""
         d = difficulty(r)
         if d:
-            facts += f'<li><span class="k">難易度</span><span class="v">{esc(d[0])}</span></li>'
+            facts += (f'<li class="pop-card-diff"><span class="k">難易度</span>'
+                      f'<span class="v">{_diff_badge_html(r)}</span></li>')
         sh = (STUDY.get(r["slug"], {}) or {}).get("study_hours", "")
         if sh:
             facts += f'<li><span class="k">学習目安</span><span class="v">{esc(fmt_nums_in_text(sh))}</span></li>'
@@ -3120,12 +3160,23 @@ def build_index(rows) -> str:
                           ' stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
                           '<path d="M4 18h16"/><path d="M7 15l4-6 3 3 5-7"/></svg>')
 
+    suggest = ranked[:8]
+    suggest_items = "".join(
+        f'<li><button type="button" class="hero-suggest-item" role="option" '
+        f'data-q="{esc(_short(r))}">{esc(_short(r))}'
+        f'<span class="hero-suggest-meta">{esc(r["major_category"])}</span></button></li>'
+        for r in suggest)
+
     body = f"""<section class="hero">
   <h1><span class="hero-h1-line">就職・転職・スキルアップの</span><span class="hero-h1-line">資格情報サイト</span></h1>
   <p class="hero-sub">日本国内の資格を <strong id="count">{len(rows):,}</strong> 件以上掲載。受験料・受験資格・試験形式・合格率・公式サイトを、公式の一次情報に基づいて整理しています。</p>
   <div class="hero-search">
     <span class="ico"><svg class="ico-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/></svg></span>
-    <input id="q" type="search" placeholder="資格名で検索（例: 簿記, 宅建, ITパスポート）" aria-label="資格名で検索">
+    <input id="q" type="search" placeholder="資格名で検索（例: 簿記, 宅建, ITパスポート）" aria-label="資格名で検索" autocomplete="off" aria-controls="heroSuggest" aria-expanded="false" aria-autocomplete="list">
+    <div class="hero-suggest" id="heroSuggest" role="listbox" aria-label="よく探される資格" hidden>
+      <p class="hero-suggest-label">よく探される資格</p>
+      <ul class="hero-suggest-list">{suggest_items}</ul>
+    </div>
   </div>
   <p class="hero-result" id="heroResult" hidden></p>
 </section>
@@ -3280,6 +3331,64 @@ def build_compare() -> str:
                       path="compare.html")
 
 
+def build_courses_page(indexable):
+    """おすすめの試験対策講座一覧。1資格につき複数講座を並べられる。"""
+    cert_info = {r["slug"]: r for r in indexable}
+    by_slug = {}
+    for slug in MATERIALS:
+        courses = courses_for_slug(slug)
+        if courses and slug in cert_info:
+            by_slug[slug] = courses
+
+    has_aff = any(m["affiliate"] for courses in by_slug.values() for m in courses)
+    pr = '<span class="pr-badge">PR</span>' if has_aff else ""
+
+    cards = []
+    for slug in sorted(by_slug, key=lambda s: cert_info[s]["name"]):
+        cert = cert_info[slug]
+        courses = by_slug[slug]
+        n = len(courses)
+        count = (f'<span class="course-cert-count">{n}件の講座</span>'
+                 if n > 1 else "")
+        items_cls = "course-items course-items--multi" if n > 1 else "course-items"
+        items = "".join(course_item_html(m) for m in courses)
+        cards.append(
+            f'<article class="course-cert">'
+            f'<header class="course-cert-head">'
+            f'<div class="course-cert-titles">'
+            f'<h2 class="course-cert-name">'
+            f'<a href="c/{esc(slug)}.html">{esc(cert["name"])}</a></h2>'
+            f'<p class="course-cert-major">{esc(cert["major_category"])}</p>'
+            f'</div>{count}</header>'
+            f'<ul class="{items_cls}">{items}</ul>'
+            f'</article>')
+
+    disclosure = (
+        '<p class="ad-disclosure">本ページには広告（アフィリエイトリンク）を含む場合があります。'
+        'リンクを経由して申込みされた場合、当サイトが収益を得ることがあります。'
+        '掲載は編集部の選定によるもので、内容の正確性・価格は各提供元の公式情報をご確認ください。</p>'
+        if has_aff else "")
+
+    grid = "".join(cards) if cards else '<p class="muted">現在、掲載中の講座はありません。</p>'
+    body = f"""<nav class="crumbs"><a href="index.html">トップ</a> › おすすめの試験対策講座</nav>
+<h1>おすすめの試験対策講座{pr}</h1>
+<p class="lead">資格別に、編集部が選んだ通信講座・オンライン講座を掲載しています。
+1つの資格に対して複数の講座を比較検討できるよう、提供元の異なる講座を並べています。</p>
+{disclosure}
+<div class="course-list">{grid}</div>
+<p class="muted course-foot">最新の価格・開講状況・カリキュラムは各提供元の公式情報で必ずご確認ください。
+各資格の詳細ページにも、テキスト・講座の例を掲載しています。</p>"""
+
+    ld = {"@context": "https://schema.org", "@type": "BreadcrumbList",
+          "itemListElement": [
+              {"@type": "ListItem", "position": 1, "name": "トップ", "item": BASE_URL + "/"},
+              {"@type": "ListItem", "position": 2, "name": "おすすめの試験対策講座"}]}
+    return page_shell(f"おすすめの試験対策講座｜{SITE_NAME}", body, depth=0, noindex=False,
+                      desc="資格別におすすめの通信講座・オンライン講座を紹介。"
+                           "簿記・宅建・ITパスポートなど人気資格の試験対策講座を編集部が選定。",
+                      path="courses.html", jsonld=ld)
+
+
 SEARCH_JS = """(function(){
   var q=document.getElementById('q'),listQ=document.getElementById('list-q'),
       majorSel=document.getElementById('major'),sortSel=document.getElementById('sort'),
@@ -3292,6 +3401,7 @@ SEARCH_JS = """(function(){
       pagination=document.getElementById('pagination'),
       count=document.getElementById('count'),
       heroResult=document.getElementById('heroResult'),
+      heroSuggest=document.getElementById('heroSuggest'),
       clearBtn=document.getElementById('clearFilters');
   var DATA=[], activeTags=new Set(), currentPage=1, PAGE_SIZE=20, resetPage=true,TROPHY=__TROPHY_HTML__;
   var legacyType='',legacyIndustry='';
@@ -3480,13 +3590,50 @@ SEARCH_JS = """(function(){
   });
   function onFilter(){resetPage=true;render();}
   function onQueryInput(e){syncQueryInputs(e.target);onFilter();}
-  if(q)q.addEventListener('input',onQueryInput);
+  function showHeroSuggest(filter){
+    if(!heroSuggest||!q)return;
+    var t=(filter||'').trim().toLowerCase();
+    var items=[].slice.call(heroSuggest.querySelectorAll('.hero-suggest-item'));
+    var shown=0;
+    items.forEach(function(btn){
+      var qv=(btn.getAttribute('data-q')||'').toLowerCase();
+      var ok=!t||qv.indexOf(t)>=0;
+      btn.parentElement.hidden=!ok;
+      if(ok)shown++;
+    });
+    heroSuggest.hidden=shown===0;
+    q.setAttribute('aria-expanded',shown>0?'true':'false');
+  }
+  function hideHeroSuggest(){
+    if(!heroSuggest)return;
+    heroSuggest.hidden=true;
+    if(q)q.setAttribute('aria-expanded','false');
+  }
+  if(q)q.addEventListener('input',function(e){showHeroSuggest(e.target.value);onQueryInput(e);});
   if(listQ)listQ.addEventListener('input',onQueryInput);
   [majorSel,sortSel,studySel,passSel,freqSel].forEach(function(el){if(el)el.addEventListener('input',onFilter);});
   fPub.addEventListener('change',onFilter);
-  if(q)q.addEventListener('keydown',function(e){
-    if(e.key==='Enter'){var a=document.getElementById('all-certs');if(a){e.preventDefault();a.scrollIntoView();}}
-  });
+  if(q){
+    q.addEventListener('focus',function(){showHeroSuggest(q.value);});
+    q.addEventListener('blur',function(){setTimeout(hideHeroSuggest,150);});
+    q.addEventListener('keydown',function(e){
+      if(e.key==='Escape'){hideHeroSuggest();return;}
+      if(e.key==='Enter'){hideHeroSuggest();var a=document.getElementById('all-certs');if(a){e.preventDefault();a.scrollIntoView();}}
+    });
+  }
+  if(heroSuggest){
+    heroSuggest.addEventListener('mousedown',function(e){e.preventDefault();});
+    heroSuggest.addEventListener('click',function(e){
+      var btn=e.target.closest('.hero-suggest-item');
+      if(!btn)return;
+      var val=btn.getAttribute('data-q')||'';
+      syncQueryInputs({value:val});
+      hideHeroSuggest();
+      onFilter();
+      var sec=document.getElementById('all-certs');
+      if(sec)sec.scrollIntoView({behavior:'smooth',block:'start'});
+    });
+  }
   if(listQ)listQ.addEventListener('keydown',function(e){
     if(e.key==='Enter'){e.preventDefault();onFilter();}
   });
@@ -3733,6 +3880,7 @@ html{scroll-padding-top:64px}
 @media(max-width:768px){:root{--page-gutter:20px}.header-nav{display:none}.header-actions{display:flex}.header-inner{padding:10px var(--page-gutter)}.logo-mark{min-width:48px;min-height:32px;padding:5px 8px 4px}.logo-mark-line{font-size:11px}.logo-mark-line--sub{font-size:10px}.logo-text{font-size:15px}.logo-sub{font-size:9px;max-width:min(200px,58vw)}.site-tagline{display:none}.container{padding:20px var(--page-gutter) 36px}.block-band{margin-left:calc(-1*var(--page-gutter));margin-right:calc(-1*var(--page-gutter));padding:32px var(--page-gutter)}.block-all-certs{padding:40px var(--page-gutter)}}
 
 .container{max-width:1200px;margin:0 auto;padding:28px var(--page-gutter) 36px;width:100%;flex:1 0 auto;min-width:0;background:#fff;box-shadow:0 0 24px rgba(0,0,0,.05)}
+.container:has(.page-detail){padding-top:36px;padding-bottom:56px}
 
 /* Hero */
 .hero{margin:-28px calc(-1*var(--page-gutter)) 0;padding:64px var(--page-gutter) 48px;margin-bottom:0;text-align:center;background:var(--page-bg)}
@@ -3741,11 +3889,17 @@ html{scroll-padding-top:64px}
 .hero-h1-line+.hero-h1-line{margin-top:2px}
 .hero-sub{font-size:var(--text-md);color:var(--ink);line-height:1.75;max-width:40em;margin:0 auto}
 .hero-sub #count{color:var(--accent);font-weight:700;text-decoration:underline;text-underline-offset:3px}
-.hero-search{margin:24px auto 0;max-width:520px;position:relative;text-align:left}
+.hero-search{margin:24px auto 0;max-width:680px;position:relative;text-align:left}
 .hero-search input{width:100%;padding:12px 16px 12px 42px;border:1px solid var(--gray-300);border-radius:var(--radius);font-size:var(--text-md);background:#fff;color:var(--ink);font-family:inherit}
 .hero-search input::placeholder{color:var(--muted)}
 .hero-search input:focus,.hero-search input:focus-visible{border-color:var(--accent);outline:3px solid var(--accent-ring);outline-offset:2px}
-.hero-search .ico{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--muted);display:flex}
+.hero-search .ico{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--muted);display:flex;pointer-events:none;z-index:1}
+.hero-suggest{position:absolute;left:0;right:0;top:calc(100% + 6px);background:#fff;border:1px solid var(--gray-200);border-radius:var(--radius);box-shadow:0 8px 24px rgba(0,0,0,.1);z-index:25;padding:10px 0 6px;text-align:left}
+.hero-suggest-label{margin:0 0 6px;padding:0 16px;font-size:var(--text-sm);font-weight:var(--fw-semibold);color:var(--muted)}
+.hero-suggest-list{list-style:none;margin:0;padding:0;max-height:min(320px,50vh);overflow-y:auto}
+.hero-suggest-item{display:flex;align-items:baseline;justify-content:space-between;gap:12px;width:100%;text-align:left;padding:10px 16px;border:none;background:transparent;font:inherit;font-size:var(--text-md);font-weight:var(--fw-semibold);color:var(--ink-deep);cursor:pointer;line-height:1.4}
+.hero-suggest-item:hover,.hero-suggest-item:focus-visible{background:var(--accent-light);outline:none}
+.hero-suggest-meta{font-size:var(--text-sm);font-weight:var(--fw-regular);color:var(--muted);white-space:nowrap;flex-shrink:0}
 .hero-result{margin-top:12px;font-size:var(--text-sm);color:var(--muted)}
 .hero-result a{color:var(--accent);font-weight:600;text-decoration:underline;text-underline-offset:2px}
 .hero-result strong{color:var(--ink-deep)}
@@ -3781,6 +3935,8 @@ html{scroll-padding-top:64px}
 .pop-card-facts{list-style:none;margin:auto 0 0;padding:6px 0 0;display:flex;flex-direction:column;gap:5px}
 .pop-card-facts li{display:grid;grid-template-columns:4.8em 1fr;gap:4px;font-size:var(--text-sm);line-height:1.45}
 .pop-card-facts .k{color:var(--muted)}.pop-card-facts .v{color:var(--ink);font-weight:600}
+.pop-card-facts li.pop-card-diff .v{font-weight:400}
+.pop-card-facts .diff-badge{font-size:var(--text-sm);vertical-align:middle}
 @media(max-width:720px){.popular-grid{grid-template-columns:repeat(2,1fr);gap:10px}.pop-card--more{display:none}.popular-more{display:block}}
 .popular-more,.field-more,.compare-more{margin:16px 0 0;text-align:right;display:none}
 .popular-more a,.field-more a,.compare-more a{font-size:var(--text-sm);font-weight:var(--fw-semibold);color:var(--ink);text-decoration:underline;text-underline-offset:2px}
@@ -3877,6 +4033,27 @@ html{scroll-padding-top:64px}
 .finder-chips,.finder-grid{margin:10px 0}.finder-chips{list-style:none;padding:0;display:flex;flex-wrap:wrap;gap:8px}
 .finder-chip a{display:inline-block;padding:7px 13px;background:var(--gray-50);border:1px solid var(--gray-200);border-radius:999px;text-decoration:none;color:var(--ink-deep);font-size:var(--text-sm)}
 @media(max-width:640px){.finder-grid{grid-template-columns:1fr}}
+
+/* Courses (おすすめ試験対策講座) */
+.course-list{display:flex;flex-direction:column;gap:18px;margin:20px 0}
+.course-cert{background:#fff;border:1px solid var(--gray-200);border-radius:var(--radius);padding:18px 20px;display:flex;flex-direction:column;gap:12px}
+.course-cert-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;flex-wrap:wrap}
+.course-cert-titles{min-width:0;flex:1}
+.course-cert-name{font-size:var(--text-md);font-weight:var(--fw-bold);margin:0;line-height:1.35}
+.course-cert-name a{color:var(--ink-deep);text-decoration:none}
+.course-cert-name a:hover{color:var(--accent);text-decoration:underline;text-underline-offset:2px}
+.course-cert-major{font-size:var(--text-sm);color:var(--muted);margin:4px 0 0}
+.course-cert-count{flex-shrink:0;font-size:var(--text-sm);font-weight:600;color:var(--muted);padding:4px 10px;background:var(--gray-50);border:1px solid var(--gray-200);border-radius:999px;line-height:1.3;white-space:nowrap}
+.course-items{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:10px}
+.course-items--multi{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+@media(max-width:640px){.course-items--multi{grid-template-columns:1fr}}
+.course-item{display:flex;flex-direction:column;gap:3px;padding:12px 14px;background:var(--gray-50);border:1px solid var(--gray-200);border-radius:8px;height:100%}
+.course-item-link{font-weight:var(--fw-semibold);color:var(--accent);text-decoration:none;line-height:1.4}
+.course-item-link:hover{text-decoration:underline;text-underline-offset:2px}
+.course-ext{font-size:.85em;margin-left:4px;font-weight:700}
+.course-provider{font-size:var(--text-sm);color:var(--muted)}
+.course-note{font-size:var(--text-sm);color:var(--ink);margin:0;line-height:1.55}
+.course-foot{margin-top:18px}
 
 /* Fields */
 .field-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
@@ -4098,54 +4275,64 @@ table.cmp tbody th{background:var(--gray-50);color:var(--ink);white-space:nowrap
 .pd-tag{font-size:var(--text-sm);color:var(--muted);line-height:1.45}
 .partner-note{font-size:var(--text-sm);margin:8px 0 0}
 /* Detail */
-.detail-intro{padding:0 0 36px;margin:0;border:none;background:transparent}
-.detail-title{font-size:var(--text-xl);font-weight:700;color:var(--ink-deep);line-height:1.35;margin:0 0 16px}
 .detail-title-inner{display:inline-flex;align-items:center;gap:10px}
-.detail-title-trophy{flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;color:#b8860b;background:#f7f3e8;border-radius:var(--radius)}
-.detail-title-trophy .icon-svg{width:18px;height:18px}
-.detail-audience{font-size:var(--text-md);color:var(--ink);line-height:1.85;margin:0}
+.detail-title-trophy{flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;color:#b8860b;background:#f7f3e8;border-radius:var(--radius)}
+.detail-title-trophy .icon-svg{width:20px;height:20px}
 .detail-official{margin-top:28px;padding-top:24px;border-top:1px solid var(--gray-200)}
 .detail-official .btn{padding:10px 18px;font-size:var(--text-sm)}
-.page-detail{--detail-h2:1.5rem;--detail-h3:1.125rem;--detail-body-lh:1.85;--detail-section-y:40px}
-.page-detail .detail-section{padding:var(--detail-section-y) 0 12px;border-top:1px solid var(--gray-200)}
-.page-detail .detail-section--alt{margin-left:calc(-1*var(--page-gutter));margin-right:calc(-1*var(--page-gutter));padding:var(--detail-section-y) var(--page-gutter) 36px;background:var(--gray-50)}
-.page-detail .detail-section-title{font-size:var(--detail-h2);font-weight:var(--fw-bold);color:var(--ink-deep);margin:0 0 24px;line-height:1.35;padding-bottom:12px;border-bottom:2px solid var(--table-border)}
-.page-detail .detail-subhead{font-size:var(--detail-h3);font-weight:var(--fw-bold);color:var(--ink-deep);margin:0 0 16px;line-height:1.4}
-.page-detail .detail-footnote{font-size:var(--text-sm);color:var(--muted);margin:20px 0 0;line-height:1.7}
-.page-detail .guide-panel{border:1px solid var(--table-border);background:#fff;margin-top:4px}
-.page-detail .guide-block{padding:22px 24px;border-bottom:1px solid var(--gray-200)}
-.page-detail .guide-block:last-child{border-bottom:none}
-.page-detail .guide-h{font-size:var(--detail-h3);font-weight:var(--fw-bold);color:var(--ink-deep);margin:0 0 14px;line-height:1.4}
+.page-detail{--detail-content:46em;--detail-body:1.125rem;--detail-body-lh:1.9;--detail-h1:clamp(1.75rem,3.2vw,2.125rem);--detail-h2:1.5rem;--detail-h3:1.125rem;--detail-section-y:52px;--detail-block-gap:32px;max-width:var(--detail-content);margin:0 auto;font-size:var(--detail-body);line-height:var(--detail-body-lh);color:var(--ink)}
+.page-detail .crumbs{margin-bottom:28px}
+.page-detail .detail-intro{padding:0;margin:0;border:none;background:transparent}
+.page-detail .detail-intro::after{content:"";display:block;width:100%;height:1px;background:var(--gray-200);margin-top:40px}
+.page-detail .detail-title{font-size:var(--detail-h1);font-weight:700;color:var(--ink-deep);line-height:1.28;margin:0 0 24px;letter-spacing:-.01em}
+.page-detail .detail-audience{font-size:var(--detail-body);color:var(--ink);line-height:var(--detail-body-lh);margin:0}
+.page-detail .detail-section{padding:var(--detail-section-y) 0 0;border:none}
+.page-detail .detail-section--alt{margin:0;padding:var(--detail-section-y) 0 0;background:transparent}
+.page-detail .detail-section-title{font-size:var(--detail-h2);font-weight:var(--fw-bold);color:var(--ink-deep);margin:0 0 28px;line-height:1.35;padding:0;border:none;letter-spacing:-.01em}
+.page-detail .detail-footnote{font-size:var(--text-sm);color:var(--muted);margin:28px 0 0;line-height:1.75}
+.page-detail .guide-body{display:flex;flex-direction:column;gap:0}
+.page-detail .guide-block{padding:0 0 var(--detail-block-gap);border:none}
+.page-detail .guide-block:last-child{padding-bottom:0}
+.page-detail .guide-block+.guide-block{padding-top:var(--detail-block-gap);border-top:1px solid var(--gray-200)}
+.page-detail .guide-h{font-size:var(--detail-h3);font-weight:var(--fw-bold);color:var(--ink-deep);margin:0 0 16px;line-height:1.45;padding-left:14px;border-left:3px solid var(--accent)}
 .page-detail .guide-block p{margin:0;line-height:var(--detail-body-lh);color:var(--ink)}
-.page-detail .guide-steps{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px;counter-reset:guide-step}
-.page-detail .guide-steps li{position:relative;margin:0;padding:12px 14px 12px 48px;background:var(--gray-50);border:1px solid var(--gray-200);border-radius:0;line-height:var(--detail-body-lh);color:var(--ink);counter-increment:guide-step}
-.page-detail .guide-steps li::before{content:counter(guide-step);position:absolute;left:14px;top:12px;width:26px;height:26px;display:flex;align-items:center;justify-content:center;background:var(--accent);color:#fff;font-size:var(--text-sm);font-weight:700;border-radius:50%;line-height:1}
-.page-detail .faq-list{border:1px solid var(--table-border);background:#fff;margin-top:4px}
-.page-detail .faq-item{border:none;border-radius:0;margin:0;border-bottom:1px solid var(--gray-200);background:#fff}
-.page-detail .faq-item:last-child{border-bottom:none}
-.page-detail .faq-item summary{cursor:pointer;padding:16px 44px 16px 18px;font-size:var(--text-md);font-weight:var(--fw-semibold);color:var(--ink-deep);line-height:var(--detail-body-lh)}
-.page-detail .faq-item summary::after{right:18px;top:16px}
-.page-detail .faq-item .faq-a{color:var(--ink);font-size:var(--text-md);line-height:var(--detail-body-lh);padding:0 18px 18px}
-.detail-nav{margin-top:0;padding:var(--detail-section-y) 0 16px;border-top:1px solid var(--gray-200)}
-.detail-nav-block+.detail-nav-block{margin-top:32px;padding-top:32px;border-top:1px solid var(--gray-200)}
-.detail-nav-heading,.detail-nav-head{font-size:var(--detail-h2);font-weight:var(--fw-bold);color:var(--ink-deep);margin:0 0 22px;line-height:1.35;padding-bottom:12px;border-bottom:2px solid var(--table-border)}
-.detail-nav-subhead{font-size:var(--detail-h3);font-weight:var(--fw-semibold);color:var(--ink-deep);margin:0 0 12px;line-height:1.4}
-.detail-nav-subhead-title{font-size:var(--detail-h3);font-weight:var(--fw-bold);color:var(--ink-deep);margin:0 0 14px;line-height:1.4}
-.detail-nav-subhead+.detail-nav-subhead,.detail-link-list+.detail-nav-subhead,.detail-link-grid+.detail-nav-subhead,.detail-compare-row+.detail-nav-subhead{margin-top:28px}
-.detail-link-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
-.detail-link-item{font-size:var(--text-md);line-height:var(--detail-body-lh);color:var(--ink)}
-.detail-link-item a{color:var(--accent);font-weight:600;text-decoration:none}
-.detail-link-item a:hover{text-decoration:underline;text-underline-offset:2px}
-.detail-link-desc{color:var(--muted);font-weight:400}
-.detail-link-grid{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 24px}
-.detail-link-grid a{display:block;font-size:var(--text-md);font-weight:600;color:var(--accent);text-decoration:none;line-height:var(--detail-body-lh);padding:3px 0}
-.detail-link-grid a:hover{text-decoration:underline;text-underline-offset:2px}
-.detail-compare-row{font-size:var(--text-md);color:var(--ink);line-height:var(--detail-body-lh);margin:0}
+.page-detail .guide-steps{list-style:none;margin:6px 0 0;padding:0;display:flex;flex-direction:column;gap:16px;counter-reset:guide-step}
+.page-detail .guide-steps li{position:relative;margin:0;padding:3px 0 3px 44px;background:none;border:none;border-radius:0;line-height:var(--detail-body-lh);color:var(--ink);counter-increment:guide-step}
+.page-detail .guide-steps li::before{content:counter(guide-step);position:absolute;left:0;top:3px;width:30px;height:30px;display:flex;align-items:center;justify-content:center;background:var(--accent);color:#fff;font-size:var(--text-sm);font-weight:700;border-radius:50%;line-height:1}
+.page-detail .faq-list{display:flex;flex-direction:column;gap:12px;margin-top:0;border:none;background:transparent}
+.page-detail .faq-item{border:1px solid var(--gray-200);border-radius:0;margin:0;background:#fff}
+.page-detail .faq-item summary{cursor:pointer;padding:18px 48px 18px 20px;font-size:var(--detail-body);font-weight:var(--fw-semibold);color:var(--ink-deep);line-height:1.55;list-style:none;position:relative}
+.page-detail .faq-item .faq-a{color:var(--ink);font-size:var(--detail-body);line-height:var(--detail-body-lh);padding:0 20px 22px;border-top:1px solid var(--gray-100)}
+.page-detail .detail-nav{margin:var(--detail-section-y) 0 0;padding:40px 0 8px;border-top:1px solid var(--gray-200);background:transparent;font-size:1rem;line-height:1.75}
+.page-detail .detail-nav-block+.detail-nav-block{margin-top:40px;padding-top:40px;border-top:1px solid var(--gray-200)}
+.page-detail .detail-nav-head{font-size:1.25rem;font-weight:var(--fw-bold);color:var(--ink-deep);margin:0 0 22px;line-height:1.35;padding:0;border:none}
+.page-detail .detail-nav-subhead{font-size:1rem;font-weight:var(--fw-semibold);color:var(--ink-deep);margin:0 0 10px;line-height:1.45}
+.page-detail .detail-nav-subhead-title{font-size:1rem;font-weight:var(--fw-bold);color:var(--ink-deep);margin:0 0 12px;line-height:1.45}
+.page-detail .detail-nav-subhead+.detail-nav-subhead,.page-detail .detail-link-list+.detail-nav-subhead,.page-detail .detail-link-grid+.detail-nav-subhead,.page-detail .detail-compare-row+.detail-nav-subhead{margin-top:28px}
+.page-detail .detail-link-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
+.page-detail .detail-link-item{font-size:.9375rem;line-height:1.7;color:var(--ink)}
+.page-detail .detail-link-grid{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 24px}
+.page-detail .detail-link-grid a{display:block;font-size:.9375rem;font-weight:600;color:var(--accent);text-decoration:none;line-height:1.7;padding:2px 0}
+.page-detail .detail-compare-row{font-size:.9375rem;color:var(--ink);line-height:1.7;margin:0}
+.page-detail .spec-sections{gap:44px}
+.page-detail .spec-section-title{font-size:var(--detail-h3);font-weight:var(--fw-bold);color:var(--ink-deep);margin:0 0 18px;line-height:1.45;padding-left:12px;border-left:3px solid var(--gray-300)}
+.page-detail .rm-track{gap:14px 24px;margin-top:0}
+.page-detail .rm-step{padding:12px 16px;font-size:.9375rem;line-height:1.5;border-radius:0;box-shadow:none}
+.page-detail .partner-detail-grid{margin-top:0}
+.spec-section-title{font-size:var(--text-md);font-weight:var(--fw-bold);color:var(--ink-deep);margin:0 0 12px;line-height:1.4}
+.page-detail .faq-item summary::-webkit-details-marker{display:none}
+.page-detail .faq-item summary::after{content:"＋";position:absolute;right:20px;top:18px;color:var(--accent);font-weight:700}
+.page-detail .faq-item[open] summary::after{content:"−"}
+.page-detail .faq-item summary:hover{background:var(--gray-50)}
+.page-detail .detail-link-item a{color:var(--accent);font-weight:600;text-decoration:none}
+.page-detail .detail-link-item a:hover{text-decoration:underline;text-underline-offset:2px}
+.page-detail .detail-link-grid a:hover{text-decoration:underline;text-underline-offset:2px}
+.page-detail .detail-compare-row a{color:var(--accent);font-weight:600;text-decoration:none}
+.page-detail .detail-compare-row a:hover{text-decoration:underline;text-underline-offset:2px}
+.page-detail .detail-footnote,.page-detail .detail-nav-note{font-size:var(--text-sm);color:var(--muted)}
 .detail-compare-label{color:var(--muted);font-weight:400}
-.detail-compare-row a{color:var(--accent);font-weight:600;text-decoration:none}
-.detail-compare-row a:hover{text-decoration:underline;text-underline-offset:2px}
-.detail-nav-note{font-size:var(--text-sm);color:var(--muted);margin-top:12px;line-height:1.55}
-@media(max-width:560px){.detail-link-grid{grid-template-columns:1fr}}
+.detail-nav-note{font-size:var(--text-sm);color:var(--muted);margin-top:16px;line-height:1.7}
+@media(max-width:560px){.page-detail .detail-link-grid{grid-template-columns:1fr}}
 .detail-facts{margin-bottom:18px}
 .facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px}
 .fact{background:var(--gray-50);border-radius:8px;padding:9px 11px;border:1px solid var(--gray-200)}
@@ -4171,11 +4358,7 @@ table.cmp tbody th{background:var(--gray-50);color:var(--ink);white-space:nowrap
 .page-detail .spec-sections table.spec col.spec-col-value{width:auto}
 .page-detail .spec-sections table.spec th{width:var(--spec-label-w);box-sizing:border-box}
 .page-detail .spec-sections table.spec td{box-sizing:border-box;width:auto}
-.page-detail .spec-section-title{font-size:var(--detail-h3);font-weight:var(--fw-bold);color:var(--ink-deep);margin:0 0 14px;line-height:1.4}
-.spec-section-title{font-size:var(--text-md);font-weight:var(--fw-bold);color:var(--ink-deep);margin:0 0 12px;line-height:1.4}
 .page-detail .spec-wrap,.page-detail table.spec{border-radius:0}
-.page-detail .rm-track{gap:14px 24px;margin-top:4px}
-.page-detail .rm-step{padding:12px 16px}
 .detail-source{margin-top:22px;padding:14px 0 0;border-top:1px solid var(--gray-200);font-size:var(--text-sm);color:var(--muted);line-height:1.65}
 .detail-source p{margin:0 0 5px}.detail-source .k{font-weight:600;color:var(--muted)}
 .detail-source a{color:var(--ink);text-decoration:underline;text-underline-offset:2px}
@@ -4210,27 +4393,24 @@ table.cmp tbody th{background:var(--gray-50);color:var(--ink);white-space:nowrap
 .cmp-verdict-card .pickname{font-size:var(--text-md);font-weight:var(--fw-semibold);color:var(--ink-deep);line-height:1.4}
 .cmp-verdict-card .pickname a{color:var(--ink-deep);text-decoration:underline;text-underline-offset:2px}
 .cmp-verdict-card .why{font-size:var(--text-sm);color:var(--muted);margin-top:3px;line-height:1.5}
-/* Detail page typography（詳細ページのフォント・色統一） */
-.page-detail{font-size:var(--text-md);color:var(--ink);line-height:var(--detail-body-lh,1.85);font-weight:var(--fw-regular)}
-.page-detail .detail-intro{margin:0;padding-bottom:36px}
-.page-detail .detail-title{font-size:var(--text-xl);color:var(--ink-deep);margin:0 0 16px;line-height:1.35}
-.page-detail .detail-audience{font-size:var(--text-md);color:var(--ink);line-height:var(--detail-body-lh,1.85);margin:0}
-.page-detail .crumbs{font-size:var(--text-sm);color:var(--muted);margin-bottom:16px;line-height:1.6}
+/* Detail page typography（表・タグ等の詳細調整） */
+.page-detail{color:var(--ink);font-weight:var(--fw-regular)}
+.page-detail .crumbs{font-size:var(--text-sm);color:var(--muted);line-height:1.6}
 .page-detail .crumbs a{color:var(--ink)}
 .page-detail .note-muted,.page-detail .muted{font-size:inherit;color:var(--muted);font-weight:400}
 .page-detail .roadmap{margin:0}
 .page-detail .rm-step{border-radius:0;box-shadow:none;border:1px solid var(--gray-200)}
 .page-detail .rm-cur{box-shadow:none}
 .page-detail .fact .l{font-size:var(--text-sm);color:var(--muted)}
-.page-detail .fact .v{font-size:var(--text-md);font-weight:600;color:var(--ink)}
-.page-detail table.spec{font-size:var(--text-table);color:var(--ink);line-height:1.6}
-.page-detail table.spec th,.page-detail table.spec td{padding:12px 16px}
-.page-detail table.spec th{background:var(--table-head-bg);color:var(--ink);font-weight:var(--fw-regular);font-size:var(--text-table)}
+.page-detail .fact .v{font-size:var(--detail-body);font-weight:600;color:var(--ink)}
+.page-detail table.spec{font-size:1rem;color:var(--ink);line-height:1.65}
+.page-detail table.spec th,.page-detail table.spec td{padding:13px 18px}
+.page-detail table.spec th{background:var(--table-head-bg);color:var(--ink);font-weight:var(--fw-regular);font-size:1rem}
 .page-detail table.spec th .spec-th-inner{display:inline-flex;align-items:center;gap:7px}
 .page-detail table.spec th .spec-th-icon{flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;color:var(--ink);opacity:.55}
 .page-detail table.spec th .spec-th-icon .icon-svg{width:15px;height:15px}
 .page-detail table.spec th .spec-th-text{font-weight:inherit;line-height:inherit}
-.page-detail table.spec td{color:var(--ink);font-size:var(--text-table);font-weight:var(--fw-regular);vertical-align:middle;line-height:1.6}
+.page-detail table.spec td{color:var(--ink);font-size:1rem;font-weight:var(--fw-regular);vertical-align:middle;line-height:1.65}
 .page-detail table.spec tr.spec-row{cursor:pointer;transition:background-color .12s ease}
 .page-detail table.spec tr.spec-row:hover th,.page-detail table.spec tr.spec-row:hover td{background:var(--table-hover-bg)}
 .page-detail table.spec tr.spec-row.is-active th,.page-detail table.spec tr.spec-row.is-active td{background:var(--accent-light)}
@@ -4285,7 +4465,7 @@ table.cmp tbody th{background:var(--gray-50);color:var(--ink);white-space:nowrap
   .hero{padding:28px var(--page-gutter) 24px}
   .hero h1{margin-bottom:10px}
   .hero-sub{font-size:var(--text-md);line-height:1.6}
-  .hero-search{margin-top:16px;max-width:min(520px,100%)}
+  .hero-search{margin-top:16px;max-width:min(680px,100%)}
   /* セクション間隔を圧縮 */
   .block-primary{margin-bottom:22px}.block-secondary{margin-bottom:20px}
   .recent-inset{margin-top:18px;padding-top:18px}
@@ -4301,24 +4481,17 @@ table.cmp tbody th{background:var(--gray-50);color:var(--ink);white-space:nowrap
   .compare-names{font-size:var(--text-md)}
   /* 一覧・ランキングのタップ領域と余白 */
   .cl-link{padding:13px 14px}
-  /* 詳細ページ（可読性優先・圧縮しすぎない） */
-  .page-detail{--detail-h2:1.3125rem;--detail-h3:1.0625rem;--detail-body-lh:1.8;--detail-section-y:28px;line-height:var(--detail-body-lh)}
-  .page-detail .detail-intro{padding-bottom:24px}
-  .page-detail .detail-title{margin-bottom:12px}
-  .page-detail .detail-section{padding:var(--detail-section-y) 0 10px}
-  .page-detail .detail-section--alt{padding-bottom:28px}
-  .page-detail .detail-section-title{margin-bottom:18px;padding-bottom:10px}
-  .page-detail .guide-block{padding:16px 18px}
-  .page-detail .guide-h{margin-bottom:12px}
-  .page-detail .guide-steps li{padding:11px 12px 11px 44px}
-  .page-detail .guide-steps li::before{left:12px;top:11px;width:24px;height:24px}
-  .page-detail .faq-item summary{padding:14px 40px 14px 16px}
-  .page-detail .faq-item summary::after{right:16px;top:14px}
-  .page-detail .faq-item .faq-a{padding:0 16px 16px}
-  .page-detail .detail-nav{padding-top:var(--detail-section-y)}
-  .page-detail .detail-nav-block+.detail-nav-block{margin-top:24px;padding-top:24px}
-  .page-detail table.spec th,.page-detail table.spec td{padding:11px 14px}
-  .page-detail .point-list li{font-size:var(--text-md)}
+  /* 詳細ページ（読みやすさ優先） */
+  .container:has(.page-detail){padding-top:24px;padding-bottom:40px}
+  .page-detail{--detail-content:100%;max-width:none;margin:0;--detail-body:1.0625rem;--detail-body-lh:1.88;--detail-h1:1.5rem;--detail-h2:1.3125rem;--detail-h3:1.0625rem;--detail-section-y:36px;--detail-block-gap:24px}
+  .page-detail .detail-intro::after{margin-top:28px}
+  .page-detail .detail-section-title{margin-bottom:22px}
+  .page-detail .faq-item summary{padding:16px 44px 16px 18px;font-size:var(--detail-body)}
+  .page-detail .faq-item summary::after{right:18px;top:16px}
+  .page-detail .faq-item .faq-a{padding:0 18px 18px}
+  .page-detail .detail-nav{padding-top:32px;padding-bottom:4px}
+  .page-detail table.spec th,.page-detail table.spec td{padding:12px 14px;font-size:0.9375rem}
+  .page-detail .point-list li{font-size:var(--detail-body)}
   /* 比較バーが内容に被らないよう余白を増やす */
   body.cmp-open{padding-bottom:96px}
 }
@@ -4394,6 +4567,7 @@ def main() -> int:
         shutil.copy2(BRAND / "favicon.ico", SITE / "favicon.ico")
     (SITE / "index.html").write_text(build_index(indexable), encoding="utf-8")
     (SITE / "compare.html").write_text(build_compare(), encoding="utf-8")
+    (SITE / "courses.html").write_text(build_courses_page(indexable), encoding="utf-8")
     (SITE / "toukei.html").write_text(build_stats_page(indexable), encoding="utf-8")
     (SITE / "calendar.html").write_text(build_calendar_page(indexable), encoding="utf-8")
     (SITE / "finder.html").write_text(build_finder_page(indexable), encoding="utf-8")
@@ -4442,6 +4616,7 @@ def main() -> int:
     today = date.today().isoformat()
     # (path, lastmod, priority)
     entries = [("", today, "1.0"), ("compare.html", today, "0.7"),
+               ("courses.html", today, "0.8"),
                ("toukei.html", today, "0.7"), ("calendar.html", today, "0.7"),
                ("finder.html", today, "0.8"), ("about.html", today, "0.5")]
     entries += [(f"bunya/{s}.html", today, "0.8") for s in cat_pages]
