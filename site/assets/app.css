@@ -226,23 +226,15 @@ html{scroll-padding-top:64px}
 .course-filter-label{font-size:var(--text-sm);font-weight:600;color:var(--muted)}
 .courses-count{margin:-4px 0 12px}
 .courses-table-wrap{margin-bottom:20px}
-.courses-table{min-width:720px}
-.courses-col-name{width:22%}
-.courses-col-major{width:14%}
-.courses-col-title{width:28%}
-.courses-col-provider{width:14%}
-.courses-col-note{width:22%}
+.courses-table{min-width:480px}
+.courses-col-name{width:38%}
+.courses-col-title{width:62%}
 .courses-table .courses-cell-name a{font-weight:var(--fw-semibold);color:var(--ink-deep);text-decoration:none}
 .courses-table .courses-cell-name a:hover{color:var(--accent);text-decoration:underline;text-underline-offset:2px}
 .courses-table .courses-cell-title a{color:var(--accent);font-weight:var(--fw-semibold);text-decoration:none}
 .courses-table .courses-cell-title a:hover{text-decoration:underline;text-underline-offset:2px}
 .course-ext{font-size:.85em;margin-left:2px;font-weight:700}
-.courses-cell-note{white-space:normal;line-height:1.55}
 .courses-foot{margin-top:18px}
-@media(max-width:720px){
-.courses-table th:nth-child(5),.courses-table td:nth-child(5){display:none}
-.courses-table{min-width:560px}
-}
 
 /* Fields */
 .field-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}

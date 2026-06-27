@@ -3316,10 +3316,9 @@ def build_compare() -> str:
 
 
 def build_courses_page(indexable):
-    """おすすめの試験対策講座一覧。表形式・キーワード・分野で絞り込み。"""
+    """おすすめの試験対策講座一覧。表形式・キーワードで絞り込み。"""
     cert_info = {r["slug"]: r for r in indexable}
     table_rows = []
-    majors = set()
     has_aff = False
     for slug in sorted(MATERIALS, key=lambda s: cert_info.get(s, {}).get("name", s)):
         if slug not in cert_info:
@@ -3328,7 +3327,6 @@ def build_courses_page(indexable):
         if not courses:
             continue
         cert = cert_info[slug]
-        majors.add(cert["major_category"])
         for m in courses:
             if m["affiliate"]:
                 has_aff = True
@@ -3340,58 +3338,44 @@ def build_courses_page(indexable):
                     f'{esc(m["title"])} <span class="course-ext" aria-hidden="true">↗</span></a>')
             else:
                 title_cell = esc(m["title"])
-            note = esc(m["note"]) if m.get("note") else "—"
-            note_cls = "" if m.get("note") else " muted"
             table_rows.append(
-                f'<tr data-major="{esc(cert["major_category"])}">'
+                f'<tr>'
                 f'<td class="courses-cell-name">'
                 f'<a href="c/{esc(slug)}.html">{esc(cert["name"])}</a></td>'
-                f'<td class="courses-cell-major">{esc(cert["major_category"])}</td>'
                 f'<td class="courses-cell-title">{title_cell}</td>'
-                f'<td class="courses-cell-provider">{esc(m["provider"])}</td>'
-                f'<td class="courses-cell-note{note_cls}">{note}</td>'
                 f'</tr>')
 
     n = len(table_rows)
-    major_opts = "".join(
-        f'<option value="{esc(ma)}">{esc(ma)}</option>' for ma in sorted(majors))
     pr = '<span class="pr-badge">PR</span>' if has_aff else ""
 
     if table_rows:
         tbody = "".join(table_rows) + (
             '<tr id="course-empty" hidden>'
-            '<td colspan="5" class="empty-state">'
-            '条件に一致する講座が見つかりませんでした。キーワードを短くするか、'
-            '分野を「すべて」に戻してみてください。</td></tr>')
+            '<td colspan="2" class="empty-state">'
+            '条件に一致する講座が見つかりませんでした。キーワードを短くしてみてください。</td></tr>')
     else:
         tbody = (
-            '<tr><td colspan="5" class="empty-state">'
+            '<tr><td colspan="2" class="empty-state">'
             '現在、掲載中の講座はありません。</td></tr>')
 
     body = f"""<nav class="crumbs"><a href="index.html">トップ</a> › おすすめの試験対策講座</nav>
 <h1>おすすめの試験対策講座{pr}</h1>
 <p class="lead">資格別の通信講座・オンライン講座を一覧表で掲載しています。
-キーワードや分野で絞り込み、1つの資格に複数ある講座も横並びで比較できます。</p>
+キーワードで絞り込み、1つの資格に複数ある講座も横並びで比較できます。</p>
 <div class="controls course-controls">
 <label class="course-filter-field">
 <span class="course-filter-label">キーワード</span>
-<input id="course-q" type="search" placeholder="資格名・講座名・提供元で検索" aria-controls="course-table">
-</label>
-<label class="course-filter-field">
-<span class="course-filter-label">分野</span>
-<select id="course-major"><option value="">すべて</option>{major_opts}</select>
+<input id="course-q" type="search" placeholder="資格名・講座名で検索" aria-controls="course-table">
 </label>
 </div>
 <p id="course-count" class="courses-count muted" aria-live="polite">{n}件</p>
 <div class="all-certs-table-wrap courses-table-wrap">
 <table class="all-certs-table courses-table" id="course-table">
 <colgroup>
-<col class="courses-col-name"><col class="courses-col-major">
-<col class="courses-col-title"><col class="courses-col-provider">
-<col class="courses-col-note">
+<col class="courses-col-name"><col class="courses-col-title">
 </colgroup>
 <thead><tr>
-<th>資格名</th><th>分野</th><th>講座名</th><th>提供元</th><th>備考</th>
+<th>資格名</th><th>講座名</th>
 </tr></thead>
 <tbody>{tbody}</tbody>
 </table>
@@ -3836,20 +3820,16 @@ OCC_SEARCH_JS = """(function(){
 
 COURSES_SEARCH_JS = """(function(){
   var q=document.getElementById('course-q'),
-      mj=document.getElementById('course-major'),
       tb=document.querySelector('#course-table tbody'),
       cnt=document.getElementById('course-count'),
       empty=document.getElementById('course-empty');
   if(!tb)return;
-  var rows=[].slice.call(tb.querySelectorAll('tr[data-major]'));
+  var rows=[].slice.call(tb.querySelectorAll('tr:not(#course-empty)'));
   function render(){
-    var t=(q&&q.value||'').trim().toLowerCase(),
-        m=mj?mj.value:'';
+    var t=(q&&q.value||'').trim().toLowerCase();
     var vis=0;
     rows.forEach(function(tr){
-      var ok=true;
-      if(m&&tr.dataset.major!==m)ok=false;
-      if(ok&&t&&tr.textContent.toLowerCase().indexOf(t)<0)ok=false;
+      var ok=!t||tr.textContent.toLowerCase().indexOf(t)>=0;
       tr.hidden=!ok;
       if(ok)vis++;
     });
@@ -3857,7 +3837,6 @@ COURSES_SEARCH_JS = """(function(){
     if(cnt)cnt.textContent=vis+'件';
   }
   if(q)q.addEventListener('input',render);
-  if(mj)mj.addEventListener('change',render);
 })();
 """
 
@@ -4089,23 +4068,15 @@ html{scroll-padding-top:64px}
 .course-filter-label{font-size:var(--text-sm);font-weight:600;color:var(--muted)}
 .courses-count{margin:-4px 0 12px}
 .courses-table-wrap{margin-bottom:20px}
-.courses-table{min-width:720px}
-.courses-col-name{width:22%}
-.courses-col-major{width:14%}
-.courses-col-title{width:28%}
-.courses-col-provider{width:14%}
-.courses-col-note{width:22%}
+.courses-table{min-width:480px}
+.courses-col-name{width:38%}
+.courses-col-title{width:62%}
 .courses-table .courses-cell-name a{font-weight:var(--fw-semibold);color:var(--ink-deep);text-decoration:none}
 .courses-table .courses-cell-name a:hover{color:var(--accent);text-decoration:underline;text-underline-offset:2px}
 .courses-table .courses-cell-title a{color:var(--accent);font-weight:var(--fw-semibold);text-decoration:none}
 .courses-table .courses-cell-title a:hover{text-decoration:underline;text-underline-offset:2px}
 .course-ext{font-size:.85em;margin-left:2px;font-weight:700}
-.courses-cell-note{white-space:normal;line-height:1.55}
 .courses-foot{margin-top:18px}
-@media(max-width:720px){
-.courses-table th:nth-child(5),.courses-table td:nth-child(5){display:none}
-.courses-table{min-width:560px}
-}
 
 /* Fields */
 .field-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
