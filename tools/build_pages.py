@@ -4085,6 +4085,7 @@ html{scroll-padding-top:64px}
 /* Courses (おすすめ試験対策講座) */
 .course-controls{align-items:flex-end;margin-top:20px}
 .course-filter-field{display:flex;flex-direction:column;gap:6px;flex:1 1 260px;min-width:0}
+.course-filter-field input,.course-filter-field select{width:100%;flex:0 0 auto}
 .course-filter-label{font-size:var(--text-sm);font-weight:600;color:var(--muted)}
 .courses-count{margin:-4px 0 12px}
 .courses-table-wrap{margin-bottom:20px}
@@ -4147,7 +4148,7 @@ h2{color:var(--ink-deep)}
 .lead strong{color:var(--accent);font-weight:var(--fw-semibold);text-decoration:underline;text-underline-offset:2px}
 .controls{display:flex;gap:10px 14px;flex-wrap:wrap;margin:16px 0;align-items:flex-end}
 .controls input,.controls select{padding:10px 12px;border:1px solid var(--gray-300);border-radius:var(--radius);font-size:var(--text-md);font-family:inherit;background:#fff;color:var(--ink)}
-.controls input{flex:1 1 260px}.controls select{cursor:pointer}
+.controls > input{flex:1 1 260px}.controls select{cursor:pointer}
 .ctl{display:inline-flex;flex-direction:column;gap:3px;min-width:0}
 .ctl-l{font-size:var(--text-sm);font-weight:600;color:var(--muted);letter-spacing:.02em}
 .ctl select{width:100%;min-width:130px}
