@@ -429,22 +429,6 @@ def courses_for_slug(slug):
     return courses
 
 
-def course_item_html(m):
-    """講座1件分のHTML（coursesページ用）。"""
-    link = m["affiliate"] or m["url"]
-    rel = "sponsored nofollow noopener" if m["affiliate"] else "nofollow noopener"
-    if link:
-        title_html = (f'<a class="course-item-link" href="{esc(link)}" rel="{rel}" '
-                      f'target="_blank">{esc(m["title"])}<span class="course-ext" '
-                      f'aria-hidden="true">↗</span></a>')
-    else:
-        title_html = f'<span class="course-item-link">{esc(m["title"])}</span>'
-    prov = (f'<span class="course-provider">{esc(m["provider"])}</span>'
-            if m["provider"] else "")
-    note = f'<p class="course-note">{esc(m["note"])}</p>' if m["note"] else ""
-    return f'<li class="course-item">{title_html}{prov}{note}</li>'
-
-
 # ── 資格間の関係（ステップアップ・免除/受験資格・ダブルライセンス）──
 RELATIONS_CSV = ROOT / "data" / "cert_relations.csv"
 
@@ -3332,52 +3316,89 @@ def build_compare() -> str:
 
 
 def build_courses_page(indexable):
-    """おすすめの試験対策講座一覧。1資格につき複数講座を並べられる。"""
+    """おすすめの試験対策講座一覧。表形式・キーワード・分野で絞り込み。"""
     cert_info = {r["slug"]: r for r in indexable}
-    by_slug = {}
-    for slug in MATERIALS:
+    table_rows = []
+    majors = set()
+    has_aff = False
+    for slug in sorted(MATERIALS, key=lambda s: cert_info.get(s, {}).get("name", s)):
+        if slug not in cert_info:
+            continue
         courses = courses_for_slug(slug)
-        if courses and slug in cert_info:
-            by_slug[slug] = courses
+        if not courses:
+            continue
+        cert = cert_info[slug]
+        majors.add(cert["major_category"])
+        for m in courses:
+            if m["affiliate"]:
+                has_aff = True
+            link = m["affiliate"] or m["url"]
+            rel = "sponsored nofollow noopener" if m["affiliate"] else "nofollow noopener"
+            if link:
+                title_cell = (
+                    f'<a href="{esc(link)}" rel="{rel}" target="_blank">'
+                    f'{esc(m["title"])} <span class="course-ext" aria-hidden="true">↗</span></a>')
+            else:
+                title_cell = esc(m["title"])
+            note = esc(m["note"]) if m.get("note") else "—"
+            note_cls = "" if m.get("note") else " muted"
+            table_rows.append(
+                f'<tr data-major="{esc(cert["major_category"])}">'
+                f'<td class="courses-cell-name">'
+                f'<a href="c/{esc(slug)}.html">{esc(cert["name"])}</a></td>'
+                f'<td class="courses-cell-major">{esc(cert["major_category"])}</td>'
+                f'<td class="courses-cell-title">{title_cell}</td>'
+                f'<td class="courses-cell-provider">{esc(m["provider"])}</td>'
+                f'<td class="courses-cell-note{note_cls}">{note}</td>'
+                f'</tr>')
 
-    has_aff = any(m["affiliate"] for courses in by_slug.values() for m in courses)
+    n = len(table_rows)
+    major_opts = "".join(
+        f'<option value="{esc(ma)}">{esc(ma)}</option>' for ma in sorted(majors))
     pr = '<span class="pr-badge">PR</span>' if has_aff else ""
 
-    cards = []
-    for slug in sorted(by_slug, key=lambda s: cert_info[s]["name"]):
-        cert = cert_info[slug]
-        courses = by_slug[slug]
-        n = len(courses)
-        count = (f'<span class="course-cert-count">{n}件の講座</span>'
-                 if n > 1 else "")
-        items_cls = "course-items course-items--multi" if n > 1 else "course-items"
-        items = "".join(course_item_html(m) for m in courses)
-        cards.append(
-            f'<article class="course-cert">'
-            f'<header class="course-cert-head">'
-            f'<div class="course-cert-titles">'
-            f'<h2 class="course-cert-name">'
-            f'<a href="c/{esc(slug)}.html">{esc(cert["name"])}</a></h2>'
-            f'<p class="course-cert-major">{esc(cert["major_category"])}</p>'
-            f'</div>{count}</header>'
-            f'<ul class="{items_cls}">{items}</ul>'
-            f'</article>')
+    if table_rows:
+        tbody = "".join(table_rows) + (
+            '<tr id="course-empty" hidden>'
+            '<td colspan="5" class="empty-state">'
+            '条件に一致する講座が見つかりませんでした。キーワードを短くするか、'
+            '分野を「すべて」に戻してみてください。</td></tr>')
+    else:
+        tbody = (
+            '<tr><td colspan="5" class="empty-state">'
+            '現在、掲載中の講座はありません。</td></tr>')
 
-    disclosure = (
-        '<p class="ad-disclosure">本ページには広告（アフィリエイトリンク）を含む場合があります。'
-        'リンクを経由して申込みされた場合、当サイトが収益を得ることがあります。'
-        '掲載は編集部の選定によるもので、内容の正確性・価格は各提供元の公式情報をご確認ください。</p>'
-        if has_aff else "")
-
-    grid = "".join(cards) if cards else '<p class="muted">現在、掲載中の講座はありません。</p>'
     body = f"""<nav class="crumbs"><a href="index.html">トップ</a> › おすすめの試験対策講座</nav>
 <h1>おすすめの試験対策講座{pr}</h1>
-<p class="lead">資格別に、編集部が選んだ通信講座・オンライン講座を掲載しています。
-1つの資格に対して複数の講座を比較検討できるよう、提供元の異なる講座を並べています。</p>
-{disclosure}
-<div class="course-list">{grid}</div>
-<p class="muted course-foot">最新の価格・開講状況・カリキュラムは各提供元の公式情報で必ずご確認ください。
-各資格の詳細ページにも、テキスト・講座の例を掲載しています。</p>"""
+<p class="lead">資格別の通信講座・オンライン講座を一覧表で掲載しています。
+キーワードや分野で絞り込み、1つの資格に複数ある講座も横並びで比較できます。</p>
+<div class="controls course-controls">
+<label class="course-filter-field">
+<span class="course-filter-label">キーワード</span>
+<input id="course-q" type="search" placeholder="資格名・講座名・提供元で検索" aria-controls="course-table">
+</label>
+<label class="course-filter-field">
+<span class="course-filter-label">分野</span>
+<select id="course-major"><option value="">すべて</option>{major_opts}</select>
+</label>
+</div>
+<p id="course-count" class="courses-count muted" aria-live="polite">{n}件</p>
+<div class="all-certs-table-wrap courses-table-wrap">
+<table class="all-certs-table courses-table" id="course-table">
+<colgroup>
+<col class="courses-col-name"><col class="courses-col-major">
+<col class="courses-col-title"><col class="courses-col-provider">
+<col class="courses-col-note">
+</colgroup>
+<thead><tr>
+<th>資格名</th><th>分野</th><th>講座名</th><th>提供元</th><th>備考</th>
+</tr></thead>
+<tbody>{tbody}</tbody>
+</table>
+</div>
+<p class="muted courses-foot">最新の価格・開講状況・カリキュラムは各提供元の公式情報で必ずご確認ください。
+各資格の詳細ページにも、テキスト・講座の例を掲載しています。</p>
+<script src="{asset_url('', 'assets/courses-search.js')}"></script>"""
 
     ld = {"@context": "https://schema.org", "@type": "BreadcrumbList",
           "itemListElement": [
@@ -3813,6 +3834,33 @@ OCC_SEARCH_JS = """(function(){
 })();
 """
 
+COURSES_SEARCH_JS = """(function(){
+  var q=document.getElementById('course-q'),
+      mj=document.getElementById('course-major'),
+      tb=document.querySelector('#course-table tbody'),
+      cnt=document.getElementById('course-count'),
+      empty=document.getElementById('course-empty');
+  if(!tb)return;
+  var rows=[].slice.call(tb.querySelectorAll('tr[data-major]'));
+  function render(){
+    var t=(q&&q.value||'').trim().toLowerCase(),
+        m=mj?mj.value:'';
+    var vis=0;
+    rows.forEach(function(tr){
+      var ok=true;
+      if(m&&tr.dataset.major!==m)ok=false;
+      if(ok&&t&&tr.textContent.toLowerCase().indexOf(t)<0)ok=false;
+      tr.hidden=!ok;
+      if(ok)vis++;
+    });
+    if(empty)empty.hidden=vis>0||!rows.length;
+    if(cnt)cnt.textContent=vis+'件';
+  }
+  if(q)q.addEventListener('input',render);
+  if(mj)mj.addEventListener('change',render);
+})();
+"""
+
 APP_CSS = """:root{
 --ink-deep:#1a1a1a;--ink:#1a1a1a;--muted:#666666;
 --header-bg:#ffffff;
@@ -4035,25 +4083,28 @@ html{scroll-padding-top:64px}
 @media(max-width:640px){.finder-grid{grid-template-columns:1fr}}
 
 /* Courses (おすすめ試験対策講座) */
-.course-list{display:flex;flex-direction:column;gap:18px;margin:20px 0}
-.course-cert{background:#fff;border:1px solid var(--gray-200);border-radius:var(--radius);padding:18px 20px;display:flex;flex-direction:column;gap:12px}
-.course-cert-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;flex-wrap:wrap}
-.course-cert-titles{min-width:0;flex:1}
-.course-cert-name{font-size:var(--text-md);font-weight:var(--fw-bold);margin:0;line-height:1.35}
-.course-cert-name a{color:var(--ink-deep);text-decoration:none}
-.course-cert-name a:hover{color:var(--accent);text-decoration:underline;text-underline-offset:2px}
-.course-cert-major{font-size:var(--text-sm);color:var(--muted);margin:4px 0 0}
-.course-cert-count{flex-shrink:0;font-size:var(--text-sm);font-weight:600;color:var(--muted);padding:4px 10px;background:var(--gray-50);border:1px solid var(--gray-200);border-radius:999px;line-height:1.3;white-space:nowrap}
-.course-items{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:10px}
-.course-items--multi{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
-@media(max-width:640px){.course-items--multi{grid-template-columns:1fr}}
-.course-item{display:flex;flex-direction:column;gap:3px;padding:12px 14px;background:var(--gray-50);border:1px solid var(--gray-200);border-radius:8px;height:100%}
-.course-item-link{font-weight:var(--fw-semibold);color:var(--accent);text-decoration:none;line-height:1.4}
-.course-item-link:hover{text-decoration:underline;text-underline-offset:2px}
-.course-ext{font-size:.85em;margin-left:4px;font-weight:700}
-.course-provider{font-size:var(--text-sm);color:var(--muted)}
-.course-note{font-size:var(--text-sm);color:var(--ink);margin:0;line-height:1.55}
-.course-foot{margin-top:18px}
+.course-controls{align-items:flex-end;margin-top:20px}
+.course-filter-field{display:flex;flex-direction:column;gap:6px;flex:1 1 260px;min-width:0}
+.course-filter-label{font-size:var(--text-sm);font-weight:600;color:var(--muted)}
+.courses-count{margin:-4px 0 12px}
+.courses-table-wrap{margin-bottom:20px}
+.courses-table{min-width:720px}
+.courses-col-name{width:22%}
+.courses-col-major{width:14%}
+.courses-col-title{width:28%}
+.courses-col-provider{width:14%}
+.courses-col-note{width:22%}
+.courses-table .courses-cell-name a{font-weight:var(--fw-semibold);color:var(--ink-deep);text-decoration:none}
+.courses-table .courses-cell-name a:hover{color:var(--accent);text-decoration:underline;text-underline-offset:2px}
+.courses-table .courses-cell-title a{color:var(--accent);font-weight:var(--fw-semibold);text-decoration:none}
+.courses-table .courses-cell-title a:hover{text-decoration:underline;text-underline-offset:2px}
+.course-ext{font-size:.85em;margin-left:2px;font-weight:700}
+.courses-cell-note{white-space:normal;line-height:1.55}
+.courses-foot{margin-top:18px}
+@media(max-width:720px){
+.courses-table th:nth-child(5),.courses-table td:nth-child(5){display:none}
+.courses-table{min-width:560px}
+}
 
 /* Fields */
 .field-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
@@ -4518,7 +4569,8 @@ def main() -> int:
     build_difficulty_rank(indexable)
 
     ASSET_V = hashlib.sha256(
-        (APP_CSS + SEARCH_JS + COMPARE_JS + COMPARE_BAR_JS + OCC_SEARCH_JS).encode()
+        (APP_CSS + SEARCH_JS + COMPARE_JS + COMPARE_BAR_JS + OCC_SEARCH_JS
+         + COURSES_SEARCH_JS).encode()
     ).hexdigest()[:10]
 
     if SITE.exists():
@@ -4559,6 +4611,7 @@ def main() -> int:
     (SITE / "assets" / "search.js").write_text(SEARCH_JS, encoding="utf-8")
     (SITE / "assets" / "compare.js").write_text(COMPARE_JS, encoding="utf-8")
     (SITE / "assets" / "compare-bar.js").write_text(COMPARE_BAR_JS, encoding="utf-8")
+    (SITE / "assets" / "courses-search.js").write_text(COURSES_SEARCH_JS, encoding="utf-8")
     for name in ("favicon.svg", "favicon.ico", "favicon-16.png", "favicon-32.png", "apple-touch-icon.png"):
         src = BRAND / name
         if src.exists():

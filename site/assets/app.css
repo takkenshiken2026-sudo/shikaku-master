@@ -220,25 +220,28 @@ html{scroll-padding-top:64px}
 @media(max-width:640px){.finder-grid{grid-template-columns:1fr}}
 
 /* Courses (おすすめ試験対策講座) */
-.course-list{display:flex;flex-direction:column;gap:18px;margin:20px 0}
-.course-cert{background:#fff;border:1px solid var(--gray-200);border-radius:var(--radius);padding:18px 20px;display:flex;flex-direction:column;gap:12px}
-.course-cert-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;flex-wrap:wrap}
-.course-cert-titles{min-width:0;flex:1}
-.course-cert-name{font-size:var(--text-md);font-weight:var(--fw-bold);margin:0;line-height:1.35}
-.course-cert-name a{color:var(--ink-deep);text-decoration:none}
-.course-cert-name a:hover{color:var(--accent);text-decoration:underline;text-underline-offset:2px}
-.course-cert-major{font-size:var(--text-sm);color:var(--muted);margin:4px 0 0}
-.course-cert-count{flex-shrink:0;font-size:var(--text-sm);font-weight:600;color:var(--muted);padding:4px 10px;background:var(--gray-50);border:1px solid var(--gray-200);border-radius:999px;line-height:1.3;white-space:nowrap}
-.course-items{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:10px}
-.course-items--multi{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
-@media(max-width:640px){.course-items--multi{grid-template-columns:1fr}}
-.course-item{display:flex;flex-direction:column;gap:3px;padding:12px 14px;background:var(--gray-50);border:1px solid var(--gray-200);border-radius:8px;height:100%}
-.course-item-link{font-weight:var(--fw-semibold);color:var(--accent);text-decoration:none;line-height:1.4}
-.course-item-link:hover{text-decoration:underline;text-underline-offset:2px}
-.course-ext{font-size:.85em;margin-left:4px;font-weight:700}
-.course-provider{font-size:var(--text-sm);color:var(--muted)}
-.course-note{font-size:var(--text-sm);color:var(--ink);margin:0;line-height:1.55}
-.course-foot{margin-top:18px}
+.course-controls{align-items:flex-end;margin-top:20px}
+.course-filter-field{display:flex;flex-direction:column;gap:6px;flex:1 1 260px;min-width:0}
+.course-filter-label{font-size:var(--text-sm);font-weight:600;color:var(--muted)}
+.courses-count{margin:-4px 0 12px}
+.courses-table-wrap{margin-bottom:20px}
+.courses-table{min-width:720px}
+.courses-col-name{width:22%}
+.courses-col-major{width:14%}
+.courses-col-title{width:28%}
+.courses-col-provider{width:14%}
+.courses-col-note{width:22%}
+.courses-table .courses-cell-name a{font-weight:var(--fw-semibold);color:var(--ink-deep);text-decoration:none}
+.courses-table .courses-cell-name a:hover{color:var(--accent);text-decoration:underline;text-underline-offset:2px}
+.courses-table .courses-cell-title a{color:var(--accent);font-weight:var(--fw-semibold);text-decoration:none}
+.courses-table .courses-cell-title a:hover{text-decoration:underline;text-underline-offset:2px}
+.course-ext{font-size:.85em;margin-left:2px;font-weight:700}
+.courses-cell-note{white-space:normal;line-height:1.55}
+.courses-foot{margin-top:18px}
+@media(max-width:720px){
+.courses-table th:nth-child(5),.courses-table td:nth-child(5){display:none}
+.courses-table{min-width:560px}
+}
 
 /* Fields */
 .field-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
