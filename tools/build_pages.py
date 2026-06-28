@@ -83,16 +83,6 @@ for _p in PARTNER_SITES:
         PARTNER_BY_CERT.setdefault(_c, []).append(_p)
 
 
-def partner_footer_html():
-    """フッター共通の運営者サイト導線（全ページ）。"""
-    items = "".join(
-        f'<a href="{esc(p["url"])}" target="_blank" rel="noopener">{esc(p["name"])}</a>'
-        for p in PARTNER_SITES)
-    return ('<nav class="site-footer-partners" aria-label="運営者の資格対策サイト">'
-            '<span class="sfp-label">運営者の資格対策サイト</span>'
-            f'<span class="sfp-links">{items}</span></nav>')
-
-
 def partner_cards_html():
     """おすすめ対策サイトのカード一覧（トップ・aboutで使用）。"""
     return "".join(
@@ -519,45 +509,6 @@ def roadmap_html(slug, chain):
     return '<ol class="rm-track">' + "".join(steps) + "</ol>"
 
 
-def cert_relations_html(slug):
-    """資格ページの「関連資格・ステップアップ」セクション。
-    step_up はロードマップで可視化し、免除・ダブルライセンスを併記。なければ空文字。"""
-    rel = CERT_RELATIONS.get(slug)
-    if not rel:
-        return ""
-
-    def li(s, note):
-        note_html = f' <span class="muted">— {esc(note)}</span>' if note else ""
-        return f'<li><a href="{esc(s)}.html">{esc(_rel_name(s))}</a>{note_html}</li>'
-
-    chain = step_up_chain(slug)
-    rm = roadmap_html(slug, chain)
-    chain_set = set(chain)
-
-    subs = []
-    # ロードマップに載らない上位/前段階（分岐）だけ補足リスト化
-    branch_up = [(s, n) for s, n in rel["up"] if s not in chain_set]
-    branch_down = [(s, n) for s, n in rel["down"] if s not in chain_set]
-    if branch_up:
-        subs.append("<h3>そのほか上位として目指せる資格</h3><ul>"
-                    + "".join(li(s, n) for s, n in branch_up) + "</ul>")
-    if branch_down:
-        subs.append("<h3>そのほか前段階となる資格</h3><ul>"
-                    + "".join(li(s, n) for s, n in branch_down) + "</ul>")
-    if rel["exempt_to"] or rel["exempt_from"]:
-        items = "".join(li(s, n) for s, n in rel["exempt_to"] + rel["exempt_from"])
-        subs.append("<h3>試験の免除・受験資格の優遇</h3><ul>" + items + "</ul>")
-    if rel["combo"]:
-        subs.append("<h3>あわせて取りたい資格（ダブルライセンス）</h3><ul>"
-                    + "".join(li(s, n) for s, n in rel["combo"]) + "</ul>")
-    if not rm and not subs:
-        return ""
-    return ('<section class="rel-certs"><h2>ステップアップ・上位資格を目指す</h2>'
-            + rm + "".join(subs)
-            + '<p class="muted">※免除・受験資格の要件は変更されることがあります。'
-              '出願前に必ず各資格の公式情報でご確認ください。</p></section>')
-
-
 def _detail_link_item(slug, note=""):
     desc = f'<span class="detail-link-desc">{esc(note)}</span>' if note else ""
     return (f'<li class="detail-link-item"><a href="{esc(slug)}.html">'
@@ -664,16 +615,6 @@ def materials_cell_html(slug):
     return f'<ul class="materials">{"".join(items)}</ul>'
 
 
-def materials_section_html(slug):
-    """おすすめ教材・講座セクション（後方互換）。"""
-    cell = materials_cell_html(slug)
-    if not cell:
-        return ""
-    return (
-        f'<section class="materials-sec"><h2 class="detail-section-title">おすすめテキスト・講座</h2>'
-        f'{cell}</section>')
-
-
 def applicants_num(r):
     """受験者数の文字列から代表数（最初の「N人/N名」）を整数で。なければ None。"""
     ed = EXAM.get(r.get("slug", ""))
@@ -681,13 +622,6 @@ def applicants_num(r):
         return None
     m = re.search(r"([0-9][0-9,]*)\s*[人名]", ed["applicants"])
     return int(m.group(1).replace(",", "")) if m else None
-
-
-def popular_slug_set(rows, limit=80):
-    """受験者数の多い上位資格の slug 集合（一覧の人気マーク用）。"""
-    ranked = sorted((r for r in rows if applicants_num(r) is not None),
-                    key=lambda r: (-(applicants_num(r) or 0), r["name"]))
-    return {r["slug"] for r in ranked[:limit]}
 
 
 def fmt_nums_in_text(s: str) -> str:
@@ -4207,9 +4141,9 @@ a.rm-name:hover{text-decoration:underline}
 .rm-cur .rm-name{color:var(--ink-deep);font-weight:700}
 .rm-badge{flex-shrink:0;font-size:var(--text-sm);font-weight:700;color:#fff;background:var(--accent);border-radius:4px;padding:2px 7px;white-space:nowrap}
 @media(max-width:560px){.rm-track{flex-direction:column;gap:18px 0}.rm-step{width:100%}.rm-step:not(:last-child)::after{content:"▾";right:auto;left:25px;top:auto;bottom:-15px;transform:translateX(-50%)}}
-.careers-sec,.materials-sec,.rel-certs,.rel-links{margin:18px 0 0;border-top:1px solid var(--gray-200);padding-top:12px}
-.careers-sec h2,.materials-sec h2,.rel-certs h2,.rel-links h2,.occ-work h2,.occ-salary h2{font-size:var(--text-lg);font-weight:var(--fw-bold);margin:.2em 0 .4em}
-.careers,.rel-certs ul,.rel-links ul{margin:.2em 0;padding-left:1.1em}.careers li{margin:2px 0}
+.careers-sec,.rel-links{margin:18px 0 0;border-top:1px solid var(--gray-200);padding-top:12px}
+.careers-sec h2,.rel-links h2,.occ-work h2,.occ-salary h2{font-size:var(--text-lg);font-weight:var(--fw-bold);margin:.2em 0 .4em}
+.careers,.rel-links ul{margin:.2em 0;padding-left:1.1em}.careers li{margin:2px 0}
 .careers-src{font-size:var(--text-sm);margin:.3em 0 0}
 .occ-list{columns:2;column-gap:22px}.occ-list li{break-inside:avoid;background:#fff;border:1px solid var(--gray-200);border-radius:8px;padding:8px 11px;margin-bottom:7px}
 @media(max-width:560px){.occ-list{columns:1}}
@@ -4223,7 +4157,6 @@ a.rm-name:hover{text-decoration:underline}
 .materials a{color:var(--accent);font-weight:var(--fw-semibold);text-decoration:underline;text-underline-offset:2px}
 .materials a:hover{color:var(--accent-hover)}
 .mat-foot{font-size:var(--text-sm);margin:.4em 0 0}
-.rel-certs h3{font-size:var(--text-lg);font-weight:var(--fw-semibold);margin:.7em 0 .2em;color:var(--ink-deep)}
 .occ-meta{background:var(--gray-50);border:1px solid var(--gray-200);border-radius:8px;padding:10px 13px;margin:10px 0}
 .occ-stats{margin:0 0 6px}.occ-fields{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px}
 .occ-stats-label{font-size:var(--text-sm);color:var(--muted);font-weight:600;margin-right:4px}
@@ -4278,11 +4211,6 @@ table.cmp tbody th{background:var(--gray-50);color:var(--ink);white-space:nowrap
 .site-footer-nav a{font-size:var(--text-sm);color:var(--muted);text-decoration:none}
 .site-footer-nav a:hover{color:var(--ink);text-decoration:underline;text-underline-offset:2px}
 .site-footer-copy{font-size:var(--text-sm);color:var(--muted);line-height:1.5;margin:0}
-.site-footer-partners{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 14px;padding:12px 0;margin:0 0 12px;border-top:1px solid var(--gray-200);border-bottom:1px solid var(--gray-200)}
-.sfp-label{font-size:var(--text-sm);font-weight:var(--fw-semibold);color:var(--muted)}
-.sfp-links{display:flex;flex-wrap:wrap;gap:4px 14px}
-.site-footer-partners a{font-size:var(--text-sm);color:var(--accent);text-decoration:none;font-weight:600}
-.site-footer-partners a:hover{text-decoration:underline;text-underline-offset:2px}
 /* Partner sites (おすすめ対策サイト) */
 .partner-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
 @media(max-width:720px){.partner-grid{grid-template-columns:repeat(2,1fr)}}
@@ -4466,8 +4394,8 @@ table.cmp tbody th{background:var(--gray-50);color:var(--ink);white-space:nowrap
 .page-detail .point-list li::before{color:var(--muted)}
 .page-detail .detail-link-desc,.page-detail .detail-nav-note,.page-detail .detail-source-note{font-size:var(--text-sm);color:var(--muted)}
 .page-detail .detail-source{font-size:var(--text-sm);color:var(--muted)}
-.page-detail .careers-sec,.page-detail .materials-sec{margin-top:20px;padding-top:14px}
-.page-detail .careers-sec h2,.page-detail .materials-sec h2{margin:.2em 0 .5em}
+.page-detail .careers-sec{margin-top:20px;padding-top:14px}
+.page-detail .careers-sec h2{margin:.2em 0 .5em}
 .page-detail .careers li,.page-detail .jobtag{font-size:var(--text-md);color:var(--ink)}
 .page-detail table.spec .careers li,.page-detail table.spec .jobtag{font-size:inherit;color:var(--ink)}
 .page-detail .careers-src,.page-detail .mat-foot{font-size:var(--text-sm);color:var(--muted)}

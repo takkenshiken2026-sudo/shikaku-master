@@ -368,9 +368,9 @@ a.rm-name:hover{text-decoration:underline}
 .rm-cur .rm-name{color:var(--ink-deep);font-weight:700}
 .rm-badge{flex-shrink:0;font-size:var(--text-sm);font-weight:700;color:#fff;background:var(--accent);border-radius:4px;padding:2px 7px;white-space:nowrap}
 @media(max-width:560px){.rm-track{flex-direction:column;gap:18px 0}.rm-step{width:100%}.rm-step:not(:last-child)::after{content:"▾";right:auto;left:25px;top:auto;bottom:-15px;transform:translateX(-50%)}}
-.careers-sec,.materials-sec,.rel-certs,.rel-links{margin:18px 0 0;border-top:1px solid var(--gray-200);padding-top:12px}
-.careers-sec h2,.materials-sec h2,.rel-certs h2,.rel-links h2,.occ-work h2,.occ-salary h2{font-size:var(--text-lg);font-weight:var(--fw-bold);margin:.2em 0 .4em}
-.careers,.rel-certs ul,.rel-links ul{margin:.2em 0;padding-left:1.1em}.careers li{margin:2px 0}
+.careers-sec,.rel-links{margin:18px 0 0;border-top:1px solid var(--gray-200);padding-top:12px}
+.careers-sec h2,.rel-links h2,.occ-work h2,.occ-salary h2{font-size:var(--text-lg);font-weight:var(--fw-bold);margin:.2em 0 .4em}
+.careers,.rel-links ul{margin:.2em 0;padding-left:1.1em}.careers li{margin:2px 0}
 .careers-src{font-size:var(--text-sm);margin:.3em 0 0}
 .occ-list{columns:2;column-gap:22px}.occ-list li{break-inside:avoid;background:#fff;border:1px solid var(--gray-200);border-radius:8px;padding:8px 11px;margin-bottom:7px}
 @media(max-width:560px){.occ-list{columns:1}}
@@ -384,7 +384,6 @@ a.rm-name:hover{text-decoration:underline}
 .materials a{color:var(--accent);font-weight:var(--fw-semibold);text-decoration:underline;text-underline-offset:2px}
 .materials a:hover{color:var(--accent-hover)}
 .mat-foot{font-size:var(--text-sm);margin:.4em 0 0}
-.rel-certs h3{font-size:var(--text-lg);font-weight:var(--fw-semibold);margin:.7em 0 .2em;color:var(--ink-deep)}
 .occ-meta{background:var(--gray-50);border:1px solid var(--gray-200);border-radius:8px;padding:10px 13px;margin:10px 0}
 .occ-stats{margin:0 0 6px}.occ-fields{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px}
 .occ-stats-label{font-size:var(--text-sm);color:var(--muted);font-weight:600;margin-right:4px}
@@ -439,11 +438,6 @@ table.cmp tbody th{background:var(--gray-50);color:var(--ink);white-space:nowrap
 .site-footer-nav a{font-size:var(--text-sm);color:var(--muted);text-decoration:none}
 .site-footer-nav a:hover{color:var(--ink);text-decoration:underline;text-underline-offset:2px}
 .site-footer-copy{font-size:var(--text-sm);color:var(--muted);line-height:1.5;margin:0}
-.site-footer-partners{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 14px;padding:12px 0;margin:0 0 12px;border-top:1px solid var(--gray-200);border-bottom:1px solid var(--gray-200)}
-.sfp-label{font-size:var(--text-sm);font-weight:var(--fw-semibold);color:var(--muted)}
-.sfp-links{display:flex;flex-wrap:wrap;gap:4px 14px}
-.site-footer-partners a{font-size:var(--text-sm);color:var(--accent);text-decoration:none;font-weight:600}
-.site-footer-partners a:hover{text-decoration:underline;text-underline-offset:2px}
 /* Partner sites (おすすめ対策サイト) */
 .partner-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
 @media(max-width:720px){.partner-grid{grid-template-columns:repeat(2,1fr)}}
@@ -627,8 +621,8 @@ table.cmp tbody th{background:var(--gray-50);color:var(--ink);white-space:nowrap
 .page-detail .point-list li::before{color:var(--muted)}
 .page-detail .detail-link-desc,.page-detail .detail-nav-note,.page-detail .detail-source-note{font-size:var(--text-sm);color:var(--muted)}
 .page-detail .detail-source{font-size:var(--text-sm);color:var(--muted)}
-.page-detail .careers-sec,.page-detail .materials-sec{margin-top:20px;padding-top:14px}
-.page-detail .careers-sec h2,.page-detail .materials-sec h2{margin:.2em 0 .5em}
+.page-detail .careers-sec{margin-top:20px;padding-top:14px}
+.page-detail .careers-sec h2{margin:.2em 0 .5em}
 .page-detail .careers li,.page-detail .jobtag{font-size:var(--text-md);color:var(--ink)}
 .page-detail table.spec .careers li,.page-detail table.spec .jobtag{font-size:inherit;color:var(--ink)}
 .page-detail .careers-src,.page-detail .mat-foot{font-size:var(--text-sm);color:var(--muted)}
