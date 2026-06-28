@@ -652,7 +652,6 @@ def materials_cell_html(slug):
     mats = sorted(MATERIALS.get(slug) or [], key=_material_sort_key)
     if not mats:
         return ""
-    has_aff = any(m["affiliate"] for m in mats)
     items = []
     for m in mats:
         link = m["affiliate"] or m["url"]
@@ -669,13 +668,7 @@ def materials_cell_html(slug):
         kind_html = (f'<span class="mat-kind">{esc(m["kind"])}</span> '
                      if m["kind"] and m["kind"] != "テキスト" else "")
         items.append(f'<li>{kind_html}{title_html}{prov}{note}</li>')
-    disclosure = (
-        '<p class="ad-disclosure">本セクションには広告（アフィリエイトリンク）を含みます。'
-        'リンクを経由して購入・申込みされた場合、当サイトが収益を得ることがあります。'
-        '掲載は編集部の選定によるもので、内容の正確性・価格は各提供元の公式情報をご確認ください。</p>'
-        if has_aff else "")
     return (
-        f'{disclosure}'
         f'<ul class="materials">{"".join(items)}</ul>'
         '<p class="muted mat-foot">編集部が選んだ学習教材・講座の例です。最新の価格・改訂版・'
         '開講状況は各販売元・提供元の公式情報で必ずご確認ください。</p>')
