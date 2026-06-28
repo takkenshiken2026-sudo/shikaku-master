@@ -657,21 +657,11 @@ def materials_cell_html(slug):
         link = m["affiliate"] or m["url"]
         rel = "sponsored nofollow noopener" if m["affiliate"] else "nofollow noopener"
         if link:
-            title_html = (f'<a href="{esc(link)}" rel="{rel}" target="_blank">'
-                          f'{esc(m["title"])} ↗</a>')
+            items.append(
+                f'<li><a href="{esc(link)}" rel="{rel}" target="_blank">{esc(m["title"])}</a></li>')
         else:
-            title_html = esc(m["title"])
-        prov = f' <span class="muted">／{esc(m["provider"])}</span>' if m["provider"] else ""
-        note = f' <span class="note-muted">— {esc(m["note"])}</span>' if m["note"] else ""
-        # セクション見出しが既に「テキスト」を含むため、種別「テキスト」のラベルは省略し、
-        # 「講座」など他種別のときだけ表示する（同じ「テキスト：」が並ぶ冗長さを回避）。
-        kind_html = (f'<span class="mat-kind">{esc(m["kind"])}</span> '
-                     if m["kind"] and m["kind"] != "テキスト" else "")
-        items.append(f'<li>{kind_html}{title_html}{prov}{note}</li>')
-    return (
-        f'<ul class="materials">{"".join(items)}</ul>'
-        '<p class="muted mat-foot">編集部が選んだ学習教材・講座の例です。最新の価格・改訂版・'
-        '開講状況は各販売元・提供元の公式情報で必ずご確認ください。</p>')
+            items.append(f'<li>{esc(m["title"])}</li>')
+    return f'<ul class="materials">{"".join(items)}</ul>'
 
 
 def materials_section_html(slug):
