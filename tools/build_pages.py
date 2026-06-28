@@ -43,6 +43,7 @@ SITE_NAME = "資格マスター"
 SITE_DESC = "日本の資格を「探せる・絞れる・比べられる」資格データベース。受験料・試験形式・受験資格・合格率・実施団体・公式サイトを公式の一次情報に基づき掲載。"
 BASE_URL = "https://shikaku-master.jp"
 CUSTOM_DOMAIN = "shikaku-master.jp"
+GA4_MEASUREMENT_ID = "G-KERDMXDPSR"
 
 # 運営者が制作する資格別の対策サイト（「おすすめの資格対策サイト」導線）。
 # 通常リンク（dofollow）・別タブ。certs に該当資格 slug を持つものは、その詳細ページにも出し分ける。
@@ -725,6 +726,19 @@ def fmt_nums_in_text(s: str) -> str:
     return re.sub(r"\d+", repl, s)
 
 
+def ga4_head_snippet() -> str:
+    mid = GA4_MEASUREMENT_ID
+    return f"""<link rel="preconnect" href="https://www.googletagmanager.com">
+<script async src="https://www.googletagmanager.com/gtag/js?id={mid}"></script>
+<script>
+window.dataLayer=window.dataLayer||[];
+function gtag(){{dataLayer.push(arguments);}}
+gtag('js',new Date());
+gtag('config','{mid}');
+</script>
+"""
+
+
 def page_shell(title: str, body: str, depth: int, noindex: bool = True,
                desc: str = "", path: str = "", jsonld=None, og_image: str = "") -> str:
     base = "../" * depth
@@ -754,7 +768,7 @@ def page_shell(title: str, body: str, depth: int, noindex: bool = True,
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#ffffff">
-{robots}<title>{esc(title)}</title>
+{ga4_head_snippet()}{robots}<title>{esc(title)}</title>
 <meta name="description" content="{esc(desc)}">
 {og}<link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -3996,11 +4010,15 @@ html{scroll-padding-top:64px}
 .all-certs-table--4col col.all-certs-col-study{width:14%}
 .all-certs-table--4col col.all-certs-col-pass{width:16%}
 .all-certs-table--4col col.all-certs-col-freq{width:38%}
-.all-certs-table--5col col.all-certs-col-name{width:24%}
+.all-certs-table--5col col.all-certs-col-name{width:23%}
 .all-certs-table--5col col.all-certs-col-major{width:17%}
-.all-certs-table--5col col.all-certs-col-study{width:11%}
-.all-certs-table--5col col.all-certs-col-pass{width:15%}
+.all-certs-table--5col col.all-certs-col-study{width:14%}
+.all-certs-table--5col col.all-certs-col-pass{width:13%}
 .all-certs-table--5col col.all-certs-col-freq{width:33%}
+.all-certs-table--4col thead th:nth-child(2),
+.all-certs-table--4col thead th:nth-child(3),
+.all-certs-table--5col thead th:nth-child(3),
+.all-certs-table--5col thead th:nth-child(4){text-align:right}
 .all-certs-table thead th{text-align:left;padding:11px 14px;background:var(--table-head-bg);color:var(--ink);font-weight:var(--fw-regular);font-size:var(--text-table);border-bottom:1px solid var(--table-border);white-space:nowrap}
 .all-certs-table tbody td{padding:11px 14px;border-bottom:1px solid var(--table-border);vertical-align:middle;line-height:1.5;font-size:var(--text-table);color:var(--ink);overflow-wrap:break-word;word-break:break-word;overflow:hidden}
 .all-certs-table tbody tr.cert-row{cursor:pointer;transition:background-color .12s ease}
@@ -4015,7 +4033,8 @@ html{scroll-padding-top:64px}
 .all-certs-table tbody tr.cert-row:hover .all-certs-name-text{color:var(--accent)}
 .all-certs-cell{font-weight:400;color:var(--ink)}
 .all-certs-cell--major,.all-certs-cell--pass,.all-certs-cell--freq{white-space:normal}
-.all-certs-cell--study{white-space:nowrap}
+.all-certs-cell--study{white-space:nowrap;text-align:right}
+.all-certs-cell--pass{text-align:right}
 .all-certs-num{font-variant-numeric:tabular-nums;color:var(--ink)}
 .all-certs-table .empty-state{white-space:normal;text-align:center;color:var(--muted);background:var(--gray-50);padding:22px 16px;line-height:1.75;font-size:var(--text-sm)}
 .pagination{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin-top:28px;padding-top:4px}
