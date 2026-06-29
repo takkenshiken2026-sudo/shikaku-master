@@ -7,7 +7,10 @@
 - site/assets/app.css, search.js
 
 掲載対象(indexable): is_bucket=0 かつ is_duplicate=0 かつ scope=domestic。
-プロトタイプのため全ページ <meta name="robots" content="noindex"> で出力。
+インデックス衛生: 実データが薄い詳細・404 等は noindex、十分な詳細と
+一覧/特集/比較/トップは index 対象（is_indexable_detail 参照）。
+構造化データ: 詳細=EducationalOccupationalCredential + BreadcrumbList + FAQPage、
+一覧/特集=BreadcrumbList + ItemList、トップ=WebSite(SearchAction) + Organization。
 事実値(受験料/合格率/公式URL)は未検証なら「公式で確認」を促す。
 """
 import csv
@@ -32,6 +35,8 @@ SITE_NAME = "資格カタログ"
 SITE_DESC = "日本の資格を「探せる・絞れる・比べられる」資格データベース。受験料・試験形式・受験資格・合格率・実施団体・公式サイトを公式の一次情報に基づき掲載。"
 BASE_URL = "https://shikaku-master.jp"
 CUSTOM_DOMAIN = "shikaku-master.jp"
+# OGP/Twitter カード用の既定画像（summary カード=正方形ロゴ）。
+OG_IMAGE = "assets/apple-touch-icon.png"
 TYPE_BADGE = {
     "国家": ("国家資格", "badge-national"),
     "公的": ("公的資格", "badge-public"),
@@ -43,6 +48,30 @@ TYPE_BADGE = {
 
 def esc(s: str) -> str:
     return html.escape(s or "", quote=True)
+
+
+def breadcrumb_ld(trail):
+    """[(name, url|None), ...] → BreadcrumbList JSON-LD（最後の要素は url 省略可）。"""
+    items = []
+    for i, (nm, url) in enumerate(trail, 1):
+        el = {"@type": "ListItem", "position": i, "name": nm}
+        if url:
+            el["item"] = url
+        items.append(el)
+    return {"@context": "https://schema.org", "@type": "BreadcrumbList",
+            "itemListElement": items}
+
+
+def itemlist_ld(rows, name):
+    """資格 rows → 一覧/ランキングページ用 ItemList JSON-LD（最大30件・順位付き）。"""
+    elems = []
+    for i, r in enumerate(rows[:30], 1):
+        elems.append({"@type": "ListItem", "position": i,
+                      "name": r["name"],
+                      "url": f'{BASE_URL}/c/{r["slug"]}.html'})
+    return {"@context": "https://schema.org", "@type": "ItemList",
+            "name": name, "numberOfItems": len(elems),
+            "itemListElement": elems}
 
 
 def load_rows():
@@ -138,6 +167,7 @@ def page_shell(title: str, body: str, depth: int, noindex: bool = True,
     robots = ('<meta name="robots" content="noindex">\n' if noindex else "")
     desc = desc or SITE_DESC
     canon = BASE_URL + "/" + path
+    img = BASE_URL + "/" + OG_IMAGE
     og = (f'<link rel="canonical" href="{esc(canon)}">\n'
           f'<meta property="og:type" content="website">\n'
           f'<meta property="og:site_name" content="{esc(SITE_NAME)}">\n'
@@ -145,7 +175,9 @@ def page_shell(title: str, body: str, depth: int, noindex: bool = True,
           f'<meta property="og:description" content="{esc(desc)}">\n'
           f'<meta property="og:url" content="{esc(canon)}">\n'
           f'<meta property="og:locale" content="ja_JP">\n'
-          f'<meta name="twitter:card" content="summary">\n')
+          f'<meta property="og:image" content="{esc(img)}">\n'
+          f'<meta name="twitter:card" content="summary">\n'
+          f'<meta name="twitter:image" content="{esc(img)}">\n')
     ld = ""
     if jsonld:
         for obj in (jsonld if isinstance(jsonld, list) else [jsonld]):
@@ -395,7 +427,23 @@ fetch("../data/certifications.json").then(r=>r.json()).then(all=>{{
             {"@type": "ListItem", "position": 3, "name": name},
         ],
     }
-    ld = [breadcrumb] + ([faq] if faq else [])
+    # 資格そのものの構造化データ（この分野で最も適切な schema.org 型）
+    credential = {
+        "@context": "https://schema.org",
+        "@type": "EducationalOccupationalCredential",
+        "name": name,
+        "description": desc,
+        "url": f'{BASE_URL}/c/{row["slug"]}.html',
+        "credentialCategory": label,
+    }
+    if row["authority"]:
+        recognized = {"@type": "Organization", "name": row["authority"]}
+        if row["official_url"]:
+            recognized["url"] = row["official_url"]
+        credential["recognizedBy"] = recognized
+    if row["eligibility"]:
+        credential["competencyRequired"] = row["eligibility"]
+    ld = [credential, breadcrumb] + ([faq] if faq else [])
     return page_shell(f"{name}｜{SITE_NAME}", body, depth=1,
                       noindex=(not is_indexable_detail(row)),
                       desc=desc, path=f'c/{row["slug"]}.html', jsonld=ld)
@@ -567,11 +615,16 @@ def build_category_pages(indexable):
             f"主なカテゴリ: {esc('、'.join(cats[:12]))}{'ほか' if len(cats) > 12 else ''}。</p>"
             + _list_items(items, depth=1)
         )
+        ld = [
+            breadcrumb_ld([("トップ", BASE_URL + "/"),
+                           (f"{major}の資格一覧", None)]),
+            itemlist_ld(items, f"{major}の資格一覧"),
+        ]
         pages[slug] = page_shell(
             f"{major}の資格一覧｜{SITE_NAME}", body, depth=1, noindex=False,
             desc=f"「{major}」分野の資格 {len(items)} 件（うち公式データ掲載 {npub} 件）。"
                  f"受験料・試験形式・受験資格・合格率を一覧・比較できます。",
-            path=f"bunya/{slug}.html")
+            path=f"bunya/{slug}.html", jsonld=ld)
     return pages
 
 
@@ -929,9 +982,13 @@ def build_feature_pages(indexable):
             + '<p class="muted" style="margin-top:14px">※受験料・合格率は公式の一次情報に基づきますが、'
               '最新の金額・制度・日程は各資格の公式サイトで必ずご確認ください。</p>'
         )
+        ld = [
+            breadcrumb_ld([("トップ", BASE_URL + "/"), (h1, None)]),
+            itemlist_ld(items, h1),
+        ]
         pages[slug] = page_shell(f"{title}｜{SITE_NAME}", body, depth=1,
                                  noindex=False, desc=desc,
-                                 path=f"feature/{slug}.html")
+                                 path=f"feature/{slug}.html", jsonld=ld)
 
     # 受験者数が多い順（公式統計のある資格）
     popular = sorted((r for r in pub if applicants_num(r) is not None),
@@ -1046,9 +1103,13 @@ def build_feature_pages(indexable):
               '必ずご確認ください。</p>'
             + hub_nav(slug)
         )
+        ld = [
+            breadcrumb_ld([("トップ", BASE_URL + "/"), (h1, None)]),
+            itemlist_ld(items, h1),
+        ]
         pages[slug] = page_shell(f"{title}｜{SITE_NAME}", body, depth=1,
                                  noindex=False, desc=desc,
-                                 path=f"feature/{slug}.html")
+                                 path=f"feature/{slug}.html", jsonld=ld)
 
     ind = curated(HUB_INDEPENDENCE)
     hub("independence", "独立・開業を目指せる資格", "独立・開業を目指せる資格",
