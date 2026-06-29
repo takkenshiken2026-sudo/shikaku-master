@@ -35,8 +35,8 @@ SITE_NAME = "資格カタログ"
 SITE_DESC = "日本の資格を「探せる・絞れる・比べられる」資格データベース。受験料・試験形式・受験資格・合格率・実施団体・公式サイトを公式の一次情報に基づき掲載。"
 BASE_URL = "https://shikaku-master.jp"
 CUSTOM_DOMAIN = "shikaku-master.jp"
-# OGP/Twitter カード用の既定画像（summary カード=正方形ロゴ）。
-OG_IMAGE = "assets/apple-touch-icon.png"
+# OGP/Twitter カード用の既定画像（1200×630・tools/build_og.py で生成）。
+OG_IMAGE = "assets/og-default.png"
 TYPE_BADGE = {
     "国家": ("国家資格", "badge-national"),
     "公的": ("公的資格", "badge-public"),
@@ -176,7 +176,9 @@ def page_shell(title: str, body: str, depth: int, noindex: bool = True,
           f'<meta property="og:url" content="{esc(canon)}">\n'
           f'<meta property="og:locale" content="ja_JP">\n'
           f'<meta property="og:image" content="{esc(img)}">\n'
-          f'<meta name="twitter:card" content="summary">\n'
+          f'<meta property="og:image:width" content="1200">\n'
+          f'<meta property="og:image:height" content="630">\n'
+          f'<meta name="twitter:card" content="summary_large_image">\n'
           f'<meta name="twitter:image" content="{esc(img)}">\n')
     ld = ""
     if jsonld:
@@ -1663,7 +1665,8 @@ def main() -> int:
     (SITE / "assets" / "app.css").write_text(APP_CSS, encoding="utf-8")
     (SITE / "assets" / "search.js").write_text(SEARCH_JS, encoding="utf-8")
     (SITE / "assets" / "compare.js").write_text(COMPARE_JS, encoding="utf-8")
-    for name in ("favicon.svg", "favicon.ico", "favicon-16.png", "favicon-32.png", "apple-touch-icon.png"):
+    for name in ("favicon.svg", "favicon.ico", "favicon-16.png", "favicon-32.png",
+                 "apple-touch-icon.png", "og-default.png"):
         src = BRAND / name
         if src.exists():
             shutil.copy2(src, SITE / "assets" / name)

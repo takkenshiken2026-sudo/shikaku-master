@@ -8,7 +8,9 @@ CSV → Python ジェネレータ → 静的HTML を生成する量産型サイ�
 
 - 検索・分野/区分での絞り込み・**受験料/合格率での並び替え**・**比較（最大4件）**
 - 受験料・試験形式・受験資格・合格率・実施団体・公式URLを**公式の一次情報**に基づき掲載（約862件）
-- SEO対応（メタ説明・OGP・canonical・sitemap.xml・robots.txt・パンくずJSON-LD）
+- SEO対応（ユニークなメタ説明・OGP画像・canonical・sitemap.xml・robots.txt）
+  - 構造化データ: 詳細=EducationalOccupationalCredential＋BreadcrumbList＋FAQPage、
+    一覧/特集=BreadcrumbList＋ItemList、トップ=WebSite(SearchAction)＋Organization
 - データ方針と出典は `data/SOURCES.md`、整合性検査は `python3 tools/validate.py`
 
 ## 構成
@@ -28,6 +30,7 @@ site/                                   # 生成物（トップ＋詳細1008ペ�
 
 ```bash
 python3 tools/build_seed.py     # data/certifications.csv を生成
+python3 tools/build_og.py       # brand/og-default.png（OGP共有画像 1200×630）を生成
 python3 tools/build_pages.py    # site/ を生成
 ```
 
