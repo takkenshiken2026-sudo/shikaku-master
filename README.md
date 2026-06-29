@@ -19,9 +19,15 @@ CSV → Python ジェネレータ → 静的HTML を生成する量産型サイ�
 data/
   sources/hellowork_license_list.tsv   # 正本シード（ハローワーク全1078件・原文ママ）
   certifications.csv                    # 資格カタログ本体（分類済みデータ）
+  descriptions.csv                      # 資格ごとの独自解説（全件ユニーク）
+  seed_triage.csv                       # 廃止・名称変更済み資格の沿革注記（一次情報確認済み）
+  seed_worklist.csv / .md               # 未掲載(seed)資格の一次情報リサーチ用ワークリスト
 tools/
   build_seed.py                         # TSV → certifications.csv（NFKC正規化・分類）
   classify_rules.py                     # 大分類(21) / 国家・公的・民間 の判定ルール
+  build_og.py                           # OGP共有画像 brand/og-default.png を生成
+  dedupe_descriptions.py                # descriptions.csv の重複説明文を一意化（冪等）
+  seed_worklist.py                      # 未掲載資格のリサーチ・ワークリストを生成
   build_pages.py                        # certifications.csv → site/（静的サイト）
 site/                                   # 生成物（トップ＋詳細1008ページ＋検索JSON）
 ```

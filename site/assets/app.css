@@ -24,6 +24,8 @@ table.spec th{width:34%;background:#f2f5fa;color:#3a4757;font-weight:600;white-s
 .provenance{font-size:.82rem;color:#6b7682;background:#f2f5fa;border:1px solid #e1e8f2;border-radius:8px;padding:11px 14px;margin:10px 0 0}
 .feat-list{margin:.2em 0 .6em;padding-left:1.1em}.feat-list li{margin:2px 0}
 .updated{font-size:.82rem;color:#6b7682;margin:.1em 0 .6em}.updated .muted{margin-left:.4em}
+.notice-defunct{font-size:.9rem;color:#7a4f00;background:#fff7e6;border:1px solid #ffd591;border-left:4px solid #fa8c16;border-radius:8px;padding:11px 14px;margin:0 0 14px;line-height:1.7}
+.notice-defunct a{color:#9a3412}
 .tag-chip{display:inline-block;background:#eef4ff;color:#0d47a1;border:1px solid #cfe0fb;border-radius:12px;padding:2px 10px;margin:2px 4px 2px 0;font-size:.82rem}
 .tag-ind{background:#eafaf1;color:#1b6e3c;border-color:#bfe6cf}
 .tagfilter{display:flex;flex-wrap:wrap;align-items:center;gap:7px;margin:2px 0 10px}

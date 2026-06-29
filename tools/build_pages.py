@@ -135,6 +135,25 @@ def load_descriptions():
 DESC = load_descriptions()
 
 
+def load_triage():
+    """slug → {kind, note, successor_slug, source, checked_at}。
+    廃止・名称変更済み資格の沿革注記（一次情報で確認した編集情報）。"""
+    path = ROOT / "data" / "seed_triage.csv"
+    if not path.exists():
+        return {}
+    out = {}
+    with path.open(encoding="utf-8") as f:
+        for r in csv.DictReader(f):
+            s = (r.get("slug") or "").strip()
+            if s:
+                out[s] = {k: (r.get(k) or "").strip() for k in
+                          ("kind", "note", "successor_slug", "source", "checked_at")}
+    return out
+
+
+TRIAGE = load_triage()
+
+
 def load_study_time():
     """slug → {study_hours, source}。学習時間の目安（編集値・公式の一次情報ではない）。"""
     if not STUDY_CSV.exists():
@@ -389,10 +408,27 @@ def build_detail(row) -> str:
                             "acceptedAnswer": {"@type": "Answer", "text": a}}
                            for q, a in qa]} if qa else None)
 
+    # 廃止・名称変更済み資格の沿革注記（一次情報で確認済み）
+    notice = ""
+    tri = TRIAGE.get(row["slug"])
+    if tri and tri.get("note"):
+        succ = ""
+        ss = tri.get("successor_slug")
+        if ss and ss in NAME_BY_SLUG:
+            succ = (f' 後継・関連資格: <a href="../c/{esc(ss)}.html">'
+                    f'{esc(NAME_BY_SLUG[ss])}</a>。')
+        src = ""
+        if tri.get("source"):
+            src = (f' <a href="{esc(tri["source"])}" rel="nofollow noopener" '
+                   f'target="_blank">出典</a>')
+        kind = tri.get("kind") or "注意"
+        notice = (f'<div class="notice-defunct"><strong>【{esc(kind)}】</strong>'
+                  f'{esc(tri["note"])}{succ}{src}</div>\n')
+
     body = f"""<nav class="crumbs"><a href="../index.html">トップ</a> ›
 <a href="../index.html?major={esc(major)}">{esc(major)}</a> › {esc(name)}</nav>
 <h1>{esc(name)}</h1>
-{updated_html}<p class="lead">{lead}</p>
+{notice}{updated_html}<p class="lead">{lead}</p>
 {fact_p}
 <table class="spec">{rows_html}</table>
 {cta}{provenance}
@@ -1575,6 +1611,8 @@ table.spec th{width:34%;background:#f2f5fa;color:#3a4757;font-weight:600;white-s
 .provenance{font-size:.82rem;color:#6b7682;background:#f2f5fa;border:1px solid #e1e8f2;border-radius:8px;padding:11px 14px;margin:10px 0 0}
 .feat-list{margin:.2em 0 .6em;padding-left:1.1em}.feat-list li{margin:2px 0}
 .updated{font-size:.82rem;color:#6b7682;margin:.1em 0 .6em}.updated .muted{margin-left:.4em}
+.notice-defunct{font-size:.9rem;color:#7a4f00;background:#fff7e6;border:1px solid #ffd591;border-left:4px solid #fa8c16;border-radius:8px;padding:11px 14px;margin:0 0 14px;line-height:1.7}
+.notice-defunct a{color:#9a3412}
 .tag-chip{display:inline-block;background:#eef4ff;color:#0d47a1;border:1px solid #cfe0fb;border-radius:12px;padding:2px 10px;margin:2px 4px 2px 0;font-size:.82rem}
 .tag-ind{background:#eafaf1;color:#1b6e3c;border-color:#bfe6cf}
 .tagfilter{display:flex;flex-wrap:wrap;align-items:center;gap:7px;margin:2px 0 10px}
