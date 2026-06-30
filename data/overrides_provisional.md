@@ -25,6 +25,10 @@
 | c-3882 | 検索技術者検定1級 | 受験料(税別)・一次/二次の方式 | https://www.infosta.or.jp/examination/kensaku-kentei-1/ |
 | c-4325 | 葬祭ディレクター1級 | 受験料・受験資格・実施日 | https://www.sousai-director.jp/ |
 | c-4326 | 葬祭ディレクター2級 | 受験料・受験資格・実施日 | https://www.sousai-director.jp/ |
+| c-4410〜4412 | 惣菜管理士1〜3級 | 会員区分別の受験料・実施日 | https://www.nsouzai-kyoukai.or.jp/training/rmm/ |
+| c-5119〜5121 | 非破壊試験技術者レベル1〜3 | 方法別受験料・受験資格の詳細 | https://www.jsndi.jp/qualification/ |
+| c-5504〜5505 | 溶接管理技術者1〜2級 | 筆記/口述の受験料・経験年数区分 | https://www.jwes.or.jp/qualifications/we/ |
+| c-6617〜6620 | トレース技能検定1〜4級 | 受験料・実施日 | https://chuoko-center.or.jp/trace.html |
 
 備考:
 - 受験料は年度で改定されるため、確証が持てないものは `fee` を空欄にして
