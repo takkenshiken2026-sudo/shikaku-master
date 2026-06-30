@@ -29,6 +29,13 @@
 | c-5119〜5121 | 非破壊試験技術者レベル1〜3 | 方法別受験料・受験資格の詳細 | https://www.jsndi.jp/qualification/ |
 | c-5504〜5505 | 溶接管理技術者1〜2級 | 筆記/口述の受験料・経験年数区分 | https://www.jwes.or.jp/qualifications/we/ |
 | c-6617〜6620 | トレース技能検定1〜4級 | 受験料・実施日 | https://chuoko-center.or.jp/trace.html |
+| c-6902 | 採石業務管理者 | 都道府県別の受験料・実施日 | https://www.meti.go.jp/information/license/c_text18.html |
+| c-6903 | 砂利採取業務主任者 | 都道府県別の受験料・実施日 | https://www.meti.go.jp/information/license/c_text19.html |
+| c-7034 | 解体工事施工技士 | 受験料・受験資格年数・実施日 | https://www.zenkaikouren.or.jp/engineer/about-test/ |
+| c-5812 | 自転車安全整備士 | 科目免除別の受験料・実施日 | https://www.tmt.or.jp/safety/index5.html |
+| c-7032 | 基礎施工士 | 受験料・受験資格年数・実施日 | https://www.kisokyo.or.jp/activity/index/1 |
+| c-6810 | CATV技術者 | 科目別の受講・受験料・等級 | https://www.shikaku.catv.or.jp/ |
+| c-6811 | 配電制御システム検査技士 | 学科/実技の受験料・実施日 | https://jsia.or.jp/kensa/ |
 
 備考:
 - 受験料は年度で改定されるため、確証が持てないものは `fee` を空欄にして
