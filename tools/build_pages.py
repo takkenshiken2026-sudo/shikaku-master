@@ -1206,7 +1206,27 @@ def build_detail(row, popular_slugs=None) -> str:
     indexable = is_indexable_detail(row)
     # index対象の詳細ページは資格ごとの個別OG画像を使う（build_og.pyがCIで生成）
     og_image = (f"{BASE_URL}/assets/ogp/{row['slug']}.png" if indexable else "")
-    return page_shell(f"{name}｜{SITE_NAME}", body, depth=1,
+    # SEO: タイトルに高検索意図のキーワード（受験料・合格率・難易度等）を付与し、
+    # ロングテール検索のCTRを改善する。実データがある語のみを採用し、資格名の
+    # 長さに応じて語数を絞って過長・SERP切れを防ぐ。
+    title_mods = []
+    if row.get("fee", "").strip():
+        title_mods.append("受験料")
+    if row.get("pass_rate", "").strip():
+        title_mods.append("合格率")
+    if difficulty(row):
+        title_mods.append("難易度")
+    if not title_mods:
+        if row.get("eligibility", "").strip():
+            title_mods.append("受験資格")
+        if row.get("frequency", "").strip():
+            title_mods.append("試験日")
+    _nlen = len(name)
+    _k = 3 if _nlen <= 12 else 2 if _nlen <= 18 else 0
+    title_mods = title_mods[:_k]
+    page_title = (f"{name}の{'・'.join(title_mods)}｜{SITE_NAME}"
+                  if title_mods else f"{name}｜{SITE_NAME}")
+    return page_shell(page_title, body, depth=1,
                       noindex=(not indexable),
                       desc=desc, path=f'c/{row["slug"]}.html', jsonld=ld,
                       og_image=og_image)
