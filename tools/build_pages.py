@@ -231,6 +231,22 @@ def load_guides():
 GUIDES = load_guides()
 
 
+def load_articles():
+    """data/articles.json → SEO記事（コラム）のリスト。検索意図の高い情報系記事を
+    独立ページとして生成し、関連する資格詳細・特集ページへ送客する。"""
+    path = ROOT / "data" / "articles.json"
+    if not path.exists():
+        return []
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except Exception as e:
+        print(f"  WARN articles.json 読み込み失敗: {e}", file=sys.stderr)
+        return []
+
+
+ARTICLES = load_articles()
+
+
 def load_study_time():
     """slug → {study_hours, source}。学習時間の目安（編集値・公式の一次情報ではない）。"""
     if not STUDY_CSV.exists():
@@ -726,6 +742,7 @@ def page_shell(title: str, body: str, depth: int, noindex: bool = True,
     <a href="{base}courses.html">試験対策講座</a>
     <a href="{base}shoku/index.html">職種から探す</a>
     <a href="{base}feature/index.html">特集・ランキング</a>
+    <a href="{base}articles/index.html">記事・コラム</a>
     <a href="{base}index.html#partners">資格対策サイト</a>
   </nav>
 </header>
@@ -741,6 +758,7 @@ def page_shell(title: str, body: str, depth: int, noindex: bool = True,
       <a href="{base}finder.html">資格の選び方・診断</a>
       <a href="{base}index.html#compare">よく比較される資格</a>
       <a href="{base}feature/index.html">特集・ランキング</a>
+      <a href="{base}articles/index.html">記事・コラム</a>
       <a href="{base}toukei.html">資格データ統計</a>
       <a href="{base}calendar.html">試験月カレンダー</a>
       <a href="{base}about.html">サイトについて・編集方針</a>
@@ -4113,6 +4131,19 @@ table.spec th{width:34%;background:var(--table-head-bg);color:var(--ink);font-we
 .btn-official:hover{background:var(--accent-hover);color:#fff;text-decoration:none}
 .provenance{font-size:var(--text-sm);color:var(--muted);background:var(--gray-50);border:1px solid var(--gray-200);border-radius:var(--radius);padding:11px 14px;margin:10px 0 0}
 .feat-list{margin:.2em 0 .6em;padding-left:1.1em}.feat-list li{margin:2px 0}
+.page-article{max-width:760px;margin:0 auto}
+.page-article .article-section{margin:26px 0}
+.page-article .article-section p{line-height:1.85;margin:.6em 0}
+.article-meta{display:flex;gap:14px;flex-wrap:wrap;font-size:var(--text-sm);color:var(--muted);margin:.3em 0 1.1em}
+.article-cat{font-size:var(--text-sm);color:var(--accent,#2a7a6e);font-weight:600}
+.article-list{display:grid;gap:14px;margin-top:18px}
+.article-card{border:1px solid var(--gray-200);border-radius:var(--radius);padding:16px 18px;background:#fff}
+.article-card h2{font-size:1.12rem;margin:.25em 0}
+.article-card-desc{font-size:var(--text-sm);color:var(--ink,#333);line-height:1.7}
+.article-cert-links{margin:12px 0}
+.article-related{margin-top:26px}
+.article-inline-link{margin:8px 0}
+.article-foot-note{font-size:var(--text-sm);color:var(--muted);margin-top:28px;border-top:1px solid var(--gray-200);padding-top:14px;line-height:1.7}
 .feat-list a{color:var(--ink)}
 .updated{font-size:var(--text-sm);color:var(--muted);margin:.1em 0 .6em}.updated .muted{margin-left:.4em}
 .tag-chip{display:inline-block;background:var(--gray-100);color:var(--muted);border:1px solid var(--gray-200);border-radius:12px;padding:2px 10px;margin:2px 4px 2px 0;font-size:var(--text-sm)}
@@ -4452,6 +4483,140 @@ table.cmp tbody th{background:var(--gray-50);color:var(--ink);white-space:nowrap
 """
 
 
+def _article_sections_html(a, base):
+    out = []
+    for s in a.get("sections", []):
+        h = f'<h2 class="detail-section-title">{esc(s.get("h2",""))}</h2>'
+        ps = "".join(f"<p>{esc(p)}</p>" for p in s.get("paras", []))
+        ul = ""
+        if s.get("list"):
+            ul = ('<ul class="point-list">'
+                  + "".join(f"<li>{esc(x)}</li>" for x in s["list"]) + "</ul>")
+        cl = ""
+        items = []
+        for slug in s.get("cert_links", []):
+            nm = NAME_BY_SLUG.get(slug)
+            if nm:
+                items.append(f'<li><a href="{base}c/{esc(slug)}.html">{esc(nm)}</a></li>')
+        if items:
+            cl = ('<ul class="results article-cert-links">' + "".join(items) + "</ul>")
+        fi = ""
+        if s.get("feature_inline"):
+            href, txt = s["feature_inline"]
+            fi = f'<p class="article-inline-link"><a href="{base}{esc(href)}">▶ {esc(txt)}</a></p>'
+        out.append(f'<section class="article-section">{h}{ps}{ul}{cl}{fi}</section>')
+    return "".join(out)
+
+
+def build_articles():
+    """SEO記事（コラム）を個別ページ + 一覧ページとして生成する。
+    返り値: (index_html, {slug: html})。記事は関連する資格詳細・特集へ送客する。"""
+    if not ARTICLES:
+        return "", {}
+    base = "../"
+    pages = {}
+    for a in ARTICLES:
+        slug = a["slug"]
+        canon = f"{BASE_URL}/articles/{slug}.html"
+        sections_html = _article_sections_html(a, base)
+        # 関連リンク（特集・ハブ）
+        feat = a.get("feature_links", [])
+        rel_html = ""
+        if feat:
+            lis = "".join(f'<li><a href="{base}{esc(h)}">{esc(t)}</a></li>' for h, t in feat)
+            rel_html = (f'<nav class="rel-links article-related"><h2 class="detail-section-title">'
+                        f'関連する特集・一覧</h2><ul>{lis}</ul></nav>')
+        # FAQ
+        faq = a.get("faq", [])
+        faq_html = ""
+        faq_ld = None
+        if faq:
+            qa = "".join(
+                f'<details class="faq-item"><summary>{esc(q)}</summary>'
+                f'<div class="faq-a">{esc(ans)}</div></details>' for q, ans in faq)
+            faq_html = (f'<section class="article-section detail-section--faq">'
+                        f'<h2 class="detail-section-title">よくある質問</h2>{qa}</section>')
+            faq_ld = {"@context": "https://schema.org", "@type": "FAQPage",
+                      "mainEntity": [{"@type": "Question", "name": q,
+                                      "acceptedAnswer": {"@type": "Answer", "text": ans}}
+                                     for q, ans in faq]}
+        updated = a.get("updated", a.get("date", ""))
+        meta_line = ""
+        if a.get("date"):
+            meta_line = (f'<p class="article-meta"><span>公開: {esc(a["date"])}</span>'
+                         + (f'<span>更新: {esc(updated)}</span>' if updated else "")
+                         + f'<span class="article-cat">{esc(a.get("category",""))}</span></p>')
+        body = f"""<div class="page-article">
+<nav class="crumbs"><a href="{base}index.html">トップ</a> ›
+<a href="{base}articles/index.html">記事・コラム</a> › {esc(a["h1"])}</nav>
+<article>
+<header class="article-head">
+<h1>{esc(a["h1"])}</h1>
+{meta_line}
+<p class="lead">{esc(a.get("lead",""))}</p>
+</header>
+{sections_html}
+{rel_html}
+{faq_html}
+<p class="article-foot-note">本記事は一般的な情報をまとめたものです。受験料・合格率・日程など個別の条件は各資格の公式サイト・詳細ページで必ずご確認ください。</p>
+</article>
+</div>"""
+        blogposting = {
+            "@context": "https://schema.org", "@type": "BlogPosting",
+            "headline": a.get("title") or a["h1"],
+            "description": a.get("description", ""),
+            "datePublished": a.get("date", ""),
+            "dateModified": updated or a.get("date", ""),
+            "author": {"@type": "Organization", "name": SITE_NAME},
+            "publisher": {"@type": "Organization", "name": SITE_NAME,
+                          "logo": {"@type": "ImageObject",
+                                   "url": BASE_URL + "/assets/favicon.svg"}},
+            "mainEntityOfPage": {"@type": "WebPage", "@id": canon},
+            "image": BASE_URL + "/assets/og.png",
+        }
+        breadcrumb = {
+            "@context": "https://schema.org", "@type": "BreadcrumbList",
+            "itemListElement": [
+                {"@type": "ListItem", "position": 1, "name": "トップ", "item": BASE_URL + "/"},
+                {"@type": "ListItem", "position": 2, "name": "記事・コラム",
+                 "item": BASE_URL + "/articles/index.html"},
+                {"@type": "ListItem", "position": 3, "name": a["h1"]},
+            ]}
+        ld = [blogposting, breadcrumb] + ([faq_ld] if faq_ld else [])
+        pages[slug] = page_shell(f'{a.get("title") or a["h1"]}｜{SITE_NAME}', body,
+                                 depth=1, noindex=False, desc=a.get("description", ""),
+                                 path=f"articles/{slug}.html", jsonld=ld)
+    # 一覧ページ
+    cards = "".join(
+        f'<article class="article-card">'
+        f'<p class="article-cat">{esc(a.get("category",""))}</p>'
+        f'<h2><a href="{base}articles/{esc(a["slug"])}.html">{esc(a["h1"])}</a></h2>'
+        f'<p class="article-card-desc">{esc(a.get("description",""))}</p></article>'
+        for a in ARTICLES)
+    idx_body = f"""<div class="page-article">
+<nav class="crumbs"><a href="{base}index.html">トップ</a> › 記事・コラム</nav>
+<h1>記事・コラム</h1>
+<p class="lead">資格選び・勉強法・転職に役立つ情報をまとめた記事一覧です。気になるテーマから、関連する資格や特集ページもあわせてご覧ください。</p>
+<div class="article-list">{cards}</div>
+</div>"""
+    idx_ld = [
+        {"@context": "https://schema.org", "@type": "BreadcrumbList",
+         "itemListElement": [
+             {"@type": "ListItem", "position": 1, "name": "トップ", "item": BASE_URL + "/"},
+             {"@type": "ListItem", "position": 2, "name": "記事・コラム"}]},
+        {"@context": "https://schema.org", "@type": "ItemList",
+         "name": "記事・コラム", "numberOfItems": len(ARTICLES),
+         "itemListElement": [
+             {"@type": "ListItem", "position": i, "name": a["h1"],
+              "url": f'{BASE_URL}/articles/{a["slug"]}.html'}
+             for i, a in enumerate(ARTICLES, 1)]},
+    ]
+    index_html = page_shell(f"記事・コラム｜{SITE_NAME}", idx_body, depth=1, noindex=False,
+                            desc="資格選び・勉強法・転職に役立つ記事一覧。目的別の資格ガイドや国家資格・民間資格の違い、働きながらの勉強法などを掲載。",
+                            path="articles/index.html", jsonld=idx_ld)
+    return index_html, pages
+
+
 def main() -> int:
     global ASSET_V
     rows = load_rows()
@@ -4542,6 +4707,14 @@ def main() -> int:
     for slug, htmlc in feat_pages.items():
         (SITE / "feature" / f"{slug}.html").write_text(htmlc, encoding="utf-8")
 
+    # SEO記事（コラム）
+    article_index_html, article_pages = build_articles()
+    if article_index_html:
+        (SITE / "articles").mkdir()
+        (SITE / "articles" / "index.html").write_text(article_index_html, encoding="utf-8")
+        for slug, htmlc in article_pages.items():
+            (SITE / "articles" / f"{slug}.html").write_text(htmlc, encoding="utf-8")
+
     # 比較（人気ペア）
     (SITE / "vs").mkdir()
     vs_pages = build_comparison_pages(indexable)
@@ -4576,6 +4749,11 @@ def main() -> int:
                ("finder.html", today, "0.8"), ("about.html", today, "0.5")]
     entries += [(f"bunya/{s}.html", today, "0.8") for s in cat_pages]
     entries += [(f"feature/{s}.html", today, "0.8") for s in feat_pages]
+    if article_index_html:
+        entries.append(("articles/index.html", today, "0.7"))
+        entries += [(f'articles/{a["slug"]}.html',
+                     (a.get("updated") or a.get("date") or today), "0.7")
+                    for a in ARTICLES]
     entries += [(f"vs/{s}.html", today, "0.7") for s in vs_pages]
     if OCC:
         entries.append(("shoku/index.html", today, "0.7"))
