@@ -40,19 +40,7 @@
 <p class="official-cta"><a class="btn-official" href="https://www.javada.or.jp/jigyou/gino/giken.html" rel="nofollow noopener" target="_blank">公式サイトで最新情報を確認 ↗</a></p><p class="provenance">受験料・試験形式・受験資格・合格率・実施団体は、各資格の<strong>公式の一次情報</strong>に基づいて整備しています。制度・金額・日程は改定されることがあるため、出願前に必ず公式サイトでご確認ください。空欄の項目は公式で確認のうえ追記します。</p>
 <section class="careers-sec"><h2>活かせる仕事・キャリア</h2><ul class="careers"><li>溶射工（表面処理）</li></ul><p class="muted careers-src">出典: <a href="https://shigoto.mhlw.go.jp/User/Search/Top" rel="nofollow noopener" target="_blank">公式・job tag 等</a></p><p class="jobtag"><a href="https://shigoto.mhlw.go.jp/User/Search/Top" rel="nofollow noopener" target="_blank">厚生労働省 job tag で関連職業を調べる ↗</a></p></section>
 <nav class="rel-links"><h2>関連リンク</h2><ul><li><a href="../bunya/manufacturing.html">機械・電気・ものづくりの資格一覧</a></li><li><a href="../feature/national.html">国家資格の一覧</a></li><li><a href="../feature/cheap.html">受験料が安い資格ランキング</a></li><li><a href="../feature/high-pass.html">合格率が高い資格</a></li></ul></nav>
-<section class="related"><h2>同じカテゴリの資格</h2><ul id="related"></ul></section>
-<script>
-fetch("../data/certifications.json").then(r=>r.json()).then(all=>{
-  const cat="金属加工", me="c-5415";
-  const ul=document.getElementById("related");
-  all.filter(x=>x.category===cat&&x.slug!==me).slice(0,12).forEach(x=>{
-    const li=document.createElement("li");
-    li.innerHTML='<a href="'+x.slug+'.html">'+x.name+'</a>';
-    ul.appendChild(li);
-  });
-  if(!ul.children.length) ul.innerHTML='<li class="muted">なし</li>';
-});
-</script>
+<section class="related"><h2>同じカテゴリの資格</h2><ul><li><a href="c-5417.html">1級めっき技能士</a></li><li><a href="c-5420.html">1級アルミニウム陽極酸化処理技能士</a></li><li><a href="c-5444.html">1級ダイカスト技能士</a></li><li><a href="c-5428.html">1級ロープ加工技能士</a></li><li><a href="c-5432.html">1級仕上げ技能士</a></li><li><a href="c-5441.html">1級切削工具研削技能士</a></li><li><a href="c-5411.html">1級工場板金技能士</a></li><li><a href="c-5413.html">1級建築板金技能士</a></li><li><a href="c-5406.html">1級放電加工技能士</a></li><li><a href="c-5402.html">1級機械加工技能士</a></li><li><a href="c-5439.html">1級金型製作技能士</a></li><li><a href="c-5426.html">1級金属ばね製造技能士</a></li></ul></section>
 
 </main>
 <footer class="site-footer">出典: 厚生労働省 ハローワーク「免許・資格コード一覧」を正本シードに、各資格の公式の一次情報に基づき整備。

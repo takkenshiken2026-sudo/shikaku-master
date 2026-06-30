@@ -425,6 +425,17 @@ def build_detail(row) -> str:
         notice = (f'<div class="notice-defunct"><strong>【{esc(kind)}】</strong>'
                   f'{esc(tri["note"])}{succ}{src}</div>\n')
 
+    # 同じカテゴリの資格（サーバーサイド出力・クロール可能な内部リンク）
+    siblings = [x for x in CATEGORY_INDEX.get(cat, []) if x["slug"] != row["slug"]][:12]
+    if siblings:
+        rel_items = "".join(
+            f'<li><a href="{esc(s["slug"])}.html">{esc(s["name"])}</a></li>'
+            for s in siblings)
+    else:
+        rel_items = '<li class="muted">なし</li>'
+    related_section = (f'<section class="related"><h2>同じカテゴリの資格</h2>'
+                       f'<ul>{rel_items}</ul></section>')
+
     body = f"""<nav class="crumbs"><a href="../index.html">トップ</a> ›
 <a href="../index.html?major={esc(major)}">{esc(major)}</a> › {esc(name)}</nav>
 <h1>{esc(name)}</h1>
@@ -434,19 +445,7 @@ def build_detail(row) -> str:
 {cta}{provenance}
 {careers_section}
 {rel_links}
-<section class="related"><h2>同じカテゴリの資格</h2><ul id="related"></ul></section>
-<script>
-fetch("../data/certifications.json").then(r=>r.json()).then(all=>{{
-  const cat={json.dumps(cat, ensure_ascii=False)}, me={json.dumps(row["slug"], ensure_ascii=False)};
-  const ul=document.getElementById("related");
-  all.filter(x=>x.category===cat&&x.slug!==me).slice(0,12).forEach(x=>{{
-    const li=document.createElement("li");
-    li.innerHTML='<a href="'+x.slug+'.html">'+x.name+'</a>';
-    ul.appendChild(li);
-  }});
-  if(!ul.children.length) ul.innerHTML='<li class="muted">なし</li>';
-}});
-</script>
+{related_section}
 """
     bits = [b for b in (("受験料" + row["fee"]) if row["fee"] else "",
                         ("合格率" + row["pass_rate"]) if row["pass_rate"] else "") if b]
@@ -1004,6 +1003,9 @@ for _ps, _a, _b, _ in COMPARE_PAIRS:
 # main() で設定（詳細→比較リンクの表示名・存在判定に使用）
 NAME_BY_SLUG = {}
 INDEXABLE_SLUGS = set()
+# category（中分類）→ 同カテゴリの資格行リスト。詳細ページの関連リンクを
+# サーバーサイドで静的出力するため main() で設定（クロール可能な内部リンク化）。
+CATEGORY_INDEX = {}
 
 
 def build_feature_pages(indexable):
@@ -1672,6 +1674,13 @@ def main() -> int:
     # 詳細→比較ページの相互リンク用グローバルを設定
     NAME_BY_SLUG.update({r["slug"]: r["name"] for r in rows})
     INDEXABLE_SLUGS.update(r["slug"] for r in indexable if is_indexable_detail(r))
+    # 同カテゴリの関連リンク（サーバーサイド出力用）。インデックス対象の詳細を
+    # 優先しつつ名称順で並べる。
+    for r in indexable:
+        CATEGORY_INDEX.setdefault(r["category"], []).append(r)
+    for cat in CATEGORY_INDEX:
+        CATEGORY_INDEX[cat].sort(
+            key=lambda x: (not is_indexable_detail(x), x["name"]))
 
     if SITE.exists():
         shutil.rmtree(SITE)

@@ -40,19 +40,7 @@
 <p class="official-cta"><a class="btn-official" href="https://www.nustec.or.jp/syunin/syunin01.html" rel="nofollow noopener" target="_blank">公式サイトで最新情報を確認 ↗</a></p><p class="provenance">受験料・試験形式・受験資格・合格率・実施団体は、各資格の<strong>公式の一次情報</strong>に基づいて整備しています。制度・金額・日程は改定されることがあるため、出願前に必ず公式サイトでご確認ください。空欄の項目は公式で確認のうえ追記します。</p>
 <section class="careers-sec"><h2>活かせる仕事・キャリア</h2><ul class="careers"><li>放射線取扱施設の管理・保安監督(医療機関・研究機関・原子力・非破壊検査)</li></ul><p class="muted careers-src">出典: <a href="https://shigoto.mhlw.go.jp/User/Search/Top" rel="nofollow noopener" target="_blank">公式・job tag 等</a></p><p class="jobtag"><a href="https://shigoto.mhlw.go.jp/User/Search/Top" rel="nofollow noopener" target="_blank">厚生労働省 job tag で関連職業を調べる ↗</a></p></section>
 <nav class="rel-links"><h2>関連リンク</h2><ul><li><a href="../bunya/manufacturing.html">機械・電気・ものづくりの資格一覧</a></li><li><a href="../feature/national.html">国家資格の一覧</a></li><li><a href="../feature/no-requirement.html">受験資格なしで受けられる資格</a></li><li><a href="../feature/cheap.html">受験料が安い資格ランキング</a></li><li><a href="../feature/high-pass.html">合格率が高い資格</a></li></ul></nav>
-<section class="related"><h2>同じカテゴリの資格</h2><ul id="related"></ul></section>
-<script>
-fetch("../data/certifications.json").then(r=>r.json()).then(all=>{
-  const cat="鉱工業技術", me="c-1218";
-  const ul=document.getElementById("related");
-  all.filter(x=>x.category===cat&&x.slug!==me).slice(0,12).forEach(x=>{
-    const li=document.createElement("li");
-    li.innerHTML='<a href="'+x.slug+'.html">'+x.name+'</a>';
-    ul.appendChild(li);
-  });
-  if(!ul.children.length) ul.innerHTML='<li class="muted">なし</li>';
-});
-</script>
+<section class="related"><h2>同じカテゴリの資格</h2><ul><li><a href="c-1211.html">1級計装士</a></li><li><a href="c-1206.html">1級電気工事施工管理技士</a></li><li><a href="c-1238.html">1級電気通信工事施工管理技士</a></li><li><a href="c-1212.html">2級計装士</a></li><li><a href="c-1207.html">2級電気工事施工管理技士</a></li><li><a href="c-1239.html">2級電気通信工事施工管理技士</a></li><li><a href="c-1201.html">ボイラー・タービン主任技術者</a></li><li><a href="c-1224.html">丙種火薬類製造保安責任者</a></li><li><a href="c-1223.html">乙種火薬類製造保安責任者</a></li><li><a href="c-1215.html">医療機器責任技術者</a></li><li><a href="c-1214.html">医薬部外品責任技術者</a></li><li><a href="c-1216.html">原子炉主任技術者</a></li></ul></section>
 
 </main>
 <footer class="site-footer">出典: 厚生労働省 ハローワーク「免許・資格コード一覧」を正本シードに、各資格の公式の一次情報に基づき整備。
