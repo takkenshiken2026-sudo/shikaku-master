@@ -16,6 +16,15 @@
 | c-3630 | 簿記実務検定1級(全商) | 部門別受験料(情報源で1,300/1,600円と相違)・実施日 | https://zensho.or.jp/examination/bookkeeping/ |
 | c-3631 | 簿記実務検定2級(全商) | 受験料・試験科目・実施日 | https://zensho.or.jp/examination/bookkeeping/ |
 | c-3632 | 簿記実務検定3級(全商) | 受験料・試験科目・実施日 | https://zensho.or.jp/examination/bookkeeping/ |
+| c-3534 | 日本語検定6級 | 受験料・実施日 | https://www.nihongokentei.jp/exam/ |
+| c-3536 | 日本語検定7級 | 受験料・実施日 | https://www.nihongokentei.jp/exam/ |
+| c-3206 | 不動産コンサルティング技能登録 | 受験料・受験資格・実施日 | https://www.retpc.jp/rcm/exam/ |
+| c-7309 | コンクリート技士・主任技士 | 部門別受験料・受験資格年数 | https://www.jci-net.or.jp/j/exam/gishi/ |
+| c-3884 | 検索技術者検定3級 | 受験料・試験方式 | https://www.infosta.or.jp/kensaku-kentei/ |
+| c-3883 | 検索技術者検定2級 | 受験料(税別)・試験方式 | https://www.infosta.or.jp/kensaku-kentei_pro/ |
+| c-3882 | 検索技術者検定1級 | 受験料(税別)・一次/二次の方式 | https://www.infosta.or.jp/examination/kensaku-kentei-1/ |
+| c-4325 | 葬祭ディレクター1級 | 受験料・受験資格・実施日 | https://www.sousai-director.jp/ |
+| c-4326 | 葬祭ディレクター2級 | 受験料・受験資格・実施日 | https://www.sousai-director.jp/ |
 
 備考:
 - 受験料は年度で改定されるため、確証が持てないものは `fee` を空欄にして
