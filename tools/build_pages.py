@@ -207,6 +207,25 @@ def load_descriptions():
 DESC = load_descriptions()
 
 
+def load_triage():
+    """slug → {kind, note, successor_slug, source}。廃止・名称変更・補足の沿革注記
+    （一次情報で確認した編集情報）。薄い seed ページに正確な案内を表示する。"""
+    path = ROOT / "data" / "seed_triage.csv"
+    if not path.exists():
+        return {}
+    out = {}
+    with path.open(encoding="utf-8") as f:
+        for r in csv.DictReader(f):
+            s = (r.get("slug") or "").strip()
+            if s and (r.get("note") or "").strip():
+                out[s] = {k: (r.get(k) or "").strip()
+                          for k in ("kind", "note", "successor_slug", "source")}
+    return out
+
+
+TRIAGE = load_triage()
+
+
 def load_guides():
     """slug → {suited, study, career} 主要資格の編集ガイダンス（手書き・定性的）。
 
@@ -1098,6 +1117,22 @@ def build_detail(row, popular_slugs=None) -> str:
             f'<div class="roadmap">{_roadmap_track}</div></section>')
     else:
         _roadmap_block = ""
+    # 廃止・名称変更・補足の沿革注記（一次情報で確認済み）。薄い seed ページに
+    # 正確な案内（後継資格への内部リンク・出典）を表示し、誤誘導を防ぐ。
+    notice = ""
+    tri = TRIAGE.get(row["slug"])
+    if tri:
+        succ = ""
+        ss = tri.get("successor_slug")
+        if ss and ss in NAME_BY_SLUG:
+            succ = (f' 後継・関連資格: <a href="../c/{esc(ss)}.html">'
+                    f'{esc(NAME_BY_SLUG[ss])}</a>。')
+        src = ""
+        if tri.get("source"):
+            src = (f' <a href="{esc(tri["source"])}" rel="nofollow noopener" '
+                   f'target="_blank">出典</a>')
+        notice = (f'<div class="notice-defunct"><strong>【{esc(tri.get("kind") or "注記")}】'
+                  f'</strong>{esc(tri["note"])}{succ}{src}</div>')
     body = f"""<div class="page-detail">
 <nav class="crumbs"><a href="../index.html">トップ</a> ›
 <a href="../bunya/{esc(bslug)}.html">{esc(major)}</a> › {esc(name)}</nav>
@@ -1105,6 +1140,7 @@ def build_detail(row, popular_slugs=None) -> str:
 {detail_title_html(name, row["slug"], popular_slugs)}
 <p class="detail-audience">{lead}</p>
 </header>
+{notice}
 {partner_detail}
 {_roadmap_block}
 <section class="detail-section detail-section--spec" aria-labelledby="ds-h">
@@ -4131,6 +4167,8 @@ table.spec th{width:34%;background:var(--table-head-bg);color:var(--ink);font-we
 .btn-official:hover{background:var(--accent-hover);color:#fff;text-decoration:none}
 .provenance{font-size:var(--text-sm);color:var(--muted);background:var(--gray-50);border:1px solid var(--gray-200);border-radius:var(--radius);padding:11px 14px;margin:10px 0 0}
 .feat-list{margin:.2em 0 .6em;padding-left:1.1em}.feat-list li{margin:2px 0}
+.notice-defunct{font-size:var(--text-sm);color:#7a4f00;background:#fff7e6;border:1px solid #ffd591;border-left:4px solid #fa8c16;border-radius:var(--radius);padding:11px 14px;margin:18px 0 0;line-height:1.7}
+.notice-defunct a{color:#9a3412}
 .page-article{max-width:760px;margin:0 auto}
 .page-article .article-section{margin:26px 0}
 .page-article .article-section p{line-height:1.85;margin:.6em 0}
