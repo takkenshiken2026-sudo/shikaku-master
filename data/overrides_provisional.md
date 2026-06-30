@@ -36,6 +36,10 @@
 | c-7032 | 基礎施工士 | 受験料・受験資格年数・実施日 | https://www.kisokyo.or.jp/activity/index/1 |
 | c-6810 | CATV技術者 | 科目別の受講・受験料・等級 | https://www.shikaku.catv.or.jp/ |
 | c-6811 | 配電制御システム検査技士 | 学科/実技の受験料・実施日 | https://jsia.or.jp/kensa/ |
+| c-4110 | 衣料管理士1〜2級 | 認定校・取得要件の詳細 | http://www.jasta1.or.jp/qualification/qualification-ta.html |
+| c-4109 | 中古自動車査定士 | 受験料・研修費・実施日 | http://www.jaai.or.jp/ginoukentei.html |
+| c-6120 | パターンメーキング技術検定 | 級別受験料・実施日 | https://www.fashion-edu.jp/pm/ |
+| c-6621〜6624 | レタリング技能検定1〜4級 | 受験料・実施日 | https://lettering-kentei.com/ |
 
 備考:
 - 受験料は年度で改定されるため、確証が持てないものは `fee` を空欄にして
