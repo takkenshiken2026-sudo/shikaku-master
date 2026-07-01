@@ -4202,6 +4202,16 @@ table.spec th{width:34%;background:var(--table-head-bg);color:var(--ink);font-we
 .article-related{margin-top:26px}
 .article-inline-link{margin:8px 0}
 .article-foot-note{font-size:var(--text-sm);color:var(--muted);margin-top:28px;border-top:1px solid var(--gray-200);padding-top:14px;line-height:1.7}
+.article-answer{background:#f0f7f5;border:1px solid #bfe0d8;border-left:4px solid var(--accent,#2a7a6e);border-radius:var(--radius);padding:14px 16px;margin:18px 0}
+.article-answer-h{font-weight:700;color:var(--accent,#2a7a6e);font-size:var(--text-sm);margin:0 0 4px}
+.article-answer p{margin:0;line-height:1.8}
+.article-toc{background:var(--gray-50);border:1px solid var(--gray-200);border-radius:var(--radius);padding:14px 18px;margin:18px 0}
+.article-toc-h{font-weight:700;margin:0 0 6px}
+.article-toc ol{margin:0;padding-left:1.4em}.article-toc li{margin:3px 0}
+.article-table-wrap{overflow-x:auto;margin:14px 0}
+.article-table{border-collapse:collapse;width:100%;font-size:var(--text-sm)}
+.article-table th,.article-table td{border:1px solid var(--gray-200);padding:9px 12px;text-align:left;vertical-align:top;line-height:1.7}
+.article-table th{background:var(--gray-50);font-weight:700;white-space:nowrap}
 .feat-list a{color:var(--ink)}
 .updated{font-size:var(--text-sm);color:var(--muted);margin:.1em 0 .6em}.updated .muted{margin-left:.4em}
 .tag-chip{display:inline-block;background:var(--gray-100);color:var(--muted);border:1px solid var(--gray-200);border-radius:12px;padding:2px 10px;margin:2px 4px 2px 0;font-size:var(--text-sm)}
@@ -4541,11 +4551,27 @@ table.cmp tbody th{background:var(--gray-50);color:var(--ink);white-space:nowrap
 """
 
 
+def _article_table_html(tbl):
+    """{headers:[...], rows:[[...],...]} → 比較表HTML。"""
+    if not tbl or not tbl.get("rows"):
+        return ""
+    thead = ""
+    if tbl.get("headers"):
+        thead = ("<thead><tr>"
+                 + "".join(f"<th>{esc(h)}</th>" for h in tbl["headers"])
+                 + "</tr></thead>")
+    trs = "".join("<tr>" + "".join(f"<td>{esc(c)}</td>" for c in row) + "</tr>"
+                  for row in tbl["rows"])
+    return f'<div class="article-table-wrap"><table class="article-table">{thead}<tbody>{trs}</tbody></table></div>'
+
+
 def _article_sections_html(a, base):
     out = []
-    for s in a.get("sections", []):
-        h = f'<h2 class="detail-section-title">{esc(s.get("h2",""))}</h2>'
+    for i, s in enumerate(a.get("sections", []), 1):
+        sid = f"sec-{i}"
+        h = f'<h2 id="{sid}" class="detail-section-title">{esc(s.get("h2",""))}</h2>'
         ps = "".join(f"<p>{esc(p)}</p>" for p in s.get("paras", []))
+        tb = _article_table_html(s.get("table"))
         ul = ""
         if s.get("list"):
             ul = ('<ul class="point-list">'
@@ -4562,8 +4588,19 @@ def _article_sections_html(a, base):
         if s.get("feature_inline"):
             href, txt = s["feature_inline"]
             fi = f'<p class="article-inline-link"><a href="{base}{esc(href)}">▶ {esc(txt)}</a></p>'
-        out.append(f'<section class="article-section">{h}{ps}{ul}{cl}{fi}</section>')
+        out.append(f'<section class="article-section">{h}{ps}{tb}{ul}{cl}{fi}</section>')
     return "".join(out)
+
+
+def _article_toc_html(a):
+    """セクション見出しから目次を生成（4見出し以上で表示）。"""
+    secs = a.get("sections", [])
+    if len(secs) < 4:
+        return ""
+    lis = "".join(f'<li><a href="#sec-{i}">{esc(s.get("h2",""))}</a></li>'
+                  for i, s in enumerate(secs, 1))
+    return (f'<nav class="article-toc" aria-label="目次"><p class="article-toc-h">目次</p>'
+            f'<ol>{lis}</ol></nav>')
 
 
 def build_articles():
@@ -4604,6 +4641,12 @@ def build_articles():
             meta_line = (f'<p class="article-meta"><span>公開: {esc(a["date"])}</span>'
                          + (f'<span>更新: {esc(updated)}</span>' if updated else "")
                          + f'<span class="article-cat">{esc(a.get("category",""))}</span></p>')
+        # 結論先出し（検索意図に即答。スニペット獲得＆読み手の離脱防止）
+        answer_html = ""
+        if a.get("answer"):
+            answer_html = (f'<div class="article-answer"><p class="article-answer-h">結論</p>'
+                           f'<p>{esc(a["answer"])}</p></div>')
+        toc_html = _article_toc_html(a)
         body = f"""<div class="page-article">
 <nav class="crumbs"><a href="{base}index.html">トップ</a> ›
 <a href="{base}articles/index.html">記事・コラム</a> › {esc(a["h1"])}</nav>
@@ -4613,6 +4656,8 @@ def build_articles():
 {meta_line}
 <p class="lead">{esc(a.get("lead",""))}</p>
 </header>
+{answer_html}
+{toc_html}
 {sections_html}
 {rel_html}
 {faq_html}
