@@ -4212,6 +4212,10 @@ table.spec th{width:34%;background:var(--table-head-bg);color:var(--ink);font-we
 .article-table{border-collapse:collapse;width:100%;font-size:var(--text-sm)}
 .article-table th,.article-table td{border:1px solid var(--gray-200);padding:9px 12px;text-align:left;vertical-align:top;line-height:1.7}
 .article-table th{background:var(--gray-50);font-weight:700;white-space:nowrap}
+.article-promo{background:#fff9f0;border:1px solid #f0d9b5;border-radius:var(--radius);padding:14px 16px;margin:16px 0}
+.article-promo-h{font-weight:700;margin:6px 0 4px;font-size:var(--text-sm)}
+.article-promo .materials{margin:.2em 0 .6em;padding-left:1.1em}
+.article-promo-links{margin:8px 0 0;font-size:var(--text-sm);line-height:2}
 .feat-list a{color:var(--ink)}
 .updated{font-size:var(--text-sm);color:var(--muted);margin:.1em 0 .6em}.updated .muted{margin-left:.4em}
 .tag-chip{display:inline-block;background:var(--gray-100);color:var(--muted);border:1px solid var(--gray-200);border-radius:12px;padding:2px 10px;margin:2px 4px 2px 0;font-size:var(--text-sm)}
@@ -4565,12 +4569,40 @@ def _article_table_html(tbl):
     return f'<div class="article-table-wrap"><table class="article-table">{thead}<tbody>{trs}</tbody></table></div>'
 
 
+def _article_promo_html(slug, base):
+    """記事内の収益導線ブロック。対象資格の講座・教材（アフィリンク）＋対策サイト＋
+    詳細ページへの導線をまとめて表示する。既存の materials_cell_html を再利用。"""
+    if not slug or slug not in NAME_BY_SLUG:
+        return ""
+    name = NAME_BY_SLUG[slug]
+    mats = materials_cell_html(slug)
+    parts = []
+    if mats:
+        parts.append(f'<p class="article-promo-h">{esc(name)}のおすすめ教材・講座</p>{mats}')
+    # 対策サイト（パートナー）
+    ps = PARTNER_BY_CERT.get(slug) or []
+    if ps:
+        links = "".join(
+            f'<li><a href="{esc(p["url"])}" target="_blank" rel="sponsored nofollow noopener">'
+            f'{esc(p["name"])} ↗</a></li>' for p in ps)
+        parts.append(f'<p class="article-promo-h">対策サイトで学ぶ</p><ul class="materials">{links}</ul>')
+    # 詳細ページ・講座一覧への導線
+    parts.append(
+        f'<p class="article-promo-links">'
+        f'<a href="{base}c/{esc(slug)}.html">▶ {esc(name)}の受験料・合格率・試験日を見る</a>'
+        f'　<a href="{base}courses.html">▶ 試験対策講座を探す</a></p>')
+    if not parts:
+        return ""
+    return f'<div class="article-promo">{"".join(parts)}</div>'
+
+
 def _article_sections_html(a, base):
     out = []
     for i, s in enumerate(a.get("sections", []), 1):
         sid = f"sec-{i}"
         h = f'<h2 id="{sid}" class="detail-section-title">{esc(s.get("h2",""))}</h2>'
         ps = "".join(f"<p>{esc(p)}</p>" for p in s.get("paras", []))
+        promo = _article_promo_html(s.get("promo_slug"), base)
         tb = _article_table_html(s.get("table"))
         ul = ""
         if s.get("list"):
@@ -4588,7 +4620,7 @@ def _article_sections_html(a, base):
         if s.get("feature_inline"):
             href, txt = s["feature_inline"]
             fi = f'<p class="article-inline-link"><a href="{base}{esc(href)}">▶ {esc(txt)}</a></p>'
-        out.append(f'<section class="article-section">{h}{ps}{tb}{ul}{cl}{fi}</section>')
+        out.append(f'<section class="article-section">{h}{ps}{tb}{ul}{cl}{fi}{promo}</section>')
     return "".join(out)
 
 
