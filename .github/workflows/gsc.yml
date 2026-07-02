@@ -1,0 +1,55 @@
+name: Fetch and analyze Search Console data
+
+# 全自動で回すには、リポジトリの Settings → Secrets and variables → Actions に
+# 以下を登録する（すべて無料）:
+#   GSC_CREDENTIALS_JSON … サービスアカウント鍵 JSON の中身をそのまま貼り付け
+#   GSC_PROPERTY         … 例 'sc-domain:shikaku-master.jp'
+# サービスアカウントのメールアドレスは Search Console のプロパティに
+# 「ユーザーと権限」で追加しておくこと（詳細は data/gsc/README.md）。
+
+on:
+  schedule:
+    - cron: '17 21 * * 1'   # 毎週月曜 06:17 JST（= 月曜 21:17 UTC）
+  workflow_dispatch:
+    inputs:
+      days:
+        description: '取得日数'
+        required: false
+        default: '28'
+
+permissions:
+  contents: write   # レポートをリポジトリにコミットするため
+
+jobs:
+  gsc:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+      - name: Install dependencies
+        run: pip install -r tools/requirements-gsc.txt
+      - name: Fetch GSC data
+        env:
+          GSC_CREDENTIALS_JSON: ${{ secrets.GSC_CREDENTIALS_JSON }}
+          GSC_PROPERTY: ${{ secrets.GSC_PROPERTY }}
+        run: python3 tools/gsc_fetch.py --days ${{ github.event.inputs.days || '28' }}
+      - name: Analyze
+        run: python3 tools/gsc_analyze.py
+      - name: Upload report artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: gsc-report
+          path: data/gsc/report.md
+      - name: Commit report
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/gsc/report.md
+          if git diff --cached --quiet; then
+            echo "変更なし"
+          else
+            git commit -m "chore(gsc): Search Console 分析レポートを更新"
+            git push
+          fi

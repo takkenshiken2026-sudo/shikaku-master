@@ -21,6 +21,8 @@ tools/
   build_seed.py                         # TSV → certifications.csv（NFKC正規化・分類）
   classify_rules.py                     # 大分類(21) / 国家・公的・民間 の判定ルール
   build_pages.py                        # certifications.csv → site/（静的サイト）
+  gsc_fetch.py                          # Search Console API → data/gsc/ CSV（無料）
+  gsc_analyze.py                        # GSC CSV → SEO分析レポート（標準ライブラリのみ）
 site/                                   # 生成物（トップ＋詳細1008ページ＋検索JSON）
 ```
 
@@ -36,6 +38,25 @@ python3 tools/build_pages.py    # site/ を生成
 ```bash
 cd site && python3 -m http.server 8000   # http://localhost:8000
 ```
+
+## SEO 分析（Search Console）
+
+Search Console のデータを取り込んで SEO 改善候補を抽出できる（取得・分析とも無料）。
+
+```bash
+# 手軽: GSC管理画面からエクスポートしたCSVを data/gsc/ に置いて分析するだけ
+python3 tools/gsc_analyze.py
+
+# 自動: サービスアカウントでAPIから取得 → 分析
+export GSC_CREDENTIALS_FILE=/path/to/service-account.json
+export GSC_PROPERTY='sc-domain:shikaku-master.jp'
+python3 tools/gsc_fetch.py && python3 tools/gsc_analyze.py
+```
+
+`data/gsc/report.md` に、資格ページ単位の集計・ストライキングディスタンス
+（あと一歩で上位化）・低CTR（機会損失）・クエリ分析が出力される。
+GitHub Actions（`.github/workflows/gsc.yml`）で定期実行も可能。
+セットアップ詳細は `data/gsc/README.md`。
 
 ## データの考え方（3層ソース戦略）
 

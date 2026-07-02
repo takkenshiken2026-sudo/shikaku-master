@@ -1,0 +1,4 @@
+# Google Search Console データ取得（tools/gsc_fetch.py）用の依存。
+# 分析（tools/gsc_analyze.py）は標準ライブラリのみで動くため不要。
+google-api-python-client>=2.100.0
+google-auth>=2.23.0
