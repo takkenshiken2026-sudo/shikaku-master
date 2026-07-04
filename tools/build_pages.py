@@ -283,6 +283,35 @@ def load_study_time():
 STUDY = load_study_time()
 
 
+def load_provisional():
+    """slug → {pass_rate, applicants, source, note}。暫定・非公式の参考値。
+
+    公式の一次情報が未取得の資格について、第三者集計等に基づく暫定値を保持する。
+    正本（overrides.csv / exam_details.csv）とは分離し、公式値が空のときだけ
+    フォールバック表示する。表示時は必ず「暫定（非公式）」と明示する。
+    ランキング・検索・難易度スコアには一切用いない（公式値のみ）。
+    """
+    path = ROOT / "data" / "provisional.csv"
+    if not path.exists():
+        return {}
+    out = {}
+    with path.open(encoding="utf-8") as f:
+        for r in csv.DictReader(f):
+            s = (r.get("slug") or "").strip()
+            if not s:
+                continue
+            out[s] = {
+                "pass_rate": (r.get("pass_rate") or "").strip(),
+                "applicants": (r.get("applicants") or "").strip(),
+                "source": (r.get("source") or "").strip(),
+                "note": (r.get("note") or "").strip(),
+            }
+    return out
+
+
+PROVISIONAL = load_provisional()
+
+
 def load_difficulty_data():
     """slug → {value, source}。編集部が出典付きで投入する難易度データ（0-100、高いほど難）。
     総合難易度スコアの第3軸。空でも可（その場合は合格率・学習時間のみで算出）。"""
@@ -800,6 +829,22 @@ def build_detail(row, popular_slugs=None) -> str:
     def field(v, fallback="公式情報で確認"):
         return esc(fmt_nums_in_text(v)) if v else f'<span class="muted">{fallback}</span>'
 
+    prov = PROVISIONAL.get(row["slug"], {})
+
+    def prov_field(official_val, key, fallback="公式情報で確認"):
+        """公式値があればそれを、無ければ暫定値を『暫定』明示で、それも無ければ促し文。"""
+        if official_val:
+            return esc(fmt_nums_in_text(official_val))
+        pv = prov.get(key, "")
+        if pv:
+            src = prov.get("source", "")
+            note = ('（暫定・非公式の参考値。'
+                    + (f'出典: {esc(src)}。' if src else '')
+                    + '公式の一次情報で確認でき次第、正式値に差し替えます）')
+            return (f'{esc(fmt_nums_in_text(pv))} <span class="prov-tag">暫定</span>'
+                    f' <span class="note-muted prov-note">{note}</span>')
+        return f'<span class="muted">{fallback}</span>'
+
     official = ""
     if row["official_url"]:
         u = esc(row["official_url"])
@@ -820,12 +865,14 @@ def build_detail(row, popular_slugs=None) -> str:
         ("受験資格", field(row["eligibility"])),
         ("試験形式", field(row["exam_format"])),
         ("受験料", field(row["fee"])),
-        ("合格率", field(pass_rate_display(row["pass_rate"]) or row["pass_rate"])),
+        ("合格率", prov_field(pass_rate_display(row["pass_rate"]) or row["pass_rate"], "pass_rate")),
         ("実施頻度", field(row["frequency"])),
     ]
     ed = EXAM.get(row["slug"], {})
     if ed.get("applicants"):
         spec_exam.append(("受験者数", esc(fmt_nums_in_text(ed["applicants"]))))
+    elif prov.get("applicants"):
+        spec_exam.append(("受験者数", prov_field("", "applicants")))
     diff = difficulty(row)
     if diff:
         spec_exam.append(("難易度の目安",
@@ -4161,6 +4208,8 @@ h2{color:var(--ink-deep)}
 .clear-filters{background:none;border:none;color:var(--accent);font-family:inherit;font-size:var(--text-sm);font-weight:600;cursor:pointer;padding:0;text-decoration:underline;text-underline-offset:2px}
 .clear-filters:hover{color:var(--accent-hover)}
 .muted,.note-muted{color:var(--muted)}
+.prov-tag{display:inline-block;background:#fff3e0;color:#e65100;border:1px solid #ffcc80;border-radius:4px;padding:0 6px;font-size:.72rem;font-weight:700;margin-left:2px;vertical-align:middle}
+.prov-note{font-size:.78rem}
 .pop-card,.field-card,.compare-card,.faq-item,table.spec,.results li,.occ-list li{box-shadow:0 1px 3px rgba(0,0,0,.07)}
 .crumbs{font-size:var(--text-sm);color:var(--muted);margin-bottom:10px}
 .crumbs a{color:var(--ink)}

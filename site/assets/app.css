@@ -314,6 +314,8 @@ h2{color:var(--ink-deep)}
 .clear-filters{background:none;border:none;color:var(--accent);font-family:inherit;font-size:var(--text-sm);font-weight:600;cursor:pointer;padding:0;text-decoration:underline;text-underline-offset:2px}
 .clear-filters:hover{color:var(--accent-hover)}
 .muted,.note-muted{color:var(--muted)}
+.prov-tag{display:inline-block;background:#fff3e0;color:#e65100;border:1px solid #ffcc80;border-radius:4px;padding:0 6px;font-size:.72rem;font-weight:700;margin-left:2px;vertical-align:middle}
+.prov-note{font-size:.78rem}
 .pop-card,.field-card,.compare-card,.faq-item,table.spec,.results li,.occ-list li{box-shadow:0 1px 3px rgba(0,0,0,.07)}
 .crumbs{font-size:var(--text-sm);color:var(--muted);margin-bottom:10px}
 .crumbs a{color:var(--ink)}
