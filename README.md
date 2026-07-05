@@ -7,7 +7,7 @@ CSV → Python ジェネレータ → 静的HTML を生成する量産型サイ�
 公開サイト: https://shikaku-master.jp/
 
 - 検索・分野/区分での絞り込み・**受験料/合格率での並び替え**・**比較（最大4件）**
-- 受験料・試験形式・受験資格・合格率・実施団体・公式URLを**公式の一次情報**に基づき掲載（約1,000件）
+- 受験料・試験形式・受験資格・合格率・実施団体・公式URLを**公式の一次情報**に基づき掲載（約1,050件）
 - SEO対応（メタ説明・OGP・canonical・sitemap.xml・robots.txt・パンくずJSON-LD）
 - データ方針と出典は `data/SOURCES.md`、整合性検査は `python3 tools/validate.py`
 
