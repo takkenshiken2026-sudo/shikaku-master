@@ -22,6 +22,21 @@ ROOT = Path(__file__).resolve().parent.parent
 SRC = ROOT / "data" / "sources" / "hellowork_license_list.tsv"
 OUT = ROOT / "data" / "certifications.csv"
 OVERRIDES = ROOT / "data" / "overrides.csv"
+EXTRA = ROOT / "data" / "extra_certs.csv"
+
+
+def load_extra():
+    """data/extra_certs.csv（ハローワーク一覧に無い主要資格の追加シード）を読む。
+
+    ハローワーク コード一覧は正本だが、生成AIパスポート・G検定・英検下位級など
+    一覧に含まれない現行の主要資格を補うための追加シード。列: slug, name,
+    category, major_category, type, type_reason, scope（省略時 domestic）。
+    事実値（受験料・公式URL等）は overrides.csv 側で付与する。
+    """
+    if not EXTRA.exists():
+        return []
+    with EXTRA.open(encoding="utf-8") as f:
+        return [r for r in csv.DictReader(f) if (r.get("slug") or "").strip()]
 
 
 def load_overrides():
@@ -118,6 +133,30 @@ def main() -> int:
             "source_checked_at": "",
             "status": "seed",      # seed -> draft -> published
         })
+
+    # --- ハローワーク一覧に無い主要資格の追加シード(data/extra_certs.csv) ---
+    extra = load_extra()
+    for r in extra:
+        out_rows.append({
+            "slug": (r.get("slug") or "").strip(),
+            "hellowork_code": "",
+            "name": nfkc((r.get("name") or "").strip()),
+            "name_raw": (r.get("name") or "").strip(),
+            "category": (r.get("category") or "").strip(),
+            "major_category": (r.get("major_category") or "").strip(),
+            "scope": (r.get("scope") or "domestic").strip() or "domestic",
+            "is_bucket": 0,
+            "is_duplicate": 0,
+            "type": (r.get("type") or "要確認").strip() or "要確認",
+            "type_confidence": "high",
+            "type_reason": (r.get("type_reason") or "").strip(),
+            "authority": "", "official_url": "", "eligibility": "",
+            "exam_format": "", "fee": "", "pass_rate": "", "frequency": "",
+            "difficulty": "", "related_slugs": "", "source_checked_at": "",
+            "status": "seed",
+        })
+    if extra:
+        print(f"  追加シード(extra_certs): {len(extra)} 件")
 
     # --- 一次情報で検証した事実値(data/overrides.csv)をマージ ---
     overrides = load_overrides()
