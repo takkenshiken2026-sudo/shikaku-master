@@ -4107,7 +4107,7 @@ a.hero-suggest-item{text-decoration:none}a.hero-suggest-item:hover{text-decorati
 .purpose-card .icon{flex-shrink:0;width:44px;height:44px;display:flex;align-items:center;justify-content:center;background:var(--accent-light);border-radius:var(--radius);color:var(--accent-hover)}
 .purpose-card .icon-svg{width:26px;height:26px}
 .purpose-card-body{min-width:0;flex:1}
-.purpose-card h3{font-size:var(--text-lg);font-weight:var(--fw-bold);margin:0 0 4px;color:var(--ink-deep)}
+.purpose-card h3{font-size:var(--text-md);font-weight:var(--fw-semibold);line-height:1.35;margin:0 0 4px;color:var(--ink-deep)}
 .purpose-card-for{font-size:var(--text-sm);color:#5a6570;line-height:1.5;margin:0}
 .purpose-card::after{content:"→";position:absolute;right:12px;top:14px;font-size:var(--text-sm);font-weight:600;color:var(--muted);opacity:0;transition:opacity .15s,color .15s;pointer-events:none}
 .purpose-card:hover::after,.purpose-card:focus-visible::after{opacity:1;color:var(--accent)}
