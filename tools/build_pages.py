@@ -3979,7 +3979,7 @@ APP_CSS = """:root{
 --table-head-bg:#edf2f8;--table-border:#cddbeb;--table-hover-bg:#e9f1fa;
 --gray-800:#434343;--gray-700:#525252;--gray-400:#7f7f7f;--white:#fff;--page-bg:#eef0f1;
 --accent:#1a4f8f;--accent-hover:#143d70;--accent-light:#e9f1fa;--accent-ring:rgba(26,79,143,.25);
---radius:8px;
+--radius:6px;
 /* テキスト色: ink-deep=見出し / ink=本文・表・通常リンク / muted=補足。on-dark*=ヘッダー等 */
 /* タイプスケール: xl=大見出し / lg=セクション見出し(20px) / md=本文 / sm=補助・メタ / table=表(15px) */
 --text-xl:clamp(1.375rem,4vw,2.25rem);--text-lg:1.25rem;--text-md:1.0625rem;--text-sm:0.875rem;--text-table:0.9375rem;
@@ -4048,7 +4048,7 @@ html{scroll-padding-top:64px}
 .hero-sub{font-size:1.125rem;color:#d9e4f2;line-height:1.75;max-width:40em;margin:0 auto}
 .hero-sub #count{color:#ffc766;font-weight:700;text-decoration:underline;text-underline-offset:3px}
 .hero-search{margin:24px auto 0;max-width:680px;position:relative;text-align:left}
-.hero-search input{width:100%;padding:15px 18px 15px 46px;border:none;border-radius:12px;font-size:1.0625rem;background:#fff;color:var(--ink);font-family:inherit;box-shadow:0 8px 28px rgba(6,20,40,.35)}
+.hero-search input{width:100%;padding:15px 18px 15px 46px;border:none;border-radius:10px;font-size:1.0625rem;background:#fff;color:var(--ink);font-family:inherit;box-shadow:0 8px 28px rgba(6,20,40,.35)}
 .hero-search input::placeholder{color:var(--muted)}
 .hero-search input:focus,.hero-search input:focus-visible{outline:3px solid #ffc766;outline-offset:2px}
 .hero-search .ico{position:absolute;left:16px;top:50%;transform:translateY(-50%);color:#5a7ba6;display:flex;pointer-events:none;z-index:1}
@@ -4221,7 +4221,7 @@ a.hero-suggest-item{text-decoration:none}a.hero-suggest-item:hover{text-decorati
 .field-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
 @media(max-width:900px){.field-grid{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:520px){.field-grid{grid-template-columns:1fr}}
-.field-card{display:flex;align-items:flex-start;gap:12px;background:#fff;border:1px solid var(--gray-200);border-radius:10px;padding:13px;text-decoration:none;color:inherit;transition:border-color .15s,background .15s}
+.field-card{display:flex;align-items:flex-start;gap:12px;background:#fff;border:1px solid var(--gray-200);border-radius:8px;padding:13px;text-decoration:none;color:inherit;transition:border-color .15s,background .15s}
 .field-card:hover,.field-card:focus-visible{background:var(--accent-light);border-color:var(--accent);text-decoration:none}
 .field-card .icon{flex-shrink:0;width:40px;height:40px;display:flex;align-items:center;justify-content:center;background:var(--accent-light);border-radius:var(--radius);color:var(--accent-hover)}
 .field-card .icon-svg{width:22px;height:22px}
@@ -4235,7 +4235,7 @@ a.hero-suggest-item{text-decoration:none}a.hero-suggest-item:hover{text-decorati
 .compare-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
 @media(max-width:900px){.compare-grid{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:560px){.compare-grid{grid-template-columns:1fr}}
-.compare-card{display:flex;flex-direction:column;position:relative;background:#fff;border:1px solid var(--gray-200);border-radius:10px;padding:14px 40px 14px 14px;text-decoration:none;color:inherit;transition:border-color .15s,background .15s}
+.compare-card{display:flex;flex-direction:column;position:relative;background:#fff;border:1px solid var(--gray-200);border-radius:8px;padding:14px 40px 14px 14px;text-decoration:none;color:inherit;transition:border-color .15s,background .15s}
 .compare-card:hover,.compare-card:focus-visible{background:var(--accent-light);border-color:var(--accent);text-decoration:none}
 .compare-tag{font-size:var(--text-sm);font-weight:600;color:var(--accent-hover);letter-spacing:.04em;margin-bottom:6px}
 .compare-names{font-size:1rem;font-weight:var(--fw-semibold);line-height:1.45;color:var(--ink-deep);margin:0;flex:1}
@@ -4266,7 +4266,7 @@ h2{color:var(--ink-deep)}
 .filters{display:flex;flex-wrap:wrap;gap:14px;margin:-6px 0 6px;font-size:var(--text-sm);color:var(--muted)}
 .filters label{display:inline-flex;align-items:center;gap:5px;cursor:pointer}
 .results{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:7px}
-.results li{background:#fff;border:1px solid var(--gray-200);border-radius:11px;padding:11px 14px}
+.results li{background:#fff;border:1px solid var(--gray-200);border-radius:8px;padding:11px 14px}
 .results li a{font-weight:600;color:var(--ink);text-decoration:none}
 .results li a:hover{color:var(--accent)}
 /* 資格の一覧・ランキングリスト */
@@ -4274,7 +4274,7 @@ h2{color:var(--ink-deep)}
 .cl-item{display:flex;align-items:stretch;gap:10px}
 .cl-rank{flex-shrink:0;display:flex;align-items:center;justify-content:center;min-width:30px;font-weight:700;font-size:var(--text-lg);color:var(--muted);font-variant-numeric:tabular-nums;line-height:1}
 .cl-rank--top{color:var(--accent)}
-.cl-link{flex:1;min-width:0;display:flex;flex-direction:column;gap:5px;background:#fff;border:1px solid var(--gray-200);border-radius:10px;padding:12px 14px;text-decoration:none;color:inherit;box-shadow:0 1px 3px rgba(0,0,0,.06);transition:border-color .15s,background .15s}
+.cl-link{flex:1;min-width:0;display:flex;flex-direction:column;gap:5px;background:#fff;border:1px solid var(--gray-200);border-radius:8px;padding:12px 14px;text-decoration:none;color:inherit;box-shadow:0 1px 3px rgba(0,0,0,.06);transition:border-color .15s,background .15s}
 .cl-link:hover,.cl-link:focus-visible{border-color:var(--accent);background:var(--accent-light);text-decoration:none}
 .cl-name{font-size:var(--text-md);font-weight:var(--fw-semibold);color:var(--ink);line-height:1.4}
 .cl-link:hover .cl-name{color:var(--accent-hover)}
@@ -4362,7 +4362,7 @@ a.tag-chip:hover{border-color:var(--accent);background:var(--accent-light);text-
 .diff-meta{font-size:var(--text-sm);margin-top:3px}
 .roadmap{margin:.4em 0 .8em}.roadmap h3{font-size:var(--text-lg);font-weight:var(--fw-bold);margin:.7em 0 .5em;color:var(--ink-deep)}
 .rm-track{list-style:none;display:flex;flex-wrap:wrap;align-items:stretch;gap:12px 20px;padding:0;margin:.2em 0}
-.rm-step{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid var(--gray-300);border-radius:10px;padding:10px 14px;position:relative;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.rm-step{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid var(--gray-300);border-radius:8px;padding:10px 14px;position:relative;box-shadow:0 1px 3px rgba(0,0,0,.06)}
 .rm-num{flex-shrink:0;display:flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;background:var(--gray-200);color:var(--muted);font-size:var(--text-sm);font-weight:700;font-variant-numeric:tabular-nums}
 .rm-name{font-weight:600;line-height:1.3}
 a.rm-name{color:var(--accent);text-decoration:none}
@@ -4429,7 +4429,7 @@ body.cmp-open{padding-bottom:76px}
 .cmpbar .btn-ghost{background:transparent;color:var(--on-dark);border:1px solid var(--gray-700);padding:6px 13px;border-radius:var(--radius);cursor:pointer;font:inherit;font-size:var(--text-sm)}
 .cmpbar .btn-ghost:hover{background:rgba(255,255,255,.08)}
 .cmp-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
-table.cmp{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--gray-200);border-radius:10px;table-layout:fixed;--cmp-label-w:9rem;font-size:var(--text-table);color:var(--ink)}
+table.cmp{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--gray-200);border-radius:8px;table-layout:fixed;--cmp-label-w:9rem;font-size:var(--text-table);color:var(--ink)}
 table.cmp col.cmp-col-label{width:var(--cmp-label-w)}
 table.cmp th,table.cmp td{text-align:left;padding:10px 14px;border-bottom:1px solid var(--gray-200);border-right:1px solid var(--gray-200);vertical-align:top;font-size:var(--text-table);color:var(--ink);line-height:1.5;overflow-wrap:break-word}
 table.cmp thead th{background:#edf2f8;color:var(--ink-deep);font-weight:700;font-size:1rem;border-bottom:2px solid #cddbeb}
