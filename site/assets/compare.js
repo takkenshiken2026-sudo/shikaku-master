@@ -35,10 +35,10 @@
     }
     var vhtml=v.length?('<section class="cmp-verdict"><h2 class="cmp-verdict-title">選び方の目安（掲載データに基づく簡易判定）</h2><div class="cmp-verdict-grid">'+v.join('')+'</div></section>'):'';
     var vroot=document.getElementById('cmpVerdict'); if(vroot)vroot.innerHTML=vhtml;
-    var h='<table class="cmp"><colgroup><col class="cmp-col-label">';
+    var h='<table class="cmp" style="min-width:'+(130+items.length*150)+'px"><colgroup><col class="cmp-col-label">';
     items.forEach(function(){h+='<col class="cmp-col-cert">';});
     h+='</colgroup><thead><tr><th></th>';
-    items.forEach(function(x){h+='<th><a href="c/'+x.slug+'.html">'+esc(x.name)+'</a></th>';});
+    items.forEach(function(x){h+='<th><a href="c/'+x.slug+'.html">'+esc(x.display_name||x.name)+'</a></th>';});
     h+='</tr></thead><tbody>';
     FIELDS.forEach(function(f){
       h+='<tr><th>'+f[0]+'</th>';

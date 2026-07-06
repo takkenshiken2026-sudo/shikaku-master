@@ -3891,10 +3891,10 @@ COMPARE_JS = """(function(){
     }
     var vhtml=v.length?('<section class="cmp-verdict"><h2 class="cmp-verdict-title">選び方の目安（掲載データに基づく簡易判定）</h2><div class="cmp-verdict-grid">'+v.join('')+'</div></section>'):'';
     var vroot=document.getElementById('cmpVerdict'); if(vroot)vroot.innerHTML=vhtml;
-    var h='<table class="cmp"><colgroup><col class="cmp-col-label">';
+    var h='<table class="cmp" style="min-width:'+(130+items.length*150)+'px"><colgroup><col class="cmp-col-label">';
     items.forEach(function(){h+='<col class="cmp-col-cert">';});
     h+='</colgroup><thead><tr><th></th>';
-    items.forEach(function(x){h+='<th><a href="c/'+x.slug+'.html">'+esc(x.name)+'</a></th>';});
+    items.forEach(function(x){h+='<th><a href="c/'+x.slug+'.html">'+esc(x.display_name||x.name)+'</a></th>';});
     h+='</tr></thead><tbody>';
     FIELDS.forEach(function(f){
       h+='<tr><th>'+f[0]+'</th>';
@@ -4434,6 +4434,8 @@ table.cmp col.cmp-col-label{width:var(--cmp-label-w)}
 table.cmp th,table.cmp td{text-align:left;padding:10px 14px;border-bottom:1px solid var(--gray-200);border-right:1px solid var(--gray-200);vertical-align:top;font-size:var(--text-table);color:var(--ink);line-height:1.5;overflow-wrap:break-word}
 table.cmp thead th{background:var(--gray-100);color:var(--ink-deep);font-weight:700;font-size:1rem}
 table.cmp tbody th{background:var(--gray-50);color:var(--ink);white-space:nowrap;width:var(--cmp-label-w);font-size:1rem}
+table.cmp tbody th,table.cmp thead th:first-child{position:sticky;left:0;z-index:1}
+table.cmp thead th:first-child{background:var(--gray-100);z-index:2}
 
 /* Footer */
 .site-footer{background:var(--gray-50);border-top:1px solid var(--gray-200);margin-top:auto;color:var(--muted)}
@@ -4560,7 +4562,7 @@ table.cmp tbody th{background:var(--gray-50);color:var(--ink);white-space:nowrap
 .faq-item summary::after{content:"＋";position:absolute;right:14px;top:12px;color:var(--accent);font-weight:700}
 .faq-item[open] summary::after{content:"−"}
 .faq-item summary:hover{background:var(--gray-50)}
-.faq-a{padding:0 14px 13px;color:var(--muted);line-height:1.7;font-size:var(--text-sm)}
+.faq-a{padding:0 14px 13px;color:var(--ink);line-height:1.7;font-size:var(--text-md)}
 .btn-sm{padding:7px 14px;font-size:var(--text-sm)}
 /* 一覧の行＋比較ボタン */
 .results li{display:flex;gap:12px;align-items:center}
