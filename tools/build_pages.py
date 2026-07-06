@@ -4448,7 +4448,7 @@ table.cmp tbody th{background:var(--gray-50);color:var(--ink);white-space:nowrap
 .partner-card{display:flex;flex-direction:column;gap:2px;min-width:0;overflow:hidden;background:#fff;border:1px solid var(--gray-200);border-radius:var(--radius);padding:10px 11px;text-decoration:none;color:inherit;box-shadow:0 1px 3px rgba(0,0,0,.07);transition:border-color .15s,background .15s}
 .partner-card:hover{border-color:var(--accent);background:var(--accent-light)}
 .partner-card-name,.partner-card-tag{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.partner-card-name{font-size:var(--text-sm);font-weight:var(--fw-semibold);color:var(--ink-deep);line-height:1.35}
+.partner-card-name{font-size:var(--text-md);font-weight:var(--fw-semibold);color:var(--ink-deep);line-height:1.35}
 .partner-card-tag{font-size:var(--text-sm);color:var(--muted);line-height:1.45}
 .partner-ext{font-size:.78em;color:var(--accent);margin-left:5px;font-weight:700}
 .partner-detail-grid{display:flex;flex-wrap:wrap;gap:10px}
