@@ -13,7 +13,7 @@ OUT = ROOT / "site" / "assets" / "og.png"
 
 W, H = 1200, 630
 INK = (34, 34, 34)          # charcoal #222
-ACCENT = (42, 122, 110)     # teal #2a7a6e
+ACCENT = (26, 79, 143)      # navy #1a4f8f
 WHITE = (255, 255, 255)
 GRAY = (185, 185, 185)
 
