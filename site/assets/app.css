@@ -84,6 +84,7 @@ html{scroll-padding-top:64px}
 .hero-suggest-list{list-style:none;margin:0;padding:0;max-height:min(320px,50vh);overflow-y:auto}
 .hero-suggest-item{display:flex;align-items:baseline;justify-content:space-between;gap:12px;width:100%;text-align:left;padding:10px 16px;border:none;background:transparent;font:inherit;font-size:var(--text-md);font-weight:var(--fw-semibold);color:var(--ink-deep);cursor:pointer;line-height:1.4}
 .hero-suggest-item:hover,.hero-suggest-item:focus-visible{background:var(--accent-light);outline:none}
+a.hero-suggest-item{text-decoration:none}a.hero-suggest-item:hover{text-decoration:none}
 .hero-suggest-meta{font-size:var(--text-sm);font-weight:var(--fw-regular);color:var(--muted);white-space:nowrap;flex-shrink:0}
 .hero-result{margin-top:12px;font-size:var(--text-sm);color:var(--muted)}
 .hero-result a{color:var(--accent);font-weight:600;text-decoration:underline;text-underline-offset:2px}
@@ -211,6 +212,7 @@ html{scroll-padding-top:64px}
 .cal-nav{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0}
 .cal-nav a{font-size:var(--text-sm);padding:5px 11px;background:var(--gray-50);border:1px solid var(--gray-200);border-radius:999px;text-decoration:none;color:var(--ink-deep)}
 .cal-month{margin:18px 0}.cal-month h2{font-size:1.1rem}
+.cal-back{font-size:var(--text-sm);margin:10px 0 0}.cal-back a{color:var(--muted)}
 .detail-faq{margin:32px 0}
 .faq-item{border:1px solid var(--gray-200);border-radius:var(--radius);margin:8px 0;background:var(--gray-50)}
 .faq-item summary{cursor:pointer;padding:12px 15px;font-weight:600;color:var(--ink-deep);list-style-position:inside}
@@ -541,6 +543,7 @@ table.cmp tbody th{background:var(--gray-50);color:var(--ink);white-space:nowrap
 .detail-nav-note{font-size:var(--text-sm);color:var(--muted);margin-top:16px;line-height:1.7}
 @media(max-width:560px){.page-detail .detail-link-grid{grid-template-columns:1fr}}
 .detail-facts{margin-bottom:18px}
+.page-detail .detail-intro .detail-facts{margin:24px 0 0}
 .facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px}
 .fact{background:var(--gray-50);border-radius:8px;padding:9px 11px;border:1px solid var(--gray-200)}
 .fact .l{font-size:var(--text-sm);color:var(--muted)}
