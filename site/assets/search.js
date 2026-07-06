@@ -17,6 +17,17 @@
   function esc(s){return (s||'').replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
   function fmtN(n){return Number(n).toLocaleString('ja-JP');}
   function certDisplayName(x){return (x&&(x.display_name||x.name))||'';}
+  // 検索用正規化: 小文字化・全角英数→半角・ひらがな→カタカナ・空白/中点/括弧の除去
+  function norm(s){
+    s=(s||'').toLowerCase();
+    s=s.replace(/[Ａ-Ｚａ-ｚ０-９]/g,function(c){return String.fromCharCode(c.charCodeAt(0)-0xFEE0);});
+    s=s.replace(/[ぁ-ゖ]/g,function(c){return String.fromCharCode(c.charCodeAt(0)+0x60);});
+    return s.replace(/[\s・･·()（）　]/g,'');
+  }
+  function searchText(x){
+    if(!x._st)x._st=norm([x.name,x.display_name||''].concat(x.aliases||[]).join(' '));
+    return x._st;
+  }
   function opt(sel,v){var o=document.createElement('option');o.value=v;o.textContent=v;sel.appendChild(o);}
   function passNum(x){var m=(x.pass_rate||'').replace(/,/g,'').match(/([0-9]+(?:\.[0-9]+)?)\s*%/);return m?parseFloat(m[1]):null;}
   function studyLow(x){var m=(x.study_hours||'').replace(/,/g,'').match(/([0-9]+)/);return m?parseInt(m[1],10):null;}
@@ -96,10 +107,11 @@
     var t=queryText(),mj=majorSel.value,sk=sortSel.value||'app-desc',
         band=studySel.value,pBand=passSel?passSel.value:'',fBand=freqSel?freqSel.value:'';
     if(studyNote)studyNote.style.display=band?'inline':'none';
+    var tn=norm(t);
     var out=DATA.filter(function(x){
       if(mj&&x.major!==mj)return false;
       if(legacyType&&x.type!==legacyType)return false;
-      if(t&&x.name.toLowerCase().indexOf(t)<0)return false;
+      if(tn&&searchText(x).indexOf(tn)<0)return false;
       if(fPub.checked&&x.status!=='published')return false;
       if(legacyIndustry&&(x.industries||[]).indexOf(legacyIndustry)<0)return false;
       if(band&&!studyHit(x,band))return false;
@@ -199,19 +211,32 @@
   });
   function onFilter(){resetPage=true;render();}
   function onQueryInput(e){syncQueryInputs(e.target);onFilter();}
+  var suggestList=heroSuggest?heroSuggest.querySelector('.hero-suggest-list'):null;
+  var suggestLabel=heroSuggest?heroSuggest.querySelector('.hero-suggest-label'):null;
+  var staticSuggest=suggestList?suggestList.innerHTML:'';
   function showHeroSuggest(filter){
-    if(!heroSuggest||!q)return;
-    var t=(filter||'').trim().toLowerCase();
-    var items=[].slice.call(heroSuggest.querySelectorAll('.hero-suggest-item'));
-    var shown=0;
-    items.forEach(function(btn){
-      var qv=(btn.getAttribute('data-q')||'').toLowerCase();
-      var ok=!t||qv.indexOf(t)>=0;
-      btn.parentElement.hidden=!ok;
-      if(ok)shown++;
+    if(!heroSuggest||!q||!suggestList)return;
+    var t=norm((filter||'').trim());
+    if(!t){
+      suggestList.innerHTML=staticSuggest;
+      if(suggestLabel)suggestLabel.textContent='よく探される資格';
+      heroSuggest.hidden=false;q.setAttribute('aria-expanded','true');return;
+    }
+    if(!DATA.length){heroSuggest.hidden=true;q.setAttribute('aria-expanded','false');return;}
+    var hits=DATA.filter(function(x){return searchText(x).indexOf(t)>=0;});
+    hits.sort(function(a,b){
+      var pa=a.popular?1:0,pb=b.popular?1:0;
+      if(pa!==pb)return pb-pa;
+      return (appNum(b)||0)-(appNum(a)||0);
     });
-    heroSuggest.hidden=shown===0;
-    q.setAttribute('aria-expanded',shown>0?'true':'false');
+    hits=hits.slice(0,8);
+    if(!hits.length){heroSuggest.hidden=true;q.setAttribute('aria-expanded','false');return;}
+    if(suggestLabel)suggestLabel.textContent='候補の資格';
+    suggestList.innerHTML=hits.map(function(x){
+      return '<li><a class="hero-suggest-item" href="c/'+esc(x.slug)+'.html">'+esc(certDisplayName(x))+
+        '<span class="hero-suggest-meta">'+esc(x.major)+'</span></a></li>';
+    }).join('');
+    heroSuggest.hidden=false;q.setAttribute('aria-expanded','true');
   }
   function hideHeroSuggest(){
     if(!heroSuggest)return;
@@ -235,6 +260,7 @@
     heroSuggest.addEventListener('click',function(e){
       var btn=e.target.closest('.hero-suggest-item');
       if(!btn)return;
+      if(btn.tagName==='A')return; // 動的候補は詳細ページへそのまま遷移
       var val=btn.getAttribute('data-q')||'';
       syncQueryInputs({value:val});
       hideHeroSuggest();

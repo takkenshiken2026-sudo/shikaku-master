@@ -283,6 +283,24 @@ def load_study_time():
 STUDY = load_study_time()
 
 
+def load_aliases():
+    """slug → [alias, ...]。検索用の略称・かな・表記ゆれ（表示には使わない）。"""
+    path = ROOT / "data" / "aliases.csv"
+    if not path.exists():
+        return {}
+    out = {}
+    with path.open(encoding="utf-8") as f:
+        for r in csv.DictReader(f):
+            s = (r.get("slug") or "").strip()
+            a = [x.strip() for x in (r.get("aliases") or "").split(";") if x.strip()]
+            if s and a:
+                out.setdefault(s, []).extend(a)
+    return out
+
+
+ALIASES = load_aliases()
+
+
 def load_provisional():
     """slug → {pass_rate, applicants, source, note}。暫定・非公式の参考値。
 
@@ -1180,19 +1198,43 @@ def build_detail(row, popular_slugs=None) -> str:
                    f'target="_blank">出典</a>')
         notice = (f'<div class="notice-defunct"><strong>【{esc(tri.get("kind") or "注記")}】'
                   f'</strong>{esc(tri["note"])}{succ}{src}</div>')
+    # 主要数値のファクトカード（h1直下）: 短い値のみタイル化し、詳細はスペック表に委ねる
+    fact_tiles = []
+    _fee = fmt_nums_in_text(row["fee"]) if row["fee"] else ""
+    if _fee and len(_fee) <= 22:
+        fact_tiles.append(("受験料", esc(_fee)))
+    _pr = pass_rate_display(row["pass_rate"]) if row["pass_rate"] else ""
+    if _pr and len(_pr) <= 22:
+        fact_tiles.append(("合格率", esc(_pr)))
+    _diff = difficulty(row)
+    if _diff:
+        fact_tiles.append(("難易度の目安",
+                           f'<span class="diff-badge {_diff[1]}">{esc(_diff[0])}</span>'))
+    _study = (STUDY.get(row["slug"], {}) or {}).get("study_hours", "")
+    if _study and len(_study) <= 22:
+        fact_tiles.append(("学習時間の目安", esc(fmt_nums_in_text(_study))))
+    _elig = row["eligibility"]
+    if _elig and len(_elig) <= 18:
+        fact_tiles.append(("受験資格", esc(_elig)))
+    facts_html = ""
+    if len(fact_tiles) >= 2:
+        _tiles = "".join(f'<div class="fact"><div class="l">{l}</div>'
+                         f'<div class="v">{v}</div></div>' for l, v in fact_tiles)
+        facts_html = f'<div class="detail-facts"><div class="facts">{_tiles}</div></div>'
     body = f"""<div class="page-detail">
 <nav class="crumbs"><a href="../index.html">トップ</a> ›
 <a href="../bunya/{esc(bslug)}.html">{esc(major)}</a> › {esc(name)}</nav>
 <header class="detail-intro">
 {detail_title_html(name, row["slug"], popular_slugs)}
 <p class="detail-audience">{lead}</p>
+{facts_html}
 </header>
 {notice}
-{partner_detail}
 {_roadmap_block}
 <section class="detail-section detail-section--spec" aria-labelledby="ds-h">
 <h2 class="detail-section-title" id="ds-h">資格情報</h2>
 <div class="spec-sections">{spec_html}</div>{SPEC_TABLE_JS}</section>
+{partner_detail}
 {guide_html}
 {faq_html}
 {detail_nav}
@@ -2498,7 +2540,8 @@ def build_calendar_page(indexable):
             for r in certs)
         sections.append(
             f'<section class="cal-month"><h2 id="m{m}">{m}月に試験・申込がある資格'
-            f'（{len(certs)}件）</h2><ul class="detail-link-list">{items}</ul></section>')
+            f'（{len(certs)}件）</h2><ul class="detail-link-list">{items}</ul>'
+            '<p class="cal-back"><a href="#top">↑ 月の一覧に戻る</a></p></section>')
 
     nav = '<nav class="cal-nav">' + "".join(
         f'<a href="#m{m}">{m}月</a>' for m in range(1, 13) if by_month[m]) + "</nav>"
@@ -2508,6 +2551,7 @@ def build_calendar_page(indexable):
 <p class="lead">資格試験を「実施・申込の月」から探せるカレンダーです。各資格の実施頻度の記載から
 月を抽出した目安で、試験日・申込・口述などの月が含まれます。正確な日程・申込期限は
 各資格ページおよび公式サイトで必ずご確認ください。</p>
+<div id="top"></div>
 {nav}
 {''.join(sections)}
 <p class="muted" style="margin-top:14px">※月は実施頻度の記載からの抽出による目安です。
@@ -2887,7 +2931,16 @@ def build_comparison_pages(indexable):
             f"{table}{cards}"
             '<p class="muted" style="margin-top:14px">※受験料・合格率・受験資格は公式の'
             '一次情報に基づきますが、最新の制度・金額・日程は各資格の公式サイトで必ず'
-            'ご確認ください。難易度は公表合格率に基づく簡易目安です。</p>')
+            'ご確認ください。難易度は公表合格率に基づく簡易目安です。</p>'
+            '<nav class="rel-links"><h2>関連リンク</h2><ul>'
+            f'<li><a href="../bunya/{esc(MAJOR_SLUGS.get(ra["major_category"], "other"))}.html">'
+            f'{esc(ra["major_category"])}の資格一覧</a></li>'
+            + (f'<li><a href="../bunya/{esc(MAJOR_SLUGS.get(rb["major_category"], "other"))}.html">'
+               f'{esc(rb["major_category"])}の資格一覧</a></li>'
+               if rb["major_category"] != ra["major_category"] else "")
+            + '<li><a href="../index.html#compare">よく比較される資格の一覧</a></li>'
+            '<li><a href="../feature/index.html">特集・ランキングから探す</a></li>'
+            "</ul></nav>")
         desc = (f"{na}と{nb}の違いを比較。受験料・合格率・難易度の目安・受験資格・"
                 f"試験形式を一覧で比べ、どちらを取るべきか選ぶ参考にできます。")
         pages[pslug] = page_shell(
@@ -3354,7 +3407,7 @@ def build_index(rows) -> str:
 
 
 def build_compare() -> str:
-    body = """<nav class="crumbs"><a href="index.html">トップ</a> › 比較</nav>
+    body = f"""<nav class="crumbs"><a href="index.html">トップ</a> › 比較</nav>
 <h1>資格を比較</h1>
 <p class="lead">選択した資格を並べて比較します（最大4件）。数値・制度は各資格の公式情報で必ずご確認ください。</p>
 <div id="cmpVerdict"></div>
@@ -3465,6 +3518,17 @@ SEARCH_JS = """(function(){
   function esc(s){return (s||'').replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
   function fmtN(n){return Number(n).toLocaleString('ja-JP');}
   function certDisplayName(x){return (x&&(x.display_name||x.name))||'';}
+  // 検索用正規化: 小文字化・全角英数→半角・ひらがな→カタカナ・空白/中点/括弧の除去
+  function norm(s){
+    s=(s||'').toLowerCase();
+    s=s.replace(/[Ａ-Ｚａ-ｚ０-９]/g,function(c){return String.fromCharCode(c.charCodeAt(0)-0xFEE0);});
+    s=s.replace(/[ぁ-ゖ]/g,function(c){return String.fromCharCode(c.charCodeAt(0)+0x60);});
+    return s.replace(/[\s・･·()（）　]/g,'');
+  }
+  function searchText(x){
+    if(!x._st)x._st=norm([x.name,x.display_name||''].concat(x.aliases||[]).join(' '));
+    return x._st;
+  }
   function opt(sel,v){var o=document.createElement('option');o.value=v;o.textContent=v;sel.appendChild(o);}
   function passNum(x){var m=(x.pass_rate||'').replace(/,/g,'').match(/([0-9]+(?:\\.[0-9]+)?)\\s*%/);return m?parseFloat(m[1]):null;}
   function studyLow(x){var m=(x.study_hours||'').replace(/,/g,'').match(/([0-9]+)/);return m?parseInt(m[1],10):null;}
@@ -3544,10 +3608,11 @@ SEARCH_JS = """(function(){
     var t=queryText(),mj=majorSel.value,sk=sortSel.value||'app-desc',
         band=studySel.value,pBand=passSel?passSel.value:'',fBand=freqSel?freqSel.value:'';
     if(studyNote)studyNote.style.display=band?'inline':'none';
+    var tn=norm(t);
     var out=DATA.filter(function(x){
       if(mj&&x.major!==mj)return false;
       if(legacyType&&x.type!==legacyType)return false;
-      if(t&&x.name.toLowerCase().indexOf(t)<0)return false;
+      if(tn&&searchText(x).indexOf(tn)<0)return false;
       if(fPub.checked&&x.status!=='published')return false;
       if(legacyIndustry&&(x.industries||[]).indexOf(legacyIndustry)<0)return false;
       if(band&&!studyHit(x,band))return false;
@@ -3647,19 +3712,32 @@ SEARCH_JS = """(function(){
   });
   function onFilter(){resetPage=true;render();}
   function onQueryInput(e){syncQueryInputs(e.target);onFilter();}
+  var suggestList=heroSuggest?heroSuggest.querySelector('.hero-suggest-list'):null;
+  var suggestLabel=heroSuggest?heroSuggest.querySelector('.hero-suggest-label'):null;
+  var staticSuggest=suggestList?suggestList.innerHTML:'';
   function showHeroSuggest(filter){
-    if(!heroSuggest||!q)return;
-    var t=(filter||'').trim().toLowerCase();
-    var items=[].slice.call(heroSuggest.querySelectorAll('.hero-suggest-item'));
-    var shown=0;
-    items.forEach(function(btn){
-      var qv=(btn.getAttribute('data-q')||'').toLowerCase();
-      var ok=!t||qv.indexOf(t)>=0;
-      btn.parentElement.hidden=!ok;
-      if(ok)shown++;
+    if(!heroSuggest||!q||!suggestList)return;
+    var t=norm((filter||'').trim());
+    if(!t){
+      suggestList.innerHTML=staticSuggest;
+      if(suggestLabel)suggestLabel.textContent='よく探される資格';
+      heroSuggest.hidden=false;q.setAttribute('aria-expanded','true');return;
+    }
+    if(!DATA.length){heroSuggest.hidden=true;q.setAttribute('aria-expanded','false');return;}
+    var hits=DATA.filter(function(x){return searchText(x).indexOf(t)>=0;});
+    hits.sort(function(a,b){
+      var pa=a.popular?1:0,pb=b.popular?1:0;
+      if(pa!==pb)return pb-pa;
+      return (appNum(b)||0)-(appNum(a)||0);
     });
-    heroSuggest.hidden=shown===0;
-    q.setAttribute('aria-expanded',shown>0?'true':'false');
+    hits=hits.slice(0,8);
+    if(!hits.length){heroSuggest.hidden=true;q.setAttribute('aria-expanded','false');return;}
+    if(suggestLabel)suggestLabel.textContent='候補の資格';
+    suggestList.innerHTML=hits.map(function(x){
+      return '<li><a class="hero-suggest-item" href="c/'+esc(x.slug)+'.html">'+esc(certDisplayName(x))+
+        '<span class="hero-suggest-meta">'+esc(x.major)+'</span></a></li>';
+    }).join('');
+    heroSuggest.hidden=false;q.setAttribute('aria-expanded','true');
   }
   function hideHeroSuggest(){
     if(!heroSuggest)return;
@@ -3683,6 +3761,7 @@ SEARCH_JS = """(function(){
     heroSuggest.addEventListener('click',function(e){
       var btn=e.target.closest('.hero-suggest-item');
       if(!btn)return;
+      if(btn.tagName==='A')return; // 動的候補は詳細ページへそのまま遷移
       var val=btn.getAttribute('data-q')||'';
       syncQueryInputs({value:val});
       hideHeroSuggest();
@@ -3978,6 +4057,7 @@ html{scroll-padding-top:64px}
 .hero-suggest-list{list-style:none;margin:0;padding:0;max-height:min(320px,50vh);overflow-y:auto}
 .hero-suggest-item{display:flex;align-items:baseline;justify-content:space-between;gap:12px;width:100%;text-align:left;padding:10px 16px;border:none;background:transparent;font:inherit;font-size:var(--text-md);font-weight:var(--fw-semibold);color:var(--ink-deep);cursor:pointer;line-height:1.4}
 .hero-suggest-item:hover,.hero-suggest-item:focus-visible{background:var(--accent-light);outline:none}
+a.hero-suggest-item{text-decoration:none}a.hero-suggest-item:hover{text-decoration:none}
 .hero-suggest-meta{font-size:var(--text-sm);font-weight:var(--fw-regular);color:var(--muted);white-space:nowrap;flex-shrink:0}
 .hero-result{margin-top:12px;font-size:var(--text-sm);color:var(--muted)}
 .hero-result a{color:var(--accent);font-weight:600;text-decoration:underline;text-underline-offset:2px}
@@ -4105,6 +4185,7 @@ html{scroll-padding-top:64px}
 .cal-nav{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0}
 .cal-nav a{font-size:var(--text-sm);padding:5px 11px;background:var(--gray-50);border:1px solid var(--gray-200);border-radius:999px;text-decoration:none;color:var(--ink-deep)}
 .cal-month{margin:18px 0}.cal-month h2{font-size:1.1rem}
+.cal-back{font-size:var(--text-sm);margin:10px 0 0}.cal-back a{color:var(--muted)}
 .detail-faq{margin:32px 0}
 .faq-item{border:1px solid var(--gray-200);border-radius:var(--radius);margin:8px 0;background:var(--gray-50)}
 .faq-item summary{cursor:pointer;padding:12px 15px;font-weight:600;color:var(--ink-deep);list-style-position:inside}
@@ -4435,6 +4516,7 @@ table.cmp tbody th{background:var(--gray-50);color:var(--ink);white-space:nowrap
 .detail-nav-note{font-size:var(--text-sm);color:var(--muted);margin-top:16px;line-height:1.7}
 @media(max-width:560px){.page-detail .detail-link-grid{grid-template-columns:1fr}}
 .detail-facts{margin-bottom:18px}
+.page-detail .detail-intro .detail-facts{margin:24px 0 0}
 .facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px}
 .fact{background:var(--gray-50);border-radius:8px;padding:9px 11px;border:1px solid var(--gray-200)}
 .fact .l{font-size:var(--text-sm);color:var(--muted)}
@@ -4821,6 +4903,7 @@ def main() -> int:
         "difficulty": _diff_label(r),
         "applicants": fmt_nums_in_text((EXAM.get(r["slug"], {}) or {}).get("applicants", "")),
         "study_hours": fmt_nums_in_text((STUDY.get(r["slug"], {}) or {}).get("study_hours", "")),
+        "aliases": ALIASES.get(r["slug"], []),
     } for r in indexable]
     payload.sort(key=lambda x: (x["major"], x["category"], x["name"]))
     (SITE / "data" / "certifications.json").write_text(
