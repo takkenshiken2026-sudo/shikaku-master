@@ -1208,8 +1208,7 @@ def build_detail(row, popular_slugs=None) -> str:
         fact_tiles.append(("合格率", esc(_pr)))
     _diff = difficulty(row)
     if _diff:
-        fact_tiles.append(("難易度の目安",
-                           f'<span class="diff-badge {_diff[1]}">{esc(_diff[0])}</span>'))
+        fact_tiles.append(("難易度の目安", _diff_meter_html(row)))
     _study = (STUDY.get(row["slug"], {}) or {}).get("study_hours", "")
     if _study and len(_study) <= 22:
         fact_tiles.append(("学習時間の目安", esc(fmt_nums_in_text(_study))))
@@ -1444,6 +1443,26 @@ def _diff_badge_html(r):
         return ""
     label, cls = d
     return f'<span class="diff-badge {cls}">{esc(label)}</span>'
+
+
+# 難易度バンド → メーターの段階（易 1 〜 難 5）
+DIFF_LEVEL = {"diff-veryeasy": 1, "diff-easy": 2, "diff-mid": 3,
+              "diff-hard": 4, "diff-veryhard": 5}
+
+
+def _diff_meter_html(r):
+    """難易度を5段階セグメントメーター＋バッジで可視化。難易度が無ければ空文字。"""
+    d = difficulty(r)
+    if not d:
+        return ""
+    label, cls = d
+    lvl = DIFF_LEVEL.get(cls, 0)
+    segs = "".join(
+        (f'<span class="seg {cls} on"></span>' if i <= lvl
+         else '<span class="seg"></span>')
+        for i in range(1, 6))
+    return (f'<span class="diff-meter" aria-hidden="true">{segs}</span>'
+            f'<span class="diff-badge {cls}">{esc(label)}</span>')
 
 
 def study_hours_max(slug):
@@ -4357,6 +4376,13 @@ a.tag-chip:hover{border-color:var(--accent);background:var(--accent-light);text-
 .diff-mid{color:var(--gray-700);background:var(--gray-100);border-color:var(--gray-300)}
 .diff-hard{color:#8a5a2a;background:#f7f0e8;border-color:#e8dcc8}
 .diff-veryhard{color:#9a3b32;background:#fbeeec;border-color:#eccfca}
+.diff-meter{display:inline-flex;gap:3px;vertical-align:middle;margin-right:8px}
+.diff-meter .seg{width:13px;height:7px;border-radius:2px;background:var(--gray-200)}
+.diff-meter .seg.on.diff-veryeasy{background:#4a90d9}
+.diff-meter .seg.on.diff-easy{background:#4a9e6b}
+.diff-meter .seg.on.diff-mid{background:#c9a227}
+.diff-meter .seg.on.diff-hard{background:#cc7a33}
+.diff-meter .seg.on.diff-veryhard{background:#c0453b}
 .diff-rank{display:inline-block;font-weight:700;font-size:var(--text-sm);padding:2px 10px;border-radius:6px;background:var(--gray-700);color:#fff;margin:1px 2px 1px 0}
 .diff-rank-field{background:var(--accent-hover)}
 .diff-meta{font-size:var(--text-sm);margin-top:3px}

@@ -384,6 +384,13 @@ a.tag-chip:hover{border-color:var(--accent);background:var(--accent-light);text-
 .diff-mid{color:var(--gray-700);background:var(--gray-100);border-color:var(--gray-300)}
 .diff-hard{color:#8a5a2a;background:#f7f0e8;border-color:#e8dcc8}
 .diff-veryhard{color:#9a3b32;background:#fbeeec;border-color:#eccfca}
+.diff-meter{display:inline-flex;gap:3px;vertical-align:middle;margin-right:8px}
+.diff-meter .seg{width:13px;height:7px;border-radius:2px;background:var(--gray-200)}
+.diff-meter .seg.on.diff-veryeasy{background:#4a90d9}
+.diff-meter .seg.on.diff-easy{background:#4a9e6b}
+.diff-meter .seg.on.diff-mid{background:#c9a227}
+.diff-meter .seg.on.diff-hard{background:#cc7a33}
+.diff-meter .seg.on.diff-veryhard{background:#c0453b}
 .diff-rank{display:inline-block;font-weight:700;font-size:var(--text-sm);padding:2px 10px;border-radius:6px;background:var(--gray-700);color:#fff;margin:1px 2px 1px 0}
 .diff-rank-field{background:var(--accent-hover)}
 .diff-meta{font-size:var(--text-sm);margin-top:3px}
