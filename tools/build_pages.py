@@ -241,7 +241,9 @@ def load_guides():
             s = (r.get("slug") or "").strip()
             if not s:
                 continue
-            g = {k: (r.get(k) or "").strip() for k in ("suited", "study", "career", "steps")}
+            g = {k: (r.get(k) or "").strip()
+                 for k in ("suited", "difficulty", "study", "steps",
+                           "pitfalls", "career")}
             if any(g.values()):
                 out[s] = g
     return out
@@ -1135,27 +1137,38 @@ def build_detail(row, popular_slugs=None) -> str:
     else:
         faq_html = ""
 
-    # 編集ガイダンス（主要資格のみ・手書き／向いている人・勉強法・活かし方）
+    # 編集ガイダンス（主要資格のみ・手書き）。各資格固有の踏み込んだ解説。
+    # プロース欄は改行で段落分割できる。steps は「|」区切りの番号リスト。
     _g = GUIDES.get(row["slug"])
     if _g:
+        def _guide_paras(text):
+            return "".join(f"<p>{esc(p.strip())}</p>"
+                           for p in text.split("\n") if p.strip())
         _blocks = []
-        for key, head in (("suited", "こんな人に向いている"),
-                          ("study", "学習の進め方・勉強法"),
-                          ("career", "取得後の活かし方・キャリア")):
+        _guide_order = (
+            ("suited", f"{name}はこんな人に向いている"),
+            ("difficulty", "難易度と学習のリアル"),
+            ("study", "学習の進め方・勉強法"),
+            ("__steps__", "学習ステップの目安"),
+            ("pitfalls", "つまずきやすいポイント"),
+            ("career", "取得後の活かし方・キャリア"),
+        )
+        for key, head in _guide_order:
+            if key == "__steps__":
+                if _g.get("steps"):
+                    _steps = [s.strip() for s in _g["steps"].split("|") if s.strip()]
+                    if _steps:
+                        _li = "".join(f"<li>{esc(s)}</li>" for s in _steps)
+                        _blocks.append(
+                            '<div class="guide-block">'
+                            '<h3 class="guide-h">学習ステップの目安</h3>'
+                            f'<ol class="guide-steps">{_li}</ol></div>')
+                continue
             if _g.get(key):
-                _title = (f"{name}は{head}" if key == "suited" else head)
                 _blocks.append(
                     f'<div class="guide-block">'
-                    f'<h3 class="guide-h">{esc(_title)}</h3>'
-                    f'<p>{esc(_g[key])}</p></div>')
-            if key == "study" and _g.get("steps"):
-                _steps = [s.strip() for s in _g["steps"].split("|") if s.strip()]
-                if _steps:
-                    _li = "".join(f"<li>{esc(s)}</li>" for s in _steps)
-                    _blocks.append(
-                        '<div class="guide-block">'
-                        '<h3 class="guide-h">学習ステップの目安</h3>'
-                        f'<ol class="guide-steps">{_li}</ol></div>')
+                    f'<h3 class="guide-h">{esc(head)}</h3>'
+                    f'{_guide_paras(_g[key])}</div>')
         guide_html = (f'<section class="detail-section detail-section--guide detail-section--alt" aria-labelledby="guide-h">'
                       f'<h2 class="detail-section-title" id="guide-h">{esc(name)}の受験・活用ガイド</h2>'
                       f'<div class="guide-body">{"".join(_blocks)}</div>'
