@@ -4048,8 +4048,8 @@ html{scroll-padding-top:64px}
 .header-nav a:not(.header-nav-cta){color:var(--ink);font-size:var(--text-sm);text-decoration:none;padding:6px 8px;white-space:nowrap;border-radius:4px}
 .header-nav a:not(.header-nav-cta):hover{color:var(--ink-deep);background:var(--gray-50);text-decoration:none}
 .header-nav a.is-current{color:var(--ink-deep);font-weight:600}
-.header-nav-cta{margin-left:8px;padding:7px 12px;background:#d97706;color:#fff !important;font-size:var(--text-sm);font-weight:600;border-radius:var(--radius);line-height:1.2;text-decoration:none}
-.header-nav a.header-nav-cta:hover,.header-nav a.header-nav-cta:focus-visible{background:#b45309;color:#fff !important;text-decoration:none}
+.header-nav-cta{margin-left:8px;padding:7px 12px;background:var(--accent);color:#fff !important;font-size:var(--text-sm);font-weight:600;border-radius:var(--radius);line-height:1.2;text-decoration:none}
+.header-nav a.header-nav-cta:hover,.header-nav a.header-nav-cta:focus-visible{background:var(--accent-hover);color:#fff !important;text-decoration:none}
 .header-nav-sep{color:var(--gray-400);font-size:var(--text-sm);user-select:none;padding:0 1px}
 .header-actions{display:none;align-items:center;gap:2px;margin-left:auto;flex-shrink:0}
 .header-icon-btn{display:inline-flex;align-items:center;justify-content:center;background:transparent;border:none;color:var(--ink);cursor:pointer;padding:8px;border-radius:6px;line-height:0;font-family:inherit}
@@ -4073,16 +4073,16 @@ html{scroll-padding-top:64px}
 .container:has(.page-detail){padding-top:36px;padding-bottom:56px}
 
 /* Hero（濃紺グラデーション＋白文字。検索ボックスを主役に） */
-.hero{margin:-28px calc(-1*var(--page-gutter)) 0;padding:64px var(--page-gutter) 48px;margin-bottom:0;text-align:center;background:linear-gradient(135deg,#122c50 0%,#1d4a80 100%)}
+.hero{margin:-28px calc(-1*var(--page-gutter)) 0;padding:64px var(--page-gutter) 48px;margin-bottom:0;text-align:center;background:linear-gradient(120deg,#0b57d0 0%,#1877e0 55%,#28a3e6 100%)}
 .hero h1{font-weight:700;line-height:1.4;margin:0 0 16px;letter-spacing:.02em}
 .hero-h1-line{display:block;font-size:var(--text-xl);font-weight:700;color:#fff;letter-spacing:.02em}
 .hero-h1-line+.hero-h1-line{margin-top:2px}
 .hero-sub{font-size:1.125rem;color:#d9e4f2;line-height:1.75;max-width:40em;margin:0 auto}
-.hero-sub #count{color:#ffc766;font-weight:700;text-decoration:underline;text-underline-offset:3px}
+.hero-sub #count{color:#fff;font-weight:700;text-decoration:underline;text-decoration-color:rgba(255,255,255,.6);text-underline-offset:3px}
 .hero-search{margin:24px auto 0;max-width:680px;position:relative;text-align:left}
 .hero-search input{width:100%;padding:15px 18px 15px 46px;border:none;border-radius:10px;font-size:1.0625rem;background:#fff;color:var(--ink);font-family:inherit;box-shadow:0 8px 28px rgba(6,20,40,.35)}
 .hero-search input::placeholder{color:var(--muted)}
-.hero-search input:focus,.hero-search input:focus-visible{outline:3px solid #ffc766;outline-offset:2px}
+.hero-search input:focus,.hero-search input:focus-visible{outline:3px solid #fff;outline-offset:2px}
 .hero-search .ico{position:absolute;left:16px;top:50%;transform:translateY(-50%);color:#5a7ba6;display:flex;pointer-events:none;z-index:1}
 .hero-suggest{position:absolute;left:0;right:0;top:calc(100% + 6px);background:#fff;border:1px solid var(--gray-200);border-radius:var(--radius);box-shadow:0 8px 24px rgba(0,0,0,.1);z-index:25;padding:10px 0 6px;text-align:left}
 .hero-suggest-label{margin:0 0 6px;padding:0 16px;font-size:var(--text-sm);font-weight:var(--fw-semibold);color:var(--muted)}
@@ -4092,7 +4092,7 @@ html{scroll-padding-top:64px}
 a.hero-suggest-item{text-decoration:none}a.hero-suggest-item:hover{text-decoration:none}
 .hero-suggest-meta{font-size:var(--text-sm);font-weight:var(--fw-regular);color:var(--muted);white-space:nowrap;flex-shrink:0}
 .hero-result{margin-top:12px;font-size:var(--text-sm);color:#c7d5e8}
-.hero-result a{color:#ffc766;font-weight:600;text-decoration:underline;text-underline-offset:2px}
+.hero-result a{color:#fff;font-weight:600;text-decoration:underline;text-underline-offset:2px}
 .hero-result strong{color:#fff}
 @media(max-width:768px){.hero{margin-top:-20px}}
 
