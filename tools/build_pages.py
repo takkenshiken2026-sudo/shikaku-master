@@ -11,6 +11,7 @@
 事実値(受験料/合格率/公式URL)は未検証なら「公式で確認」を促す。
 """
 import csv
+import datetime as _dt
 import html
 import json
 import re
@@ -31,6 +32,8 @@ JOBTAG_URL = "https://shigoto.mhlw.go.jp/User/Search/Top"
 SITE_NAME = "資格カタログ"
 SITE_DESC = "日本の資格を「探せる・絞れる・比べられる」資格データベース。受験料・試験形式・受験資格・合格率・実施団体・公式サイトを公式の一次情報に基づき掲載。"
 BASE_URL = "https://shikaku-master.jp"
+# 検索結果の鮮度シグナル用の年（ビルド時点の年を自動反映）
+YEAR = _dt.date.today().year
 CUSTOM_DOMAIN = "shikaku-master.jp"
 TYPE_BADGE = {
     "国家": ("国家資格", "badge-national"),
@@ -378,14 +381,30 @@ fetch("../data/certifications.json").then(r=>r.json()).then(all=>{{
 }});
 </script>
 """
-    bits = [b for b in (("受験料" + row["fee"]) if row["fee"] else "",
-                        ("合格率" + row["pass_rate"]) if row["pass_rate"] else "") if b]
-    if hand_desc:
-        desc = hand_desc[:118]
-    else:
-        desc = (f"{name}（{major}分野・{label}）の試験情報。"
-                + ("／".join(bits) + "。" if bits else "")
-                + "受験料・試験形式・受験資格・合格率・実施団体・公式サイトを掲載。")
+    # --- SEOタイトル: 資格名＋検索意図キーワード（合格率/受験料/難易度）＋年 ---
+    # GSCで「◯◯ 合格率」「◯◯ 受験料」等の意図が多いため、保有データに応じて
+    # 検索意図語をタイトル前方に露出し、CTRを高める。
+    intents = []
+    if row["pass_rate"].strip():
+        intents.append("合格率")
+    if row["fee"].strip():
+        intents.append("受験料")
+    if difficulty(row):
+        intents.append("難易度")
+    head = f"{name}の{'・'.join(intents[:3])}" if intents else f"{name}の試験情報"
+    seo_title = f"{head}【{YEAR}年最新】｜{SITE_NAME}"
+
+    # --- SEOディスクリプション: 事実値（合格率・受験料）を前方に置きCTRを高める ---
+    facts = []
+    if row["pass_rate"].strip():
+        facts.append("合格率" + _fact_head(row["pass_rate"]))
+    if row["fee"].strip():
+        facts.append("受験料" + _fact_head(row["fee"]))
+    fact_lead = ("、".join(facts) + "。") if facts else ""
+    body_desc = hand_desc if hand_desc else (
+        f"{major}分野の{label}。受験資格・試験形式・実施頻度・実施団体・"
+        "公式サイトを公式の一次情報に基づき掲載。")
+    desc = f"{name}の{YEAR}年最新情報。{fact_lead}{body_desc}"[:120]
     breadcrumb = {
         "@context": "https://schema.org", "@type": "BreadcrumbList",
         "itemListElement": [
@@ -396,9 +415,23 @@ fetch("../data/certifications.json").then(r=>r.json()).then(all=>{{
         ],
     }
     ld = [breadcrumb] + ([faq] if faq else [])
-    return page_shell(f"{name}｜{SITE_NAME}", body, depth=1,
+    return page_shell(seo_title, body, depth=1,
                       noindex=(not is_indexable_detail(row)),
                       desc=desc, path=f'c/{row["slug"]}.html', jsonld=ld)
+
+
+def _fact_head(s):
+    """受験料・合格率などの長い文字列から代表値だけを短く取り出す。
+
+    例: "5,200円(税込・20…" → "5,200円" / "学科3,100円/実技…" → "学科3,100円"。
+    メタ説明・タイトルに載せる際に注記や複数等級で冗長化するのを防ぐ。
+    """
+    s = (s or "").strip()
+    for d in ("（", "(", "、", "／", "/", " ", "　"):
+        i = s.find(d)
+        if i > 0:
+            s = s[:i]
+    return s.strip()
 
 
 def fee_yen(r):
