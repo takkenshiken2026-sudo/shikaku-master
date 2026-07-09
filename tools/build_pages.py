@@ -3289,6 +3289,7 @@ def build_index(rows) -> str:
         for r in suggest)
 
     body = f"""<section class="hero">
+  <div class="hero-inner">
   <h1><span class="hero-h1-line">就職・転職・スキルアップの</span><span class="hero-h1-line">資格情報サイト</span></h1>
   <p class="hero-sub">日本国内の資格を <strong id="count">{len(rows):,}</strong> 件以上掲載。受験料・受験資格・試験形式・合格率・公式サイトを、公式の一次情報に基づいて整理しています。</p>
   <div class="hero-search">
@@ -3300,6 +3301,7 @@ def build_index(rows) -> str:
     </div>
   </div>
   <p class="hero-result" id="heroResult" hidden></p>
+  </div>
 </section>
 
 <section class="block block-band block-band--white" id="purpose">
@@ -4019,7 +4021,7 @@ APP_CSS = """:root{
 --fw-regular:400;--fw-semibold:600;--fw-bold:700;--page-gutter:36px}
 *{box-sizing:border-box}
 html{font-size:16px}
-body{margin:0;min-height:100vh;display:flex;flex-direction:column;font-family:"Noto Sans JP",system-ui,-apple-system,"Hiragino Kaku Gothic ProN",Meiryo,sans-serif;font-size:var(--text-md);font-weight:var(--fw-regular);color:var(--ink);background:var(--page-bg);line-height:1.7;-webkit-font-smoothing:antialiased;overflow-wrap:break-word}
+body{margin:0;min-height:100vh;display:flex;flex-direction:column;font-family:"Noto Sans JP",system-ui,-apple-system,"Hiragino Kaku Gothic ProN",Meiryo,sans-serif;font-size:var(--text-md);font-weight:var(--fw-regular);color:var(--ink);background:var(--page-bg);line-height:1.7;-webkit-font-smoothing:antialiased;overflow-wrap:break-word;overflow-x:clip}
 h2{font-size:var(--text-lg);font-weight:var(--fw-bold);color:var(--ink-deep)}
 h3{font-size:var(--text-lg);font-weight:var(--fw-semibold);color:var(--ink-deep)}
 a{color:var(--ink)}a:hover{text-decoration:underline}
@@ -4073,7 +4075,8 @@ html{scroll-padding-top:64px}
 .container:has(.page-detail){padding-top:36px;padding-bottom:56px}
 
 /* Hero（濃紺グラデーション＋白文字。検索ボックスを主役に） */
-.hero{margin:-28px calc(-1*var(--page-gutter)) 0;padding:64px var(--page-gutter) 48px;margin-bottom:0;text-align:center;background:linear-gradient(120deg,#0b57d0 0%,#1877e0 55%,#28a3e6 100%)}
+.hero{margin-top:-28px;margin-bottom:0;margin-left:calc(50% - 50vw);margin-right:calc(50% - 50vw);padding:64px var(--page-gutter) 48px;text-align:center;background:linear-gradient(120deg,#0b57d0 0%,#1877e0 55%,#28a3e6 100%)}
+.hero-inner{max-width:1200px;margin:0 auto}
 .hero h1{font-weight:700;line-height:1.4;margin:0 0 16px;letter-spacing:.02em}
 .hero-h1-line{display:block;font-size:var(--text-xl);font-weight:700;color:#fff;letter-spacing:.02em}
 .hero-h1-line+.hero-h1-line{margin-top:2px}
