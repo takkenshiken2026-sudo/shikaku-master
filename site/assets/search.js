@@ -208,7 +208,102 @@
     if(p.get('industry'))legacyIndustry=p.get('industry');
     if(location.hash==='#all')location.hash='#all-certs';
     render();
+    initShindan();
   });
+  function initShindan(){
+    var goalWrap=document.getElementById('sdGoal'),
+        fieldSel=document.getElementById('sdField'),
+        timeSel=document.getElementById('sdTime'),
+        runBtn=document.getElementById('sdRun'),
+        resultBox=document.getElementById('sdResult');
+    if(!goalWrap||!fieldSel||!timeSel||!resultBox)return;
+    // 目的 → タグの重み（希少なタグほど強いシグナル）
+    var GOAL_TAGS={
+      job:{'就職・転職':1,'受験資格なし':2,'未経験からIT':3},
+      change:{'就職・転職':1,'手に職':3,'未経験からIT':2},
+      skill:{'働きながら':3,'CBT・ネット試験':2},
+      independent:{'独立・開業':6,'手に職':3}
+    };
+    var GOAL_LABEL={job:'就職',change:'転職',skill:'スキルアップ',independent:'独立・開業'};
+    var TIME_LABEL={'0-50':'〜50時間','50-100':'50〜100時間','100-300':'100〜300時間','300-1000':'300〜1000時間','1000-':'1000時間以上'};
+    var goal='job';
+    // 分野プルダウンを industries から生成（件数の多い順）
+    var indCount={};
+    DATA.forEach(function(x){(x.industries||[]).forEach(function(i){indCount[i]=(indCount[i]||0)+1;});});
+    Object.keys(indCount).sort(function(a,b){return indCount[b]-indCount[a];}).forEach(function(v){
+      opt(fieldSel,v);
+    });
+    function bandHit(x,band){
+      var v=studyLow(x); if(v===null)return null;
+      var pr=band.split('-'),lo=parseInt(pr[0],10),hi=pr[1]===''?Infinity:parseInt(pr[1],10);
+      return v>=lo&&v<hi;
+    }
+    function scoreOf(x,field,time){
+      if(x.status!=='published')return null;
+      var score=0,reasons=[];
+      var tw=GOAL_TAGS[goal]||{},tg=x.tags||[],goalScore=0;
+      for(var k in tw){if(tg.indexOf(k)>=0)goalScore+=tw[k];}
+      score+=goalScore;
+      if(goal==='independent'&&tg.indexOf('独立・開業')>=0)reasons.push('独立・開業向き');
+      else if(goal==='skill'&&tg.indexOf('働きながら')>=0)reasons.push('働きながら取りやすい');
+      else if(goal==='job'&&tg.indexOf('受験資格なし')>=0)reasons.push('受験資格なし');
+      else if(goal==='change'&&tg.indexOf('手に職')>=0)reasons.push('手に職');
+      if(field){
+        if((x.industries||[]).indexOf(field)>=0){score+=6;reasons.push(field);}
+        else return null; // 分野指定時はその業界で活かせる資格のみ
+      }
+      if(time){
+        var hit=bandHit(x,time);
+        if(hit===true){score+=4;reasons.push('学習時間が合う');}
+        else if(hit===false)score-=3;
+      }
+      if(x.popular){score+=2;if(reasons.length<3)reasons.push('人気');}
+      var ap=appNum(x);if(ap)score+=Math.min(2,ap/50000);
+      return {x:x,score:score,reasons:reasons.slice(0,3)};
+    }
+    function run(){
+      var field=fieldSel.value,time=timeSel.value;
+      var scored=[];
+      DATA.forEach(function(x){var s=scoreOf(x,field,time);if(s)scored.push(s);});
+      scored.sort(function(a,b){
+        if(b.score!==a.score)return b.score-a.score;
+        return (appNum(b.x)||0)-(appNum(a.x)||0);
+      });
+      var top=scored.slice(0,6);
+      var cond='「<strong>'+esc(GOAL_LABEL[goal])+'</strong>」'+
+        (field?'／<strong>'+esc(field)+'</strong>':'')+
+        (time?'／学習時間 <strong>'+esc(TIME_LABEL[time]||time)+'</strong>':'');
+      if(!top.length){
+        resultBox.innerHTML='<p class="shindan-result-head">'+cond+' の条件に合う資格が見つかりませんでした。分野や学習時間の条件をゆるめてお試しください。</p>';
+        resultBox.hidden=false;return;
+      }
+      var head='<p class="shindan-result-head">'+cond+' のおすすめ資格 <strong>'+top.length+'</strong> 件</p>';
+      var cards=top.map(function(s,i){
+        var x=s.x;
+        var meta=[x.major,x.study_hours?'学習 '+x.study_hours:'',x.pass_rate?'合格率 '+x.pass_rate:''].filter(Boolean).join('　·　');
+        var rs=s.reasons.map(function(r){return '<span class="sd-reason">'+esc(r)+'</span>';}).join('');
+        return '<li><a class="sd-card" href="c/'+esc(x.slug)+'.html">'+
+          '<span class="sd-card-rank">'+(i+1)+'位</span>'+
+          '<span class="sd-card-name">'+esc(certDisplayName(x))+'</span>'+
+          '<span class="sd-card-meta">'+esc(meta)+'</span>'+
+          (rs?'<span class="sd-card-reasons">'+rs+'</span>':'')+
+          '</a></li>';
+      }).join('');
+      resultBox.innerHTML=head+'<ul class="sd-cards">'+cards+'</ul>';
+      resultBox.hidden=false;
+    }
+    goalWrap.addEventListener('click',function(e){
+      var b=e.target.closest('.sd-chip');if(!b)return;
+      goal=b.getAttribute('data-goal')||'job';
+      goalWrap.querySelectorAll('.sd-chip').forEach(function(c){
+        var on=c===b;c.classList.toggle('is-on',on);c.setAttribute('aria-pressed',on?'true':'false');
+      });
+      if(!resultBox.hidden)run();
+    });
+    fieldSel.addEventListener('change',function(){if(!resultBox.hidden)run();});
+    timeSel.addEventListener('change',function(){if(!resultBox.hidden)run();});
+    if(runBtn)runBtn.addEventListener('click',run);
+  }
   function onFilter(){resetPage=true;render();}
   function onQueryInput(e){syncQueryInputs(e.target);onFilter();}
   var suggestList=heroSuggest?heroSuggest.querySelector('.hero-suggest-list'):null;

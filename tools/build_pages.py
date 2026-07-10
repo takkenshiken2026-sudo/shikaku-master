@@ -773,8 +773,8 @@ def page_shell(title: str, body: str, depth: int, noindex: bool = True,
 <meta name="description" content="{esc(desc)}">
 {og}<link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" onload="this.onload=null;this.rel='stylesheet'">
-<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap"></noscript>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;800&display=swap" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;800&display=swap"></noscript>
 <link rel="icon" href="{base}assets/favicon.ico" sizes="32x32">
 <link rel="icon" href="{base}assets/favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="{base}assets/apple-touch-icon.png">
@@ -3304,6 +3304,43 @@ def build_index(rows) -> str:
   </div>
 </section>
 
+<section class="block block-band block-band--white block-shindan" id="shindan">
+  <div class="block-head"><h2>あなたに合う資格を診断</h2><p>目的・分野・使える学習時間を選ぶだけで、おすすめの資格をその場で提案します</p></div>
+  <div class="shindan">
+    <div class="shindan-fields">
+      <div class="shindan-field">
+        <span class="shindan-label" id="sdGoalLabel">目的</span>
+        <div class="shindan-seg" role="group" aria-labelledby="sdGoalLabel" id="sdGoal">
+          <button type="button" class="sd-chip is-on" data-goal="job" aria-pressed="true">就職</button>
+          <button type="button" class="sd-chip" data-goal="change" aria-pressed="false">転職</button>
+          <button type="button" class="sd-chip" data-goal="skill" aria-pressed="false">スキルアップ</button>
+          <button type="button" class="sd-chip" data-goal="independent" aria-pressed="false">独立・開業</button>
+        </div>
+      </div>
+      <div class="shindan-field">
+        <label class="shindan-label" for="sdField">興味のある分野・いまの業界</label>
+        <select id="sdField"><option value="">指定なし（すべての分野）</option></select>
+      </div>
+      <div class="shindan-field">
+        <label class="shindan-label" for="sdTime">使える学習時間の目安</label>
+        <select id="sdTime">
+          <option value="">こだわらない</option>
+          <option value="0-50">〜50時間（数週間で狙える）</option>
+          <option value="50-100">50〜100時間</option>
+          <option value="100-300">100〜300時間</option>
+          <option value="300-1000">300〜1000時間</option>
+          <option value="1000-">1000時間以上（難関に挑戦）</option>
+        </select>
+      </div>
+    </div>
+    <div class="shindan-actions">
+      <button type="button" class="sd-run" id="sdRun">この条件で診断する</button>
+      <span class="shindan-note">※ 掲載データに基づく目安です。年収・給与は診断には使用していません。</span>
+    </div>
+    <div class="shindan-result" id="sdResult" hidden></div>
+  </div>
+</section>
+
 <section class="block block-band block-band--white" id="purpose">
   <div class="block-head"><h2>目的から探す</h2></div>
   <div class="purpose-grid">
@@ -3743,7 +3780,102 @@ SEARCH_JS = """(function(){
     if(p.get('industry'))legacyIndustry=p.get('industry');
     if(location.hash==='#all')location.hash='#all-certs';
     render();
+    initShindan();
   });
+  function initShindan(){
+    var goalWrap=document.getElementById('sdGoal'),
+        fieldSel=document.getElementById('sdField'),
+        timeSel=document.getElementById('sdTime'),
+        runBtn=document.getElementById('sdRun'),
+        resultBox=document.getElementById('sdResult');
+    if(!goalWrap||!fieldSel||!timeSel||!resultBox)return;
+    // 目的 → タグの重み（希少なタグほど強いシグナル）
+    var GOAL_TAGS={
+      job:{'就職・転職':1,'受験資格なし':2,'未経験からIT':3},
+      change:{'就職・転職':1,'手に職':3,'未経験からIT':2},
+      skill:{'働きながら':3,'CBT・ネット試験':2},
+      independent:{'独立・開業':6,'手に職':3}
+    };
+    var GOAL_LABEL={job:'就職',change:'転職',skill:'スキルアップ',independent:'独立・開業'};
+    var TIME_LABEL={'0-50':'〜50時間','50-100':'50〜100時間','100-300':'100〜300時間','300-1000':'300〜1000時間','1000-':'1000時間以上'};
+    var goal='job';
+    // 分野プルダウンを industries から生成（件数の多い順）
+    var indCount={};
+    DATA.forEach(function(x){(x.industries||[]).forEach(function(i){indCount[i]=(indCount[i]||0)+1;});});
+    Object.keys(indCount).sort(function(a,b){return indCount[b]-indCount[a];}).forEach(function(v){
+      opt(fieldSel,v);
+    });
+    function bandHit(x,band){
+      var v=studyLow(x); if(v===null)return null;
+      var pr=band.split('-'),lo=parseInt(pr[0],10),hi=pr[1]===''?Infinity:parseInt(pr[1],10);
+      return v>=lo&&v<hi;
+    }
+    function scoreOf(x,field,time){
+      if(x.status!=='published')return null;
+      var score=0,reasons=[];
+      var tw=GOAL_TAGS[goal]||{},tg=x.tags||[],goalScore=0;
+      for(var k in tw){if(tg.indexOf(k)>=0)goalScore+=tw[k];}
+      score+=goalScore;
+      if(goal==='independent'&&tg.indexOf('独立・開業')>=0)reasons.push('独立・開業向き');
+      else if(goal==='skill'&&tg.indexOf('働きながら')>=0)reasons.push('働きながら取りやすい');
+      else if(goal==='job'&&tg.indexOf('受験資格なし')>=0)reasons.push('受験資格なし');
+      else if(goal==='change'&&tg.indexOf('手に職')>=0)reasons.push('手に職');
+      if(field){
+        if((x.industries||[]).indexOf(field)>=0){score+=6;reasons.push(field);}
+        else return null; // 分野指定時はその業界で活かせる資格のみ
+      }
+      if(time){
+        var hit=bandHit(x,time);
+        if(hit===true){score+=4;reasons.push('学習時間が合う');}
+        else if(hit===false)score-=3;
+      }
+      if(x.popular){score+=2;if(reasons.length<3)reasons.push('人気');}
+      var ap=appNum(x);if(ap)score+=Math.min(2,ap/50000);
+      return {x:x,score:score,reasons:reasons.slice(0,3)};
+    }
+    function run(){
+      var field=fieldSel.value,time=timeSel.value;
+      var scored=[];
+      DATA.forEach(function(x){var s=scoreOf(x,field,time);if(s)scored.push(s);});
+      scored.sort(function(a,b){
+        if(b.score!==a.score)return b.score-a.score;
+        return (appNum(b.x)||0)-(appNum(a.x)||0);
+      });
+      var top=scored.slice(0,6);
+      var cond='「<strong>'+esc(GOAL_LABEL[goal])+'</strong>」'+
+        (field?'／<strong>'+esc(field)+'</strong>':'')+
+        (time?'／学習時間 <strong>'+esc(TIME_LABEL[time]||time)+'</strong>':'');
+      if(!top.length){
+        resultBox.innerHTML='<p class="shindan-result-head">'+cond+' の条件に合う資格が見つかりませんでした。分野や学習時間の条件をゆるめてお試しください。</p>';
+        resultBox.hidden=false;return;
+      }
+      var head='<p class="shindan-result-head">'+cond+' のおすすめ資格 <strong>'+top.length+'</strong> 件</p>';
+      var cards=top.map(function(s,i){
+        var x=s.x;
+        var meta=[x.major,x.study_hours?'学習 '+x.study_hours:'',x.pass_rate?'合格率 '+x.pass_rate:''].filter(Boolean).join('　·　');
+        var rs=s.reasons.map(function(r){return '<span class="sd-reason">'+esc(r)+'</span>';}).join('');
+        return '<li><a class="sd-card" href="c/'+esc(x.slug)+'.html">'+
+          '<span class="sd-card-rank">'+(i+1)+'位</span>'+
+          '<span class="sd-card-name">'+esc(certDisplayName(x))+'</span>'+
+          '<span class="sd-card-meta">'+esc(meta)+'</span>'+
+          (rs?'<span class="sd-card-reasons">'+rs+'</span>':'')+
+          '</a></li>';
+      }).join('');
+      resultBox.innerHTML=head+'<ul class="sd-cards">'+cards+'</ul>';
+      resultBox.hidden=false;
+    }
+    goalWrap.addEventListener('click',function(e){
+      var b=e.target.closest('.sd-chip');if(!b)return;
+      goal=b.getAttribute('data-goal')||'job';
+      goalWrap.querySelectorAll('.sd-chip').forEach(function(c){
+        var on=c===b;c.classList.toggle('is-on',on);c.setAttribute('aria-pressed',on?'true':'false');
+      });
+      if(!resultBox.hidden)run();
+    });
+    fieldSel.addEventListener('change',function(){if(!resultBox.hidden)run();});
+    timeSel.addEventListener('change',function(){if(!resultBox.hidden)run();});
+    if(runBtn)runBtn.addEventListener('click',run);
+  }
   function onFilter(){resetPage=true;render();}
   function onQueryInput(e){syncQueryInputs(e.target);onFilter();}
   var suggestList=heroSuggest?heroSuggest.querySelector('.hero-suggest-list'):null;
@@ -4012,7 +4144,7 @@ APP_CSS = """:root{
 --gray-300:#c4c4c4;--gray-200:#dcdcdc;--gray-100:#f0f0f0;--gray-50:#f7f7f7;
 --table-head-bg:#edf2f8;--table-border:#cddbeb;--table-hover-bg:#e9f1fa;
 --gray-800:#434343;--gray-700:#525252;--gray-400:#7f7f7f;--white:#fff;--page-bg:#eef0f1;
---accent:#1a4f8f;--accent-hover:#143d70;--accent-light:#e9f1fa;--accent-ring:rgba(26,79,143,.25);
+--accent:#0b57d0;--accent-hover:#0847ad;--accent-light:#e8f1fd;--accent-ring:rgba(11,87,208,.25);
 --radius:6px;
 /* テキスト色: ink-deep=見出し / ink=本文・表・通常リンク / muted=補足。on-dark*=ヘッダー等 */
 /* タイプスケール: xl=大見出し / lg=セクション見出し(20px) / md=本文 / sm=補助・メタ / table=表(15px) */
@@ -4036,7 +4168,7 @@ html{scroll-padding-top:64px}
 .header-inner{max-width:1200px;margin:0 auto;padding:12px var(--page-gutter);display:flex;align-items:center;gap:16px;min-width:0}
 .header-brand{flex-shrink:0;display:flex;align-items:center}
 .logo{display:flex;align-items:center;gap:9px;text-decoration:none;color:var(--ink-deep);flex-shrink:0}
-.logo-mark{min-width:54px;min-height:36px;padding:6px 10px 5px;border-radius:4px;background:var(--ink-deep);display:inline-flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;flex-shrink:0;color:#fff;box-sizing:border-box;transition:opacity .15s}
+.logo-mark{min-width:54px;min-height:36px;padding:6px 10px 5px;border-radius:4px;background:linear-gradient(120deg,#0b57d0,#28a3e6);display:inline-flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;flex-shrink:0;color:#fff;box-sizing:border-box;transition:opacity .15s}
 .logo-mark-line{display:block;font-size:12px;font-weight:700;line-height:1.05;text-align:center;white-space:nowrap;letter-spacing:.02em}
 .logo-mark-line--sub{font-size:11px;letter-spacing:.04em}
 .logo-stack{display:flex;flex-direction:column;align-items:flex-start;gap:1px;line-height:1.15;min-width:0}
@@ -4077,8 +4209,8 @@ html{scroll-padding-top:64px}
 /* Hero（濃紺グラデーション＋白文字。検索ボックスを主役に） */
 .hero{margin-top:-28px;margin-bottom:0;margin-left:calc(50% - 50vw);margin-right:calc(50% - 50vw);padding:64px var(--page-gutter) 48px;text-align:center;background:linear-gradient(120deg,#0b57d0 0%,#1877e0 55%,#28a3e6 100%)}
 .hero-inner{max-width:1200px;margin:0 auto}
-.hero h1{font-weight:700;line-height:1.4;margin:0 0 16px;letter-spacing:.02em}
-.hero-h1-line{display:block;font-size:var(--text-xl);font-weight:700;color:#fff;letter-spacing:.02em}
+.hero h1{font-weight:800;line-height:1.4;margin:0 0 16px;letter-spacing:.02em}
+.hero-h1-line{display:block;font-size:var(--text-xl);font-weight:800;color:#fff;letter-spacing:.02em}
 .hero-h1-line+.hero-h1-line{margin-top:2px}
 .hero-sub{font-size:1.125rem;color:#d9e4f2;line-height:1.75;max-width:40em;margin:0 auto}
 .hero-sub #count{color:#fff;font-weight:700;text-decoration:underline;text-decoration-color:rgba(255,255,255,.6);text-underline-offset:3px}
@@ -4104,6 +4236,7 @@ a.hero-suggest-item{text-decoration:none}a.hero-suggest-item:hover{text-decorati
 .block-primary{margin-bottom:40px}.block-secondary{margin-bottom:34px}
 .block-band{margin-left:calc(-1*var(--page-gutter));margin-right:calc(-1*var(--page-gutter));padding:40px var(--page-gutter);border-top:1px solid var(--gray-200);margin-bottom:0}
 .hero+.block-band{border-top:none}
+.container>.block-band:last-of-type{margin-bottom:-36px}
 .block-band--gray{background:#f4f7fb}
 .block-band--white{background:#fff}
 .recent-inset{margin-top:32px;padding-top:32px}
@@ -4147,6 +4280,36 @@ a.hero-suggest-item{text-decoration:none}a.hero-suggest-item:hover{text-decorati
 .purpose-card::after{content:"→";position:absolute;right:12px;top:14px;font-size:var(--text-sm);font-weight:600;color:var(--muted);opacity:0;transition:opacity .15s,color .15s;pointer-events:none}
 .purpose-card:hover::after,.purpose-card:focus-visible::after{opacity:1;color:var(--accent)}
 .purpose-card:hover,.purpose-card:focus-visible{border-color:var(--muted);background:var(--accent-light);text-decoration:none}
+/* 資格診断 */
+.shindan{background:#fff;border:1px solid var(--gray-200);border-radius:10px;padding:20px 20px 22px}
+.shindan-fields{display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:16px}
+@media(max-width:760px){.shindan-fields{grid-template-columns:1fr}}
+.shindan-field{min-width:0;display:flex;flex-direction:column}
+.shindan-label{display:block;font-size:var(--text-sm);color:var(--muted);font-weight:600;margin-bottom:7px}
+.shindan-seg{display:flex;flex-wrap:wrap;gap:7px}
+.sd-chip{font-family:inherit;font-size:var(--text-sm);font-weight:600;color:var(--ink);background:#fff;border:1px solid var(--gray-300);border-radius:999px;padding:7px 14px;cursor:pointer;transition:.12s}
+.sd-chip:hover{border-color:var(--accent);color:var(--accent)}
+.sd-chip.is-on{background:var(--accent);border-color:var(--accent);color:#fff}
+.shindan-field select{width:100%;padding:9px 11px;border:1px solid var(--gray-300);border-radius:var(--radius);font-size:var(--text-md);font-family:inherit;background:#fff;color:var(--ink);cursor:pointer}
+.shindan-actions{display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin-top:16px}
+.sd-run{font-family:inherit;font-size:var(--text-md);font-weight:700;color:#fff;background:var(--accent);border:none;border-radius:var(--radius);padding:11px 24px;cursor:pointer;transition:background .15s}
+.sd-run:hover{background:var(--accent-hover)}
+.shindan-note{font-size:var(--text-sm);color:var(--muted);line-height:1.5}
+.shindan-result{margin-top:18px}
+.shindan-result-head{font-size:var(--text-sm);color:var(--muted);margin:0 0 12px}
+.shindan-result-head strong{color:var(--ink-deep)}
+.sd-cards{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin:0;padding:0;list-style:none}
+@media(max-width:640px){.sd-cards{grid-template-columns:1fr}}
+.sd-card{display:flex;flex-direction:column;gap:6px;background:#fff;border:1px solid var(--gray-200);border-radius:var(--radius);padding:14px 40px 14px 15px;text-decoration:none;color:inherit;position:relative;transition:border-color .15s,background .15s}
+.sd-card:hover,.sd-card:focus-visible{border-color:var(--muted);background:var(--accent-light);text-decoration:none}
+.sd-card::after{content:"→";position:absolute;right:14px;top:14px;font-weight:700;color:var(--muted);opacity:0;transition:opacity .15s,color .15s}
+.sd-card:hover::after,.sd-card:focus-visible::after{opacity:1;color:var(--accent)}
+.sd-card-rank{position:absolute;left:0;top:0;background:var(--accent);color:#fff;font-size:11px;font-weight:700;padding:2px 8px;border-radius:var(--radius) 0 var(--radius) 0}
+.sd-card-name{font-size:var(--text-md);font-weight:700;color:var(--ink-deep);line-height:1.4;padding-left:34px}
+.sd-card-meta{font-size:var(--text-sm);color:#5a6570;line-height:1.5}
+.sd-card-reasons{display:flex;flex-wrap:wrap;gap:6px;margin-top:2px}
+.sd-reason{font-size:12px;font-weight:600;color:var(--accent-hover);background:var(--accent-light);border-radius:999px;padding:2px 9px}
+.shindan-empty{font-size:var(--text-md);color:var(--muted);padding:8px 0}
 .recent-list{list-style:none;display:flex;flex-wrap:wrap;gap:8px;margin:0;padding:0}
 .recent-list a{display:inline-block;padding:8px 12px;border:1px solid var(--gray-200);border-radius:var(--radius);font-size:var(--text-sm);font-weight:600;color:var(--ink-deep);text-decoration:none;background:#fff}
 .recent-list a:hover{border-color:var(--muted);text-decoration:none}
