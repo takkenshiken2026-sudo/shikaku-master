@@ -1708,8 +1708,11 @@ def _certs_name_cell(r, popular_slugs=None):
         f'{trophy}<span class="all-certs-name-text">{esc(r["name"])}</span></span></td>')
 
 
-def _all_certs_colgroup(show_major=False):
-    cols = ['<col class="all-certs-col-name">']
+def _all_certs_colgroup(show_major=False, ranked=False):
+    cols = []
+    if ranked:
+        cols.append('<col class="all-certs-col-rank">')
+    cols.append('<col class="all-certs-col-name">')
     if show_major:
         cols.append('<col class="all-certs-col-major">')
     cols.extend([
@@ -1721,11 +1724,17 @@ def _all_certs_colgroup(show_major=False):
 
 
 def _certs_table(items, depth=1, *, show_major=False,
-                 with_script=True, popular_slugs=None):
-    """資格一覧の表形式HTML（分野・目的別ガイドなどで共用）。"""
+                 with_script=True, popular_slugs=None, ranked=False):
+    """資格一覧の表形式HTML（分野・目的別ガイド・特集ランキングなどで共用）。
+    ranked=True のとき先頭に順位列を表示する。"""
     base = "../" * depth
     col_mod = "all-certs-table--5col" if show_major else "all-certs-table--4col"
-    headers = ['<th scope="col">資格名</th>']
+    if ranked:
+        col_mod += " all-certs-table--ranked"
+    headers = []
+    if ranked:
+        headers.append('<th scope="col" class="all-certs-th-rank">順位</th>')
+    headers.append('<th scope="col">資格名</th>')
     if show_major:
         headers.append('<th scope="col">分野</th>')
     headers.extend([
@@ -1734,12 +1743,17 @@ def _certs_table(items, depth=1, *, show_major=False,
         '<th scope="col">実施頻度</th>',
     ])
     rows = []
-    for r in items:
+    for i, r in enumerate(items, 1):
         pr = pass_rate_display(r.get("pass_rate", "")) or "—"
         study = fmt_nums_in_text((STUDY.get(r["slug"], {}) or {}).get("study_hours", "")) or "—"
         freq_raw = (r.get("frequency") or "").strip()
         freq = esc(freq_raw) if freq_raw else "—"
-        cells = [_certs_name_cell(r, popular_slugs)]
+        cells = []
+        if ranked:
+            cells.append(
+                f'<td class="all-certs-cell all-certs-rank'
+                f'{" all-certs-rank--top" if i <= 3 else ""}">{i}</td>')
+        cells.append(_certs_name_cell(r, popular_slugs))
         if show_major:
             cells.append(
                 f'<td class="all-certs-cell all-certs-cell--major">{esc(r["major_category"])}</td>')
@@ -1754,7 +1768,7 @@ def _certs_table(items, depth=1, *, show_major=False,
     table = (
         '<div class="all-certs-table-wrap">'
         f'<table class="all-certs-table {col_mod}">'
-        f'<colgroup>{_all_certs_colgroup(show_major)}</colgroup>'
+        f'<colgroup>{_all_certs_colgroup(show_major, ranked)}</colgroup>'
         f'<thead><tr>{"".join(headers)}</tr></thead>'
         f'<tbody>{"".join(rows)}</tbody></table></div>')
     return table + (_CERTS_TABLE_SCRIPT if with_script else "")
@@ -2610,7 +2624,8 @@ def build_feature_pages(indexable, popular_slugs=None):
             f'<nav class="crumbs"><a href="../index.html">トップ</a> › 特集</nav>'
             f"<h1>{esc(h1)}</h1>"
             f'<p class="lead">{intro}</p>'
-            + _list_items(items, depth=1, ranked=ranked)
+            + _certs_table(items, depth=1, show_major=True, ranked=ranked,
+                           popular_slugs=popular_slugs)
             + '<p class="muted" style="margin-top:14px">※受験料・合格率は公式の一次情報に基づきますが、'
               '最新の金額・制度・日程は各資格の公式サイトで必ずご確認ください。</p>'
         )
@@ -3054,7 +3069,7 @@ def build_occupation_pages(indexable):
                 f'<a href="{JOBTAG_URL}" rel="nofollow noopener" target="_blank">'
                 '厚生労働省 job tag</a> 等でご確認ください。</p></section>')
 
-        listing = (_list_items(certs, depth=1) if certs
+        listing = (_certs_table(certs, depth=1, show_major=True) if certs
                    else '<p class="muted">この職種に直接ひも付く掲載資格は精査中です。</p>')
 
         # 資格区分の内訳（国家/公的/民間/要確認）＋関連分野チップ（既存データから機械生成）
@@ -4332,10 +4347,22 @@ a.hero-suggest-item{text-decoration:none}a.hero-suggest-item:hover{text-decorati
 .all-certs-table--5col col.all-certs-col-study{width:14%}
 .all-certs-table--5col col.all-certs-col-pass{width:13%}
 .all-certs-table--5col col.all-certs-col-freq{width:33%}
+.all-certs-table--ranked{min-width:780px}
+.all-certs-table--ranked col.all-certs-col-rank{width:56px}
+.all-certs-table--ranked.all-certs-table--5col col.all-certs-col-name{width:22%}
+.all-certs-table--ranked.all-certs-table--5col col.all-certs-col-major{width:15%}
+.all-certs-table--ranked.all-certs-table--5col col.all-certs-col-study{width:17%}
+.all-certs-table--ranked.all-certs-table--5col col.all-certs-col-pass{width:12%}
+.all-certs-table--ranked.all-certs-table--5col col.all-certs-col-freq{width:29%}
 .all-certs-table--4col thead th:nth-child(2),
 .all-certs-table--4col thead th:nth-child(3),
 .all-certs-table--5col thead th:nth-child(3),
 .all-certs-table--5col thead th:nth-child(4){text-align:right}
+.all-certs-table--ranked.all-certs-table--5col thead th:nth-child(3){text-align:left}
+.all-certs-table--ranked.all-certs-table--5col thead th:nth-child(5){text-align:right}
+.all-certs-th-rank{text-align:center}
+.all-certs-rank{text-align:center;color:var(--muted);font-weight:700;font-variant-numeric:tabular-nums}
+.all-certs-rank--top{color:var(--accent)}
 .all-certs-table thead th{text-align:left;padding:11px 14px;background:#edf2f8;color:var(--ink);font-weight:var(--fw-semibold);font-size:1rem;border-bottom:2px solid #cddbeb;white-space:nowrap}
 .all-certs-table tbody td{padding:11px 14px;border-bottom:1px solid var(--table-border);vertical-align:middle;line-height:1.5;font-size:var(--text-table);color:var(--ink);overflow-wrap:break-word;word-break:break-word;overflow:hidden}
 .all-certs-table tbody tr.cert-row{cursor:pointer;transition:background-color .12s ease}
