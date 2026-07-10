@@ -193,10 +193,22 @@ a.hero-suggest-item{text-decoration:none}a.hero-suggest-item:hover{text-decorati
 .all-certs-table--5col col.all-certs-col-study{width:14%}
 .all-certs-table--5col col.all-certs-col-pass{width:13%}
 .all-certs-table--5col col.all-certs-col-freq{width:33%}
+.all-certs-table--ranked{min-width:780px}
+.all-certs-table--ranked col.all-certs-col-rank{width:56px}
+.all-certs-table--ranked.all-certs-table--5col col.all-certs-col-name{width:22%}
+.all-certs-table--ranked.all-certs-table--5col col.all-certs-col-major{width:15%}
+.all-certs-table--ranked.all-certs-table--5col col.all-certs-col-study{width:17%}
+.all-certs-table--ranked.all-certs-table--5col col.all-certs-col-pass{width:12%}
+.all-certs-table--ranked.all-certs-table--5col col.all-certs-col-freq{width:29%}
 .all-certs-table--4col thead th:nth-child(2),
 .all-certs-table--4col thead th:nth-child(3),
 .all-certs-table--5col thead th:nth-child(3),
 .all-certs-table--5col thead th:nth-child(4){text-align:right}
+.all-certs-table--ranked.all-certs-table--5col thead th:nth-child(3){text-align:left}
+.all-certs-table--ranked.all-certs-table--5col thead th:nth-child(5){text-align:right}
+.all-certs-th-rank{text-align:center}
+.all-certs-rank{text-align:center;color:var(--muted);font-weight:700;font-variant-numeric:tabular-nums}
+.all-certs-rank--top{color:var(--accent)}
 .all-certs-table thead th{text-align:left;padding:11px 14px;background:#edf2f8;color:var(--ink);font-weight:var(--fw-semibold);font-size:1rem;border-bottom:2px solid #cddbeb;white-space:nowrap}
 .all-certs-table tbody td{padding:11px 14px;border-bottom:1px solid var(--table-border);vertical-align:middle;line-height:1.5;font-size:var(--text-table);color:var(--ink);overflow-wrap:break-word;word-break:break-word;overflow:hidden}
 .all-certs-table tbody tr.cert-row{cursor:pointer;transition:background-color .12s ease}
