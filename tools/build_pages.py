@@ -840,6 +840,42 @@ def page_shell(title: str, body: str, depth: int, noindex: bool = True,
 """
 
 
+# 資格ごとのイメージ写真（プロトタイプ）。無料素材サイト（Unsplash等）からの引用。
+# 公式サイトの画像は著作権上そのまま流用できないため、原則フリー素材を使う。
+CERT_IMAGES = {
+    # ITパスポート … コード/PC のイメージ（Unsplash・帰属不要のフリーライセンス）
+    "c-1538": {
+        "url": "https://images.unsplash.com/photo-1498050108023-c5249f4df085"
+               "?auto=format&fit=crop&w=560&q=70",
+        "credit_name": "Ilya Pavlov",
+        "credit_url": "https://unsplash.com/@ilyapavlov",
+        "source": "Unsplash",
+    },
+}
+
+
+def detail_media_html(slug, name):
+    """詳細ページ見出し横のイメージ写真。CERT_IMAGES にある資格のみ表示。"""
+    img = CERT_IMAGES.get(slug)
+    if not img:
+        return ""
+    credit = ""
+    if img.get("credit_name"):
+        credit = (
+            f'<figcaption class="detail-intro-credit">Photo: '
+            f'<a href="{esc(img["credit_url"])}" rel="nofollow noopener" '
+            f'target="_blank">{esc(img["credit_name"])}</a> / '
+            f'{esc(img.get("source", "Unsplash"))}</figcaption>')
+    # 画像取得に失敗した場合は figure ごと非表示にして崩れを防ぐ
+    onerr = "this.closest('.detail-intro-media').style.display='none'"
+    return (
+        f'<figure class="detail-intro-media">'
+        f'<img src="{esc(img["url"])}" alt="{esc(name)}のイメージ写真" '
+        f'loading="lazy" decoding="async" width="280" height="188" '
+        f'onerror="{onerr}">'
+        f'{credit}</figure>')
+
+
 def build_detail(row, popular_slugs=None) -> str:
     name = row["name"]
     label, cls = TYPE_BADGE.get(row["type"], ("区分要確認", "badge-unknown"))
@@ -1237,9 +1273,14 @@ def build_detail(row, popular_slugs=None) -> str:
 <nav class="crumbs"><a href="../index.html">トップ</a> ›
 <a href="../bunya/{esc(bslug)}.html">{esc(major)}</a> › {esc(name)}</nav>
 <header class="detail-intro">
+<div class="detail-intro-row">
+<div class="detail-intro-main">
 {detail_title_html(name, row["slug"], popular_slugs)}
 <p class="detail-audience">{lead}</p>
 {facts_html}
+</div>
+{detail_media_html(row["slug"], name)}
+</div>
 </header>
 {notice}
 {_roadmap_block}
@@ -4703,6 +4744,13 @@ table.cmp thead th:first-child{background:#edf2f8;z-index:2}
 .page-detail .crumbs{margin-bottom:28px}
 .page-detail .detail-intro{padding:0;margin:0;border:none;background:transparent}
 .page-detail .detail-intro::after{content:"";display:block;width:100%;height:1px;background:var(--gray-200);margin-top:40px}
+.detail-intro-row{display:flex;gap:28px;align-items:flex-start}
+.detail-intro-main{flex:1 1 auto;min-width:0}
+.detail-intro-media{flex:0 0 auto;width:280px;margin:0}
+.detail-intro-media img{display:block;width:280px;height:188px;object-fit:cover;border-radius:10px;border:1px solid var(--gray-200);background:var(--gray-100)}
+.detail-intro-credit{font-size:11px;color:var(--muted);line-height:1.4;margin-top:6px}
+.detail-intro-credit a{color:var(--muted);text-decoration:underline}
+@media(max-width:720px){.detail-intro-row{flex-direction:column-reverse;gap:16px}.detail-intro-media,.detail-intro-media img{width:100%}.detail-intro-media img{height:190px}}
 .page-detail .detail-title{font-size:var(--detail-h1);font-weight:700;color:var(--ink-deep);line-height:1.28;margin:0 0 24px;letter-spacing:-.01em}
 .page-detail .detail-audience{font-size:var(--detail-body);color:var(--ink);line-height:var(--detail-body-lh);margin:0}
 .page-detail .detail-section{padding:var(--detail-section-y) 0 0;border:none}
