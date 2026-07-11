@@ -864,6 +864,23 @@ def _hsl(h, s, l):
     return f"#{int(r*255):02x}{int(g*255):02x}{int(b*255):02x}"
 
 
+def _rel_lum(h, s, l):
+    """相対輝度（WCAG）。白文字の読みやすさ判定に使う。"""
+    def f(c):
+        return c / 12.92 if c <= 0.03928 else ((c + 0.055) / 1.055) ** 2.4
+    r, g, b = colorsys.hls_to_rgb((h % 360) / 360, l, s)
+    r, g, b = f(r), f(g), f(b)
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b
+
+
+def _readable_l(h, s, l_start, max_lum=0.16):
+    """白文字のコントラストが確保できるよう、輝度が上限を超えない明度まで下げる。"""
+    l = l_start
+    while l > 0.14 and _rel_lum(h, s, l) > max_lum:
+        l -= 0.01
+    return round(l, 3)
+
+
 def _cover_deco(seed):
     """シード由来の抽象パターン（重なる円）。資格ごとに違う模様になる。"""
     shapes = []
@@ -904,9 +921,11 @@ def _cert_cover_html(row, name):
     """資格名を主役にした自前カバー画像。色は分野で統一、名前で資格ごとに識別。"""
     major = row["major_category"]
     base = MAJOR_HUE.get(major, 214)
-    # 色・グラデーションは分野で統一（同じ分野は同じ配色）
-    c1 = _hsl(base, 0.54, 0.45)
-    c2 = _hsl(base + 22, 0.62, 0.29)
+    # 色・グラデーションは分野で統一（同じ分野は同じ配色）。
+    # 明るい色相でも白文字が読めるよう、輝度上限まで明度を自動で下げる。
+    l1 = _readable_l(base, 0.54, 0.45, max_lum=0.16)
+    c1 = _hsl(base, 0.54, l1)
+    c2 = _hsl(base + 22, 0.62, max(0.16, l1 - 0.14))
     # 模様だけ資格ごとのシードで少し変えて単調さを避ける
     seed = int(hashlib.md5(row["slug"].encode("utf-8")).hexdigest()[:12], 16)
     icon = FIELD_ICONS.get(major, "")
