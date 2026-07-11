@@ -864,15 +864,36 @@ def _hsl(h, s, l):
     return f"#{int(r*255):02x}{int(g*255):02x}{int(b*255):02x}"
 
 
+def _cover_deco(seed):
+    """シード由来の抽象パターン（重なる円）。資格ごとに違う模様になる。"""
+    shapes = []
+    for i in range(4):
+        s = seed >> (i * 8)
+        cx = 8 + (s % 264)
+        cy = 6 + ((s // 17) % 176)
+        r = 26 + ((s // 131) % 62)
+        op = 0.06 + ((s // 7) % 6) * 0.014
+        if (s // 3) % 3 == 0:               # 一部はリング（線）にして変化を出す
+            shapes.append(
+                f'<circle cx="{cx}" cy="{cy}" r="{r}" fill="none" '
+                f'stroke="#fff" stroke-width="2" opacity="{op:.2f}"/>')
+        else:
+            shapes.append(
+                f'<circle cx="{cx}" cy="{cy}" r="{r}" fill="#fff" '
+                f'opacity="{op:.2f}"/>')
+    return "".join(shapes)
+
+
 def _cert_cover_html(row, name):
-    """分野アイコン＋分野名の自前カバー画像。資格ごとに色を少しずつ変える。"""
+    """分野アイコン＋分野名の自前カバー画像。資格ごとに色・模様を変えて個性を出す。"""
     major = row["major_category"]
     base = MAJOR_HUE.get(major, 214)
-    seed = int(hashlib.md5(row["slug"].encode("utf-8")).hexdigest()[:8], 16)
-    hue = base + (seed % 26) - 13          # ±13°で1件ずつ色を変える
-    angle = 125 + (seed // 26 % 50)         # グラデーション角度も少し変える
-    c1 = _hsl(hue, 0.52, 0.46)
-    c2 = _hsl(hue + 20, 0.60, 0.30)
+    seed = int(hashlib.md5(row["slug"].encode("utf-8")).hexdigest()[:12], 16)
+    hue = base + (seed % 30) - 15          # ±15°で1件ずつ色相を変える
+    lig = 0.44 + ((seed // 30) % 7) * 0.012  # 明度も少しずつ変える
+    angle = 120 + (seed // 211 % 60)        # グラデーション角度も変える
+    c1 = _hsl(hue, 0.54, lig)
+    c2 = _hsl(hue + 22, 0.62, lig - 0.16)
     icon = FIELD_ICONS.get(major, "")
     cat = row.get("category") or ""
     sub = (f'<span class="cert-cover-sub">{esc(cat)}</span>'
@@ -882,9 +903,13 @@ def _cert_cover_html(row, name):
         f'<figure class="detail-intro-media">'
         f'<div class="cert-cover" style="{style}" role="img" '
         f'aria-label="{esc(major)}のイメージ">'
+        f'<svg class="cert-cover-deco" viewBox="0 0 280 188" '
+        f'preserveAspectRatio="xMidYMid slice" aria-hidden="true">'
+        f'{_cover_deco(seed)}</svg>'
+        f'<span class="cert-cover-inner">'
         f'<span class="cert-cover-icon">{icon}</span>'
-        f'<span class="cert-cover-label">{esc(major)}</span>{sub}</div>'
-        f'</figure>')
+        f'<span class="cert-cover-label">{esc(major)}</span>{sub}'
+        f'</span></div></figure>')
 
 
 def detail_media_html(row, name):
@@ -4780,10 +4805,13 @@ table.cmp thead th:first-child{background:#edf2f8;z-index:2}
 .detail-intro-main{flex:1 1 auto;min-width:0}
 .detail-intro-media{flex:0 0 auto;width:280px;margin:0}
 .detail-intro-media img{display:block;width:280px;height:188px;object-fit:cover;border-radius:10px;border:1px solid var(--gray-200);background:var(--gray-100)}
-.cert-cover{width:280px;height:188px;border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:11px;color:#fff;text-align:center;padding:16px;box-sizing:border-box}
-.cert-cover-icon .icon-svg{width:50px;height:50px;stroke-width:1.4;color:#fff;opacity:.96}
-.cert-cover-label{font-size:15px;font-weight:700;letter-spacing:.02em;line-height:1.35;text-shadow:0 1px 2px rgba(0,0,0,.18)}
-.cert-cover-sub{font-size:12px;font-weight:600;color:rgba(255,255,255,.85);line-height:1.3}
+.cert-cover{position:relative;overflow:hidden;width:280px;height:188px;border-radius:10px;color:#fff;box-sizing:border-box}
+.cert-cover-deco{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.cert-cover-inner{position:absolute;inset:0;z-index:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center;padding:16px}
+.cert-cover-icon{display:flex;align-items:center;justify-content:center;width:66px;height:66px;border-radius:50%;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.28);margin-bottom:2px}
+.cert-cover-icon .icon-svg{width:34px;height:34px;stroke-width:1.6;color:#fff}
+.cert-cover-label{font-size:15px;font-weight:700;letter-spacing:.02em;line-height:1.35;text-shadow:0 1px 3px rgba(0,0,0,.25)}
+.cert-cover-sub{font-size:12px;font-weight:600;color:rgba(255,255,255,.9);line-height:1.3;text-shadow:0 1px 2px rgba(0,0,0,.2)}
 .detail-intro-credit{font-size:11px;color:var(--muted);line-height:1.4;margin-top:6px}
 .detail-intro-credit a{color:var(--muted);text-decoration:underline}
 @media(max-width:720px){.detail-intro-row{flex-direction:column-reverse;gap:16px}.detail-intro-media,.detail-intro-media img,.cert-cover{width:100%}.detail-intro-media img,.cert-cover{height:190px}}
