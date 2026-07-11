@@ -10,6 +10,7 @@
 プロトタイプのため全ページ <meta name="robots" content="noindex"> で出力。
 事実値(受験料/合格率/公式URL)は未検証なら「公式で確認」を促す。
 """
+import colorsys
 import csv
 import hashlib
 import html
@@ -840,65 +841,68 @@ def page_shell(title: str, body: str, depth: int, noindex: bool = True,
 """
 
 
-# 分野（大分類）ごとの「仕事がイメージできる」写真キーワード（英語）。
-# LoremFlickr（Flickr の CC 画像をキーワードで返す無料サービス）に渡す。
-# 資格ごとに固定シード（lock）を付けることで、同じ分野でも1件ずつ違う写真になる。
-MAJOR_IMG_KEYWORD = {
-    "IT・情報処理": "programmer",
-    "医療・看護・薬": "hospital",
-    "建築・設備": "architecture",
-    "語学・コミュニケーション": "classroom",
-    "会計・金融・経営": "accounting",
-    "安全・環境・危険物": "factory",
-    "美容・サービス・スポーツ": "hairdresser",
-    "商業・販売・事務": "office",
-    "食品・調理・栄養": "chef",
-    "運輸・運転・航空": "truck",
-    "土木・測量・建設": "construction",
-    "福祉・介護・心理": "caregiver",
-    "電気・通信": "electrician",
-    "教育・保育・学術": "teacher",
-    "設備・プラント・機械運転": "machinery",
-    "デザイン・美術・文化": "design",
-    "不動産": "house",
-    "農林水産・動物": "farmer",
-    "法律・法務・知財": "lawyer",
-    "機械・電気・ものづくり": "engineering",
-    "建築・土木・設備": "construction",
+# 分野（大分類）ごとの基調カラー（HSL の色相）。分野アイコン＋分野名の
+# 自前カバー画像に使う。外部依存なし・高速・必ず分野に関連した見た目になる。
+MAJOR_HUE = {
+    "IT・情報処理": 215, "法律・法務・知財": 262, "会計・金融・経営": 158,
+    "不動産": 24, "建築・設備": 204, "設備・プラント・機械運転": 197,
+    "土木・測量・建設": 36, "電気・通信": 188, "機械・電気・ものづくり": 224,
+    "食品・調理・栄養": 12, "医療・看護・薬": 176, "福祉・介護・心理": 334,
+    "教育・保育・学術": 44, "語学・コミュニケーション": 248,
+    "デザイン・美術・文化": 300, "美容・サービス・スポーツ": 322,
+    "商業・販売・事務": 234, "安全・環境・危険物": 28,
+    "運輸・運転・航空": 210, "農林水産・動物": 122, "海外資格": 268,
 }
 
-# 個別に写真を指定したい資格の上書き（任意）。無料素材(Unsplash等)を想定。
+# 個別に写真を指定したい資格の上書き（任意）。無料素材や自前ホスティングを想定。
+# 例: "c-1538": {"url": "assets/certs/it-passport.jpg"}
 CERT_IMAGES = {}
 
 
-def _cert_image_url(row):
-    """資格ごとのイメージ写真URL。分野キーワード＋スラッグ固定シードで出し分け。"""
-    kw = MAJOR_IMG_KEYWORD.get(row["major_category"], "office")
-    lock = int(hashlib.md5(row["slug"].encode("utf-8")).hexdigest()[:7], 16) % 100000
-    return f"https://loremflickr.com/560/376/{kw}?lock={lock}"
+def _hsl(h, s, l):
+    r, g, b = colorsys.hls_to_rgb((h % 360) / 360, l, s)
+    return f"#{int(r*255):02x}{int(g*255):02x}{int(b*255):02x}"
+
+
+def _cert_cover_html(row, name):
+    """分野アイコン＋分野名の自前カバー画像。資格ごとに色を少しずつ変える。"""
+    major = row["major_category"]
+    base = MAJOR_HUE.get(major, 214)
+    seed = int(hashlib.md5(row["slug"].encode("utf-8")).hexdigest()[:8], 16)
+    hue = base + (seed % 26) - 13          # ±13°で1件ずつ色を変える
+    angle = 125 + (seed // 26 % 50)         # グラデーション角度も少し変える
+    c1 = _hsl(hue, 0.52, 0.46)
+    c2 = _hsl(hue + 20, 0.60, 0.30)
+    icon = FIELD_ICONS.get(major, "")
+    cat = row.get("category") or ""
+    sub = (f'<span class="cert-cover-sub">{esc(cat)}</span>'
+           if cat and cat != major else "")
+    style = f"background:linear-gradient({angle}deg,{c1},{c2})"
+    return (
+        f'<figure class="detail-intro-media">'
+        f'<div class="cert-cover" style="{style}" role="img" '
+        f'aria-label="{esc(major)}のイメージ">'
+        f'<span class="cert-cover-icon">{icon}</span>'
+        f'<span class="cert-cover-label">{esc(major)}</span>{sub}</div>'
+        f'</figure>')
 
 
 def detail_media_html(row, name):
-    """詳細ページ見出し横のイメージ写真。手動指定があればそれを、無ければ自動生成。"""
+    """詳細ページ見出し横のイメージ。手動写真指定があればそれを、無ければ自前カバー。"""
     img = CERT_IMAGES.get(row["slug"])
-    if img:
-        url = img["url"]
-        credit = ""
-        if img.get("credit_name"):
-            credit = (
-                f'<figcaption class="detail-intro-credit">Photo: '
-                f'<a href="{esc(img["credit_url"])}" rel="nofollow noopener" '
-                f'target="_blank">{esc(img["credit_name"])}</a> / '
-                f'{esc(img.get("source", "Unsplash"))}</figcaption>')
-    else:
-        url = _cert_image_url(row)
-        credit = ('<figcaption class="detail-intro-credit">'
-                  '写真はイメージです（Flickr / Creative Commons）</figcaption>')
-    # 画像取得に失敗した場合は figure ごと非表示にして崩れを防ぐ
+    if not img:
+        return _cert_cover_html(row, name)
+    credit = ""
+    if img.get("credit_name"):
+        credit = (
+            f'<figcaption class="detail-intro-credit">Photo: '
+            f'<a href="{esc(img["credit_url"])}" rel="nofollow noopener" '
+            f'target="_blank">{esc(img["credit_name"])}</a> / '
+            f'{esc(img.get("source", "Unsplash"))}</figcaption>')
     onerr = "this.closest('.detail-intro-media').style.display='none'"
     return (
         f'<figure class="detail-intro-media">'
-        f'<img src="{esc(url)}" alt="{esc(name)}のイメージ写真" '
+        f'<img src="{esc(img["url"])}" alt="{esc(name)}のイメージ写真" '
         f'loading="lazy" decoding="async" width="280" height="188" '
         f'onerror="{onerr}">'
         f'{credit}</figure>')
@@ -4776,9 +4780,13 @@ table.cmp thead th:first-child{background:#edf2f8;z-index:2}
 .detail-intro-main{flex:1 1 auto;min-width:0}
 .detail-intro-media{flex:0 0 auto;width:280px;margin:0}
 .detail-intro-media img{display:block;width:280px;height:188px;object-fit:cover;border-radius:10px;border:1px solid var(--gray-200);background:var(--gray-100)}
+.cert-cover{width:280px;height:188px;border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:11px;color:#fff;text-align:center;padding:16px;box-sizing:border-box}
+.cert-cover-icon .icon-svg{width:50px;height:50px;stroke-width:1.4;color:#fff;opacity:.96}
+.cert-cover-label{font-size:15px;font-weight:700;letter-spacing:.02em;line-height:1.35;text-shadow:0 1px 2px rgba(0,0,0,.18)}
+.cert-cover-sub{font-size:12px;font-weight:600;color:rgba(255,255,255,.85);line-height:1.3}
 .detail-intro-credit{font-size:11px;color:var(--muted);line-height:1.4;margin-top:6px}
 .detail-intro-credit a{color:var(--muted);text-decoration:underline}
-@media(max-width:720px){.detail-intro-row{flex-direction:column-reverse;gap:16px}.detail-intro-media,.detail-intro-media img{width:100%}.detail-intro-media img{height:190px}}
+@media(max-width:720px){.detail-intro-row{flex-direction:column-reverse;gap:16px}.detail-intro-media,.detail-intro-media img,.cert-cover{width:100%}.detail-intro-media img,.cert-cover{height:190px}}
 .page-detail .detail-title{font-size:var(--detail-h1);font-weight:700;color:var(--ink-deep);line-height:1.28;margin:0 0 24px;letter-spacing:-.01em}
 .page-detail .detail-audience{font-size:var(--detail-body);color:var(--ink);line-height:var(--detail-body-lh);margin:0}
 .page-detail .detail-section{padding:var(--detail-section-y) 0 0;border:none}
