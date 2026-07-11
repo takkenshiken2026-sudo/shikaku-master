@@ -840,37 +840,65 @@ def page_shell(title: str, body: str, depth: int, noindex: bool = True,
 """
 
 
-# 資格ごとのイメージ写真（プロトタイプ）。無料素材サイト（Unsplash等）からの引用。
-# 公式サイトの画像は著作権上そのまま流用できないため、原則フリー素材を使う。
-CERT_IMAGES = {
-    # ITパスポート … コード/PC のイメージ（Unsplash・帰属不要のフリーライセンス）
-    "c-1538": {
-        "url": "https://images.unsplash.com/photo-1498050108023-c5249f4df085"
-               "?auto=format&fit=crop&w=560&q=70",
-        "credit_name": "Ilya Pavlov",
-        "credit_url": "https://unsplash.com/@ilyapavlov",
-        "source": "Unsplash",
-    },
+# 分野（大分類）ごとの「仕事がイメージできる」写真キーワード（英語）。
+# LoremFlickr（Flickr の CC 画像をキーワードで返す無料サービス）に渡す。
+# 資格ごとに固定シード（lock）を付けることで、同じ分野でも1件ずつ違う写真になる。
+MAJOR_IMG_KEYWORD = {
+    "IT・情報処理": "programmer",
+    "医療・看護・薬": "hospital",
+    "建築・設備": "architecture",
+    "語学・コミュニケーション": "classroom",
+    "会計・金融・経営": "accounting",
+    "安全・環境・危険物": "factory",
+    "美容・サービス・スポーツ": "hairdresser",
+    "商業・販売・事務": "office",
+    "食品・調理・栄養": "chef",
+    "運輸・運転・航空": "truck",
+    "土木・測量・建設": "construction",
+    "福祉・介護・心理": "caregiver",
+    "電気・通信": "electrician",
+    "教育・保育・学術": "teacher",
+    "設備・プラント・機械運転": "machinery",
+    "デザイン・美術・文化": "design",
+    "不動産": "house",
+    "農林水産・動物": "farmer",
+    "法律・法務・知財": "lawyer",
+    "機械・電気・ものづくり": "engineering",
+    "建築・土木・設備": "construction",
 }
 
+# 個別に写真を指定したい資格の上書き（任意）。無料素材(Unsplash等)を想定。
+CERT_IMAGES = {}
 
-def detail_media_html(slug, name):
-    """詳細ページ見出し横のイメージ写真。CERT_IMAGES にある資格のみ表示。"""
-    img = CERT_IMAGES.get(slug)
-    if not img:
-        return ""
-    credit = ""
-    if img.get("credit_name"):
-        credit = (
-            f'<figcaption class="detail-intro-credit">Photo: '
-            f'<a href="{esc(img["credit_url"])}" rel="nofollow noopener" '
-            f'target="_blank">{esc(img["credit_name"])}</a> / '
-            f'{esc(img.get("source", "Unsplash"))}</figcaption>')
+
+def _cert_image_url(row):
+    """資格ごとのイメージ写真URL。分野キーワード＋スラッグ固定シードで出し分け。"""
+    kw = MAJOR_IMG_KEYWORD.get(row["major_category"], "office")
+    lock = int(hashlib.md5(row["slug"].encode("utf-8")).hexdigest()[:7], 16) % 100000
+    return f"https://loremflickr.com/560/376/{kw}?lock={lock}"
+
+
+def detail_media_html(row, name):
+    """詳細ページ見出し横のイメージ写真。手動指定があればそれを、無ければ自動生成。"""
+    img = CERT_IMAGES.get(row["slug"])
+    if img:
+        url = img["url"]
+        credit = ""
+        if img.get("credit_name"):
+            credit = (
+                f'<figcaption class="detail-intro-credit">Photo: '
+                f'<a href="{esc(img["credit_url"])}" rel="nofollow noopener" '
+                f'target="_blank">{esc(img["credit_name"])}</a> / '
+                f'{esc(img.get("source", "Unsplash"))}</figcaption>')
+    else:
+        url = _cert_image_url(row)
+        credit = ('<figcaption class="detail-intro-credit">'
+                  '写真はイメージです（Flickr / Creative Commons）</figcaption>')
     # 画像取得に失敗した場合は figure ごと非表示にして崩れを防ぐ
     onerr = "this.closest('.detail-intro-media').style.display='none'"
     return (
         f'<figure class="detail-intro-media">'
-        f'<img src="{esc(img["url"])}" alt="{esc(name)}のイメージ写真" '
+        f'<img src="{esc(url)}" alt="{esc(name)}のイメージ写真" '
         f'loading="lazy" decoding="async" width="280" height="188" '
         f'onerror="{onerr}">'
         f'{credit}</figure>')
@@ -1279,7 +1307,7 @@ def build_detail(row, popular_slugs=None) -> str:
 <p class="detail-audience">{lead}</p>
 {facts_html}
 </div>
-{detail_media_html(row["slug"], name)}
+{detail_media_html(row, name)}
 </div>
 </header>
 {notice}
