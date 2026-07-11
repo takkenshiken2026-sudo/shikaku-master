@@ -4536,7 +4536,7 @@ table.spec{width:100%;border-collapse:collapse;background:#fff;border:1px solid 
 table.spec tr:last-child th,table.spec tr:last-child td{border-bottom:none}
 table.spec th,table.spec td{text-align:left;padding:10px 14px;border-bottom:1px solid var(--table-border);vertical-align:middle;line-height:1.55}
 table.spec th{width:34%;background:var(--table-head-bg);color:var(--ink);font-weight:var(--fw-regular);font-size:1rem;white-space:nowrap}
-@media(max-width:600px){table.spec th,table.spec td{display:block;width:auto}table.spec th{white-space:normal;border-bottom:none;padding:9px 14px 1px}table.spec td{padding:1px 14px 11px}}
+@media(max-width:600px){table.spec,table.spec tbody,table.spec tr,table.spec th,table.spec td{display:block;width:auto}.page-detail .spec-sections table.spec{table-layout:auto}table.spec th{white-space:normal;border-bottom:none;padding:9px 14px 1px}table.spec td{padding:1px 14px 11px}}
 .related{margin-top:24px}.related ul{padding-left:1.1em}
 .official-cta{margin:16px 0 6px}
 .btn-official{display:inline-block;background:var(--accent);color:#fff;font-size:var(--text-table);font-weight:var(--fw-semibold);padding:11px 20px;border-radius:var(--radius);text-decoration:none}
@@ -4780,6 +4780,7 @@ table.cmp thead th:first-child{background:#edf2f8;z-index:2}
 .page-detail .spec-sections table.spec col.spec-col-value{width:auto}
 .page-detail .spec-sections table.spec th{width:var(--spec-label-w);box-sizing:border-box}
 .page-detail .spec-sections table.spec td{box-sizing:border-box;width:auto}
+@media(max-width:600px){.page-detail .spec-sections table.spec,.page-detail .spec-sections table.spec th,.page-detail .spec-sections table.spec td{width:auto;display:block}}
 .page-detail .spec-wrap,.page-detail table.spec{border-radius:0}
 .detail-source{margin-top:22px;padding:14px 0 0;border-top:1px solid var(--gray-200);font-size:var(--text-sm);color:var(--muted);line-height:1.65}
 .detail-source p{margin:0 0 5px}.detail-source .k{font-weight:600;color:var(--muted)}
