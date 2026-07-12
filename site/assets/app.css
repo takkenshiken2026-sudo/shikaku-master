@@ -156,6 +156,7 @@ a.hero-suggest-item{text-decoration:none}a.hero-suggest-item:hover{text-decorati
 .sd-chip:hover{border-color:var(--accent);color:var(--accent)}
 .sd-chip.is-on{background:var(--accent);border-color:var(--accent);color:#fff}
 .shindan-field select{width:100%;padding:9px 11px;border:1px solid var(--gray-300);border-radius:var(--radius);font-size:var(--text-md);font-family:inherit;background:#fff;color:var(--ink);cursor:pointer}
+.shindan-prefs{margin-top:16px}
 .shindan-actions{display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin-top:16px}
 .sd-run{font-family:inherit;font-size:var(--text-md);font-weight:700;color:#fff;background:var(--accent);border:none;border-radius:var(--radius);padding:11px 24px;cursor:pointer;transition:background .15s}
 .sd-run:hover{background:var(--accent-hover)}
