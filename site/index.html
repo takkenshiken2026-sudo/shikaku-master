@@ -33,7 +33,7 @@ gtag('config','G-KERDMXDPSR');
 <link rel="icon" href="assets/favicon.ico" sizes="32x32">
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
-<link rel="stylesheet" href="assets/app.css?v=35439593ab">
+<link rel="stylesheet" href="assets/app.css?v=0fc3ef87e4">
 <script type="application/ld+json">{"@context": "https://schema.org", "@type": "WebSite", "name": "資格マスター", "url": "https://shikaku-master.jp/", "potentialAction": {"@type": "SearchAction", "target": {"@type": "EntryPoint", "urlTemplate": "https://shikaku-master.jp/?q={search_term_string}"}, "query-input": "required name=search_term_string"}}</script>
 <script type="application/ld+json">{"@context": "https://schema.org", "@type": "Organization", "name": "資格マスター", "url": "https://shikaku-master.jp/", "logo": "https://shikaku-master.jp/assets/favicon.svg", "image": "https://shikaku-master.jp/assets/og.png", "description": "日本国内の資格を、各資格の公式の一次情報に基づいて整理・掲載する資格情報サイト。受験料・受験資格・試験形式・合格率・実施団体・公式サイトを横断的に検索・比較できます。"}</script>
 </head>
@@ -89,7 +89,7 @@ gtag('config','G-KERDMXDPSR');
 </section>
 
 <section class="block block-band block-band--white block-shindan" id="shindan">
-  <div class="block-head"><h2>あなたに合う資格を診断</h2><p>目的・分野・使える学習時間を選ぶだけで、おすすめの資格をその場で提案します</p></div>
+  <div class="block-head"><h2>あなたに合う資格を診断</h2><p>目的・分野・学習時間・こだわり条件から、おすすめの資格をその場で提案します</p></div>
   <div class="shindan">
     <div class="shindan-fields">
       <div class="shindan-field">
@@ -115,6 +115,15 @@ gtag('config','G-KERDMXDPSR');
           <option value="300-1000">300〜1000時間</option>
           <option value="1000-">1000時間以上（難関に挑戦）</option>
         </select>
+      </div>
+    </div>
+    <div class="shindan-prefs">
+      <span class="shindan-label" id="sdPrefLabel">こだわり条件（複数選択できます・任意）</span>
+      <div class="shindan-seg" role="group" aria-labelledby="sdPrefLabel" id="sdPref">
+        <button type="button" class="sd-chip" data-pref="nolic" aria-pressed="false">受験資格なし（誰でも受けられる）</button>
+        <button type="button" class="sd-chip" data-pref="cbt" aria-pressed="false">在宅・CBTで受けられる</button>
+        <button type="button" class="sd-chip" data-pref="working" aria-pressed="false">働きながら取りやすい</button>
+        <button type="button" class="sd-chip" data-pref="kokka" aria-pressed="false">国家資格</button>
       </div>
     </div>
     <div class="shindan-actions">
@@ -234,11 +243,11 @@ gtag('config','G-KERDMXDPSR');
   <div class="block-head"><h2>おすすめの資格対策サイト</h2><p>当サイト運営者が制作している資格別の学習・対策サイト</p></div>
   <div class="partner-grid"><a class="partner-card" href="https://takken-master.jp/" target="_blank" rel="noopener"><span class="partner-card-name">宅建対策サイト<span class="partner-ext" aria-hidden="true">↗</span></span><span class="partner-card-tag">宅地建物取引士（不動産）</span></a><a class="partner-card" href="https://mankan-master.jp/" target="_blank" rel="noopener"><span class="partner-card-name">マンション管理士対策サイト<span class="partner-ext" aria-hidden="true">↗</span></span><span class="partner-card-tag">不動産・マンション管理</span></a><a class="partner-card" href="https://kangyou-master.jp/" target="_blank" rel="noopener"><span class="partner-card-name">管理業務主任者対策サイト<span class="partner-ext" aria-hidden="true">↗</span></span><span class="partner-card-tag">不動産・マンション管理</span></a><a class="partner-card" href="https://chintaikanrishi-master.jp/" target="_blank" rel="noopener"><span class="partner-card-name">賃貸不動産経営管理士対策サイト<span class="partner-ext" aria-hidden="true">↗</span></span><span class="partner-card-tag">不動産・賃貸管理</span></a><a class="partner-card" href="https://fp-master.jp/" target="_blank" rel="noopener"><span class="partner-card-name">FP対策サイト<span class="partner-ext" aria-hidden="true">↗</span></span><span class="partner-card-tag">FP技能士 1〜3級・CFP/AFP</span></a><a class="partner-card" href="https://gaimuin-master.jp/" target="_blank" rel="noopener"><span class="partner-card-name">証券外務員対策サイト<span class="partner-ext" aria-hidden="true">↗</span></span><span class="partner-card-tag">一種・二種外務員資格</span></a><a class="partner-card" href="https://kikenbutsu-master.jp/" target="_blank" rel="noopener"><span class="partner-card-name">危険物取扱者対策サイト<span class="partner-ext" aria-hidden="true">↗</span></span><span class="partner-card-tag">甲種・乙種・丙種</span></a><a class="partner-card" href="https://boiler-master.jp/" target="_blank" rel="noopener"><span class="partner-card-name">ボイラー技士対策サイト<span class="partner-ext" aria-hidden="true">↗</span></span><span class="partner-card-tag">特級・1級・2級</span></a><a class="partner-card" href="https://eisei1shu-master.jp/" target="_blank" rel="noopener"><span class="partner-card-name">第一種衛生管理者対策サイト<span class="partner-ext" aria-hidden="true">↗</span></span><span class="partner-card-tag">労働衛生管理</span></a><a class="partner-card" href="https://eisei2shu-master.jp/" target="_blank" rel="noopener"><span class="partner-card-name">第二種衛生管理者対策サイト<span class="partner-ext" aria-hidden="true">↗</span></span><span class="partner-card-tag">労働衛生管理</span></a><a class="partner-card" href="https://unkan-master.jp/" target="_blank" rel="noopener"><span class="partner-card-name">運行管理者対策サイト<span class="partner-ext" aria-hidden="true">↗</span></span><span class="partner-card-tag">旅客・貨物</span></a><a class="partner-card" href="https://mentalhealth-master.jp/" target="_blank" rel="noopener"><span class="partner-card-name">メンタルヘルス・マネジメント検定対策サイト<span class="partner-ext" aria-hidden="true">↗</span></span><span class="partner-card-tag">II種ほか</span></a><a class="partner-card" href="https://ai-master.jp/" target="_blank" rel="noopener"><span class="partner-card-name">AI資格対策サイト<span class="partner-ext" aria-hidden="true">↗</span></span><span class="partner-card-tag">AI・データサイエンス系</span></a></div>
 </section>
-<script src="assets/search.js?v=35439593ab"></script>
+<script src="assets/search.js?v=0fc3ef87e4"></script>
 
 </main>
 <div id="cmpbar" class="cmpbar" data-base="" aria-live="polite"></div>
-<script src="assets/compare-bar.js?v=35439593ab"></script>
+<script src="assets/compare-bar.js?v=0fc3ef87e4"></script>
 <footer class="site-footer">
   <div class="site-footer-inner">
     <div class="footer-recent" id="recentBlock" data-base="" hidden>

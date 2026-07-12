@@ -3458,7 +3458,7 @@ def build_index(rows) -> str:
 </section>
 
 <section class="block block-band block-band--white block-shindan" id="shindan">
-  <div class="block-head"><h2>あなたに合う資格を診断</h2><p>目的・分野・使える学習時間を選ぶだけで、おすすめの資格をその場で提案します</p></div>
+  <div class="block-head"><h2>あなたに合う資格を診断</h2><p>目的・分野・学習時間・こだわり条件から、おすすめの資格をその場で提案します</p></div>
   <div class="shindan">
     <div class="shindan-fields">
       <div class="shindan-field">
@@ -3484,6 +3484,15 @@ def build_index(rows) -> str:
           <option value="300-1000">300〜1000時間</option>
           <option value="1000-">1000時間以上（難関に挑戦）</option>
         </select>
+      </div>
+    </div>
+    <div class="shindan-prefs">
+      <span class="shindan-label" id="sdPrefLabel">こだわり条件（複数選択できます・任意）</span>
+      <div class="shindan-seg" role="group" aria-labelledby="sdPrefLabel" id="sdPref">
+        <button type="button" class="sd-chip" data-pref="nolic" aria-pressed="false">受験資格なし（誰でも受けられる）</button>
+        <button type="button" class="sd-chip" data-pref="cbt" aria-pressed="false">在宅・CBTで受けられる</button>
+        <button type="button" class="sd-chip" data-pref="working" aria-pressed="false">働きながら取りやすい</button>
+        <button type="button" class="sd-chip" data-pref="kokka" aria-pressed="false">国家資格</button>
       </div>
     </div>
     <div class="shindan-actions">
@@ -3935,9 +3944,18 @@ SEARCH_JS = """(function(){
     var goalWrap=document.getElementById('sdGoal'),
         fieldSel=document.getElementById('sdField'),
         timeSel=document.getElementById('sdTime'),
+        prefWrap=document.getElementById('sdPref'),
         runBtn=document.getElementById('sdRun'),
         resultBox=document.getElementById('sdResult');
     if(!goalWrap||!fieldSel||!timeSel||!resultBox)return;
+    // こだわり条件（複数選択・AND絞り込み）
+    var PREF={
+      nolic:{label:'受験資格なし',test:function(x){return (x.tags||[]).indexOf('受験資格なし')>=0;}},
+      cbt:{label:'在宅・CBT',test:function(x){return (x.tags||[]).indexOf('CBT・ネット試験')>=0;}},
+      working:{label:'働きながら',test:function(x){return (x.tags||[]).indexOf('働きながら')>=0;}},
+      kokka:{label:'国家資格',test:function(x){return x.type==='国家';}}
+    };
+    var activePrefs=[];
     // 目的 → タグの重み（希少なタグほど強いシグナル）
     var GOAL_TAGS={
       job:{'就職・転職':1,'受験資格なし':2,'未経験からIT':3},
@@ -3973,14 +3991,22 @@ SEARCH_JS = """(function(){
         if((x.industries||[]).indexOf(field)>=0){score+=6;reasons.push(field);}
         else return null; // 分野指定時はその業界で活かせる資格のみ
       }
+      // こだわり条件は必須（すべて満たすものだけ）
+      for(var pi=0;pi<activePrefs.length;pi++){
+        var pk=activePrefs[pi];
+        if(!PREF[pk].test(x))return null;
+        score+=2;reasons.push(PREF[pk].label);
+      }
       if(time){
         var hit=bandHit(x,time);
         if(hit===true){score+=4;reasons.push('学習時間が合う');}
         else if(hit===false)score-=3;
       }
-      if(x.popular){score+=2;if(reasons.length<3)reasons.push('人気');}
+      if(x.popular){score+=2;if(reasons.length<4)reasons.push('人気');}
       var ap=appNum(x);if(ap)score+=Math.min(2,ap/50000);
-      return {x:x,score:score,reasons:reasons.slice(0,3)};
+      var uniq=[],seen={};
+      for(var ri=0;ri<reasons.length;ri++){if(!seen[reasons[ri]]){seen[reasons[ri]]=1;uniq.push(reasons[ri]);}}
+      return {x:x,score:score,reasons:uniq.slice(0,4)};
     }
     function run(){
       var field=fieldSel.value,time=timeSel.value;
@@ -3991,11 +4017,13 @@ SEARCH_JS = """(function(){
         return (appNum(b.x)||0)-(appNum(a.x)||0);
       });
       var top=scored.slice(0,6);
+      var prefTxt=activePrefs.map(function(k){return PREF[k].label;}).join('・');
       var cond='「<strong>'+esc(GOAL_LABEL[goal])+'</strong>」'+
         (field?'／<strong>'+esc(field)+'</strong>':'')+
-        (time?'／学習時間 <strong>'+esc(TIME_LABEL[time]||time)+'</strong>':'');
+        (time?'／学習時間 <strong>'+esc(TIME_LABEL[time]||time)+'</strong>':'')+
+        (prefTxt?'／<strong>'+esc(prefTxt)+'</strong>':'');
       if(!top.length){
-        resultBox.innerHTML='<p class="shindan-result-head">'+cond+' の条件に合う資格が見つかりませんでした。分野や学習時間の条件をゆるめてお試しください。</p>';
+        resultBox.innerHTML='<p class="shindan-result-head">'+cond+' の条件に合う資格が見つかりませんでした。分野・学習時間・こだわり条件をゆるめてお試しください。</p>';
         resultBox.hidden=false;return;
       }
       var head='<p class="shindan-result-head">'+cond+' のおすすめ資格 <strong>'+top.length+'</strong> 件</p>';
@@ -4019,6 +4047,14 @@ SEARCH_JS = """(function(){
       goalWrap.querySelectorAll('.sd-chip').forEach(function(c){
         var on=c===b;c.classList.toggle('is-on',on);c.setAttribute('aria-pressed',on?'true':'false');
       });
+      if(!resultBox.hidden)run();
+    });
+    if(prefWrap)prefWrap.addEventListener('click',function(e){
+      var b=e.target.closest('.sd-chip');if(!b)return;
+      var pk=b.getAttribute('data-pref');if(!pk||!PREF[pk])return;
+      var idx=activePrefs.indexOf(pk),on;
+      if(idx>=0){activePrefs.splice(idx,1);on=false;}else{activePrefs.push(pk);on=true;}
+      b.classList.toggle('is-on',on);b.setAttribute('aria-pressed',on?'true':'false');
       if(!resultBox.hidden)run();
     });
     fieldSel.addEventListener('change',function(){if(!resultBox.hidden)run();});
@@ -4430,6 +4466,7 @@ a.hero-suggest-item{text-decoration:none}a.hero-suggest-item:hover{text-decorati
 .sd-chip:hover{border-color:var(--accent);color:var(--accent)}
 .sd-chip.is-on{background:var(--accent);border-color:var(--accent);color:#fff}
 .shindan-field select{width:100%;padding:9px 11px;border:1px solid var(--gray-300);border-radius:var(--radius);font-size:var(--text-md);font-family:inherit;background:#fff;color:var(--ink);cursor:pointer}
+.shindan-prefs{margin-top:16px}
 .shindan-actions{display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin-top:16px}
 .sd-run{font-family:inherit;font-size:var(--text-md);font-weight:700;color:#fff;background:var(--accent);border:none;border-radius:var(--radius);padding:11px 24px;cursor:pointer;transition:background .15s}
 .sd-run:hover{background:var(--accent-hover)}
