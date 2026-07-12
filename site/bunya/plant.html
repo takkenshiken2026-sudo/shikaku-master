@@ -33,7 +33,7 @@ gtag('config','G-KERDMXDPSR');
 <link rel="icon" href="../assets/favicon.ico" sizes="32x32">
 <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="../assets/apple-touch-icon.png">
-<link rel="stylesheet" href="../assets/app.css?v=867e3416b5">
+<link rel="stylesheet" href="../assets/app.css?v=35439593ab">
 <script type="application/ld+json">{"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "トップ", "item": "https://shikaku-master.jp/"}, {"@type": "ListItem", "position": 2, "name": "設備・プラント・機械運転の資格一覧"}]}</script>
 <script type="application/ld+json">{"@context": "https://schema.org", "@type": "ItemList", "name": "設備・プラント・機械運転の資格一覧", "numberOfItems": 19, "itemListElement": [{"@type": "ListItem", "position": 1, "url": "https://shikaku-master.jp/c/c-6702.html", "name": "1級ボイラー技士"}, {"@type": "ListItem", "position": 2, "url": "https://shikaku-master.jp/c/c-6703.html", "name": "2級ボイラー技士"}, {"@type": "ListItem", "position": 3, "url": "https://shikaku-master.jp/c/c-6708.html", "name": "クレーン・デリック運転士(クレーン限定)"}, {"@type": "ListItem", "position": 4, "url": "https://shikaku-master.jp/c/c-6719.html", "name": "クレーン・デリック運転士(限定なし)"}, {"@type": "ListItem", "position": 5, "url": "https://shikaku-master.jp/c/c-6717.html", "name": "ショベルローダー等運転技能者"}, {"@type": "ListItem", "position": 6, "url": "https://shikaku-master.jp/c/c-6705.html", "name": "ボイラー取扱作業主任者"}, {"@type": "ListItem", "position": 7, "url": "https://shikaku-master.jp/c/c-6704.html", "name": "ボイラー整備士"}, {"@type": "ListItem", "position": 8, "url": "https://shikaku-master.jp/c/c-6707.html", "name": "乾燥設備作業主任者"}, {"@type": "ListItem", "position": 9, "url": "https://shikaku-master.jp/c/c-6710.html", "name": "小型移動式クレーン運転技能者"}, {"@type": "ListItem", "position": 10, "url": "https://shikaku-master.jp/c/c-6711.html", "name": "床上操作式クレーン運転技能者"}, {"@type": "ListItem", "position": 11, "url": "https://shikaku-master.jp/c/c-6720.html", "name": "床上運転式クレーン限定運転士"}, {"@type": "ListItem", "position": 12, "url": "https://shikaku-master.jp/c/c-6713.html", "name": "揚貨装置運転士"}, {"@type": "ListItem", "position": 13, "url": "https://shikaku-master.jp/c/c-6706.html", "name": "普通第一種圧力容器取扱作業主任者"}, {"@type": "ListItem", "position": 14, "url": "https://shikaku-master.jp/c/c-6701.html", "name": "特級ボイラー技士"}, {"@type": "ListItem", "position": 15, "url": "https://shikaku-master.jp/c/c-6718.html", "name": "玉掛技能者"}, {"@type": "ListItem", "position": 16, "url": "https://shikaku-master.jp/c/c-6709.html", "name": "移動式クレーン運転士"}, {"@type": "ListItem", "position": 17, "url": "https://shikaku-master.jp/c/c-6714.html", "name": "車両系建設機械(基礎工事用)運転技能者"}, {"@type": "ListItem", "position": 18, "url": "https://shikaku-master.jp/c/c-6715.html", "name": "車両系建設機械(整地・運搬・積込用及び掘削用)運転技能者"}, {"@type": "ListItem", "position": 19, "url": "https://shikaku-master.jp/c/c-6716.html", "name": "車両系建設機械(解体用)運転技能者"}]}</script>
 </head>
@@ -45,8 +45,8 @@ gtag('config','G-KERDMXDPSR');
     <nav class="header-nav" aria-label="サイトメニュー">
       <a href="../index.html#purpose">目的から探す</a><span class="header-nav-sep" aria-hidden="true">｜</span>
       <a href="../index.html#fields">分野から探す</a><span class="header-nav-sep" aria-hidden="true">｜</span>
-      <a href="../index.html#all-certs">資格一覧</a><span class="header-nav-sep" aria-hidden="true">｜</span>
-      <a href="../courses.html">試験対策講座</a>
+      <a href="../index.html#all-certs">資格一覧</a>
+      <a href="../courses.html" class="header-nav-cta header-nav-cta--course">試験対策講座</a>
       <a href="../index.html#partners" class="header-nav-cta">資格対策サイト</a>
     </nav>
     <div class="header-actions">
@@ -87,9 +87,13 @@ gtag('config','G-KERDMXDPSR');
 </script></div>
 </main>
 <div id="cmpbar" class="cmpbar" data-base="../" aria-live="polite"></div>
-<script src="../assets/compare-bar.js?v=867e3416b5"></script>
+<script src="../assets/compare-bar.js?v=35439593ab"></script>
 <footer class="site-footer">
   <div class="site-footer-inner">
+    <div class="footer-recent" id="recentBlock" data-base="../" hidden>
+      <span class="footer-recent-label">最近見た資格</span>
+      <ul class="footer-recent-list" id="recentGrid"></ul>
+    </div>
     <p class="site-footer-brand">資格マスター</p>
     <nav class="site-footer-nav" aria-label="フッターナビ">
       <a href="../finder.html">資格の選び方・診断</a>
@@ -105,5 +109,6 @@ gtag('config','G-KERDMXDPSR');
 </footer>
 <script>(function(){var h=document.getElementById('siteHeader');if(!h)return;function close(){h.classList.remove('site-header--search-open','site-header--menu-open');h.querySelectorAll('[data-toggle]').forEach(function(b){b.setAttribute('aria-expanded','false');});}h.querySelectorAll('[data-toggle]').forEach(function(b){b.addEventListener('click',function(){var k=b.getAttribute('data-toggle');var cls=k==='search'?'site-header--search-open':'site-header--menu-open';var open=h.classList.contains(cls);close();if(!open){h.classList.add(cls);b.setAttribute('aria-expanded','true');var p=document.getElementById(k==='search'?'hSearch':'hMenu');if(p){p.hidden=false;var inp=p.querySelector('input');if(inp)setTimeout(function(){inp.focus();},30);}}});});document.addEventListener('keydown',function(e){if(e.key==='Escape')close();});})();</script>
 <script>(function(){function init(el){if(el.dataset.hs)return;el.dataset.hs='1';var w=document.createElement('div');w.className='hscroll';el.parentNode.insertBefore(w,el);w.appendChild(el);var f=document.createElement('span');f.className='hscroll-fade';f.setAttribute('aria-hidden','true');w.appendChild(f);function u(){var m=el.scrollWidth-el.clientWidth;w.classList.toggle('can-right',m>2&&el.scrollLeft<m-2);}el.addEventListener('scroll',u,{passive:true});window.addEventListener('resize',u);if(window.ResizeObserver){new ResizeObserver(u).observe(el);}u();}function run(){document.querySelectorAll('.all-certs-table-wrap,.cmp-wrap').forEach(init);}if(document.readyState!=='loading')run();else document.addEventListener('DOMContentLoaded',run);})();</script>
+<script>(function(){try{var blk=document.getElementById('recentBlock'),grid=document.getElementById('recentGrid');if(!blk||!grid)return;var a=JSON.parse(localStorage.getItem('recent')||'[]');if(!a.length)return;var base=blk.getAttribute('data-base')||'';var cur=(location.pathname.match(/\/c\/([^\/]+)\.html/)||[])[1]||'';function esc(s){return (s||'').replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}var items=a.filter(function(x){return x.s!==cur;}).slice(0,8);if(!items.length)return;grid.innerHTML=items.map(function(x){return '<li><a href="'+base+'c/'+esc(x.s)+'.html">'+esc(x.n)+'</a></li>';}).join('');blk.hidden=false;}catch(e){}})();</script>
 </body>
 </html>

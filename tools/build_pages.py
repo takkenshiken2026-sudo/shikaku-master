@@ -789,8 +789,8 @@ def page_shell(title: str, body: str, depth: int, noindex: bool = True,
     <nav class="header-nav" aria-label="サイトメニュー">
       <a href="{base}index.html#purpose">目的から探す</a><span class="header-nav-sep" aria-hidden="true">｜</span>
       <a href="{base}index.html#fields">分野から探す</a><span class="header-nav-sep" aria-hidden="true">｜</span>
-      <a href="{base}index.html#all-certs">資格一覧</a><span class="header-nav-sep" aria-hidden="true">｜</span>
-      <a href="{base}courses.html">試験対策講座</a>
+      <a href="{base}index.html#all-certs">資格一覧</a>
+      <a href="{base}courses.html" class="header-nav-cta header-nav-cta--course">試験対策講座</a>
       <a href="{base}index.html#partners" class="header-nav-cta">資格対策サイト</a>
     </nav>
     <div class="header-actions">
@@ -822,6 +822,10 @@ def page_shell(title: str, body: str, depth: int, noindex: bool = True,
 <script src="{asset_url(base, 'assets/compare-bar.js')}"></script>
 <footer class="site-footer">
   <div class="site-footer-inner">
+    <div class="footer-recent" id="recentBlock" data-base="{base}" hidden>
+      <span class="footer-recent-label">最近見た資格</span>
+      <ul class="footer-recent-list" id="recentGrid"></ul>
+    </div>
     <p class="site-footer-brand">{esc(SITE_NAME)}</p>
     <nav class="site-footer-nav" aria-label="フッターナビ">
       <a href="{base}finder.html">資格の選び方・診断</a>
@@ -837,6 +841,7 @@ def page_shell(title: str, body: str, depth: int, noindex: bool = True,
 </footer>
 <script>(function(){{var h=document.getElementById('siteHeader');if(!h)return;function close(){{h.classList.remove('site-header--search-open','site-header--menu-open');h.querySelectorAll('[data-toggle]').forEach(function(b){{b.setAttribute('aria-expanded','false');}});}}h.querySelectorAll('[data-toggle]').forEach(function(b){{b.addEventListener('click',function(){{var k=b.getAttribute('data-toggle');var cls=k==='search'?'site-header--search-open':'site-header--menu-open';var open=h.classList.contains(cls);close();if(!open){{h.classList.add(cls);b.setAttribute('aria-expanded','true');var p=document.getElementById(k==='search'?'hSearch':'hMenu');if(p){{p.hidden=false;var inp=p.querySelector('input');if(inp)setTimeout(function(){{inp.focus();}},30);}}}}}});}});document.addEventListener('keydown',function(e){{if(e.key==='Escape')close();}});}})();</script>
 <script>(function(){{function init(el){{if(el.dataset.hs)return;el.dataset.hs='1';var w=document.createElement('div');w.className='hscroll';el.parentNode.insertBefore(w,el);w.appendChild(el);var f=document.createElement('span');f.className='hscroll-fade';f.setAttribute('aria-hidden','true');w.appendChild(f);function u(){{var m=el.scrollWidth-el.clientWidth;w.classList.toggle('can-right',m>2&&el.scrollLeft<m-2);}}el.addEventListener('scroll',u,{{passive:true}});window.addEventListener('resize',u);if(window.ResizeObserver){{new ResizeObserver(u).observe(el);}}u();}}function run(){{document.querySelectorAll('.all-certs-table-wrap,.cmp-wrap').forEach(init);}}if(document.readyState!=='loading')run();else document.addEventListener('DOMContentLoaded',run);}})();</script>
+<script>(function(){{try{{var blk=document.getElementById('recentBlock'),grid=document.getElementById('recentGrid');if(!blk||!grid)return;var a=JSON.parse(localStorage.getItem('recent')||'[]');if(!a.length)return;var base=blk.getAttribute('data-base')||'';var cur=(location.pathname.match(/\\/c\\/([^\\/]+)\\.html/)||[])[1]||'';function esc(s){{return (s||'').replace(/[&<>"]/g,function(c){{return {{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}}[c];}});}}var items=a.filter(function(x){{return x.s!==cur;}}).slice(0,8);if(!items.length)return;grid.innerHTML=items.map(function(x){{return '<li><a href="'+base+'c/'+esc(x.s)+'.html">'+esc(x.n)+'</a></li>';}}).join('');blk.hidden=false;}}catch(e){{}}}})();</script>
 </body>
 </html>
 """
@@ -3514,10 +3519,6 @@ def build_index(rows) -> str:
       </div>
     </a>
   </div>
-  <div class="recent-inset" id="recentBlock" hidden>
-    <div class="block-head"><h2>最近見た資格</h2></div>
-    <ul class="recent-list" id="recentGrid"></ul>
-  </div>
 </section>
 
 <section class="block block-band block-band--gray">
@@ -4096,20 +4097,6 @@ SEARCH_JS = """(function(){
     legacyType='';legacyIndustry='';
     activeTags.clear();resetPage=true;render();
   });
-  (function renderRecent(){
-    try{
-      var a=JSON.parse(localStorage.getItem('recent')||'[]');
-      var blk=document.getElementById('recentBlock'),grid=document.getElementById('recentGrid');
-      if(!blk||!grid||!a.length)return;
-      fetch('data/certifications.json').then(function(r){return r.json();}).then(function(all){
-        var nm={};all.forEach(function(x){nm[x.slug]=x.display_name||x.name;});
-        grid.innerHTML=a.slice(0,8).map(function(x){
-          return '<li><a href="c/'+esc(x.s)+'.html">'+esc(nm[x.s]||x.n)+'</a></li>';
-        }).join('');
-        blk.hidden=false;
-      });
-    }catch(e){}
-  })();
 })();
 """
 
@@ -4332,6 +4319,8 @@ html{scroll-padding-top:64px}
 .header-nav a.is-current{color:var(--ink-deep);font-weight:600}
 .header-nav-cta{margin-left:8px;padding:7px 12px;background:var(--accent);color:#fff !important;font-size:var(--text-sm);font-weight:600;border-radius:var(--radius);line-height:1.2;text-decoration:none}
 .header-nav a.header-nav-cta:hover,.header-nav a.header-nav-cta:focus-visible{background:var(--accent-hover);color:#fff !important;text-decoration:none}
+.header-nav-cta--course{background:#127a3e}
+.header-nav a.header-nav-cta--course:hover,.header-nav a.header-nav-cta--course:focus-visible{background:#0e6231}
 .header-nav-sep{color:var(--gray-400);font-size:var(--text-sm);user-select:none;padding:0 1px}
 .header-actions{display:none;align-items:center;gap:2px;margin-left:auto;flex-shrink:0}
 .header-icon-btn{display:inline-flex;align-items:center;justify-content:center;background:transparent;border:none;color:var(--ink);cursor:pointer;padding:8px;border-radius:6px;line-height:0;font-family:inherit}
@@ -4350,6 +4339,8 @@ html{scroll-padding-top:64px}
 .header-menu-panel a:last-child{border-bottom:none}
 .header-menu-panel a:hover{color:var(--ink-deep);background:var(--gray-50);text-decoration:none}
 @media(max-width:768px){:root{--page-gutter:20px}.header-nav{display:none}.header-actions{display:flex}.header-inner{padding:10px var(--page-gutter)}.logo-mark{min-width:48px;min-height:32px;padding:5px 8px 4px}.logo-mark-line{font-size:11px}.logo-mark-line--sub{font-size:10px}.logo-text{font-size:15px}.logo-sub{font-size:11px;max-width:min(210px,60vw)}.site-tagline{display:none}.container{padding:20px var(--page-gutter) 36px}.block-band{margin-left:calc(-1*var(--page-gutter));margin-right:calc(-1*var(--page-gutter));padding:32px var(--page-gutter)}.block-all-certs{padding:40px var(--page-gutter)}}
+/* 2つのCTAを含むナビが折り返す狭いデスクトップ幅では、早めにハンバーガーへ切替 */
+@media(min-width:769px) and (max-width:900px){.header-nav{display:none}.header-actions{display:flex}}
 
 .container{max-width:1200px;margin:0 auto;padding:28px var(--page-gutter) 36px;width:100%;flex:1 0 auto;min-width:0;background:#fff;box-shadow:0 0 24px rgba(0,0,0,.05)}
 .container:has(.page-detail){padding-top:36px;padding-bottom:56px}
@@ -4809,6 +4800,11 @@ table.cmp thead th:first-child{background:#edf2f8;z-index:2}
 /* Footer */
 .site-footer{background:var(--gray-50);border-top:1px solid var(--gray-200);margin-top:auto;color:var(--muted)}
 .site-footer-inner{max-width:1200px;margin:0 auto;padding:24px var(--page-gutter) 20px}
+.footer-recent{margin:0 0 20px;padding-bottom:18px;border-bottom:1px solid var(--gray-200)}
+.footer-recent-label{display:block;font-size:var(--text-sm);color:var(--muted);font-weight:600;margin-bottom:9px}
+.footer-recent-list{list-style:none;display:flex;flex-wrap:wrap;gap:7px;margin:0;padding:0}
+.footer-recent-list a{display:inline-block;max-width:220px;padding:5px 12px;border:1px solid var(--gray-200);border-radius:999px;font-size:var(--text-sm);color:var(--muted);text-decoration:none;background:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:middle}
+.footer-recent-list a:hover{color:var(--ink);border-color:var(--gray-300);text-decoration:none}
 .site-footer-brand{font-size:var(--text-md);font-weight:700;color:var(--ink-deep);margin:0 0 10px}
 .site-footer-nav{display:flex;flex-wrap:wrap;gap:6px 18px;margin-bottom:12px}
 .site-footer-nav a{font-size:var(--text-sm);color:var(--muted);text-decoration:none}

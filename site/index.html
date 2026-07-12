@@ -33,7 +33,7 @@ gtag('config','G-KERDMXDPSR');
 <link rel="icon" href="assets/favicon.ico" sizes="32x32">
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
-<link rel="stylesheet" href="assets/app.css?v=867e3416b5">
+<link rel="stylesheet" href="assets/app.css?v=35439593ab">
 <script type="application/ld+json">{"@context": "https://schema.org", "@type": "WebSite", "name": "資格マスター", "url": "https://shikaku-master.jp/", "potentialAction": {"@type": "SearchAction", "target": {"@type": "EntryPoint", "urlTemplate": "https://shikaku-master.jp/?q={search_term_string}"}, "query-input": "required name=search_term_string"}}</script>
 <script type="application/ld+json">{"@context": "https://schema.org", "@type": "Organization", "name": "資格マスター", "url": "https://shikaku-master.jp/", "logo": "https://shikaku-master.jp/assets/favicon.svg", "image": "https://shikaku-master.jp/assets/og.png", "description": "日本国内の資格を、各資格の公式の一次情報に基づいて整理・掲載する資格情報サイト。受験料・受験資格・試験形式・合格率・実施団体・公式サイトを横断的に検索・比較できます。"}</script>
 </head>
@@ -45,8 +45,8 @@ gtag('config','G-KERDMXDPSR');
     <nav class="header-nav" aria-label="サイトメニュー">
       <a href="index.html#purpose">目的から探す</a><span class="header-nav-sep" aria-hidden="true">｜</span>
       <a href="index.html#fields">分野から探す</a><span class="header-nav-sep" aria-hidden="true">｜</span>
-      <a href="index.html#all-certs">資格一覧</a><span class="header-nav-sep" aria-hidden="true">｜</span>
-      <a href="courses.html">試験対策講座</a>
+      <a href="index.html#all-certs">資格一覧</a>
+      <a href="courses.html" class="header-nav-cta header-nav-cta--course">試験対策講座</a>
       <a href="index.html#partners" class="header-nav-cta">資格対策サイト</a>
     </nav>
     <div class="header-actions">
@@ -150,10 +150,6 @@ gtag('config','G-KERDMXDPSR');
       </div>
     </a>
   </div>
-  <div class="recent-inset" id="recentBlock" hidden>
-    <div class="block-head"><h2>最近見た資格</h2></div>
-    <ul class="recent-list" id="recentGrid"></ul>
-  </div>
 </section>
 
 <section class="block block-band block-band--gray">
@@ -238,13 +234,17 @@ gtag('config','G-KERDMXDPSR');
   <div class="block-head"><h2>おすすめの資格対策サイト</h2><p>当サイト運営者が制作している資格別の学習・対策サイト</p></div>
   <div class="partner-grid"><a class="partner-card" href="https://takken-master.jp/" target="_blank" rel="noopener"><span class="partner-card-name">宅建対策サイト<span class="partner-ext" aria-hidden="true">↗</span></span><span class="partner-card-tag">宅地建物取引士（不動産）</span></a><a class="partner-card" href="https://mankan-master.jp/" target="_blank" rel="noopener"><span class="partner-card-name">マンション管理士対策サイト<span class="partner-ext" aria-hidden="true">↗</span></span><span class="partner-card-tag">不動産・マンション管理</span></a><a class="partner-card" href="https://kangyou-master.jp/" target="_blank" rel="noopener"><span class="partner-card-name">管理業務主任者対策サイト<span class="partner-ext" aria-hidden="true">↗</span></span><span class="partner-card-tag">不動産・マンション管理</span></a><a class="partner-card" href="https://chintaikanrishi-master.jp/" target="_blank" rel="noopener"><span class="partner-card-name">賃貸不動産経営管理士対策サイト<span class="partner-ext" aria-hidden="true">↗</span></span><span class="partner-card-tag">不動産・賃貸管理</span></a><a class="partner-card" href="https://fp-master.jp/" target="_blank" rel="noopener"><span class="partner-card-name">FP対策サイト<span class="partner-ext" aria-hidden="true">↗</span></span><span class="partner-card-tag">FP技能士 1〜3級・CFP/AFP</span></a><a class="partner-card" href="https://gaimuin-master.jp/" target="_blank" rel="noopener"><span class="partner-card-name">証券外務員対策サイト<span class="partner-ext" aria-hidden="true">↗</span></span><span class="partner-card-tag">一種・二種外務員資格</span></a><a class="partner-card" href="https://kikenbutsu-master.jp/" target="_blank" rel="noopener"><span class="partner-card-name">危険物取扱者対策サイト<span class="partner-ext" aria-hidden="true">↗</span></span><span class="partner-card-tag">甲種・乙種・丙種</span></a><a class="partner-card" href="https://boiler-master.jp/" target="_blank" rel="noopener"><span class="partner-card-name">ボイラー技士対策サイト<span class="partner-ext" aria-hidden="true">↗</span></span><span class="partner-card-tag">特級・1級・2級</span></a><a class="partner-card" href="https://eisei1shu-master.jp/" target="_blank" rel="noopener"><span class="partner-card-name">第一種衛生管理者対策サイト<span class="partner-ext" aria-hidden="true">↗</span></span><span class="partner-card-tag">労働衛生管理</span></a><a class="partner-card" href="https://eisei2shu-master.jp/" target="_blank" rel="noopener"><span class="partner-card-name">第二種衛生管理者対策サイト<span class="partner-ext" aria-hidden="true">↗</span></span><span class="partner-card-tag">労働衛生管理</span></a><a class="partner-card" href="https://unkan-master.jp/" target="_blank" rel="noopener"><span class="partner-card-name">運行管理者対策サイト<span class="partner-ext" aria-hidden="true">↗</span></span><span class="partner-card-tag">旅客・貨物</span></a><a class="partner-card" href="https://mentalhealth-master.jp/" target="_blank" rel="noopener"><span class="partner-card-name">メンタルヘルス・マネジメント検定対策サイト<span class="partner-ext" aria-hidden="true">↗</span></span><span class="partner-card-tag">II種ほか</span></a><a class="partner-card" href="https://ai-master.jp/" target="_blank" rel="noopener"><span class="partner-card-name">AI資格対策サイト<span class="partner-ext" aria-hidden="true">↗</span></span><span class="partner-card-tag">AI・データサイエンス系</span></a></div>
 </section>
-<script src="assets/search.js?v=867e3416b5"></script>
+<script src="assets/search.js?v=35439593ab"></script>
 
 </main>
 <div id="cmpbar" class="cmpbar" data-base="" aria-live="polite"></div>
-<script src="assets/compare-bar.js?v=867e3416b5"></script>
+<script src="assets/compare-bar.js?v=35439593ab"></script>
 <footer class="site-footer">
   <div class="site-footer-inner">
+    <div class="footer-recent" id="recentBlock" data-base="" hidden>
+      <span class="footer-recent-label">最近見た資格</span>
+      <ul class="footer-recent-list" id="recentGrid"></ul>
+    </div>
     <p class="site-footer-brand">資格マスター</p>
     <nav class="site-footer-nav" aria-label="フッターナビ">
       <a href="finder.html">資格の選び方・診断</a>
@@ -260,5 +260,6 @@ gtag('config','G-KERDMXDPSR');
 </footer>
 <script>(function(){var h=document.getElementById('siteHeader');if(!h)return;function close(){h.classList.remove('site-header--search-open','site-header--menu-open');h.querySelectorAll('[data-toggle]').forEach(function(b){b.setAttribute('aria-expanded','false');});}h.querySelectorAll('[data-toggle]').forEach(function(b){b.addEventListener('click',function(){var k=b.getAttribute('data-toggle');var cls=k==='search'?'site-header--search-open':'site-header--menu-open';var open=h.classList.contains(cls);close();if(!open){h.classList.add(cls);b.setAttribute('aria-expanded','true');var p=document.getElementById(k==='search'?'hSearch':'hMenu');if(p){p.hidden=false;var inp=p.querySelector('input');if(inp)setTimeout(function(){inp.focus();},30);}}});});document.addEventListener('keydown',function(e){if(e.key==='Escape')close();});})();</script>
 <script>(function(){function init(el){if(el.dataset.hs)return;el.dataset.hs='1';var w=document.createElement('div');w.className='hscroll';el.parentNode.insertBefore(w,el);w.appendChild(el);var f=document.createElement('span');f.className='hscroll-fade';f.setAttribute('aria-hidden','true');w.appendChild(f);function u(){var m=el.scrollWidth-el.clientWidth;w.classList.toggle('can-right',m>2&&el.scrollLeft<m-2);}el.addEventListener('scroll',u,{passive:true});window.addEventListener('resize',u);if(window.ResizeObserver){new ResizeObserver(u).observe(el);}u();}function run(){document.querySelectorAll('.all-certs-table-wrap,.cmp-wrap').forEach(init);}if(document.readyState!=='loading')run();else document.addEventListener('DOMContentLoaded',run);})();</script>
+<script>(function(){try{var blk=document.getElementById('recentBlock'),grid=document.getElementById('recentGrid');if(!blk||!grid)return;var a=JSON.parse(localStorage.getItem('recent')||'[]');if(!a.length)return;var base=blk.getAttribute('data-base')||'';var cur=(location.pathname.match(/\/c\/([^\/]+)\.html/)||[])[1]||'';function esc(s){return (s||'').replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}var items=a.filter(function(x){return x.s!==cur;}).slice(0,8);if(!items.length)return;grid.innerHTML=items.map(function(x){return '<li><a href="'+base+'c/'+esc(x.s)+'.html">'+esc(x.n)+'</a></li>';}).join('');blk.hidden=false;}catch(e){}})();</script>
 </body>
 </html>
