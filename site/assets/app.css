@@ -181,6 +181,10 @@ a.hero-suggest-item{text-decoration:none}a.hero-suggest-item:hover{text-decorati
 .all-certs-check input{width:17px;height:17px;accent-color:var(--accent)}
 .block-all-certs .all-certs-count{font-size:var(--text-sm);color:var(--muted);margin-bottom:12px}
 .all-certs-table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;border:1px solid var(--table-border);border-radius:var(--radius);background:#fff}
+.hscroll{position:relative}
+.hscroll-fade{position:absolute;top:1px;right:1px;bottom:1px;width:30px;pointer-events:none;border-radius:0 var(--radius) var(--radius) 0;background:linear-gradient(to left,rgba(15,30,60,.15),rgba(15,30,60,0));opacity:0;transition:opacity .18s}
+.hscroll.can-right .hscroll-fade{opacity:1}
+@media(hover:none){.hscroll.can-right .hscroll-fade{opacity:1}}
 .all-certs-table{width:100%;border-collapse:collapse;background:#fff;border:none;border-radius:0;font-size:var(--text-table);color:var(--ink);table-layout:fixed}
 .all-certs-table--4col{min-width:640px}
 .all-certs-table--5col{min-width:760px}
