@@ -33,7 +33,7 @@ gtag('config','G-KERDMXDPSR');
 <link rel="icon" href="../assets/favicon.ico" sizes="32x32">
 <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="../assets/apple-touch-icon.png">
-<link rel="stylesheet" href="../assets/app.css?v=867e3416b5">
+<link rel="stylesheet" href="../assets/app.css?v=35439593ab">
 <script type="application/ld+json">{"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "トップ", "item": "https://shikaku-master.jp/"}, {"@type": "ListItem", "position": 2, "name": "機械・電気・ものづくり", "item": "https://shikaku-master.jp/bunya/manufacturing.html"}, {"@type": "ListItem", "position": 3, "name": "伝統工芸士"}]}</script>
 <script type="application/ld+json">{"@context": "https://schema.org", "@type": "EducationalOccupationalCredential", "name": "伝統工芸士", "url": "https://shikaku-master.jp/c/c-6511.html", "credentialCategory": "区分要確認", "description": "伝統工芸士は、経済産業大臣が指定する伝統的工芸品の製造に高度な技術・技法を持つ職人を認定する資格で、伝統的工芸品産業振興協会が実施します。長年の製造実務経験を持つ現役の職人が、実技・知識・面接の試験を経て認定されます。伝統の技を受け継ぎ高める担い手の証であり、工芸の世界で権威と信頼を持つ資格です。", "recognizedBy": {"@type": "Organization", "name": "一般財団法人伝統的工芸品産業振興協会"}, "competencyRequired": "実技(完成作品・製造工程の審査)、知識試験(伝産法・産地振興制度等の全国共通ペーパー)、面接。受験に当該産地の製造実務12年以上が必要。"}</script>
 <script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "伝統工芸士の受験料はいくらですか？", "acceptedAnswer": {"@type": "Answer", "text": "7,200円（知識試験のみの再受験は3,500円）"}}, {"@type": "Question", "name": "伝統工芸士に受験資格はありますか？", "acceptedAnswer": {"@type": "Answer", "text": "伝統的工芸品の製造地域における製造実務経験を満12年以上有する現役従事者"}}, {"@type": "Question", "name": "伝統工芸士の試験はどのような形式ですか？", "acceptedAnswer": {"@type": "Answer", "text": "実技試験・知識試験・面接試験に合格して認定。認定後は5年ごとに技術を確認し基準を満たす者が登録継続"}}, {"@type": "Question", "name": "伝統工芸士の試験科目・出題範囲は？", "acceptedAnswer": {"@type": "Answer", "text": "実技(完成作品・製造工程の審査)、知識試験(伝産法・産地振興制度等の全国共通ペーパー)、面接。受験に当該産地の製造実務12年以上が必要。"}}, {"@type": "Question", "name": "伝統工芸士はいつ実施されますか？", "acceptedAnswer": {"@type": "Answer", "text": "年1回（例年9〜11月、産地委員会が実施）"}}, {"@type": "Question", "name": "伝統工芸士の実施団体はどこですか？", "acceptedAnswer": {"@type": "Answer", "text": "一般財団法人伝統的工芸品産業振興協会"}}]}</script>
@@ -47,8 +47,8 @@ gtag('config','G-KERDMXDPSR');
     <nav class="header-nav" aria-label="サイトメニュー">
       <a href="../index.html#purpose">目的から探す</a><span class="header-nav-sep" aria-hidden="true">｜</span>
       <a href="../index.html#fields">分野から探す</a><span class="header-nav-sep" aria-hidden="true">｜</span>
-      <a href="../index.html#all-certs">資格一覧</a><span class="header-nav-sep" aria-hidden="true">｜</span>
-      <a href="../courses.html">試験対策講座</a>
+      <a href="../index.html#all-certs">資格一覧</a>
+      <a href="../courses.html" class="header-nav-cta header-nav-cta--course">試験対策講座</a>
       <a href="../index.html#partners" class="header-nav-cta">資格対策サイト</a>
     </nav>
     <div class="header-actions">
@@ -119,9 +119,13 @@ gtag('config','G-KERDMXDPSR');
 </div>
 </main>
 <div id="cmpbar" class="cmpbar" data-base="../" aria-live="polite"></div>
-<script src="../assets/compare-bar.js?v=867e3416b5"></script>
+<script src="../assets/compare-bar.js?v=35439593ab"></script>
 <footer class="site-footer">
   <div class="site-footer-inner">
+    <div class="footer-recent" id="recentBlock" data-base="../" hidden>
+      <span class="footer-recent-label">最近見た資格</span>
+      <ul class="footer-recent-list" id="recentGrid"></ul>
+    </div>
     <p class="site-footer-brand">資格マスター</p>
     <nav class="site-footer-nav" aria-label="フッターナビ">
       <a href="../finder.html">資格の選び方・診断</a>
@@ -137,5 +141,6 @@ gtag('config','G-KERDMXDPSR');
 </footer>
 <script>(function(){var h=document.getElementById('siteHeader');if(!h)return;function close(){h.classList.remove('site-header--search-open','site-header--menu-open');h.querySelectorAll('[data-toggle]').forEach(function(b){b.setAttribute('aria-expanded','false');});}h.querySelectorAll('[data-toggle]').forEach(function(b){b.addEventListener('click',function(){var k=b.getAttribute('data-toggle');var cls=k==='search'?'site-header--search-open':'site-header--menu-open';var open=h.classList.contains(cls);close();if(!open){h.classList.add(cls);b.setAttribute('aria-expanded','true');var p=document.getElementById(k==='search'?'hSearch':'hMenu');if(p){p.hidden=false;var inp=p.querySelector('input');if(inp)setTimeout(function(){inp.focus();},30);}}});});document.addEventListener('keydown',function(e){if(e.key==='Escape')close();});})();</script>
 <script>(function(){function init(el){if(el.dataset.hs)return;el.dataset.hs='1';var w=document.createElement('div');w.className='hscroll';el.parentNode.insertBefore(w,el);w.appendChild(el);var f=document.createElement('span');f.className='hscroll-fade';f.setAttribute('aria-hidden','true');w.appendChild(f);function u(){var m=el.scrollWidth-el.clientWidth;w.classList.toggle('can-right',m>2&&el.scrollLeft<m-2);}el.addEventListener('scroll',u,{passive:true});window.addEventListener('resize',u);if(window.ResizeObserver){new ResizeObserver(u).observe(el);}u();}function run(){document.querySelectorAll('.all-certs-table-wrap,.cmp-wrap').forEach(init);}if(document.readyState!=='loading')run();else document.addEventListener('DOMContentLoaded',run);})();</script>
+<script>(function(){try{var blk=document.getElementById('recentBlock'),grid=document.getElementById('recentGrid');if(!blk||!grid)return;var a=JSON.parse(localStorage.getItem('recent')||'[]');if(!a.length)return;var base=blk.getAttribute('data-base')||'';var cur=(location.pathname.match(/\/c\/([^\/]+)\.html/)||[])[1]||'';function esc(s){return (s||'').replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}var items=a.filter(function(x){return x.s!==cur;}).slice(0,8);if(!items.length)return;grid.innerHTML=items.map(function(x){return '<li><a href="'+base+'c/'+esc(x.s)+'.html">'+esc(x.n)+'</a></li>';}).join('');blk.hidden=false;}catch(e){}})();</script>
 </body>
 </html>

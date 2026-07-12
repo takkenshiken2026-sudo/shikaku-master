@@ -376,18 +376,4 @@
     legacyType='';legacyIndustry='';
     activeTags.clear();resetPage=true;render();
   });
-  (function renderRecent(){
-    try{
-      var a=JSON.parse(localStorage.getItem('recent')||'[]');
-      var blk=document.getElementById('recentBlock'),grid=document.getElementById('recentGrid');
-      if(!blk||!grid||!a.length)return;
-      fetch('data/certifications.json').then(function(r){return r.json();}).then(function(all){
-        var nm={};all.forEach(function(x){nm[x.slug]=x.display_name||x.name;});
-        grid.innerHTML=a.slice(0,8).map(function(x){
-          return '<li><a href="c/'+esc(x.s)+'.html">'+esc(nm[x.s]||x.n)+'</a></li>';
-        }).join('');
-        blk.hidden=false;
-      });
-    }catch(e){}
-  })();
 })();

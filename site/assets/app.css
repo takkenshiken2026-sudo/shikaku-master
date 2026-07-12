@@ -45,6 +45,8 @@ html{scroll-padding-top:64px}
 .header-nav a.is-current{color:var(--ink-deep);font-weight:600}
 .header-nav-cta{margin-left:8px;padding:7px 12px;background:var(--accent);color:#fff !important;font-size:var(--text-sm);font-weight:600;border-radius:var(--radius);line-height:1.2;text-decoration:none}
 .header-nav a.header-nav-cta:hover,.header-nav a.header-nav-cta:focus-visible{background:var(--accent-hover);color:#fff !important;text-decoration:none}
+.header-nav-cta--course{background:#127a3e}
+.header-nav a.header-nav-cta--course:hover,.header-nav a.header-nav-cta--course:focus-visible{background:#0e6231}
 .header-nav-sep{color:var(--gray-400);font-size:var(--text-sm);user-select:none;padding:0 1px}
 .header-actions{display:none;align-items:center;gap:2px;margin-left:auto;flex-shrink:0}
 .header-icon-btn{display:inline-flex;align-items:center;justify-content:center;background:transparent;border:none;color:var(--ink);cursor:pointer;padding:8px;border-radius:6px;line-height:0;font-family:inherit}
@@ -63,6 +65,8 @@ html{scroll-padding-top:64px}
 .header-menu-panel a:last-child{border-bottom:none}
 .header-menu-panel a:hover{color:var(--ink-deep);background:var(--gray-50);text-decoration:none}
 @media(max-width:768px){:root{--page-gutter:20px}.header-nav{display:none}.header-actions{display:flex}.header-inner{padding:10px var(--page-gutter)}.logo-mark{min-width:48px;min-height:32px;padding:5px 8px 4px}.logo-mark-line{font-size:11px}.logo-mark-line--sub{font-size:10px}.logo-text{font-size:15px}.logo-sub{font-size:11px;max-width:min(210px,60vw)}.site-tagline{display:none}.container{padding:20px var(--page-gutter) 36px}.block-band{margin-left:calc(-1*var(--page-gutter));margin-right:calc(-1*var(--page-gutter));padding:32px var(--page-gutter)}.block-all-certs{padding:40px var(--page-gutter)}}
+/* 2つのCTAを含むナビが折り返す狭いデスクトップ幅では、早めにハンバーガーへ切替 */
+@media(min-width:769px) and (max-width:900px){.header-nav{display:none}.header-actions{display:flex}}
 
 .container{max-width:1200px;margin:0 auto;padding:28px var(--page-gutter) 36px;width:100%;flex:1 0 auto;min-width:0;background:#fff;box-shadow:0 0 24px rgba(0,0,0,.05)}
 .container:has(.page-detail){padding-top:36px;padding-bottom:56px}
@@ -522,6 +526,11 @@ table.cmp thead th:first-child{background:#edf2f8;z-index:2}
 /* Footer */
 .site-footer{background:var(--gray-50);border-top:1px solid var(--gray-200);margin-top:auto;color:var(--muted)}
 .site-footer-inner{max-width:1200px;margin:0 auto;padding:24px var(--page-gutter) 20px}
+.footer-recent{margin:0 0 20px;padding-bottom:18px;border-bottom:1px solid var(--gray-200)}
+.footer-recent-label{display:block;font-size:var(--text-sm);color:var(--muted);font-weight:600;margin-bottom:9px}
+.footer-recent-list{list-style:none;display:flex;flex-wrap:wrap;gap:7px;margin:0;padding:0}
+.footer-recent-list a{display:inline-block;max-width:220px;padding:5px 12px;border:1px solid var(--gray-200);border-radius:999px;font-size:var(--text-sm);color:var(--muted);text-decoration:none;background:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:middle}
+.footer-recent-list a:hover{color:var(--ink);border-color:var(--gray-300);text-decoration:none}
 .site-footer-brand{font-size:var(--text-md);font-weight:700;color:var(--ink-deep);margin:0 0 10px}
 .site-footer-nav{display:flex;flex-wrap:wrap;gap:6px 18px;margin-bottom:12px}
 .site-footer-nav a{font-size:var(--text-sm);color:var(--muted);text-decoration:none}
