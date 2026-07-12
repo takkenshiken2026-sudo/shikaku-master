@@ -268,9 +268,9 @@
         score+=2;reasons.push(PREF[pk].label);
       }
       if(time){
-        var hit=bandHit(x,time);
-        if(hit===true){score+=4;reasons.push('学習時間が合う');}
-        else if(hit===false)score-=3;
+        // 学習時間を指定したら、その帯に収まる資格のみ（不明・帯外は除外）
+        if(bandHit(x,time)!==true)return null;
+        score+=4;reasons.push('学習時間が合う');
       }
       if(x.popular){score+=2;if(reasons.length<4)reasons.push('人気');}
       var ap=appNum(x);if(ap)score+=Math.min(2,ap/50000);
@@ -317,7 +317,7 @@
       goalWrap.querySelectorAll('.sd-chip').forEach(function(c){
         var on=c===b;c.classList.toggle('is-on',on);c.setAttribute('aria-pressed',on?'true':'false');
       });
-      if(!resultBox.hidden)run();
+      run();
     });
     if(prefWrap)prefWrap.addEventListener('click',function(e){
       var b=e.target.closest('.sd-chip');if(!b)return;
@@ -325,11 +325,12 @@
       var idx=activePrefs.indexOf(pk),on;
       if(idx>=0){activePrefs.splice(idx,1);on=false;}else{activePrefs.push(pk);on=true;}
       b.classList.toggle('is-on',on);b.setAttribute('aria-pressed',on?'true':'false');
-      if(!resultBox.hidden)run();
+      run();
     });
-    fieldSel.addEventListener('change',function(){if(!resultBox.hidden)run();});
-    timeSel.addEventListener('change',function(){if(!resultBox.hidden)run();});
+    fieldSel.addEventListener('change',run);
+    timeSel.addEventListener('change',run);
     if(runBtn)runBtn.addEventListener('click',run);
+    run(); // 初期表示（既定の目的で候補を出しておく）
   }
   function onFilter(){resetPage=true;render();}
   function onQueryInput(e){syncQueryInputs(e.target);onFilter();}
