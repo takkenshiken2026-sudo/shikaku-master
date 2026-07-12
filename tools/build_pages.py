@@ -4839,11 +4839,11 @@ table.cmp thead th:first-child{background:#edf2f8;z-index:2}
 .page-detail .crumbs{margin-bottom:28px}
 .page-detail .detail-intro{padding:0;margin:0;border:none;background:transparent}
 .page-detail .detail-intro::after{content:"";display:block;width:100%;height:1px;background:var(--gray-200);margin-top:40px}
-.detail-intro-row{display:flex;gap:28px;align-items:flex-start}
+.detail-intro-row{display:flex;gap:28px;align-items:stretch}
 .detail-intro-main{flex:1 1 auto;min-width:0}
 .detail-intro-media{flex:0 0 auto;width:280px;margin:0}
-.detail-intro-media img{display:block;width:280px;height:188px;object-fit:cover;border-radius:10px;border:1px solid var(--gray-200);background:var(--gray-100)}
-.cert-cover{position:relative;overflow:hidden;width:280px;height:188px;border-radius:10px;color:#fff;box-sizing:border-box}
+.detail-intro-media img{display:block;width:280px;height:100%;min-height:188px;object-fit:cover;border-radius:10px;border:1px solid var(--gray-200);background:var(--gray-100)}
+.cert-cover{position:relative;overflow:hidden;width:280px;height:100%;min-height:188px;border-radius:10px;color:#fff;box-sizing:border-box}
 .cert-cover-deco{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
 .cert-cover-inner{position:absolute;inset:0;z-index:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center;padding:16px}
 .cert-cover-icon{display:flex;align-items:center;justify-content:center;width:48px;height:48px;border-radius:50%;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.28);margin-bottom:4px;flex-shrink:0}
