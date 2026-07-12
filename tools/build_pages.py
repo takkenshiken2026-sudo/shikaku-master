@@ -836,6 +836,7 @@ def page_shell(title: str, body: str, depth: int, noindex: bool = True,
   </div>
 </footer>
 <script>(function(){{var h=document.getElementById('siteHeader');if(!h)return;function close(){{h.classList.remove('site-header--search-open','site-header--menu-open');h.querySelectorAll('[data-toggle]').forEach(function(b){{b.setAttribute('aria-expanded','false');}});}}h.querySelectorAll('[data-toggle]').forEach(function(b){{b.addEventListener('click',function(){{var k=b.getAttribute('data-toggle');var cls=k==='search'?'site-header--search-open':'site-header--menu-open';var open=h.classList.contains(cls);close();if(!open){{h.classList.add(cls);b.setAttribute('aria-expanded','true');var p=document.getElementById(k==='search'?'hSearch':'hMenu');if(p){{p.hidden=false;var inp=p.querySelector('input');if(inp)setTimeout(function(){{inp.focus();}},30);}}}}}});}});document.addEventListener('keydown',function(e){{if(e.key==='Escape')close();}});}})();</script>
+<script>(function(){{function init(el){{if(el.dataset.hs)return;el.dataset.hs='1';var w=document.createElement('div');w.className='hscroll';el.parentNode.insertBefore(w,el);w.appendChild(el);var f=document.createElement('span');f.className='hscroll-fade';f.setAttribute('aria-hidden','true');w.appendChild(f);function u(){{var m=el.scrollWidth-el.clientWidth;w.classList.toggle('can-right',m>2&&el.scrollLeft<m-2);}}el.addEventListener('scroll',u,{{passive:true}});window.addEventListener('resize',u);if(window.ResizeObserver){{new ResizeObserver(u).observe(el);}}u();}}function run(){{document.querySelectorAll('.all-certs-table-wrap,.cmp-wrap').forEach(init);}}if(document.readyState!=='loading')run();else document.addEventListener('DOMContentLoaded',run);}})();</script>
 </body>
 </html>
 """
@@ -4467,6 +4468,10 @@ a.hero-suggest-item{text-decoration:none}a.hero-suggest-item:hover{text-decorati
 .all-certs-check input{width:17px;height:17px;accent-color:var(--accent)}
 .block-all-certs .all-certs-count{font-size:var(--text-sm);color:var(--muted);margin-bottom:12px}
 .all-certs-table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;border:1px solid var(--table-border);border-radius:var(--radius);background:#fff}
+.hscroll{position:relative}
+.hscroll-fade{position:absolute;top:1px;right:1px;bottom:1px;width:30px;pointer-events:none;border-radius:0 var(--radius) var(--radius) 0;background:linear-gradient(to left,rgba(15,30,60,.15),rgba(15,30,60,0));opacity:0;transition:opacity .18s}
+.hscroll.can-right .hscroll-fade{opacity:1}
+@media(hover:none){.hscroll.can-right .hscroll-fade{opacity:1}}
 .all-certs-table{width:100%;border-collapse:collapse;background:#fff;border:none;border-radius:0;font-size:var(--text-table);color:var(--ink);table-layout:fixed}
 .all-certs-table--4col{min-width:640px}
 .all-certs-table--5col{min-width:760px}
