@@ -787,7 +787,6 @@ def page_shell(title: str, body: str, depth: int, noindex: bool = True,
   <div class="header-inner">
     <div class="header-brand"><a class="logo" href="{base}index.html" aria-label="{esc(SITE_NAME)}、トップへ"><span class="logo-mark" aria-hidden="true"><span class="logo-mark-line">資格</span><span class="logo-mark-line logo-mark-line--sub">マスター</span></span><span class="logo-stack"><span class="logo-text">{esc(SITE_NAME)}</span><span class="logo-sub">国内最大級の資格情報サイト</span></span></a></div>
     <nav class="header-nav" aria-label="サイトメニュー">
-      <a href="{base}index.html#purpose">目的から探す</a><span class="header-nav-sep" aria-hidden="true">｜</span>
       <a href="{base}index.html#fields">分野から探す</a><span class="header-nav-sep" aria-hidden="true">｜</span>
       <a href="{base}index.html#all-certs">資格一覧</a>
       <a href="{base}courses.html" class="header-nav-cta header-nav-cta--course">試験対策講座</a>
@@ -805,7 +804,6 @@ def page_shell(title: str, body: str, depth: int, noindex: bool = True,
     </form>
   </div>
   <nav class="header-menu-panel" id="hMenu" aria-label="サイトメニュー" hidden>
-    <a href="{base}index.html#purpose">目的から探す</a>
     <a href="{base}index.html#fields">分野から探す</a>
     <a href="{base}index.html#all-certs">資格一覧</a>
     <a href="{base}courses.html">試験対策講座</a>
@@ -3503,33 +3501,6 @@ def build_index(rows) -> str:
   </div>
 </section>
 
-<section class="block block-band block-band--white" id="purpose">
-  <div class="block-head"><h2>目的から探す</h2></div>
-  <div class="purpose-grid">
-    <a class="purpose-card" href="feature/job-hunting.html">
-      <div class="icon">{PURPOSE_ICON_JOB}</div>
-      <div class="purpose-card-body">
-        <h3>就職</h3>
-        <p class="purpose-card-for">就活・新卒・第二新卒で、はじめて資格を選ぶ方</p>
-      </div>
-    </a>
-    <a class="purpose-card" href="feature/job-hunting.html">
-      <div class="icon">{PURPOSE_ICON_CHANGE}</div>
-      <div class="purpose-card-body">
-        <h3>転職</h3>
-        <p class="purpose-card-for">業界や職種を変えたい社会人向け</p>
-      </div>
-    </a>
-    <a class="purpose-card" href="feature/working-adults.html">
-      <div class="icon">{PURPOSE_ICON_SKILL}</div>
-      <div class="purpose-card-body">
-        <h3>スキルアップ</h3>
-        <p class="purpose-card-for">今の仕事に活かせる資格を探す方</p>
-      </div>
-    </a>
-  </div>
-</section>
-
 <section class="block block-band block-band--gray">
   <div class="block-head"><h2>人気の資格</h2><p>受験者数の多い順</p></div>
   <div class="popular-grid">{pop_html}</div>
@@ -4375,8 +4346,6 @@ html{scroll-padding-top:64px}
 .header-menu-panel a:last-child{border-bottom:none}
 .header-menu-panel a:hover{color:var(--ink-deep);background:var(--gray-50);text-decoration:none}
 @media(max-width:768px){:root{--page-gutter:20px}.header-nav{display:none}.header-actions{display:flex}.header-inner{padding:10px var(--page-gutter)}.logo-mark{min-width:48px;min-height:32px;padding:5px 8px 4px}.logo-mark-line{font-size:11px}.logo-mark-line--sub{font-size:10px}.logo-text{font-size:15px}.logo-sub{font-size:11px;max-width:min(210px,60vw)}.site-tagline{display:none}.container{padding:20px var(--page-gutter) 36px}.block-band{margin-left:calc(-1*var(--page-gutter));margin-right:calc(-1*var(--page-gutter));padding:32px var(--page-gutter)}.block-all-certs{padding:40px var(--page-gutter)}}
-/* 2つのCTAを含むナビが折り返す狭いデスクトップ幅では、早めにハンバーガーへ切替 */
-@media(min-width:769px) and (max-width:900px){.header-nav{display:none}.header-actions{display:flex}}
 
 .container{max-width:1200px;margin:0 auto;padding:28px var(--page-gutter) 36px;width:100%;flex:1 0 auto;min-width:0;background:#fff;box-shadow:0 0 24px rgba(0,0,0,.05)}
 .container:has(.page-detail){padding-top:36px;padding-bottom:56px}
