@@ -24,6 +24,7 @@ EXAM_CSV = ROOT / "data" / "exam_details.csv"
 STUDY_CSV = ROOT / "data" / "study_time.csv"
 SITE = ROOT / "site"
 BRAND = ROOT / "brand"
+CONTENT = ROOT / "content"
 
 # 厚労省 職業情報提供サイト（job tag）— 関連職業の公式ディスカバリ導線
 JOBTAG_URL = "https://shigoto.mhlw.go.jp/User/Search/Top"
@@ -1234,7 +1235,278 @@ def build_comparison_pages(indexable):
     return pages
 
 
-def build_index(rows) -> str:
+# ─────────────────────────────────────────────────────────────
+# 手書き記事（コラム）: content/articles/<slug>.md を静的ページ化する。
+# 依存を増やさないため Markdown のサブセットを自前で変換する。
+#   - 見出し ##〜####、段落、箇条書き(-,*)、番号付き(1.)、表(| … |)、引用(>)、区切り(---)
+#   - 強調 **x**、リンク [text](url)
+#   - 資格詳細への内部リンク [[c-1538]] / [[c-1538|表示名]]（名称はデータから自動補完）
+#   - 「よくある質問」節（## 見出し配下の ### 質問→本文）から FAQPage 構造化データを自動生成
+# ─────────────────────────────────────────────────────────────
+
+def _parse_front_matter(text):
+    """先頭の --- … --- を key: value のメタ情報として取り出す。"""
+    meta = {}
+    body = text
+    if text.startswith("---"):
+        end = text.find("\n---", 3)
+        if end != -1:
+            fm = text[3:end].strip("\n")
+            body = text[end + 4:].lstrip("\n")
+            for line in fm.split("\n"):
+                if ":" in line and not line.lstrip().startswith("#"):
+                    k, v = line.split(":", 1)
+                    meta[k.strip()] = v.strip()
+    return meta, body
+
+
+def _md_inline(text, base, name_of):
+    """行内Markdown（エスケープ済み前提の変換）を安全なHTMLへ。"""
+    t = esc(text)
+
+    def _cite(m):
+        slug = m.group(1).strip()
+        label = m.group(2)
+        nm = name_of.get(slug)
+        if not nm:
+            return m.group(0)  # 未知slugはそのまま残し、検証で気付けるように
+        lab = label[1:].strip() if label else esc(nm)
+        return f'<a href="{base}c/{esc(slug)}.html">{lab}</a>'
+
+    t = re.sub(r"\[\[([a-z0-9\-]+)(\|[^\]]+)?\]\]", _cite, t)
+    t = re.sub(r"\[([^\]]+)\]\((https?://[^)\s]+)\)",
+               lambda m: f'<a href="{m.group(2)}" rel="noopener" '
+                         f'target="_blank">{m.group(1)}</a>', t)
+    t = re.sub(r"\*\*([^*]+)\*\*", r"<strong>\1</strong>", t)
+    return t
+
+
+def _md_to_html(md, base, name_of):
+    """Markdownサブセットをブロック単位でHTMLへ変換。"""
+    lines = md.split("\n")
+    out, para = [], []
+    i, N = 0, len(lines)
+
+    def flush():
+        if para:
+            out.append("<p>" + _md_inline(" ".join(para), base, name_of) + "</p>")
+            para.clear()
+
+    while i < N:
+        s = lines[i].rstrip()
+        if not s.strip():
+            flush(); i += 1; continue
+        m = re.match(r"(#{2,4})\s+(.*)", s)
+        if m:
+            flush(); lvl = len(m.group(1))
+            out.append(f"<h{lvl}>" + _md_inline(m.group(2).strip(), base, name_of)
+                       + f"</h{lvl}>")
+            i += 1; continue
+        # 表
+        if (s.lstrip().startswith("|") and i + 1 < N
+                and re.match(r"\s*\|?[\s:\-|]+\|?\s*$", lines[i + 1])
+                and "-" in lines[i + 1]):
+            flush()
+            header = [c.strip() for c in s.strip().strip("|").split("|")]
+            i += 2
+            body_rows = []
+            while i < N and lines[i].lstrip().startswith("|"):
+                body_rows.append([c.strip() for c in
+                                  lines[i].strip().strip("|").split("|")])
+                i += 1
+            th = "".join(f"<th>{_md_inline(h, base, name_of)}</th>" for h in header)
+            trs = ""
+            for r in body_rows:
+                trs += "<tr>" + "".join(
+                    f"<td>{_md_inline(c, base, name_of)}</td>" for c in r) + "</tr>"
+            out.append('<div class="table-wrap"><table><thead><tr>'
+                       + th + "</tr></thead><tbody>" + trs + "</tbody></table></div>")
+            continue
+        # 箇条書き
+        if re.match(r"\s*[-*]\s+", s):
+            flush(); items = []
+            while i < N and re.match(r"\s*[-*]\s+", lines[i]):
+                items.append(re.sub(r"\s*[-*]\s+", "", lines[i], count=1))
+                i += 1
+            out.append("<ul>" + "".join(
+                f"<li>{_md_inline(it.strip(), base, name_of)}</li>"
+                for it in items) + "</ul>")
+            continue
+        # 番号付き
+        if re.match(r"\s*\d+\.\s+", s):
+            flush(); items = []
+            while i < N and re.match(r"\s*\d+\.\s+", lines[i]):
+                items.append(re.sub(r"\s*\d+\.\s+", "", lines[i], count=1))
+                i += 1
+            out.append("<ol>" + "".join(
+                f"<li>{_md_inline(it.strip(), base, name_of)}</li>"
+                for it in items) + "</ol>")
+            continue
+        # 引用
+        if s.lstrip().startswith(">"):
+            flush(); qs = []
+            while i < N and lines[i].lstrip().startswith(">"):
+                qs.append(re.sub(r"\s*>\s?", "", lines[i], count=1))
+                i += 1
+            out.append("<blockquote>"
+                       + _md_inline(" ".join(qs), base, name_of) + "</blockquote>")
+            continue
+        if s.strip() == "---":
+            flush(); out.append("<hr>"); i += 1; continue
+        para.append(s.strip()); i += 1
+    flush()
+    return "\n".join(out)
+
+
+def _strip_md(text):
+    """FAQ本文をプレーン文字列に（構造化データ用）。"""
+    t = re.sub(r"\[\[[a-z0-9\-]+\|([^\]]+)\]\]", r"\1", text)
+    t = re.sub(r"\[\[([a-z0-9\-]+)\]\]", r"\1", t)
+    t = re.sub(r"\[([^\]]+)\]\([^)]+\)", r"\1", t)
+    t = re.sub(r"\*\*([^*]+)\*\*", r"\1", t)
+    return t.strip()
+
+
+def _extract_faq(md, name_of):
+    """## よくある質問 節から (質問, 回答) を抽出。回答表示用に slug は名称へ。"""
+    faqs, in_sec, q, a = [], False, None, []
+
+    def name_sub(m):
+        return name_of.get(m.group(1), m.group(1))
+
+    def close():
+        if q:
+            ans = " ".join(a).strip()
+            ans = re.sub(r"\[\[([a-z0-9\-]+)\]\]", name_sub, ans)
+            faqs.append((q, _strip_md(ans)))
+    for ln in md.split("\n"):
+        if ln.startswith("## "):
+            close(); q, a = None, []
+            in_sec = any(k in ln for k in ("よくある質問", "Q&A", "FAQ"))
+            continue
+        if not in_sec:
+            continue
+        if ln.startswith("### "):
+            close(); q, a = ln[4:].strip(), []
+        elif ln.strip():
+            a.append(ln.strip())
+    close()
+    return faqs
+
+
+ARTICLE_NAV = ("article/index.html", "記事・コラム")
+
+
+def build_articles(indexable):
+    """content/articles/*.md → site/article/<slug>.html（＋一覧 index）。"""
+    pages, metas = {}, []
+    src_dir = CONTENT / "articles"
+    if not src_dir.exists():
+        return pages, metas
+    name_of = {r["slug"]: r["name"] for r in indexable}
+    by_slug = {r["slug"]: r for r in indexable}
+    base = "../"
+
+    for md_path in sorted(src_dir.glob("*.md")):
+        raw = md_path.read_text(encoding="utf-8")
+        meta, md_body = _parse_front_matter(raw)
+        slug = meta.get("slug") or md_path.stem
+        title = meta.get("title", slug)
+        desc = meta.get("description", "")
+        date = meta.get("date", "")
+        h1 = meta.get("h1", title.split("｜")[0])
+
+        content_html = _md_to_html(md_body, base, name_of)
+        faqs = _extract_faq(md_body, name_of)
+
+        rel_slugs = [s.strip() for s in meta.get("related", "").split(",") if s.strip()]
+        rel_items = [by_slug[s] for s in rel_slugs if s in by_slug]
+        related_html = ""
+        if rel_items:
+            related_html = ('<section class="rel-links"><h2>この記事で紹介した資格</h2>'
+                            + _list_items(rel_items, depth=1) + "</section>")
+
+        hub_lis = "".join(f'<li><a href="../feature/{s}.html">{esc(l)}</a></li>'
+                          for s, l in INTENT_HUB_NAV)
+        hub_html = ('<nav class="rel-links"><h2>関連ガイド</h2><ul>'
+                    + hub_lis + "</ul></nav>")
+
+        meta_line = ""
+        if date:
+            meta_line = f'<p class="post-meta">更新: {esc(date)}・{esc(SITE_NAME)}編集部</p>'
+
+        body = (
+            f'<nav class="crumbs"><a href="../index.html">トップ</a> › '
+            f'<a href="index.html">記事・コラム</a> › {esc(h1)}</nav>'
+            f'<article class="post"><h1>{esc(h1)}</h1>{meta_line}'
+            + content_html
+            + '<p class="muted" style="margin-top:18px">※受験料・合格率・受験資格・'
+              '試験日程・制度は変更されることがあります。出願前に各資格の公式サイトで'
+              '必ず最新情報をご確認ください。学習時間は編集部調べの目安（非公式）です。</p>'
+            + "</article>"
+            + related_html
+            + hub_html
+        )
+
+        canon = f"{BASE_URL}/article/{slug}.html"
+        article_ld = {
+            "@context": "https://schema.org", "@type": "Article",
+            "headline": title, "description": desc or SITE_DESC,
+            "inLanguage": "ja",
+            "author": {"@type": "Organization", "name": SITE_NAME},
+            "publisher": {"@type": "Organization", "name": SITE_NAME},
+            "mainEntityOfPage": {"@type": "WebPage", "@id": canon},
+        }
+        if date:
+            article_ld["datePublished"] = date
+            article_ld["dateModified"] = date
+        breadcrumb = {
+            "@context": "https://schema.org", "@type": "BreadcrumbList",
+            "itemListElement": [
+                {"@type": "ListItem", "position": 1, "name": "トップ",
+                 "item": BASE_URL + "/"},
+                {"@type": "ListItem", "position": 2, "name": "記事・コラム",
+                 "item": BASE_URL + "/article/index.html"},
+                {"@type": "ListItem", "position": 3, "name": h1},
+            ],
+        }
+        jsonld = [article_ld, breadcrumb]
+        if faqs:
+            jsonld.append({
+                "@context": "https://schema.org", "@type": "FAQPage",
+                "mainEntity": [
+                    {"@type": "Question", "name": q,
+                     "acceptedAnswer": {"@type": "Answer", "text": a}}
+                    for q, a in faqs],
+            })
+        pages[slug] = page_shell(f"{title}｜{SITE_NAME}", body, depth=1,
+                                 noindex=False, desc=desc, path=f"article/{slug}.html",
+                                 jsonld=jsonld)
+        metas.append({"slug": slug, "title": title, "h1": h1,
+                      "desc": desc, "date": date})
+
+    # 記事一覧 index
+    metas_sorted = sorted(metas, key=lambda m: m["date"], reverse=True)
+    cards = ""
+    for m in metas_sorted:
+        d = f'<span class="post-date">{esc(m["date"])}</span>' if m["date"] else ""
+        cards += (f'<li><a href="{esc(m["slug"])}.html">{esc(m["h1"])}</a>'
+                  f'{d}<p class="muted">{esc(m["desc"])}</p></li>')
+    idx_body = (
+        '<nav class="crumbs"><a href="../index.html">トップ</a> › 記事・コラム</nav>'
+        "<h1>記事・コラム</h1>"
+        '<p class="lead">資格の選び方・勉強法・難易度をテーマごとに深掘りする'
+        "読み物です。データに基づき、独学で取れる資格や目的別の選び方を解説します。</p>"
+        f'<ul class="post-list">{cards}</ul>')
+    pages["index"] = page_shell(f"記事・コラム｜{SITE_NAME}", idx_body, depth=1,
+                                noindex=False,
+                                desc="資格の選び方・勉強法・難易度を解説する記事一覧。"
+                                "独学で取れる資格や目的別の選び方をデータに基づき紹介。",
+                                path="article/index.html")
+    return pages, metas_sorted
+
+
+def build_index(rows, articles=None) -> str:
     pub = sum(1 for r in rows if r.get("status") == "published")
     majors = sorted({r["major_category"] for r in rows})
     cat_links = " ".join(
@@ -1247,6 +1519,15 @@ def build_index(rows) -> str:
     hub_links = "".join(
         f'<li><a href="feature/{slug}.html">{esc(label)}</a></li>'
         for slug, label in INTENT_HUB_NAV)
+    article_block = ""
+    if articles:
+        art_lis = "".join(
+            f'<li><a href="article/{esc(a["slug"])}.html">{esc(a["h1"])}</a></li>'
+            for a in articles[:6])
+        article_block = ('<h2>記事・コラム</h2>'
+                         f'<ul class="feat-list">{art_lis}</ul>'
+                         '<p class="muted" style="margin:.2em 0 .6em">'
+                         '<a href="article/index.html">記事一覧をすべて見る →</a></p>')
     by_slug = {r["slug"]: r for r in rows}
 
     def _short(r):
@@ -1290,6 +1571,7 @@ def build_index(rows) -> str:
 <ul id="results" class="results"></ul>
 <div id="cmpbar" class="cmpbar"></div>
 <section class="feature-nav">
+  {article_block}
   <h2>目的から探す</h2>
   <ul class="feat-list">{hub_links}</ul>
   <h2>資格を比べる（人気の比較）</h2>
@@ -1531,6 +1813,23 @@ table.spec th{width:34%;background:#f2f5fa;color:#3a4757;font-weight:600;white-s
 .rel-links h2{font-size:1.05rem;margin:.2em 0 .3em}
 .rel-links ul{margin:.2em 0;padding-left:1.1em}.rel-links li{margin:2px 0}
 .site-footer{max-width:920px;margin:30px auto;padding:16px 18px;color:#7a838f;font-size:.8rem;border-top:1px solid #e6e9ef}
+.post{max-width:760px}
+.post h2{font-size:1.28rem;margin:1.5em 0 .4em;color:#0d47a1;border-bottom:2px solid #e6e9ef;padding-bottom:5px}
+.post h3{font-size:1.08rem;margin:1.3em 0 .3em}
+.post h4{font-size:.98rem;margin:1.1em 0 .3em;color:#43505f}
+.post p{margin:.7em 0}
+.post ul,.post ol{margin:.6em 0;padding-left:1.4em}.post li{margin:4px 0}
+.post blockquote{margin:1em 0;padding:.6em 1em;border-left:4px solid #9bb8e6;background:#eef4fc;color:#33404f;border-radius:0 8px 8px 0}
+.post-meta{color:#7a838f;font-size:.85rem;margin:.2em 0 1.2em}
+.table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:14px 0}
+.table-wrap table{border-collapse:collapse;width:100%;min-width:480px;font-size:.92rem;background:#fff}
+.table-wrap th,.table-wrap td{border:1px solid #e1e8f2;padding:8px 10px;text-align:left;vertical-align:top}
+.table-wrap thead th{background:#0d47a1;color:#fff}
+.post-list{list-style:none;padding:0;margin:14px 0}
+.post-list li{border:1px solid #e6e9ef;background:#fff;border-radius:10px;padding:13px 16px;margin:10px 0}
+.post-list li a{font-weight:700;font-size:1.05rem}
+.post-list .post-date{color:#7a838f;font-size:.8rem;margin-left:8px}
+.post-list p{margin:.3em 0 0;font-size:.9rem}
 .hub-grp{font-size:1.0rem;margin:1.1em 0 .3em;color:#0d47a1;border-bottom:1px solid #e6e9ef;padding-bottom:3px}
 .vs-table{width:100%;border-collapse:collapse;margin:14px 0;font-size:.94rem}
 .vs-table th,.vs-table td{border:1px solid #e1e8f2;padding:8px 10px;text-align:left;vertical-align:top}
@@ -1608,7 +1907,15 @@ def main() -> int:
             shutil.copy2(src, SITE / "assets" / name)
     if (BRAND / "favicon.ico").exists():
         shutil.copy2(BRAND / "favicon.ico", SITE / "favicon.ico")
-    (SITE / "index.html").write_text(build_index(indexable), encoding="utf-8")
+    # 記事・コラム（手書き原稿 content/articles/*.md → site/article/）
+    art_pages, art_metas = build_articles(indexable)
+    if art_pages:
+        (SITE / "article").mkdir()
+        for slug, htmlc in art_pages.items():
+            (SITE / "article" / f"{slug}.html").write_text(htmlc, encoding="utf-8")
+
+    (SITE / "index.html").write_text(build_index(indexable, art_metas),
+                                     encoding="utf-8")
     (SITE / "compare.html").write_text(build_compare(), encoding="utf-8")
 
     for r in indexable:
@@ -1641,6 +1948,10 @@ def main() -> int:
     entries += [(f"bunya/{s}.html", today, "0.8") for s in cat_pages]
     entries += [(f"feature/{s}.html", today, "0.8") for s in feat_pages]
     entries += [(f"vs/{s}.html", today, "0.7") for s in vs_pages]
+    if art_pages:
+        entries.append(("article/index.html", today, "0.7"))
+        entries += [(f'article/{m["slug"]}.html', (m["date"] or today), "0.8")
+                    for m in art_metas]
     idx_details = [r for r in indexable if is_indexable_detail(r)]
     entries += [(f'c/{r["slug"]}.html',
                  (r.get("source_checked_at") or today), "0.6") for r in idx_details]
