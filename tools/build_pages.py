@@ -4701,6 +4701,22 @@ table.spec th{width:34%;background:var(--table-head-bg);color:var(--ink);font-we
 .article-table tbody tr:last-child th,.article-table tbody tr:last-child td{border-bottom:none}
 .article-table thead th{background:#edf2f8;color:var(--ink);font-weight:var(--fw-semibold);white-space:nowrap;font-size:1rem;border-bottom:2px solid #cddbeb}
 .article-table tbody td:first-child{font-weight:var(--fw-semibold);color:var(--ink-deep)}
+/* 記事本文をサイト共通のカード/見出し流儀に合わせる（左アクセントバー・カード余白） */
+.page-article .article-section{margin:32px 0}
+.page-article .detail-section-title{padding-left:12px;border-left:4px solid var(--accent);line-height:1.4}
+.page-article .article-answer{margin:20px 0 22px}
+.page-article .article-toc{margin:20px 0 26px}
+.page-article .article-cert-links{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:16px 0}
+.page-article .article-cert-links li{margin:0;padding:12px 14px;gap:8px;transition:border-color .12s,box-shadow .12s}
+.page-article .article-cert-links li::before{content:"›";color:var(--accent);font-weight:700;font-size:1.2em;line-height:1}
+.page-article .article-cert-links li a{flex:1;min-width:0}
+.page-article .article-cert-links li:hover{border-color:var(--accent);box-shadow:0 2px 10px rgba(11,87,208,.13)}
+.page-article .article-related{border-top:1px solid var(--gray-200);padding-top:22px}
+.page-article .article-related ul{list-style:none;padding:0;margin:0;display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.page-article .article-related li a{display:block;padding:11px 14px;background:var(--gray-50);border:1px solid var(--gray-200);border-radius:var(--radius);color:var(--ink);text-decoration:none;transition:border-color .12s,background .12s}
+.page-article .article-related li a::before{content:"▶";color:var(--accent);font-size:.75em;margin-right:8px;vertical-align:middle}
+.page-article .article-related li a:hover{border-color:var(--accent);background:var(--accent-light)}
+@media(max-width:560px){.page-article .article-cert-links,.page-article .article-related ul{grid-template-columns:1fr}}
 .feat-list a{color:var(--ink)}
 .updated{font-size:var(--text-sm);color:var(--muted);margin:.1em 0 .6em}.updated .muted{margin-left:.4em}
 .tag-chip{display:inline-block;background:var(--gray-100);color:var(--muted);border:1px solid var(--gray-200);border-radius:12px;padding:2px 10px;margin:2px 4px 2px 0;font-size:var(--text-sm)}
