@@ -3,74 +3,239 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#0d47a1">
-<title>資格カタログ</title>
+<meta name="theme-color" content="#ffffff">
+<link rel="preconnect" href="https://www.googletagmanager.com">
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-KERDMXDPSR"></script>
+<script>
+window.dataLayer=window.dataLayer||[];
+function gtag(){dataLayer.push(arguments);}
+gtag('js',new Date());
+gtag('config','G-KERDMXDPSR');
+</script>
+<title>資格マスター｜就職・転職・スキルアップの資格を検索・比較（1076件以上）</title>
 <meta name="description" content="日本の資格を「探せる・絞れる・比べられる」資格データベース。受験料・試験形式・受験資格・合格率・実施団体・公式サイトを公式の一次情報に基づき掲載。">
 <link rel="canonical" href="https://shikaku-master.jp/">
 <meta property="og:type" content="website">
-<meta property="og:site_name" content="資格カタログ">
-<meta property="og:title" content="資格カタログ">
+<meta property="og:site_name" content="資格マスター">
+<meta property="og:title" content="資格マスター｜就職・転職・スキルアップの資格を検索・比較（1076件以上）">
 <meta property="og:description" content="日本の資格を「探せる・絞れる・比べられる」資格データベース。受験料・試験形式・受験資格・合格率・実施団体・公式サイトを公式の一次情報に基づき掲載。">
 <meta property="og:url" content="https://shikaku-master.jp/">
 <meta property="og:locale" content="ja_JP">
-<meta name="twitter:card" content="summary">
+<meta property="og:image" content="https://shikaku-master.jp/assets/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://shikaku-master.jp/assets/og.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;800&display=swap" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;800&display=swap"></noscript>
 <link rel="icon" href="assets/favicon.ico" sizes="32x32">
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
-<link rel="stylesheet" href="assets/app.css">
-<script type="application/ld+json">{"@context": "https://schema.org", "@type": "WebSite", "name": "資格カタログ", "url": "https://shikaku-master.jp/", "potentialAction": {"@type": "SearchAction", "target": {"@type": "EntryPoint", "urlTemplate": "https://shikaku-master.jp/?q={search_term_string}"}, "query-input": "required name=search_term_string"}}</script>
-<script type="application/ld+json">{"@context": "https://schema.org", "@type": "Organization", "name": "資格カタログ", "url": "https://shikaku-master.jp/", "logo": "https://shikaku-master.jp/assets/favicon.svg"}</script>
+<link rel="stylesheet" href="assets/app.css?v=42dff6ec20">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "WebSite", "name": "資格マスター", "url": "https://shikaku-master.jp/", "potentialAction": {"@type": "SearchAction", "target": {"@type": "EntryPoint", "urlTemplate": "https://shikaku-master.jp/?q={search_term_string}"}, "query-input": "required name=search_term_string"}}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "Organization", "name": "資格マスター", "url": "https://shikaku-master.jp/", "logo": "https://shikaku-master.jp/assets/favicon.svg", "image": "https://shikaku-master.jp/assets/og.png", "description": "日本国内の資格を、各資格の公式の一次情報に基づいて整理・掲載する資格情報サイト。受験料・受験資格・試験形式・合格率・実施団体・公式サイトを横断的に検索・比較できます。"}</script>
 </head>
 <body>
-<header class="site-header"><a href="index.html" class="logo">資格カタログ</a>
-<span class="tagline">日本の資格を探せる・絞れる・比べられる</span></header>
-<main class="container">
-<h1>日本の資格カタログ</h1>
-<p class="lead">資格名で検索、または分野・区分で絞り込み・並び替えできます。現在 <strong id="count">-</strong> 件を収録（うち公式データ掲載 862 件）。受験料・試験形式・受験資格・合格率・公式サイトを掲載しています。</p>
-<div class="controls">
-  <input id="q" type="search" placeholder="資格名で検索（例: 簿記, 電気, ボイラー）">
-  <select id="major"><option value="">分野（すべて）</option></select>
-  <select id="type"><option value="">区分（すべて）</option></select>
-  <select id="industry"><option value="">活かせる業界（すべて）</option></select>
-  <select id="study">
-    <option value="">学習時間の目安（すべて）</option>
-    <option value="0-50">〜50時間</option>
-    <option value="50-100">50〜100時間</option>
-    <option value="100-300">100〜300時間</option>
-    <option value="300-1000">300〜1000時間</option>
-    <option value="1000-">1000時間以上</option>
-  </select>
-  <select id="sort">
-    <option value="">並び順（標準）</option>
-    <option value="fee-asc">受験料が安い順</option>
-    <option value="fee-desc">受験料が高い順</option>
-    <option value="pass-desc">合格率が高い順</option>
-    <option value="pass-asc">合格率が低い順</option>
-  </select>
-</div>
-<div class="filters">
-  <label><input type="checkbox" id="f-pub"> データ掲載のみ</label>
-  <span class="muted" id="studynote" style="display:none">学習時間は編集部調べの目安（非公式）</span>
-</div>
-<div id="tagfilter" class="tagfilter"><span class="tf-label">目的・特徴で絞り込み：</span></div>
-<p id="status" class="muted"></p>
-<p class="muted hint">行頭のチェックを入れて資格を選ぶと、最大4件まで並べて比較できます。</p>
-<ul id="results" class="results"></ul>
-<div id="cmpbar" class="cmpbar"></div>
-<section class="feature-nav">
-  <h2>目的から探す</h2>
-  <ul class="feat-list"><li><a href="feature/independence.html">独立・開業を目指せる資格</a></li><li><a href="feature/job-hunting.html">就職・転職に役立つ資格</a></li><li><a href="feature/remote-work.html">在宅・リモートワークに活かせる資格</a></li><li><a href="feature/skilled-trade.html">手に職をつけられる資格</a></li><li><a href="feature/working-adults.html">働きながら取りやすい資格</a></li><li><a href="feature/it-beginner.html">未経験からITエンジニアを目指す資格</a></li><li><a href="feature/senior.html">定年後・シニアに役立つ資格</a></li></ul>
-  <h2>資格を比べる（人気の比較）</h2>
-  <ul class="feat-list"><li><a href="vs/takken-gyoseishoshi.html">宅地建物取引士 と 行政書士 の違い</a></li><li><a href="vs/gyoseishoshi-sharoshi.html">行政書士 と 社会保険労務士 の違い</a></li><li><a href="vs/boki-2-3.html">日商簿記2級 と 日商簿記3級 の違い</a></li><li><a href="vs/kihonjoho-ojoho.html">基本情報技術者 と 応用情報技術者 の違い</a></li><li><a href="vs/fp-2-3.html">2級ファイナンシャル・プランニング技能士 と 3級ファイナンシャル・プランニング技能士 の違い</a></li><li><a href="vs/takken-mankanshi.html">宅地建物取引士 と マンション管理士 の違い</a></li><li><a href="vs/mankanshi-kanrigyomu.html">マンション管理士 と 管理業務主任者 の違い</a></li><li><a href="vs/shihoshoshi-gyoseishoshi.html">司法書士 と 行政書士 の違い</a></li><li><a href="vs/zeirishi-koninkaikeishi.html">税理士 と 公認会計士 の違い</a></li><li><a href="vs/denki-2shu-1shu.html">第二種電気工事士 と 第一種電気工事士 の違い</a></li><li><a href="vs/kaigofukushishi-caremane.html">介護福祉士 と 介護支援専門員 の違い</a></li><li><a href="vs/shakaifukushi-seishinhoken.html">社会福祉士 と 精神保健福祉士 の違い</a></li><li><a href="vs/kanrieiyoshi-eiyoshi.html">管理栄養士 と 栄養士 の違い</a></li><li><a href="vs/itpassport-kihonjoho.html">ITパスポート と 基本情報技術者 の違い</a></li><li><a href="vs/torokuhanbai-yakuzaishi.html">登録販売者 と 薬剤師 の違い</a></li><li><a href="vs/shindanshi-sharoshi.html">中小企業診断士 と 社会保険労務士 の違い</a></li><li><a href="vs/boki2-fp2.html">日商簿記2級 と 2級ファイナンシャル・プランニング技能士 の違い</a></li><li><a href="vs/sokuryoshi-sokuryoshiho.html">測量士 と 測量士補 の違い</a></li><li><a href="vs/denken3-denkikoji.html">第三種電気主任技術者 と 第一種電気工事士 の違い</a></li><li><a href="vs/toeic-eiken.html">TOEIC と 実用英語技能検定準1級 の違い</a></li><li><a href="vs/kangoshi-junkangoshi.html">看護師 と 准看護師 の違い</a></li><li><a href="vs/biyoshi-riyoshi.html">美容師 と 理容師 の違い</a></li><li><a href="vs/ri1gaku-sagyo.html">理学療法士 と 作業療法士 の違い</a></li><li><a href="vs/shakaifukushi-kaigofukushi.html">社会福祉士 と 介護福祉士 の違い</a></li><li><a href="vs/hoikushi-yochien.html">保育士 と 幼稚園教諭免許 の違い</a></li><li><a href="vs/kikenbutsu-ko-otsu.html">危険物取扱者 と 危険物取扱者 の違い</a></li><li><a href="vs/eisei-1shu-2shu.html">第一種衛生管理者 と 第二種衛生管理者 の違い</a></li><li><a href="vs/kenchiku-sekan-1-2.html">1級建築施工管理技士 と 2級建築施工管理技士 の違い</a></li><li><a href="vs/doboku-sekan-1-2.html">1級土木施工管理技士 と 2級土木施工管理技士 の違い</a></li><li><a href="vs/shindanshi-gyoseishoshi.html">中小企業診断士 と 行政書士 の違い</a></li><li><a href="vs/denken3-enekan.html">第三種電気主任技術者 と エネルギー管理士 の違い</a></li><li><a href="vs/boki1-zeirishi.html">日商簿記1級 と 税理士 の違い</a></li><li><a href="vs/itpassport-mos.html">ITパスポート と MOS Excelスペシャリスト の違い</a></li><li><a href="vs/anma-judo.html">あん摩マッサージ指圧師 と 柔道整復師 の違い</a></li><li><a href="vs/kanrigyomu-takken.html">管理業務主任者 と 宅地建物取引士 の違い</a></li><li><a href="vs/takken-fp2.html">宅地建物取引士 と 2級ファイナンシャル・プランニング技能士 の違い</a></li><li><a href="vs/takken-boki2.html">宅地建物取引士 と 日商簿記2級 の違い</a></li><li><a href="vs/denko2-kikenbutsu.html">第二種電気工事士 と 危険物取扱者 の違い</a></li><li><a href="vs/denko-denken3.html">第二種電気工事士 と 第三種電気主任技術者 の違い</a></li><li><a href="vs/sokuryoshi-chosashi.html">測量士 と 土地家屋調査士 の違い</a></li><li><a href="vs/shihoshoshi-chosashi.html">司法書士 と 土地家屋調査士 の違い</a></li><li><a href="vs/shika-eisei-gikou.html">歯科衛生士 と 歯科技工士 の違い</a></li><li><a href="vs/rinsho-hoshasen.html">臨床検査技師 と 診療放射線技師 の違い</a></li><li><a href="vs/chorishi-seika.html">調理師 と 製菓衛生師 の違い</a></li><li><a href="vs/shisho-gakugeiin.html">司書 と 学芸員 の違い</a></li><li><a href="vs/nesupe-sc.html">ネットワークスペシャリスト と 情報処理安全確保支援士 の違い</a></li><li><a href="vs/kangoshi-kaigofukushi.html">看護師 と 介護福祉士 の違い</a></li><li><a href="vs/career-sharoshi.html">キャリアコンサルタント と 社会保険労務士 の違い</a></li><li><a href="vs/boiler-1-2.html">1級ボイラー技士 と 2級ボイラー技士 の違い</a></li><li><a href="vs/ikkyu-kenchikushi-sekan.html">一級建築士 と 1級建築施工管理技士 の違い</a></li><li><a href="vs/boki3-fp3.html">日商簿記3級 と 3級ファイナンシャル・プランニング技能士 の違い</a></li></ul>
-  <h2>特集・ランキング</h2>
-  <ul class="feat-list"><li><a href="feature/popular.html">受験者数が多い人気資格ランキング</a></li><li><a href="feature/cheap.html">受験料が安い資格ランキング</a></li><li><a href="feature/high-pass.html">合格率が高い資格</a></li><li><a href="feature/hard.html">合格率が低い難関資格</a></li><li><a href="feature/cbt.html">在宅・CBTで受けられる資格</a></li><li><a href="feature/no-requirement.html">受験資格なしで受けられる資格</a></li><li><a href="feature/no-requirement-national.html">受験資格なしで取れる国家資格</a></li><li><a href="feature/national.html">国家資格の一覧</a></li><li><a href="feature/public.html">公的資格の一覧</a></li><li><a href="feature/data-available.html">公式データ掲載資格の一覧</a></li></ul>
-  <h2>分野から探す</h2>
-  <div class="chips"><a class="chip" href="bunya/it.html">IT・情報処理</a> <a class="chip" href="bunya/design.html">デザイン・美術・文化</a> <a class="chip" href="bunya/realestate.html">不動産</a> <a class="chip" href="bunya/finance.html">会計・金融・経営</a> <a class="chip" href="bunya/medical.html">医療・看護・薬</a> <a class="chip" href="bunya/business.html">商業・販売・事務</a> <a class="chip" href="bunya/civil.html">土木・測量・建設</a> <a class="chip" href="bunya/safety.html">安全・環境・危険物</a> <a class="chip" href="bunya/architecture.html">建築・設備</a> <a class="chip" href="bunya/education.html">教育・保育・学術</a> <a class="chip" href="bunya/manufacturing.html">機械・電気・ものづくり</a> <a class="chip" href="bunya/law.html">法律・法務・知財</a> <a class="chip" href="bunya/welfare.html">福祉・介護・心理</a> <a class="chip" href="bunya/service.html">美容・サービス・スポーツ</a> <a class="chip" href="bunya/plant.html">設備・プラント・機械運転</a> <a class="chip" href="bunya/language.html">語学・コミュニケーション</a> <a class="chip" href="bunya/agriculture.html">農林水産・動物</a> <a class="chip" href="bunya/transport.html">運輸・運転・航空</a> <a class="chip" href="bunya/electric.html">電気・通信</a> <a class="chip" href="bunya/food.html">食品・調理・栄養</a></div>
+<a class="skip-link" href="#main">本文へスキップ</a>
+<header class="site-header" id="siteHeader">
+  <div class="header-inner">
+    <div class="header-brand"><a class="logo" href="index.html" aria-label="資格マスター、トップへ"><span class="logo-mark" aria-hidden="true"><span class="logo-mark-line">資格</span><span class="logo-mark-line logo-mark-line--sub">マスター</span></span><span class="logo-stack"><span class="logo-text">資格マスター</span><span class="logo-sub">国内最大級の資格情報サイト</span></span></a></div>
+    <nav class="header-nav" aria-label="サイトメニュー">
+      <a href="index.html#fields">分野から探す</a><span class="header-nav-sep" aria-hidden="true">｜</span>
+      <a href="index.html#all-certs">資格一覧</a>
+      <a href="courses.html" class="header-nav-cta header-nav-cta--course">試験対策講座</a>
+      <a href="index.html#partners" class="header-nav-cta">資格対策サイト</a>
+    </nav>
+    <div class="header-actions">
+      <button type="button" class="header-icon-btn" data-toggle="search" aria-label="資格名で検索" aria-controls="hSearch" aria-expanded="false"><svg class="ico-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/></svg></button>
+      <button type="button" class="header-icon-btn" data-toggle="menu" aria-label="メニューを開く" aria-controls="hMenu" aria-expanded="false"><svg class="ico-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+    </div>
+  </div>
+  <div class="header-search-panel" id="hSearch" hidden>
+    <form class="header-search-form" role="search" action="index.html" method="get">
+      <input type="search" name="q" placeholder="資格名で検索（例: 簿記、宅建、ITパスポート）" aria-label="資格名で検索">
+      <button type="submit">検索</button>
+    </form>
+  </div>
+  <nav class="header-menu-panel" id="hMenu" aria-label="サイトメニュー" hidden>
+    <a href="index.html#fields">分野から探す</a>
+    <a href="index.html#all-certs">資格一覧</a>
+    <a href="courses.html">試験対策講座</a>
+    <a href="shoku/index.html">職種から探す</a>
+    <a href="feature/index.html">特集・ランキング</a>
+    <a href="articles/index.html">記事・コラム</a>
+    <a href="index.html#partners">資格対策サイト</a>
+  </nav>
+</header>
+<main class="container" id="main">
+<section class="hero">
+  <div class="hero-inner">
+  <h1><span class="hero-h1-line">就職・転職・スキルアップの</span><span class="hero-h1-line">資格情報サイト</span></h1>
+  <p class="hero-sub">日本国内の資格を <strong id="count">1,076</strong> 件以上掲載。受験料・受験資格・試験形式・合格率・公式サイトを、公式の一次情報に基づいて整理しています。</p>
+  <div class="hero-search">
+    <span class="ico"><svg class="ico-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/></svg></span>
+    <input id="q" type="search" placeholder="資格名で検索（例: 簿記, 宅建, ITパスポート）" aria-label="資格名で検索" autocomplete="off" aria-controls="heroSuggest" aria-expanded="false" aria-autocomplete="list">
+    <div class="hero-suggest" id="heroSuggest" role="listbox" aria-label="よく探される資格" hidden>
+      <p class="hero-suggest-label">よく探される資格</p>
+      <ul class="hero-suggest-list"><li><button type="button" class="hero-suggest-item" role="option" data-q="ITパスポート">ITパスポート<span class="hero-suggest-meta">IT・情報処理</span></button></li><li><button type="button" class="hero-suggest-item" role="option" data-q="宅地建物取引士">宅地建物取引士<span class="hero-suggest-meta">不動産</span></button></li><li><button type="button" class="hero-suggest-item" role="option" data-q="危険物取扱者(乙種)">危険物取扱者(乙種)<span class="hero-suggest-meta">機械・電気・ものづくり</span></button></li><li><button type="button" class="hero-suggest-item" role="option" data-q="日商簿記3級">日商簿記3級<span class="hero-suggest-meta">会計・金融・経営</span></button></li><li><button type="button" class="hero-suggest-item" role="option" data-q="基本情報技術者">基本情報技術者<span class="hero-suggest-meta">IT・情報処理</span></button></li><li><button type="button" class="hero-suggest-item" role="option" data-q="日本漢字能力検定2級">日本漢字能力検定2級<span class="hero-suggest-meta">語学・コミュニケーション</span></button></li><li><button type="button" class="hero-suggest-item" role="option" data-q="日商簿記2級">日商簿記2級<span class="hero-suggest-meta">会計・金融・経営</span></button></li><li><button type="button" class="hero-suggest-item" role="option" data-q="生成AIパスポート">生成AIパスポート<span class="hero-suggest-meta">IT・情報処理</span></button></li></ul>
+    </div>
+  </div>
+  <p class="hero-result" id="heroResult" hidden></p>
+  </div>
 </section>
-<script src="assets/search.js"></script>
+
+<section class="block block-band block-band--white block-shindan" id="shindan">
+  <div class="block-head"><h2>あなたに合う資格を診断</h2><p>目的・分野・学習時間・こだわり条件から、おすすめの資格をその場で提案します</p></div>
+  <div class="shindan">
+    <div class="shindan-fields">
+      <div class="shindan-field">
+        <span class="shindan-label" id="sdGoalLabel">目的</span>
+        <div class="shindan-seg" role="group" aria-labelledby="sdGoalLabel" id="sdGoal">
+          <button type="button" class="sd-chip is-on" data-goal="job" aria-pressed="true">就職</button>
+          <button type="button" class="sd-chip" data-goal="change" aria-pressed="false">転職</button>
+          <button type="button" class="sd-chip" data-goal="skill" aria-pressed="false">スキルアップ</button>
+          <button type="button" class="sd-chip" data-goal="independent" aria-pressed="false">独立・開業</button>
+        </div>
+      </div>
+      <div class="shindan-field">
+        <label class="shindan-label" for="sdField">興味のある分野・いまの業界</label>
+        <select id="sdField"><option value="">指定なし（すべての分野）</option></select>
+      </div>
+      <div class="shindan-field">
+        <label class="shindan-label" for="sdTime">使える学習時間の目安</label>
+        <select id="sdTime">
+          <option value="">こだわらない</option>
+          <option value="0-50">〜50時間（数週間で狙える）</option>
+          <option value="50-100">50〜100時間</option>
+          <option value="100-300">100〜300時間</option>
+          <option value="300-1000">300〜1000時間</option>
+          <option value="1000-">1000時間以上（難関に挑戦）</option>
+        </select>
+      </div>
+    </div>
+    <div class="shindan-prefs">
+      <span class="shindan-label" id="sdPrefLabel">こだわり条件（複数選択できます・任意）</span>
+      <div class="shindan-seg" role="group" aria-labelledby="sdPrefLabel" id="sdPref">
+        <button type="button" class="sd-chip" data-pref="nolic" aria-pressed="false">受験資格なし（誰でも受けられる）</button>
+        <button type="button" class="sd-chip" data-pref="cbt" aria-pressed="false">在宅・CBTで受けられる</button>
+        <button type="button" class="sd-chip" data-pref="working" aria-pressed="false">働きながら取りやすい</button>
+        <button type="button" class="sd-chip" data-pref="kokka" aria-pressed="false">国家資格</button>
+      </div>
+    </div>
+    <div class="shindan-result" id="sdResult" hidden></div>
+  </div>
+</section>
+
+<section class="block block-band block-band--gray">
+  <div class="block-head"><h2>人気の資格</h2><p>受験者数の多い順</p></div>
+  <div class="popular-grid"><a class="pop-card card-link" href="c/c-1538.html"><div class="pop-card-head"><span class="pop-card-trophy" aria-hidden="true"><svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 21h8"/><path d="M12 17v4"/><path d="M7 4h10v5a5 5 0 0 1-10 0V4z"/><path d="M5 5H3v2a3 3 0 0 0 3 3"/><path d="M19 5h2v2a3 3 0 0 1-3 3"/></svg></span><div class="pop-card-name">ITパスポート</div></div><ul class="pop-card-facts"><li class="pop-card-diff"><span class="k">難易度</span><span class="v"><span class="diff-badge diff-mid">標準</span></span></li><li><span class="k">学習目安</span><span class="v">約100〜180時間</span></li></ul></a><a class="pop-card card-link" href="c/c-3207.html"><div class="pop-card-head"><span class="pop-card-trophy" aria-hidden="true"><svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 21h8"/><path d="M12 17v4"/><path d="M7 4h10v5a5 5 0 0 1-10 0V4z"/><path d="M5 5H3v2a3 3 0 0 0 3 3"/><path d="M19 5h2v2a3 3 0 0 1-3 3"/></svg></span><div class="pop-card-name">宅地建物取引士</div></div><ul class="pop-card-facts"><li class="pop-card-diff"><span class="k">難易度</span><span class="v"><span class="diff-badge diff-hard">やや難関</span></span></li><li><span class="k">学習目安</span><span class="v">約300〜400時間</span></li></ul></a><a class="pop-card card-link" href="c/c-5207.html"><div class="pop-card-head"><span class="pop-card-trophy" aria-hidden="true"><svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 21h8"/><path d="M12 17v4"/><path d="M7 4h10v5a5 5 0 0 1-10 0V4z"/><path d="M5 5H3v2a3 3 0 0 0 3 3"/><path d="M19 5h2v2a3 3 0 0 1-3 3"/></svg></span><div class="pop-card-name">危険物取扱者(乙種)</div></div><ul class="pop-card-facts"><li class="pop-card-diff"><span class="k">難易度</span><span class="v"><span class="diff-badge diff-mid">標準</span></span></li><li><span class="k">学習目安</span><span class="v">約40〜60時間</span></li></ul></a><a class="pop-card card-link" href="c/c-3625.html"><div class="pop-card-head"><span class="pop-card-trophy" aria-hidden="true"><svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 21h8"/><path d="M12 17v4"/><path d="M7 4h10v5a5 5 0 0 1-10 0V4z"/><path d="M5 5H3v2a3 3 0 0 0 3 3"/><path d="M19 5h2v2a3 3 0 0 1-3 3"/></svg></span><div class="pop-card-name">日商簿記3級</div></div><ul class="pop-card-facts"><li class="pop-card-diff"><span class="k">難易度</span><span class="v"><span class="diff-badge diff-mid">標準</span></span></li><li><span class="k">学習目安</span><span class="v">約50〜100時間</span></li></ul></a><a class="pop-card card-link pop-card--more" href="c/c-1505.html"><div class="pop-card-head"><span class="pop-card-trophy" aria-hidden="true"><svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 21h8"/><path d="M12 17v4"/><path d="M7 4h10v5a5 5 0 0 1-10 0V4z"/><path d="M5 5H3v2a3 3 0 0 0 3 3"/><path d="M19 5h2v2a3 3 0 0 1-3 3"/></svg></span><div class="pop-card-name">基本情報技術者</div></div><ul class="pop-card-facts"><li class="pop-card-diff"><span class="k">難易度</span><span class="v"><span class="diff-badge diff-mid">標準</span></span></li><li><span class="k">学習目安</span><span class="v">約150〜200時間</span></li></ul></a><a class="pop-card card-link pop-card--more" href="c/c-3512.html"><div class="pop-card-head"><span class="pop-card-trophy" aria-hidden="true"><svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 21h8"/><path d="M12 17v4"/><path d="M7 4h10v5a5 5 0 0 1-10 0V4z"/><path d="M5 5H3v2a3 3 0 0 0 3 3"/><path d="M19 5h2v2a3 3 0 0 1-3 3"/></svg></span><div class="pop-card-name">日本漢字能力検定2級</div></div><ul class="pop-card-facts"><li class="pop-card-diff"><span class="k">難易度</span><span class="v"><span class="diff-badge diff-hard">やや難関</span></span></li><li><span class="k">学習目安</span><span class="v">約50時間</span></li></ul></a><a class="pop-card card-link pop-card--more" href="c/c-3624.html"><div class="pop-card-head"><span class="pop-card-trophy" aria-hidden="true"><svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 21h8"/><path d="M12 17v4"/><path d="M7 4h10v5a5 5 0 0 1-10 0V4z"/><path d="M5 5H3v2a3 3 0 0 0 3 3"/><path d="M19 5h2v2a3 3 0 0 1-3 3"/></svg></span><div class="pop-card-name">日商簿記2級</div></div><ul class="pop-card-facts"><li class="pop-card-diff"><span class="k">難易度</span><span class="v"><span class="diff-badge diff-hard">やや難関</span></span></li><li><span class="k">学習目安</span><span class="v">約200〜350時間</span></li></ul></a><a class="pop-card card-link pop-card--more" href="c/c-9002.html"><div class="pop-card-head"><span class="pop-card-trophy" aria-hidden="true"><svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 21h8"/><path d="M12 17v4"/><path d="M7 4h10v5a5 5 0 0 1-10 0V4z"/><path d="M5 5H3v2a3 3 0 0 0 3 3"/><path d="M19 5h2v2a3 3 0 0 1-3 3"/></svg></span><div class="pop-card-name">生成AIパスポート</div></div><ul class="pop-card-facts"><li class="pop-card-diff"><span class="k">難易度</span><span class="v"><span class="diff-badge diff-easy">比較的やさしい</span></span></li><li><span class="k">学習目安</span><span class="v">約10〜20時間</span></li></ul></a></div>
+  <p class="popular-more"><a href="feature/popular.html">人気資格をすべて見る →</a></p>
+</section>
+
+<section class="block block-band block-band--white" id="fields">
+  <div class="block-head"><h2>分野から探す</h2></div>
+  <div class="field-grid"><a class="field-card" href="bunya/manufacturing.html"><div class="icon"><svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg></div><div class="field-card-body"><div class="field-card-top"><h3>機械・電気・ものづくり</h3><span class="field-count">284件</span></div><p class="field-examples">危険物取扱者(乙種)・第三種電気主任技術者・1級電気工事施工管理技士など</p></div></a><a class="field-card" href="bunya/it.html"><div class="icon"><svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8"/><path d="M12 17v4"/></svg></div><div class="field-card-body"><div class="field-card-top"><h3>IT・情報処理</h3><span class="field-count">127件</span></div><p class="field-examples">ITパスポート・基本情報技術者・生成AIパスポートなど</p></div></a><a class="field-card" href="bunya/architecture.html"><div class="icon"><svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21h18"/><path d="M5 21V9l7-5 7 5v12"/><path d="M9 21v-6h6v6"/></svg></div><div class="field-card-body"><div class="field-card-top"><h3>建築・設備</h3><span class="field-count">93件</span></div><p class="field-examples">2級建築施工管理技士・一級建築士・1級建築施工管理技士など</p></div></a><a class="field-card" href="bunya/language.html"><div class="icon"><svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></div><div class="field-card-body"><div class="field-card-top"><h3>語学・コミュニケーション</h3><span class="field-count">79件</span></div><p class="field-examples">日本漢字能力検定2級・全商英語検定1級・秘書検定2級など</p></div></a><a class="field-card" href="bunya/finance.html"><div class="icon"><svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M8 6h8M8 10h2M12 10h2M8 14h2M12 14h2M8 18h8"/></svg></div><div class="field-card-body"><div class="field-card-top"><h3>会計・金融・経営</h3><span class="field-count">63件</span></div><p class="field-examples">日商簿記3級・日商簿記2級・3級ファイナンシャル・プランニング技能士など</p></div></a><a class="field-card" href="bunya/safety.html"><div class="icon"><svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div><div class="field-card-body"><div class="field-card-top"><h3>安全・環境・危険物</h3><span class="field-count">55件</span></div><p class="field-examples">甲種消防設備士・乙種消防設備士・eco検定など</p></div></a><a class="field-card" href="bunya/service.html"><div class="icon"><svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="6" cy="6" r="3"/><circle cx="18" cy="6" r="3"/><path d="M9 6h6"/><path d="M6 9v3a6 6 0 0 0 12 0V9"/></svg></div><div class="field-card-body"><div class="field-card-top"><h3>美容・サービス・スポーツ</h3><span class="field-count">54件</span></div><p class="field-examples">美容師・ネイリスト技能検定試験3級・ネイリスト技能検定試験2級など</p></div></a><a class="field-card" href="bunya/business.html"><div class="icon"><svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg></div><div class="field-card-body"><div class="field-card-top"><h3>商業・販売・事務</h3><span class="field-count">46件</span></div><p class="field-examples">登録販売者・一種・二種外務員資格・国内旅行業務取扱管理者など</p></div></a></div>
+  <p class="field-more"><a href="#all-certs">すべての分野・条件で絞り込む →</a></p>
+</section>
+
+<section class="block block-band block-band--gray block-compare" id="compare">
+  <div class="block-head"><h2>よく比較される資格</h2><p>2つ以上を並べて違いを確認</p></div>
+  <div class="compare-grid"><a class="compare-card" href="vs/takken-gyoseishoshi.html"><span class="compare-tag">不動産</span><div class="compare-names">宅地建物取引士 <span class="compare-sep" aria-hidden="true">⇄</span> 行政書士</div><span class="compare-go" aria-hidden="true">→</span></a><a class="compare-card" href="vs/gyoseishoshi-sharoshi.html"><span class="compare-tag">法律・法務・知財</span><div class="compare-names">行政書士 <span class="compare-sep" aria-hidden="true">⇄</span> 社会保険労務士</div><span class="compare-go" aria-hidden="true">→</span></a><a class="compare-card" href="vs/boki-2-3.html"><span class="compare-tag">会計・金融・経営</span><div class="compare-names">日商簿記2級 <span class="compare-sep" aria-hidden="true">⇄</span> 日商簿記3級</div><span class="compare-go" aria-hidden="true">→</span></a><a class="compare-card" href="vs/kihonjoho-ojoho.html"><span class="compare-tag">IT・情報処理</span><div class="compare-names">基本情報技術者 <span class="compare-sep" aria-hidden="true">⇄</span> 応用情報技術者</div><span class="compare-go" aria-hidden="true">→</span></a><a class="compare-card" href="vs/fp-2-3.html"><span class="compare-tag">会計・金融・経営</span><div class="compare-names">2級FP技能士 <span class="compare-sep" aria-hidden="true">⇄</span> 3級FP技能士</div><span class="compare-go" aria-hidden="true">→</span></a><a class="compare-card" href="vs/takken-mankanshi.html"><span class="compare-tag">不動産</span><div class="compare-names">宅地建物取引士 <span class="compare-sep" aria-hidden="true">⇄</span> マンション管理士</div><span class="compare-go" aria-hidden="true">→</span></a></div>
+</section>
+
+<section class="block block-band block-band--white block-all-certs" id="all-certs">
+  <div class="block-head"><h2>すべての資格から探す</h2><p>資格名・分野・学習時間・合格率・実施頻度で絞り込み</p></div>
+  <div class="all-certs-filters">
+    <div class="filter-field"><label for="list-q">資格名</label><input type="search" id="list-q" placeholder="例: 簿記、宅建" aria-label="資格名で絞り込み"></div>
+    <div class="filter-field"><label for="major">分野</label><select id="major" aria-label="分野で絞り込み"><option value="">すべて</option></select></div>
+    <div class="filter-field"><label for="study">学習時間</label><select id="study" aria-label="学習時間で絞り込み">
+      <option value="">すべて</option>
+      <option value="0-50">〜50時間</option>
+      <option value="50-100">50〜100時間</option>
+      <option value="100-300">100〜300時間</option>
+      <option value="300-1000">300〜1000時間</option>
+      <option value="1000-">1000時間以上</option>
+    </select></div>
+    <div class="filter-field"><label for="pass">合格率</label><select id="pass" aria-label="合格率で絞り込み">
+      <option value="">すべて</option>
+      <option value="80-">80%以上</option>
+      <option value="60-80">60〜80%</option>
+      <option value="40-60">40〜60%</option>
+      <option value="20-40">20〜40%</option>
+      <option value="0-20">20%未満</option>
+      <option value="unknown">データなし</option>
+    </select></div>
+    <div class="filter-field"><label for="frequency">実施頻度</label><select id="frequency" aria-label="実施頻度で絞り込み">
+      <option value="">すべて</option>
+      <option value="anytime">通年・随時</option>
+      <option value="once">年1回</option>
+      <option value="twice">年2回</option>
+      <option value="3plus">年3回以上</option>
+      <option value="other">その他</option>
+      <option value="unknown">データなし</option>
+    </select></div>
+    <div class="filter-field"><label for="sort">並び順</label><select id="sort" aria-label="並び順">
+      <option value="app-desc" selected>受験者数が多い順</option>
+      <option value="study-asc">学習時間が短い順</option>
+      <option value="study-desc">学習時間が長い順</option>
+      <option value="pass-desc">合格率が高い順</option>
+      <option value="pass-asc">合格率が低い順</option>
+    </select></div>
+  </div>
+  <label class="all-certs-check"><input type="checkbox" id="f-pub"> データ掲載のみ</label>
+  <span class="muted" id="studynote" style="display:none">学習時間は編集部調べの目安（非公式）</span>
+  <div class="results-bar"><button type="button" id="clearFilters" class="clear-filters" hidden>× 条件をクリア</button></div>
+  <p class="all-certs-count" id="allCertsCount"></p>
+  <div class="all-certs-table-wrap">
+    <table class="all-certs-table all-certs-table--5col">
+      <colgroup><col class="all-certs-col-name"><col class="all-certs-col-major"><col class="all-certs-col-study"><col class="all-certs-col-pass"><col class="all-certs-col-freq"></colgroup>
+      <thead>
+        <tr>
+          <th scope="col">資格名</th>
+          <th scope="col">分野</th>
+          <th scope="col">学習時間</th>
+          <th scope="col">合格率</th>
+          <th scope="col">実施頻度</th>
+        </tr>
+      </thead>
+      <tbody id="results"><tr><td colspan="5" class="muted">読み込み中…</td></tr></tbody>
+    </table>
+  </div>
+  <nav class="pagination" id="pagination" aria-label="資格一覧のページ送り" hidden></nav>
+</section>
+
+<section class="block block-band block-band--gray" id="partners">
+  <div class="block-head"><h2>おすすめの資格対策サイト</h2><p>当サイト運営者が制作している資格別の学習・対策サイト</p></div>
+  <div class="partner-grid"><a class="partner-card" href="https://takken-master.jp/" target="_blank" rel="noopener"><span class="partner-card-name">宅建対策サイト<span class="partner-ext" aria-hidden="true">↗</span></span><span class="partner-card-tag">宅地建物取引士（不動産）</span></a><a class="partner-card" href="https://mankan-master.jp/" target="_blank" rel="noopener"><span class="partner-card-name">マンション管理士対策サイト<span class="partner-ext" aria-hidden="true">↗</span></span><span class="partner-card-tag">不動産・マンション管理</span></a><a class="partner-card" href="https://kangyou-master.jp/" target="_blank" rel="noopener"><span class="partner-card-name">管理業務主任者対策サイト<span class="partner-ext" aria-hidden="true">↗</span></span><span class="partner-card-tag">不動産・マンション管理</span></a><a class="partner-card" href="https://chintaikanrishi-master.jp/" target="_blank" rel="noopener"><span class="partner-card-name">賃貸不動産経営管理士対策サイト<span class="partner-ext" aria-hidden="true">↗</span></span><span class="partner-card-tag">不動産・賃貸管理</span></a><a class="partner-card" href="https://fp-master.jp/" target="_blank" rel="noopener"><span class="partner-card-name">FP対策サイト<span class="partner-ext" aria-hidden="true">↗</span></span><span class="partner-card-tag">FP技能士 1〜3級・CFP/AFP</span></a><a class="partner-card" href="https://gaimuin-master.jp/" target="_blank" rel="noopener"><span class="partner-card-name">証券外務員対策サイト<span class="partner-ext" aria-hidden="true">↗</span></span><span class="partner-card-tag">一種・二種外務員資格</span></a><a class="partner-card" href="https://kikenbutsu-master.jp/" target="_blank" rel="noopener"><span class="partner-card-name">危険物取扱者対策サイト<span class="partner-ext" aria-hidden="true">↗</span></span><span class="partner-card-tag">甲種・乙種・丙種</span></a><a class="partner-card" href="https://boiler-master.jp/" target="_blank" rel="noopener"><span class="partner-card-name">ボイラー技士対策サイト<span class="partner-ext" aria-hidden="true">↗</span></span><span class="partner-card-tag">特級・1級・2級</span></a><a class="partner-card" href="https://eisei1shu-master.jp/" target="_blank" rel="noopener"><span class="partner-card-name">第一種衛生管理者対策サイト<span class="partner-ext" aria-hidden="true">↗</span></span><span class="partner-card-tag">労働衛生管理</span></a><a class="partner-card" href="https://eisei2shu-master.jp/" target="_blank" rel="noopener"><span class="partner-card-name">第二種衛生管理者対策サイト<span class="partner-ext" aria-hidden="true">↗</span></span><span class="partner-card-tag">労働衛生管理</span></a><a class="partner-card" href="https://unkan-master.jp/" target="_blank" rel="noopener"><span class="partner-card-name">運行管理者対策サイト<span class="partner-ext" aria-hidden="true">↗</span></span><span class="partner-card-tag">旅客・貨物</span></a><a class="partner-card" href="https://mentalhealth-master.jp/" target="_blank" rel="noopener"><span class="partner-card-name">メンタルヘルス・マネジメント検定対策サイト<span class="partner-ext" aria-hidden="true">↗</span></span><span class="partner-card-tag">II種ほか</span></a><a class="partner-card" href="https://ai-master.jp/" target="_blank" rel="noopener"><span class="partner-card-name">AI資格対策サイト<span class="partner-ext" aria-hidden="true">↗</span></span><span class="partner-card-tag">AI・データサイエンス系</span></a></div>
+</section>
+<script src="assets/search.js?v=42dff6ec20"></script>
 
 </main>
-<footer class="site-footer">出典: 厚生労働省 ハローワーク「免許・資格コード一覧」を正本シードに、各資格の公式の一次情報に基づき整備。
-最新の制度・受験料・日程・合格率は各資格の公式サイトで必ずご確認ください。</footer>
+<div id="cmpbar" class="cmpbar" data-base="" aria-live="polite"></div>
+<script src="assets/compare-bar.js?v=42dff6ec20"></script>
+<footer class="site-footer">
+  <div class="site-footer-inner">
+    <div class="footer-recent" id="recentBlock" data-base="" hidden>
+      <span class="footer-recent-label">最近見た資格</span>
+      <ul class="footer-recent-list" id="recentGrid"></ul>
+    </div>
+    <p class="site-footer-brand">資格マスター</p>
+    <nav class="site-footer-nav" aria-label="フッターナビ">
+      <a href="finder.html">資格の選び方・診断</a>
+      <a href="index.html#compare">よく比較される資格</a>
+      <a href="feature/index.html">特集・ランキング</a>
+      <a href="articles/index.html">記事・コラム</a>
+      <a href="toukei.html">資格データ統計</a>
+      <a href="calendar.html">試験月カレンダー</a>
+      <a href="about.html">サイトについて・編集方針</a>
+    </nav>
+    <p class="site-footer-copy">© 資格マスター／一覧データ出典: 厚生労働省 ハローワーク「免許・資格コード一覧」ほか、各資格の公式の一次情報に基づき整備。</p>
+  </div>
+</footer>
+<script>(function(){var h=document.getElementById('siteHeader');if(!h)return;function close(){h.classList.remove('site-header--search-open','site-header--menu-open');h.querySelectorAll('[data-toggle]').forEach(function(b){b.setAttribute('aria-expanded','false');});}h.querySelectorAll('[data-toggle]').forEach(function(b){b.addEventListener('click',function(){var k=b.getAttribute('data-toggle');var cls=k==='search'?'site-header--search-open':'site-header--menu-open';var open=h.classList.contains(cls);close();if(!open){h.classList.add(cls);b.setAttribute('aria-expanded','true');var p=document.getElementById(k==='search'?'hSearch':'hMenu');if(p){p.hidden=false;var inp=p.querySelector('input');if(inp)setTimeout(function(){inp.focus();},30);}}});});document.addEventListener('keydown',function(e){if(e.key==='Escape')close();});})();</script>
+<script>(function(){function init(el){if(el.dataset.hs)return;el.dataset.hs='1';var w=document.createElement('div');w.className='hscroll';el.parentNode.insertBefore(w,el);w.appendChild(el);var f=document.createElement('span');f.className='hscroll-fade';f.setAttribute('aria-hidden','true');w.appendChild(f);function u(){var m=el.scrollWidth-el.clientWidth;w.classList.toggle('can-right',m>2&&el.scrollLeft<m-2);}el.addEventListener('scroll',u,{passive:true});window.addEventListener('resize',u);if(window.ResizeObserver){new ResizeObserver(u).observe(el);}u();}function run(){document.querySelectorAll('.all-certs-table-wrap,.cmp-wrap').forEach(init);}if(document.readyState!=='loading')run();else document.addEventListener('DOMContentLoaded',run);})();</script>
+<script>(function(){try{var blk=document.getElementById('recentBlock'),grid=document.getElementById('recentGrid');if(!blk||!grid)return;var a=JSON.parse(localStorage.getItem('recent')||'[]');if(!a.length)return;var base=blk.getAttribute('data-base')||'';var cur=(location.pathname.match(/\/c\/([^\/]+)\.html/)||[])[1]||'';function esc(s){return (s||'').replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}var items=a.filter(function(x){return x.s!==cur;}).slice(0,8);if(!items.length)return;grid.innerHTML=items.map(function(x){return '<li><a href="'+base+'c/'+esc(x.s)+'.html">'+esc(x.n)+'</a></li>';}).join('');blk.hidden=false;}catch(e){}})();</script>
 </body>
 </html>

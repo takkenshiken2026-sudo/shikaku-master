@@ -10,28 +10,105 @@
 プロトタイプのため全ページ <meta name="robots" content="noindex"> で出力。
 事実値(受験料/合格率/公式URL)は未検証なら「公式で確認」を促す。
 """
+import colorsys
 import csv
+import hashlib
 import html
 import json
+import math
 import re
 import shutil
+from collections import Counter
 from pathlib import Path
+from urllib.parse import quote
 
 ROOT = Path(__file__).resolve().parent.parent
 CSV = ROOT / "data" / "certifications.csv"
 CAREERS_CSV = ROOT / "data" / "careers.csv"
 EXAM_CSV = ROOT / "data" / "exam_details.csv"
 STUDY_CSV = ROOT / "data" / "study_time.csv"
+DIFFICULTY_CSV = ROOT / "data" / "difficulty.csv"
 SITE = ROOT / "site"
 BRAND = ROOT / "brand"
+ASSET_V = ""
+
+
+def asset_url(base: str, path: str) -> str:
+    href = f"{base}{path}"
+    return f"{href}?v={ASSET_V}" if ASSET_V else href
 
 # 厚労省 職業情報提供サイト（job tag）— 関連職業の公式ディスカバリ導線
 JOBTAG_URL = "https://shigoto.mhlw.go.jp/User/Search/Top"
 
-SITE_NAME = "資格カタログ"
+SITE_NAME = "資格マスター"
 SITE_DESC = "日本の資格を「探せる・絞れる・比べられる」資格データベース。受験料・試験形式・受験資格・合格率・実施団体・公式サイトを公式の一次情報に基づき掲載。"
 BASE_URL = "https://shikaku-master.jp"
 CUSTOM_DOMAIN = "shikaku-master.jp"
+GA4_MEASUREMENT_ID = "G-KERDMXDPSR"
+
+# 運営者が制作する資格別の対策サイト（「おすすめの資格対策サイト」導線）。
+# 通常リンク（dofollow）・別タブ。certs に該当資格 slug を持つものは、その詳細ページにも出し分ける。
+PARTNER_SITES = [
+    {"name": "宅建対策サイト", "url": "https://takken-master.jp/",
+     "tagline": "宅地建物取引士（不動産）", "certs": ["c-3207"]},
+    {"name": "マンション管理士対策サイト", "url": "https://mankan-master.jp/",
+     "tagline": "不動産・マンション管理", "certs": ["c-3209"]},
+    {"name": "管理業務主任者対策サイト", "url": "https://kangyou-master.jp/",
+     "tagline": "不動産・マンション管理", "certs": ["c-3210"]},
+    {"name": "賃貸不動産経営管理士対策サイト", "url": "https://chintaikanrishi-master.jp/",
+     "tagline": "不動産・賃貸管理", "certs": []},
+    {"name": "FP対策サイト", "url": "https://fp-master.jp/",
+     "tagline": "FP技能士 1〜3級・CFP/AFP",
+     "certs": ["c-2505", "c-2515", "c-2516", "c-2517"]},
+    {"name": "証券外務員対策サイト", "url": "https://gaimuin-master.jp/",
+     "tagline": "一種・二種外務員資格", "certs": ["c-4201"]},
+    {"name": "危険物取扱者対策サイト", "url": "https://kikenbutsu-master.jp/",
+     "tagline": "甲種・乙種・丙種",
+     "certs": ["c-5206", "c-5207", "c-5208"]},
+    {"name": "ボイラー技士対策サイト", "url": "https://boiler-master.jp/",
+     "tagline": "特級・1級・2級", "certs": ["c-6701", "c-6702", "c-6703"]},
+    {"name": "第一種衛生管理者対策サイト", "url": "https://eisei1shu-master.jp/",
+     "tagline": "労働衛生管理", "certs": ["c-2202"]},
+    {"name": "第二種衛生管理者対策サイト", "url": "https://eisei2shu-master.jp/",
+     "tagline": "労働衛生管理", "certs": ["c-2203"]},
+    {"name": "運行管理者対策サイト", "url": "https://unkan-master.jp/",
+     "tagline": "旅客・貨物", "certs": ["c-3705", "c-3706"]},
+    {"name": "メンタルヘルス・マネジメント検定対策サイト", "url": "https://mentalhealth-master.jp/",
+     "tagline": "II種ほか", "certs": []},
+    {"name": "AI資格対策サイト", "url": "https://ai-master.jp/",
+     "tagline": "AI・データサイエンス系", "certs": []},
+]
+PARTNER_BY_CERT = {}
+for _p in PARTNER_SITES:
+    for _c in _p["certs"]:
+        PARTNER_BY_CERT.setdefault(_c, []).append(_p)
+
+
+def partner_cards_html():
+    """おすすめ対策サイトのカード一覧（トップ・aboutで使用）。"""
+    return "".join(
+        f'<a class="partner-card" href="{esc(p["url"])}" target="_blank" rel="noopener">'
+        f'<span class="partner-card-name">{esc(p["name"])}<span class="partner-ext" aria-hidden="true">↗</span></span>'
+        f'<span class="partner-card-tag">{esc(p["tagline"])}</span></a>'
+        for p in PARTNER_SITES)
+
+
+def partner_detail_html(slug):
+    """資格詳細ページに、その資格の対策サイトがあれば出し分けるボックス。"""
+    ps = PARTNER_BY_CERT.get(slug)
+    if not ps:
+        return ""
+    items = "".join(
+        f'<a class="partner-detail-card" href="{esc(p["url"])}" target="_blank" rel="noopener">'
+        f'<span class="pd-name">{esc(p["name"])}<span class="partner-ext" aria-hidden="true">↗</span></span>'
+        f'<span class="pd-tag">{esc(p["tagline"])}</span></a>' for p in ps)
+    return ('<section class="detail-section detail-section--partner" aria-labelledby="pd-h">'
+            '<h2 class="detail-section-title" id="pd-h">この資格の対策サイト</h2>'
+            f'<div class="partner-detail-grid">{items}</div>'
+            '<p class="detail-footnote">当サイト運営者が制作している学習・対策サイトです。</p>'
+            '</section>')
+
+
 TYPE_BADGE = {
     "国家": ("国家資格", "badge-national"),
     "公的": ("公的資格", "badge-public"),
@@ -39,6 +116,31 @@ TYPE_BADGE = {
     "要確認": ("区分要確認", "badge-unknown"),
     "海外": ("海外資格", "badge-overseas"),
 }
+
+
+def type_reason_note(cert_type, badge_label, reason):
+    """バッジと重複する接頭辞を除き、補足理由だけを返す。"""
+    if not reason:
+        return ""
+    r = reason.strip()
+    prefixes = (
+        badge_label,
+        f"{cert_type}資格",
+        cert_type,
+        "民間資格",
+        "国家資格",
+        "公的資格",
+        "区分要確認",
+    )
+    for prefix in prefixes:
+        if r.startswith(prefix):
+            r = r[len(prefix):].strip()
+            break
+    if r.startswith("(") and r.endswith(")"):
+        r = r[1:-1].strip()
+    if not r or r in {badge_label, cert_type, f"{cert_type}資格"}:
+        return ""
+    return f' <span class="muted">（{esc(r)}）</span>'
 
 
 def esc(s: str) -> str:
@@ -106,6 +208,67 @@ def load_descriptions():
 DESC = load_descriptions()
 
 
+def load_triage():
+    """slug → {kind, note, successor_slug, source}。廃止・名称変更・補足の沿革注記
+    （一次情報で確認した編集情報）。薄い seed ページに正確な案内を表示する。"""
+    path = ROOT / "data" / "seed_triage.csv"
+    if not path.exists():
+        return {}
+    out = {}
+    with path.open(encoding="utf-8") as f:
+        for r in csv.DictReader(f):
+            s = (r.get("slug") or "").strip()
+            if s and (r.get("note") or "").strip():
+                out[s] = {k: (r.get(k) or "").strip()
+                          for k in ("kind", "note", "successor_slug", "source")}
+    return out
+
+
+TRIAGE = load_triage()
+
+
+def load_guides():
+    """slug → {suited, study, career} 主要資格の編集ガイダンス（手書き・定性的）。
+
+    勉強法の考え方・向いている人・取得後の活かし方など、データ生成では書けない
+    読者価値の高い解説。具体的な数値（年収・合格点等）は扱わず一般知識の範囲で記述。
+    """
+    path = ROOT / "data" / "guides.csv"
+    if not path.exists():
+        return {}
+    out = {}
+    with path.open(encoding="utf-8") as f:
+        for r in csv.DictReader(f):
+            s = (r.get("slug") or "").strip()
+            if not s:
+                continue
+            g = {k: (r.get(k) or "").strip()
+                 for k in ("suited", "difficulty", "study", "steps",
+                           "pitfalls", "career")}
+            if any(g.values()):
+                out[s] = g
+    return out
+
+
+GUIDES = load_guides()
+
+
+def load_articles():
+    """data/articles.json → SEO記事（コラム）のリスト。検索意図の高い情報系記事を
+    独立ページとして生成し、関連する資格詳細・特集ページへ送客する。"""
+    path = ROOT / "data" / "articles.json"
+    if not path.exists():
+        return []
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except Exception as e:
+        print(f"  WARN articles.json 読み込み失敗: {e}", file=sys.stderr)
+        return []
+
+
+ARTICLES = load_articles()
+
+
 def load_study_time():
     """slug → {study_hours, source}。学習時間の目安（編集値・公式の一次情報ではない）。"""
     if not STUDY_CSV.exists():
@@ -123,6 +286,420 @@ def load_study_time():
 STUDY = load_study_time()
 
 
+def load_aliases():
+    """slug → [alias, ...]。検索用の略称・かな・表記ゆれ（表示には使わない）。"""
+    path = ROOT / "data" / "aliases.csv"
+    if not path.exists():
+        return {}
+    out = {}
+    with path.open(encoding="utf-8") as f:
+        for r in csv.DictReader(f):
+            s = (r.get("slug") or "").strip()
+            a = [x.strip() for x in (r.get("aliases") or "").split(";") if x.strip()]
+            if s and a:
+                out.setdefault(s, []).extend(a)
+    return out
+
+
+ALIASES = load_aliases()
+
+
+def load_provisional():
+    """slug → {pass_rate, applicants, source, note}。暫定・非公式の参考値。
+
+    公式の一次情報が未取得の資格について、第三者集計等に基づく暫定値を保持する。
+    正本（overrides.csv / exam_details.csv）とは分離し、公式値が空のときだけ
+    フォールバック表示する。表示時は必ず「暫定（非公式）」と明示する。
+    ランキング・検索・難易度スコアには一切用いない（公式値のみ）。
+    """
+    path = ROOT / "data" / "provisional.csv"
+    if not path.exists():
+        return {}
+    out = {}
+    with path.open(encoding="utf-8") as f:
+        for r in csv.DictReader(f):
+            s = (r.get("slug") or "").strip()
+            if not s:
+                continue
+            out[s] = {
+                "pass_rate": (r.get("pass_rate") or "").strip(),
+                "applicants": (r.get("applicants") or "").strip(),
+                "source": (r.get("source") or "").strip(),
+                "note": (r.get("note") or "").strip(),
+            }
+    return out
+
+
+PROVISIONAL = load_provisional()
+
+
+def load_difficulty_data():
+    """slug → {value, source}。編集部が出典付きで投入する難易度データ（0-100、高いほど難）。
+    総合難易度スコアの第3軸。空でも可（その場合は合格率・学習時間のみで算出）。"""
+    if not DIFFICULTY_CSV.exists():
+        return {}
+    out = {}
+    with DIFFICULTY_CSV.open(encoding="utf-8") as f:
+        for r in csv.DictReader(f):
+            s = (r.get("slug") or "").strip()
+            v = (r.get("difficulty") or "").strip()
+            if not s or not v:
+                continue
+            try:
+                val = float(v)
+            except ValueError:
+                continue
+            out[s] = {"value": val, "source": (r.get("source") or "").strip()}
+    return out
+
+
+DIFFICULTY_DATA = load_difficulty_data()
+
+
+# ── 職種データベース（occupations.csv / cert_occupations.csv）──
+import build_occupations as occlib  # 正規化ロジック（split_name_note / canonical）を共有
+
+OCC_CSV = ROOT / "data" / "occupations.csv"
+MAP_CSV = ROOT / "data" / "cert_occupations.csv"
+OCC_DESC_CSV = ROOT / "data" / "occupation_descriptions.csv"
+
+
+def load_occupations():
+    """occ_id → {name, major_category, cert_count}。職種マスタ。"""
+    if not OCC_CSV.exists():
+        return {}
+    out = {}
+    with OCC_CSV.open(encoding="utf-8") as f:
+        for r in csv.DictReader(f):
+            oid = (r.get("occ_id") or "").strip()
+            nm = (r.get("name") or "").strip()
+            if not oid or not nm:
+                continue
+            try:
+                cc = int(r.get("cert_count") or 0)
+            except ValueError:
+                cc = 0
+            out[oid] = {"name": nm, "major_category": (r.get("major_category") or "").strip(),
+                        "cert_count": cc}
+    return out
+
+
+OCC = load_occupations()
+OCC_ID_BY_NAME = {v["name"]: k for k, v in OCC.items()}
+
+
+def load_cert_occ():
+    """occ_id → [slug]（逆引き）と slug → set(occ_id) を返す。"""
+    occ_certs, slug_occs = {}, {}
+    if not MAP_CSV.exists():
+        return occ_certs, slug_occs
+    with MAP_CSV.open(encoding="utf-8") as f:
+        for r in csv.DictReader(f):
+            s = (r.get("slug") or "").strip()
+            oid = (r.get("occ_id") or "").strip()
+            if not s or not oid:
+                continue
+            occ_certs.setdefault(oid, []).append(s)
+            slug_occs.setdefault(s, set()).add(oid)
+    return occ_certs, slug_occs
+
+
+OCC_CERTS, SLUG_OCC_IDS = load_cert_occ()
+
+
+def load_occupation_descriptions():
+    """occ_id → {summary, work, skills}（手書きのキュレーション。work/skillsは任意）。"""
+    if not OCC_DESC_CSV.exists():
+        return {}
+    out = {}
+    with OCC_DESC_CSV.open(encoding="utf-8") as f:
+        for r in csv.DictReader(f):
+            oid = (r.get("occ_id") or "").strip()
+            d = (r.get("summary") or "").strip()
+            if oid and d:
+                out[oid] = {"summary": d,
+                            "work": (r.get("work") or "").strip(),
+                            "skills": (r.get("skills") or "").strip()}
+    return out
+
+
+OCC_DESC = load_occupation_descriptions()
+
+
+def load_occupation_salary():
+    """occ_id → 想定年収レンジ（目安・編集値）。公式値ではない。"""
+    path = ROOT / "data" / "occupation_salary.csv"
+    if not path.exists():
+        return {}
+    out = {}
+    with path.open(encoding="utf-8") as f:
+        for r in csv.DictReader(f):
+            oid = (r.get("occ_id") or "").strip()
+            sal = (r.get("salary") or "").strip()
+            if oid and sal:
+                out[oid] = sal
+    return out
+
+
+OCC_SALARY = load_occupation_salary()
+
+
+def _salary_quantitative(sal):
+    """『約480〜560万円』等のレンジを schema.org の QuantitativeValue(円・年額) に変換。"""
+    if not sal:
+        return None
+    m = re.search(r"([0-9,]+)\s*[〜~～]\s*([0-9,]+)\s*万", sal)
+    if not m:
+        return None
+    lo = int(m.group(1).replace(",", "")) * 10000
+    hi = int(m.group(2).replace(",", "")) * 10000
+    return {"@type": "QuantitativeValue", "minValue": lo, "maxValue": hi,
+            "unitText": "YEAR"}
+
+
+# ── おすすめ教材・講座（アフィリエイト対応。本体DBとは分離）──
+MATERIALS_CSV = ROOT / "data" / "materials.csv"
+
+
+def load_materials():
+    """slug → [教材dict]。編集部選定の学習教材・講座。affiliate列があれば収益リンク。"""
+    if not MATERIALS_CSV.exists():
+        return {}
+    out = {}
+    with MATERIALS_CSV.open(encoding="utf-8") as f:
+        for i, r in enumerate(csv.DictReader(f)):
+            s = (r.get("slug") or "").strip()
+            title = (r.get("title") or "").strip()
+            if not s or not title:
+                continue
+            out.setdefault(s, []).append({
+                "kind": (r.get("kind") or "教材").strip(),
+                "title": title,
+                "provider": (r.get("provider") or "").strip(),
+                "url": (r.get("url") or "").strip(),
+                "affiliate": (r.get("affiliate") or "").strip(),
+                "note": (r.get("note") or "").strip(),
+                "sort": (r.get("sort") or "").strip(),
+                "_order": i,
+            })
+    return out
+
+
+MATERIALS = load_materials()
+
+
+def _material_sort_key(m):
+    """同一資格内の表示順（sort列 → CSV登録順 → 提供元 → タイトル）。"""
+    raw = m.get("sort", "")
+    try:
+        sort_n = int(raw) if raw not in ("", None) else 10_000
+    except ValueError:
+        sort_n = 10_000
+    return (sort_n, m.get("_order", 0), m.get("provider", ""), m.get("title", ""))
+
+
+def courses_for_slug(slug):
+    """1資格に紐づく講座のみを表示順で返す。"""
+    courses = [m for m in (MATERIALS.get(slug) or []) if m["kind"] == "講座"]
+    courses.sort(key=_material_sort_key)
+    return courses
+
+
+# ── 資格間の関係（ステップアップ・免除/受験資格・ダブルライセンス）──
+RELATIONS_CSV = ROOT / "data" / "cert_relations.csv"
+
+
+def load_cert_relations():
+    """slug → {up, down, exempt_to, exempt_from, combo}（各 (相手slug, note) のリスト）。"""
+    rel = {}
+
+    def b(s):
+        return rel.setdefault(s, {"up": [], "down": [], "exempt_to": [],
+                                  "exempt_from": [], "combo": []})
+    if not RELATIONS_CSV.exists():
+        return rel
+    with RELATIONS_CSV.open(encoding="utf-8") as f:
+        for r in csv.DictReader(f):
+            a = (r.get("slug_a") or "").strip()
+            c = (r.get("slug_b") or "").strip()
+            t = (r.get("relation") or "").strip()
+            note = (r.get("note") or "").strip()
+            if not a or not c:
+                continue
+            if t == "step_up":
+                b(a)["up"].append((c, note))
+                b(c)["down"].append((a, note))
+            elif t == "exemption":
+                b(a)["exempt_to"].append((c, note))
+                b(c)["exempt_from"].append((a, note))
+            elif t == "combo":
+                b(a)["combo"].append((c, note))
+                b(c)["combo"].append((a, note))
+    return rel
+
+
+CERT_RELATIONS = load_cert_relations()
+
+
+def _rel_name(s):
+    """関連資格・ロードマップ用の短縮名。級・種別・スコア目安など識別に必要な括弧書きは残す。"""
+    n = NAME_BY_SLUG.get(s, s)
+    qualifiers = re.findall(r"[（(]([^）)]+)[）)]", n)
+    base = re.sub(r"[（(][^）)]+[）)]", "", n).strip() or n
+    for q in reversed(qualifiers):
+        q = q.strip()
+        if not q or len(q) > 14:
+            continue
+        if re.search(r"旧|廃止|所管|法律|国家資格|検定の|誰でも|一次情報", q):
+            continue
+        if re.search(r"種|級|類|号|部門|上級|中級|下級|全経|日商|\d+点", q):
+            return f"{base}({q})"
+    return base
+
+
+def step_up_chain(slug):
+    """step_up 関係をたどり、この資格を含む級・上位資格の直線チェーンを返す。
+    前段階(down)を遡り、上位(up)を辿る。分岐は最初の枝のみを背骨に採用。"""
+    seen = {slug}
+    preds, cur = [], slug
+    while True:
+        nxt = next((s for s, _ in CERT_RELATIONS.get(cur, {}).get("down", []) if s not in seen), None)
+        if not nxt:
+            break
+        preds.append(nxt); seen.add(nxt); cur = nxt
+    preds.reverse()
+    succs, cur = [], slug
+    while True:
+        nxt = next((s for s, _ in CERT_RELATIONS.get(cur, {}).get("up", []) if s not in seen), None)
+        if not nxt:
+            break
+        succs.append(nxt); seen.add(nxt); cur = nxt
+    return preds + [slug] + succs
+
+
+def roadmap_html(slug, chain):
+    """step_up チェーンを取得ロードマップとして横並び表示。2段未満なら空文字。"""
+    if len(chain) < 2:
+        return ""
+    steps = []
+    for i, s in enumerate(chain, 1):
+        num = f'<span class="rm-num">{i}</span>'
+        if s == slug:
+            steps.append(f'<li class="rm-step rm-cur">{num}'
+                         f'<span class="rm-name">{esc(_rel_name(s))}</span>'
+                         f'<span class="rm-badge">いま見ている資格</span></li>')
+        else:
+            steps.append(f'<li class="rm-step">{num}'
+                         f'<a class="rm-name" href="{esc(s)}.html">{esc(_rel_name(s))}</a></li>')
+    return '<ol class="rm-track">' + "".join(steps) + "</ol>"
+
+
+def _detail_link_item(slug, note=""):
+    desc = f'<span class="detail-link-desc">{esc(note)}</span>' if note else ""
+    return (f'<li class="detail-link-item"><a href="{esc(slug)}.html">'
+            f'{esc(_rel_name(slug))}</a>{desc}</li>')
+
+
+def detail_nav_html(slug, cat, rel_links, vs_pairs):
+    """UI spec v2.8: detail-nav（ステップアップ + ほかの資格を見る）。"""
+    rel = CERT_RELATIONS.get(slug)
+    subs = []
+    if rel:
+        chain = step_up_chain(slug)
+        chain_set = set(chain)
+        branch_up = [(s, n) for s, n in rel["up"] if s not in chain_set]
+        branch_down = [(s, n) for s, n in rel["down"] if s not in chain_set]
+        if branch_up:
+            subs.append(
+                '<h3 class="detail-nav-subhead">そのほか上位として目指せる資格</h3>'
+                '<ul class="detail-link-list">'
+                + "".join(_detail_link_item(s, n) for s, n in branch_up)
+                + "</ul>")
+        if branch_down:
+            subs.append(
+                '<h3 class="detail-nav-subhead">そのほか前段階となる資格</h3>'
+                '<ul class="detail-link-list">'
+                + "".join(_detail_link_item(s, n) for s, n in branch_down)
+                + "</ul>")
+        if rel["exempt_to"] or rel["exempt_from"]:
+            items = rel["exempt_to"] + rel["exempt_from"]
+            subs.append(
+                '<h3 class="detail-nav-subhead">試験の免除・受験資格の優遇</h3>'
+                '<ul class="detail-link-list">'
+                + "".join(_detail_link_item(s, n) for s, n in items)
+                + "</ul>")
+        if rel["combo"]:
+            subs.append(
+                '<h3 class="detail-nav-subhead detail-nav-subhead-title">あわせて取りたい資格</h3>'
+                '<ul class="detail-link-list">'
+                + "".join(_detail_link_item(s, n) for s, n in rel["combo"])
+                + "</ul>")
+
+    compare_row = ""
+    if vs_pairs:
+        links = "".join(
+            f'<a href="../vs/{esc(ps)}.html">{esc(on)}との違い</a>'
+            for ps, on in vs_pairs[:5])
+        compare_row = (
+            '<h3 class="detail-nav-subhead detail-nav-subhead-title">よく比較される資格</h3>'
+            f'<div class="detail-compare-row">{links}</div>')
+        subs.append(compare_row)
+
+    block1 = ""
+    if subs:
+        note = ('<p class="detail-footnote">※免除・受験資格の要件は変更されることがあります。'
+                '出願前に必ず各資格の公式情報でご確認ください。</p>' if rel else "")
+        block1 = (
+            '<div class="detail-nav-block">'
+            + "".join(subs)
+            + note
+            + '</div>')
+
+    more_grid = (
+        '<h3 class="detail-nav-subhead">もっと探す</h3>'
+        '<ul class="detail-link-grid">'
+        + "".join(
+            f'<li class="detail-link-item"><a href="{u}">{esc(t)}</a></li>'
+            for u, t in rel_links)
+        + "</ul>")
+
+    # 同分野の関連資格はビルド時に静的生成（787KBのJSON fetchを排除し、クローラビリティとLCPを改善）
+    related_peers = [(s, n) for s, n in CERTS_BY_CATEGORY.get(cat, []) if s != slug][:8]
+    if related_peers:
+        related_items = "".join(
+            f'<li class="detail-link-item"><a href="{esc(s)}.html">{esc(n)}</a></li>'
+            for s, n in related_peers)
+    else:
+        related_items = '<li class="detail-link-item muted">なし</li>'
+
+    block2 = (
+        '<div class="detail-nav-block">'
+        '<h2 class="detail-nav-head">ほかの資格を見る・比較する</h2>'
+        '<h3 class="detail-nav-subhead">同じ分野の他の資格</h3>'
+        f'<ul class="detail-link-grid">{related_items}</ul>'
+        + more_grid
+        + '</div>')
+
+    return f'<nav class="detail-nav" aria-label="関連する資格への導線">{block1}{block2}</nav>'
+
+
+def materials_cell_html(slug):
+    """おすすめ教材・講座（表セル用）。教材が無ければ空文字。"""
+    mats = sorted(MATERIALS.get(slug) or [], key=_material_sort_key)
+    if not mats:
+        return ""
+    items = []
+    for m in mats:
+        link = m["affiliate"] or m["url"]
+        rel = "sponsored nofollow noopener" if m["affiliate"] else "nofollow noopener"
+        if link:
+            items.append(
+                f'<li><a href="{esc(link)}" rel="{rel}" target="_blank">{esc(m["title"])}</a></li>')
+        else:
+            items.append(f'<li>{esc(m["title"])}</li>')
+    return f'<ul class="materials">{"".join(items)}</ul>'
+
+
 def applicants_num(r):
     """受験者数の文字列から代表数（最初の「N人/N名」）を整数で。なければ None。"""
     ed = EXAM.get(r.get("slug", ""))
@@ -132,12 +709,45 @@ def applicants_num(r):
     return int(m.group(1).replace(",", "")) if m else None
 
 
+def fmt_nums_in_text(s: str) -> str:
+    """文字列内の4桁以上の整数に3桁カンマを付与（小数部・年数は除外）。"""
+    if not s:
+        return s
+
+    def repl(m: re.Match[str]) -> str:
+        n = m.group(0)
+        if len(n) < 4:
+            return n
+        start, end = m.start(), m.end()
+        if start > 0 and s[start - 1] == ".":
+            return n
+        if end < len(s) and s[end] == "年":
+            return n
+        return f"{int(n):,}"
+
+    return re.sub(r"\d+", repl, s)
+
+
+def ga4_head_snippet() -> str:
+    mid = GA4_MEASUREMENT_ID
+    return f"""<link rel="preconnect" href="https://www.googletagmanager.com">
+<script async src="https://www.googletagmanager.com/gtag/js?id={mid}"></script>
+<script>
+window.dataLayer=window.dataLayer||[];
+function gtag(){{dataLayer.push(arguments);}}
+gtag('js',new Date());
+gtag('config','{mid}');
+</script>
+"""
+
+
 def page_shell(title: str, body: str, depth: int, noindex: bool = True,
-               desc: str = "", path: str = "", jsonld=None) -> str:
+               desc: str = "", path: str = "", jsonld=None, og_image: str = "") -> str:
     base = "../" * depth
     robots = ('<meta name="robots" content="noindex">\n' if noindex else "")
     desc = desc or SITE_DESC
     canon = BASE_URL + "/" + path
+    og_img = og_image or (BASE_URL + "/assets/og.png")
     og = (f'<link rel="canonical" href="{esc(canon)}">\n'
           f'<meta property="og:type" content="website">\n'
           f'<meta property="og:site_name" content="{esc(SITE_NAME)}">\n'
@@ -145,7 +755,11 @@ def page_shell(title: str, body: str, depth: int, noindex: bool = True,
           f'<meta property="og:description" content="{esc(desc)}">\n'
           f'<meta property="og:url" content="{esc(canon)}">\n'
           f'<meta property="og:locale" content="ja_JP">\n'
-          f'<meta name="twitter:card" content="summary">\n')
+          f'<meta property="og:image" content="{esc(og_img)}">\n'
+          f'<meta property="og:image:width" content="1200">\n'
+          f'<meta property="og:image:height" content="630">\n'
+          f'<meta name="twitter:card" content="summary_large_image">\n'
+          f'<meta name="twitter:image" content="{esc(og_img)}">\n')
     ld = ""
     if jsonld:
         for obj in (jsonld if isinstance(jsonld, list) else [jsonld]):
@@ -155,35 +769,232 @@ def page_shell(title: str, body: str, depth: int, noindex: bool = True,
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#0d47a1">
-{robots}<title>{esc(title)}</title>
+<meta name="theme-color" content="#ffffff">
+{ga4_head_snippet()}{robots}<title>{esc(title)}</title>
 <meta name="description" content="{esc(desc)}">
-{og}<link rel="icon" href="{base}assets/favicon.ico" sizes="32x32">
+{og}<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;800&display=swap" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;800&display=swap"></noscript>
+<link rel="icon" href="{base}assets/favicon.ico" sizes="32x32">
 <link rel="icon" href="{base}assets/favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="{base}assets/apple-touch-icon.png">
-<link rel="stylesheet" href="{base}assets/app.css">
+<link rel="stylesheet" href="{asset_url(base, 'assets/app.css')}">
 {ld}</head>
 <body>
-<header class="site-header"><a href="{base}index.html" class="logo">{esc(SITE_NAME)}</a>
-<span class="tagline">日本の資格を探せる・絞れる・比べられる</span></header>
-<main class="container">
+<a class="skip-link" href="#main">本文へスキップ</a>
+<header class="site-header" id="siteHeader">
+  <div class="header-inner">
+    <div class="header-brand"><a class="logo" href="{base}index.html" aria-label="{esc(SITE_NAME)}、トップへ"><span class="logo-mark" aria-hidden="true"><span class="logo-mark-line">資格</span><span class="logo-mark-line logo-mark-line--sub">マスター</span></span><span class="logo-stack"><span class="logo-text">{esc(SITE_NAME)}</span><span class="logo-sub">国内最大級の資格情報サイト</span></span></a></div>
+    <nav class="header-nav" aria-label="サイトメニュー">
+      <a href="{base}index.html#fields">分野から探す</a><span class="header-nav-sep" aria-hidden="true">｜</span>
+      <a href="{base}index.html#all-certs">資格一覧</a>
+      <a href="{base}courses.html" class="header-nav-cta header-nav-cta--course">試験対策講座</a>
+      <a href="{base}index.html#partners" class="header-nav-cta">資格対策サイト</a>
+    </nav>
+    <div class="header-actions">
+      <button type="button" class="header-icon-btn" data-toggle="search" aria-label="資格名で検索" aria-controls="hSearch" aria-expanded="false"><svg class="ico-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/></svg></button>
+      <button type="button" class="header-icon-btn" data-toggle="menu" aria-label="メニューを開く" aria-controls="hMenu" aria-expanded="false"><svg class="ico-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+    </div>
+  </div>
+  <div class="header-search-panel" id="hSearch" hidden>
+    <form class="header-search-form" role="search" action="{base}index.html" method="get">
+      <input type="search" name="q" placeholder="資格名で検索（例: 簿記、宅建、ITパスポート）" aria-label="資格名で検索">
+      <button type="submit">検索</button>
+    </form>
+  </div>
+  <nav class="header-menu-panel" id="hMenu" aria-label="サイトメニュー" hidden>
+    <a href="{base}index.html#fields">分野から探す</a>
+    <a href="{base}index.html#all-certs">資格一覧</a>
+    <a href="{base}courses.html">試験対策講座</a>
+    <a href="{base}shoku/index.html">職種から探す</a>
+    <a href="{base}feature/index.html">特集・ランキング</a>
+    <a href="{base}articles/index.html">記事・コラム</a>
+    <a href="{base}index.html#partners">資格対策サイト</a>
+  </nav>
+</header>
+<main class="container" id="main">
 {body}
 </main>
-<footer class="site-footer">出典: 厚生労働省 ハローワーク「免許・資格コード一覧」を正本シードに、各資格の公式の一次情報に基づき整備。
-最新の制度・受験料・日程・合格率は各資格の公式サイトで必ずご確認ください。</footer>
+<div id="cmpbar" class="cmpbar" data-base="{base}" aria-live="polite"></div>
+<script src="{asset_url(base, 'assets/compare-bar.js')}"></script>
+<footer class="site-footer">
+  <div class="site-footer-inner">
+    <div class="footer-recent" id="recentBlock" data-base="{base}" hidden>
+      <span class="footer-recent-label">最近見た資格</span>
+      <ul class="footer-recent-list" id="recentGrid"></ul>
+    </div>
+    <p class="site-footer-brand">{esc(SITE_NAME)}</p>
+    <nav class="site-footer-nav" aria-label="フッターナビ">
+      <a href="{base}finder.html">資格の選び方・診断</a>
+      <a href="{base}index.html#compare">よく比較される資格</a>
+      <a href="{base}feature/index.html">特集・ランキング</a>
+      <a href="{base}articles/index.html">記事・コラム</a>
+      <a href="{base}toukei.html">資格データ統計</a>
+      <a href="{base}calendar.html">試験月カレンダー</a>
+      <a href="{base}about.html">サイトについて・編集方針</a>
+    </nav>
+    <p class="site-footer-copy">© {esc(SITE_NAME)}／一覧データ出典: 厚生労働省 ハローワーク「免許・資格コード一覧」ほか、各資格の公式の一次情報に基づき整備。</p>
+  </div>
+</footer>
+<script>(function(){{var h=document.getElementById('siteHeader');if(!h)return;function close(){{h.classList.remove('site-header--search-open','site-header--menu-open');h.querySelectorAll('[data-toggle]').forEach(function(b){{b.setAttribute('aria-expanded','false');}});}}h.querySelectorAll('[data-toggle]').forEach(function(b){{b.addEventListener('click',function(){{var k=b.getAttribute('data-toggle');var cls=k==='search'?'site-header--search-open':'site-header--menu-open';var open=h.classList.contains(cls);close();if(!open){{h.classList.add(cls);b.setAttribute('aria-expanded','true');var p=document.getElementById(k==='search'?'hSearch':'hMenu');if(p){{p.hidden=false;var inp=p.querySelector('input');if(inp)setTimeout(function(){{inp.focus();}},30);}}}}}});}});document.addEventListener('keydown',function(e){{if(e.key==='Escape')close();}});}})();</script>
+<script>(function(){{function init(el){{if(el.dataset.hs)return;el.dataset.hs='1';var w=document.createElement('div');w.className='hscroll';el.parentNode.insertBefore(w,el);w.appendChild(el);var f=document.createElement('span');f.className='hscroll-fade';f.setAttribute('aria-hidden','true');w.appendChild(f);function u(){{var m=el.scrollWidth-el.clientWidth;w.classList.toggle('can-right',m>2&&el.scrollLeft<m-2);}}el.addEventListener('scroll',u,{{passive:true}});window.addEventListener('resize',u);if(window.ResizeObserver){{new ResizeObserver(u).observe(el);}}u();}}function run(){{document.querySelectorAll('.all-certs-table-wrap,.cmp-wrap').forEach(init);}}if(document.readyState!=='loading')run();else document.addEventListener('DOMContentLoaded',run);}})();</script>
+<script>(function(){{try{{var blk=document.getElementById('recentBlock'),grid=document.getElementById('recentGrid');if(!blk||!grid)return;var a=JSON.parse(localStorage.getItem('recent')||'[]');if(!a.length)return;var base=blk.getAttribute('data-base')||'';var cur=(location.pathname.match(/\\/c\\/([^\\/]+)\\.html/)||[])[1]||'';function esc(s){{return (s||'').replace(/[&<>"]/g,function(c){{return {{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}}[c];}});}}var items=a.filter(function(x){{return x.s!==cur;}}).slice(0,8);if(!items.length)return;grid.innerHTML=items.map(function(x){{return '<li><a href="'+base+'c/'+esc(x.s)+'.html">'+esc(x.n)+'</a></li>';}}).join('');blk.hidden=false;}}catch(e){{}}}})();</script>
 </body>
 </html>
 """
 
 
-def build_detail(row) -> str:
+# 分野（大分類）ごとの基調カラー（HSL の色相）。分野アイコン＋分野名の
+# 自前カバー画像に使う。外部依存なし・高速・必ず分野に関連した見た目になる。
+MAJOR_HUE = {
+    "IT・情報処理": 215, "法律・法務・知財": 262, "会計・金融・経営": 158,
+    "不動産": 24, "建築・設備": 204, "設備・プラント・機械運転": 197,
+    "土木・測量・建設": 36, "電気・通信": 188, "機械・電気・ものづくり": 224,
+    "食品・調理・栄養": 12, "医療・看護・薬": 176, "福祉・介護・心理": 334,
+    "教育・保育・学術": 44, "語学・コミュニケーション": 248,
+    "デザイン・美術・文化": 300, "美容・サービス・スポーツ": 322,
+    "商業・販売・事務": 234, "安全・環境・危険物": 28,
+    "運輸・運転・航空": 210, "農林水産・動物": 122, "海外資格": 268,
+}
+
+# 個別に写真を指定したい資格の上書き（任意）。無料素材や自前ホスティングを想定。
+# 例: "c-1538": {"url": "assets/certs/it-passport.jpg"}
+CERT_IMAGES = {}
+
+
+def _hsl(h, s, l):
+    r, g, b = colorsys.hls_to_rgb((h % 360) / 360, l, s)
+    return f"#{int(r*255):02x}{int(g*255):02x}{int(b*255):02x}"
+
+
+def _rel_lum(h, s, l):
+    """相対輝度（WCAG）。白文字の読みやすさ判定に使う。"""
+    def f(c):
+        return c / 12.92 if c <= 0.03928 else ((c + 0.055) / 1.055) ** 2.4
+    r, g, b = colorsys.hls_to_rgb((h % 360) / 360, l, s)
+    r, g, b = f(r), f(g), f(b)
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b
+
+
+def _readable_l(h, s, l_start, max_lum=0.16):
+    """白文字のコントラストが確保できるよう、輝度が上限を超えない明度まで下げる。"""
+    l = l_start
+    while l > 0.14 and _rel_lum(h, s, l) > max_lum:
+        l -= 0.01
+    return round(l, 3)
+
+
+def _cover_deco(seed):
+    """シード由来の抽象パターン（重なる円）。資格ごとに違う模様になる。"""
+    shapes = []
+    for i in range(4):
+        s = seed >> (i * 8)
+        cx = 8 + (s % 264)
+        cy = 6 + ((s // 17) % 176)
+        r = 26 + ((s // 131) % 62)
+        op = 0.06 + ((s // 7) % 6) * 0.014
+        if (s // 3) % 3 == 0:               # 一部はリング（線）にして変化を出す
+            shapes.append(
+                f'<circle cx="{cx}" cy="{cy}" r="{r}" fill="none" '
+                f'stroke="#fff" stroke-width="2" opacity="{op:.2f}"/>')
+        else:
+            shapes.append(
+                f'<circle cx="{cx}" cy="{cy}" r="{r}" fill="#fff" '
+                f'opacity="{op:.2f}"/>')
+    return "".join(shapes)
+
+
+def _cover_name_size(name):
+    """資格名の文字数に応じてカバー内フォントサイズ(px)を決める。"""
+    n = len(name)
+    if n <= 6:
+        return 25
+    if n <= 9:
+        return 22
+    if n <= 13:
+        return 18
+    if n <= 18:
+        return 16
+    if n <= 26:
+        return 14
+    return 12
+
+
+def _cert_cover_html(row, name):
+    """資格名を主役にした自前カバー画像。色は分野で統一、名前で資格ごとに識別。"""
+    major = row["major_category"]
+    base = MAJOR_HUE.get(major, 214)
+    # 色・グラデーションは分野で統一（同じ分野は同じ配色）。
+    # 明るい色相でも白文字が読めるよう、輝度上限まで明度を自動で下げる。
+    l1 = _readable_l(base, 0.54, 0.45, max_lum=0.16)
+    c1 = _hsl(base, 0.54, l1)
+    c2 = _hsl(base + 22, 0.62, max(0.16, l1 - 0.14))
+    # 模様だけ資格ごとのシードで少し変えて単調さを避ける
+    seed = int(hashlib.md5(row["slug"].encode("utf-8")).hexdigest()[:12], 16)
+    icon = FIELD_ICONS.get(major, "")
+    fs = _cover_name_size(name)
+    style = f"background:linear-gradient(130deg,{c1},{c2})"
+    return (
+        f'<figure class="detail-intro-media">'
+        f'<div class="cert-cover" style="{style}" role="img" '
+        f'aria-label="{esc(name)}">'
+        f'<svg class="cert-cover-deco" viewBox="0 0 280 188" '
+        f'preserveAspectRatio="xMidYMid slice" aria-hidden="true">'
+        f'{_cover_deco(seed)}</svg>'
+        f'<span class="cert-cover-inner">'
+        f'<span class="cert-cover-icon">{icon}</span>'
+        f'<span class="cert-cover-name" style="font-size:{fs}px">'
+        f'{esc(name)}</span>'
+        f'<span class="cert-cover-label">{esc(major)}</span>'
+        f'</span></div></figure>')
+
+
+def detail_media_html(row, name):
+    """詳細ページ見出し横のイメージ。手動写真指定があればそれを、無ければ自前カバー。"""
+    img = CERT_IMAGES.get(row["slug"])
+    if not img:
+        return _cert_cover_html(row, name)
+    credit = ""
+    if img.get("credit_name"):
+        credit = (
+            f'<figcaption class="detail-intro-credit">Photo: '
+            f'<a href="{esc(img["credit_url"])}" rel="nofollow noopener" '
+            f'target="_blank">{esc(img["credit_name"])}</a> / '
+            f'{esc(img.get("source", "Unsplash"))}</figcaption>')
+    onerr = "this.closest('.detail-intro-media').style.display='none'"
+    return (
+        f'<figure class="detail-intro-media">'
+        f'<img src="{esc(img["url"])}" alt="{esc(name)}のイメージ写真" '
+        f'loading="lazy" decoding="async" width="280" height="188" '
+        f'onerror="{onerr}">'
+        f'{credit}</figure>')
+
+
+def build_detail(row, popular_slugs=None) -> str:
     name = row["name"]
     label, cls = TYPE_BADGE.get(row["type"], ("区分要確認", "badge-unknown"))
     major = row["major_category"]
     cat = row["category"]
 
     def field(v, fallback="公式情報で確認"):
-        return esc(v) if v else f'<span class="muted">{fallback}</span>'
+        return esc(fmt_nums_in_text(v)) if v else f'<span class="muted">{fallback}</span>'
+
+    prov = PROVISIONAL.get(row["slug"], {})
+
+    def prov_field(official_val, key, fallback="公式情報で確認"):
+        """公式値があればそれを、無ければ暫定値を『暫定』明示で、それも無ければ促し文。"""
+        if official_val:
+            return esc(fmt_nums_in_text(official_val))
+        pv = prov.get(key, "")
+        if pv:
+            src = prov.get("source", "")
+            note = ('（暫定・非公式の参考値。'
+                    + (f'出典: {esc(src)}。' if src else '')
+                    + '公式の一次情報で確認でき次第、正式値に差し替えます）')
+            return (f'{esc(fmt_nums_in_text(pv))} <span class="prov-tag">暫定</span>'
+                    f' <span class="note-muted prov-note">{note}</span>')
+        return f'<span class="muted">{fallback}</span>'
 
     official = ""
     if row["official_url"]:
@@ -192,66 +1003,163 @@ def build_detail(row) -> str:
     else:
         official = '<span class="muted">未登録（一次情報で確認予定）</span>'
 
-    spec = [
+    spec_basic = [
         ("資格区分", f'<span class="badge {cls}">{esc(label)}</span>'
-                    f' <span class="muted">（{esc(row["type_reason"])}）</span>'),
+                    + type_reason_note(row["type"], label, row["type_reason"])),
         ("分野（大分類）", esc(major)),
         ("カテゴリ", esc(cat)),
         ("実施団体", field(row["authority"])),
         ("公式サイト", official),
+        ("ハローワークコード", esc(row["hellowork_code"])),
+    ]
+    spec_exam = [
         ("受験資格", field(row["eligibility"])),
         ("試験形式", field(row["exam_format"])),
         ("受験料", field(row["fee"])),
-        ("合格率", field(row["pass_rate"])),
+        ("合格率", prov_field(pass_rate_display(row["pass_rate"]) or row["pass_rate"], "pass_rate")),
         ("実施頻度", field(row["frequency"])),
-        ("ハローワークコード", esc(row["hellowork_code"])),
     ]
     ed = EXAM.get(row["slug"], {})
     if ed.get("applicants"):
-        spec.append(("受験者数", esc(ed["applicants"])))
+        spec_exam.append(("受験者数", esc(fmt_nums_in_text(ed["applicants"]))))
+    elif prov.get("applicants"):
+        spec_exam.append(("受験者数", prov_field("", "applicants")))
     diff = difficulty(row)
     if diff:
-        dlabel, dcls = diff
-        spec.append(("難易度の目安",
-                     f'<span class="diff-badge {dcls}">{esc(dlabel)}</span>'
-                     f' <span class="muted">（公表合格率 {esc(row["pass_rate"])} に基づく簡易目安）</span>'))
+        spec_exam.append(("難易度の目安",
+                          _diff_badge_html(row)
+                          + f' <span class="note-muted">（公表合格率 {esc(pass_rate_display(row["pass_rate"]))} に基づく簡易目安）</span>'))
+    dr = DIFFICULTY_RANK.get(row["slug"])
+    if dr:
+        rank_parts = [f'掲載資格中 上位{dr["pct"]}%']
+        if dr.get("fpct"):
+            rank_parts.append(f'{dr["fname"]}分野内 上位{dr["fpct"]}%')
+        conf_note = {"高": "高（主要指標2つ以上で算出）",
+                     "中": "中（単一指標ベースの参考値）"}.get(dr["conf"], dr["conf"])
+        meta = (f'信頼度: {conf_note}／スコア算出{dr["total"]}件中{dr["rank"]}位相当。'
+                f'{"・".join(dr["srcs"])}から算出した編集部の総合スコアで、'
+                f'難易度の絶対指標ではありません。')
+        spec_exam.append(("総合難易度（目安）",
+                          esc(" / ".join(rank_parts))
+                          + f'<div class="note-muted">{esc(meta)}</div>'))
     if ed.get("exam_subjects"):
-        spec.append(("試験科目・出題範囲", esc(ed["exam_subjects"])))
+        spec_exam.append(("試験科目・出題範囲", esc(ed["exam_subjects"])))
     st = STUDY.get(row["slug"], {})
     if st.get("study_hours"):
-        spec.append(("学習時間の目安",
-                     esc(st["study_hours"])
-                     + ' <span class="muted">（編集部調べの目安。個人差があり、公式の数値ではありません）</span>'))
+        spec_exam.append(("学習時間の目安",
+                          esc(fmt_nums_in_text(st["study_hours"]))
+                          + ' <span class="note-muted">（編集部調べの目安。個人差があり、公式の数値ではありません）</span>'))
+
+    spec_use = []
     inds = industry_tags(row)
     if inds:
-        chips = "".join(f'<span class="tag-chip tag-ind">{esc(t)}</span>' for t in inds)
-        spec.append(("活かせる業界", chips))
+        chips = "".join(
+            f'<a class="tag-chip tag-ind" href="../index.html?industry={quote(t)}#all-certs"'
+            f' title="「{esc(t)}」で活かせる資格を探す">{esc(t)}</a>' for t in inds)
+        spec_use.append(("活かせる業界", chips))
     tags = cert_tags(row)
     if tags:
-        chips = "".join(f'<span class="tag-chip">{esc(t)}</span>' for t in tags)
-        spec.append(("特徴・目的タグ", chips))
+        chips = "".join(
+            f'<a class="tag-chip" href="../index.html?tag={quote(t)}#all-certs"'
+            f' title="「{esc(t)}」の資格を探す">{esc(t)}</a>' for t in tags)
+        spec_use.append(("特徴・目的タグ", chips))
     src = row.get("source_checked_at", "")
-    if src:
-        spec.append(("情報確認日", esc(src) + ' <span class="muted">（公式の一次情報に基づき確認）</span>'))
-    rows_html = "".join(f"<tr><th>{esc(k)}</th><td>{v}</td></tr>" for k, v in spec)
 
-    # 公式サイトへの導線（CTA）と出典・注意書き
+    # この資格のポイント
+    pts = []
+    if is_noreq(row):
+        pts.append("受験資格の制限がなく、誰でも受験できます")
+    if is_cbt(row):
+        pts.append("CBT・ネット試験に対応し、比較的受けやすい試験です")
+    _d = difficulty(row)
+    if _d:
+        pts.append(f"難易度の目安は「{_d[0]}」です（公表合格率に基づく簡易目安）")
+    _tg = cert_tags(row)
+    _tagmsg = [("就職・転職", "就職・転職でアピールしやすい資格です"),
+               ("独立・開業", "独立・開業につながる資格です"),
+               ("在宅ワーク", "在宅・リモートワークに活かせます"),
+               ("手に職", "手に職をつけられる実務的な資格です"),
+               ("未経験からIT", "未経験からITを目指す入口になります"),
+               ("定年後・シニア", "定年後・シニアの活動にも役立ちます")]
+    for _k, _m in _tagmsg:
+        if _k in _tg:
+            pts.append(_m)
+    _inds = industry_tags(row)
+    if _inds:
+        pts.append(f"主に{'・'.join(_inds[:2])}の分野で活かせます")
+    pts = pts[:5]
+    if pts:
+        _lis = "".join(f"<li>{esc(p)}</li>" for p in pts)
+        spec_use.append(("この資格のポイント",
+                         f'<ul class="spec-list">{_lis}</ul>'))
+
+    # 活かせる仕事・キャリア
+    cur = CAREERS.get(row["slug"])
+    if cur:
+        items = []
+        for tok in cur["careers"].split("、"):
+            tok = tok.strip()
+            if not tok:
+                continue
+            nm, note = occlib.split_name_note(tok)
+            nm = occlib.canonical(nm)
+            note_html = f'<span class="muted">（{esc(note)}）</span>' if note else ""
+            oid = OCC_ID_BY_NAME.get(nm)
+            if oid:
+                items.append(f'<li><a href="../shoku/{oid}.html">{esc(nm)}</a>{note_html}</li>')
+            else:
+                items.append(f'<li>{esc(nm)}{note_html}</li>')
+        careers_cell = f'<ul class="spec-list careers">{"".join(items)}</ul>'
+        if cur["source"]:
+            careers_cell += (f'<p class="muted careers-src">出典: '
+                             f'<a href="{esc(cur["source"])}" rel="nofollow noopener" target="_blank">'
+                             f'公式・job tag 等</a>（職種名から各職種ページへ：'
+                             f'その職種に活かせる資格を逆引きできます）</p>')
+    else:
+        careers_cell = (f'<p class="muted">{esc(name)}（{esc(major)}分野）を要件・推奨とする'
+                        '職業は個別に精査中です。関連する職業は、厚生労働省の職業情報提供'
+                        'サイト（job tag）で資格名から検索できます。</p>')
+    careers_cell += (f'<p class="jobtag"><a href="{JOBTAG_URL}" rel="nofollow noopener" '
+                     f'target="_blank">厚生労働省 job tag で関連職業を調べる ↗</a></p>')
+    spec_use.append(("活かせる仕事・キャリア", careers_cell))
+
+    spec_ref = []
+    # おすすめ教材
+    _mat_cell = materials_cell_html(row["slug"])
+    if _mat_cell:
+        spec_ref.append(("おすすめテキスト・講座", _mat_cell))
+
+    jd = jp_date(src)
     if row["official_url"]:
         u = esc(row["official_url"])
-        cta = (f'<p class="official-cta"><a class="btn-official" href="{u}" '
-               f'rel="nofollow noopener" target="_blank">公式サイトで最新情報を確認 ↗</a></p>')
+        official_src = f'<a href="{u}" rel="nofollow noopener" target="_blank">公式サイト</a>'
+        if row["authority"]:
+            official_src += f'（{esc(row["authority"])}）'
+    elif row["authority"]:
+        official_src = esc(row["authority"])
     else:
-        cta = ""
-    provenance = (
-        '<p class="provenance">受験料・試験形式・受験資格・合格率・実施団体は、'
-        '各資格の<strong>公式の一次情報</strong>に基づいて整備しています。'
-        '制度・金額・日程は改定されることがあるため、出願前に必ず公式サイトで'
-        'ご確認ください。空欄の項目は公式で確認のうえ追記します。</p>')
+        official_src = "各資格の公式情報"
+    if jd:
+        spec_ref.append(("最終確認日", esc(jd)))
+    elif src:
+        spec_ref.append(("最終確認日", esc(src)))
+    spec_ref.append(("情報源", official_src))
+    if row["official_url"]:
+        u = esc(row["official_url"])
+        spec_ref.append(("最新情報の確認",
+                         f'<a href="{u}" rel="nofollow noopener" target="_blank">'
+                         f'公式サイトで最新情報を確認 ↗</a>'))
+    spec_ref.append(("データの注記",
+                     '<p class="detail-source-note">受験料・受験資格・試験形式・合格率・実施団体は公式の一次情報に基づきます。'
+                     '学習時間・難易度・総合スコアは編集部による目安で、公式の数値ではありません。'
+                     '制度・金額・日程は改定されることがあるため、出願前に必ず公式サイトでご確認ください。</p>'))
 
-    # 鮮度シグナル（最終更新日の可視表示）
-    jd = jp_date(src)
-    updated_html = (f'<p class="updated">最終更新: {esc(jd)}'
-                    f'<span class="muted">（公式の一次情報に基づき確認）</span></p>\n') if jd else ""
+    spec_html = spec_sections_html([
+        ("基本情報", "spec-basic", spec_basic),
+        ("試験・学習", "spec-exam", spec_exam),
+        ("活かし方", "spec-use", spec_use),
+        ("参考・出典", "spec-ref", spec_ref),
+    ], row.get("official_url") or "")
 
     # ユニーク本文（概要）— 手書きの独自解説があれば優先、なければテンプレート生成
     hand_desc = DESC.get(row["slug"], "")
@@ -264,36 +1172,15 @@ def build_detail(row) -> str:
         lead += "このページでは受験料・試験形式・受験資格・合格率・実施頻度・公式サイトをまとめています。"
     fact = []
     if row["fee"]:
-        fact.append(f"受験料は{esc(row['fee'])}")
+        fact.append(f"受験料は{esc(fmt_nums_in_text(row['fee']))}")
     if row["pass_rate"]:
-        fact.append(f"合格率は{esc(row['pass_rate'])}")
+        fact.append(f"合格率は{esc(pass_rate_display(row['pass_rate']))}")
     if row["exam_format"]:
         fact.append(f"試験形式は{esc(row['exam_format'])}")
     if row["frequency"]:
         fact.append(f"実施頻度は{esc(row['frequency'])}")
     fact_p = (f"<p>{name}の概要: " + "、".join(fact)
               + "。最新の金額・日程・合格率は公式サイトで必ずご確認ください。</p>") if fact else ""
-
-    # 活かせる仕事・キャリア（ハイブリッド: キュレーション + job tag 導線）
-    cur = CAREERS.get(row["slug"])
-    if cur:
-        jobs = [c.strip() for c in cur["careers"].split("、") if c.strip()]
-        jobs_html = "".join(f"<li>{esc(j)}</li>" for j in jobs)
-        src_html = ""
-        if cur["source"]:
-            src_html = (f'<p class="muted careers-src">出典: '
-                        f'<a href="{esc(cur["source"])}" rel="nofollow noopener" target="_blank">'
-                        f'公式・job tag 等</a></p>')
-        careers_body = f'<ul class="careers">{jobs_html}</ul>{src_html}'
-    else:
-        careers_body = (f'<p class="muted">{esc(name)}（{esc(major)}分野）を要件・推奨とする'
-                        '職業は個別に精査中です。関連する職業は、厚生労働省の職業情報提供'
-                        'サイト（job tag）で資格名から検索できます。</p>')
-    careers_section = (
-        '<section class="careers-sec"><h2>活かせる仕事・キャリア</h2>'
-        + careers_body
-        + f'<p class="jobtag"><a href="{JOBTAG_URL}" rel="nofollow noopener" '
-          f'target="_blank">厚生労働省 job tag で関連職業を調べる ↗</a></p></section>')
 
     # 関連内部リンク
     bslug = MAJOR_SLUGS.get(major, "other")
@@ -321,71 +1208,204 @@ def build_detail(row) -> str:
         rel.append(("../feature/senior.html", "定年後・シニアに役立つ資格"))
     if is_working_adult(row):
         rel.append(("../feature/working-adults.html", "働きながら取りやすい資格"))
-    # 比較ページへの相互リンク（この資格が含まれる人気ペア）
-    for ps, other in COMPARE_INDEX.get(s, []):
-        if other in INDEXABLE_SLUGS:
-            on = re.sub(r"[（(].*?[）)]", "", NAME_BY_SLUG.get(other, other)).strip()
-            rel.append((f"../vs/{ps}.html", f"{on or other}との違い・比較"))
+    # 比較ペアは下の「よく比較される資格」で扱うため、ここでは一覧・特集への導線のみ
     rel += [("../feature/cheap.html", "受験料が安い資格ランキング"),
             ("../feature/high-pass.html", "合格率が高い資格")]
-    rel_links = ('<nav class="rel-links"><h2>関連リンク</h2><ul>'
-                 + "".join(f'<li><a href="{u}">{esc(t)}</a></li>' for u, t in rel)
-                 + "</ul></nav>")
 
-    # FAQ 構造化データ
+    vs_pairs = []
+    for ps, other in COMPARE_INDEX.get(row["slug"], []):
+        if other in INDEXABLE_SLUGS:
+            on = _rel_name(other)
+            vs_pairs.append((ps, on))
+
+    # FAQ 構造化データ（表示は表に統合、JSON-LD のみ出力）
     qa = []
     if row["fee"]:
-        qa.append((f"{name}の受験料はいくらですか？", row["fee"]))
+        qa.append((f"{name}の受験料はいくらですか？", fmt_nums_in_text(row["fee"])))
     if row["eligibility"]:
         qa.append((f"{name}に受験資格はありますか？", row["eligibility"]))
     if row["exam_format"]:
         qa.append((f"{name}の試験はどのような形式ですか？", row["exam_format"]))
     if row["pass_rate"]:
-        qa.append((f"{name}の合格率はどのくらいですか？", row["pass_rate"]))
+        qa.append((f"{name}の合格率はどのくらいですか？", pass_rate_display(row["pass_rate"])))
     if ed.get("exam_subjects"):
         qa.append((f"{name}の試験科目・出題範囲は？", ed["exam_subjects"]))
     if ed.get("applicants"):
-        qa.append((f"{name}の受験者数はどのくらいですか？", ed["applicants"]))
+        qa.append((f"{name}の受験者数はどのくらいですか？", fmt_nums_in_text(ed["applicants"])))
     if row["frequency"]:
         qa.append((f"{name}はいつ実施されますか？", row["frequency"]))
     if row["authority"]:
         qa.append((f"{name}の実施団体はどこですか？", row["authority"]))
+    # 派生Q&A（保有データに基づく事実回答。ロングテール検索を狙う）
+    _sth = (STUDY.get(row["slug"], {}) or {}).get("study_hours", "")
+    if is_noreq(row):
+        qa.append((f"{name}は誰でも受験できますか？",
+                   "受験資格の制限はなく、誰でも受験できます。"))
+    if is_cbt(row):
+        qa.append((f"{name}は在宅・CBTで受けられますか？",
+                   "CBT（テストセンターやネット試験）方式に対応しています。会場や日程は公式サイトでご確認ください。"))
+    if _sth:
+        qa.append((f"{name}の合格に必要な学習時間の目安は？",
+                   f"編集部調べでは{_sth}が目安です（個人差があり、公式の数値ではありません）。"))
+    _dq = difficulty(row)
+    if _dq and row["pass_rate"]:
+        qa.append((f"{name}の難易度はどのくらいですか？",
+                   f"公表合格率（{pass_rate_display(row['pass_rate'])}）に基づく簡易的な目安では「{_dq[0]}」です。"
+                   "合格率は受験者層により変わるため、難易度の絶対指標ではありません。"))
     faq = ({"@context": "https://schema.org", "@type": "FAQPage",
             "mainEntity": [{"@type": "Question", "name": q,
                             "acceptedAnswer": {"@type": "Answer", "text": a}}
                            for q, a in qa]} if qa else None)
-
-    body = f"""<nav class="crumbs"><a href="../index.html">トップ</a> ›
-<a href="../index.html?major={esc(major)}">{esc(major)}</a> › {esc(name)}</nav>
-<h1>{esc(name)}</h1>
-{updated_html}<p class="lead">{lead}</p>
-{fact_p}
-<table class="spec">{rows_html}</table>
-{cta}{provenance}
-{careers_section}
-{rel_links}
-<section class="related"><h2>同じカテゴリの資格</h2><ul id="related"></ul></section>
-<script>
-fetch("../data/certifications.json").then(r=>r.json()).then(all=>{{
-  const cat={json.dumps(cat, ensure_ascii=False)}, me={json.dumps(row["slug"], ensure_ascii=False)};
-  const ul=document.getElementById("related");
-  all.filter(x=>x.category===cat&&x.slug!==me).slice(0,12).forEach(x=>{{
-    const li=document.createElement("li");
-    li.innerHTML='<a href="'+x.slug+'.html">'+x.name+'</a>';
-    ul.appendChild(li);
-  }});
-  if(!ul.children.length) ul.innerHTML='<li class="muted">なし</li>';
-}});
-</script>
-"""
-    bits = [b for b in (("受験料" + row["fee"]) if row["fee"] else "",
-                        ("合格率" + row["pass_rate"]) if row["pass_rate"] else "") if b]
-    if hand_desc:
-        desc = hand_desc[:118]
+    # 可視FAQ（読者の可読性＋FAQリッチリザルト適格化：JSON-LDと同内容をHTMLでも表示）
+    if qa:
+        faq_items = "".join(
+            f'<details class="faq-item"><summary>{esc(q)}</summary>'
+            f'<div class="faq-a">{esc(fmt_nums_in_text(a))}</div></details>'
+            for q, a in qa)
+        faq_html = (f'<section class="detail-section detail-section--faq detail-section--alt" aria-labelledby="faq-h">'
+                    f'<h2 class="detail-section-title" id="faq-h">{esc(name)}のよくある質問</h2>'
+                    f'<div class="faq-list">{faq_items}</div></section>')
     else:
-        desc = (f"{name}（{major}分野・{label}）の試験情報。"
-                + ("／".join(bits) + "。" if bits else "")
-                + "受験料・試験形式・受験資格・合格率・実施団体・公式サイトを掲載。")
+        faq_html = ""
+
+    # 編集ガイダンス（主要資格のみ・手書き）。各資格固有の踏み込んだ解説。
+    # プロース欄は改行で段落分割できる。steps は「|」区切りの番号リスト。
+    _g = GUIDES.get(row["slug"])
+    if _g:
+        def _guide_paras(text):
+            return "".join(f"<p>{esc(p.strip())}</p>"
+                           for p in text.split("\n") if p.strip())
+        _blocks = []
+        _guide_order = (
+            ("suited", f"{name}はこんな人に向いている"),
+            ("difficulty", "難易度と学習のリアル"),
+            ("study", "学習の進め方・勉強法"),
+            ("__steps__", "学習ステップの目安"),
+            ("pitfalls", "つまずきやすいポイント"),
+            ("career", "取得後の活かし方・キャリア"),
+        )
+        for key, head in _guide_order:
+            if key == "__steps__":
+                if _g.get("steps"):
+                    _steps = [s.strip() for s in _g["steps"].split("|") if s.strip()]
+                    if _steps:
+                        _li = "".join(f"<li>{esc(s)}</li>" for s in _steps)
+                        _blocks.append(
+                            '<div class="guide-block">'
+                            '<h3 class="guide-h">学習ステップの目安</h3>'
+                            f'<ol class="guide-steps">{_li}</ol></div>')
+                continue
+            if _g.get(key):
+                _blocks.append(
+                    f'<div class="guide-block">'
+                    f'<h3 class="guide-h">{esc(head)}</h3>'
+                    f'{_guide_paras(_g[key])}</div>')
+        guide_html = (f'<section class="detail-section detail-section--guide detail-section--alt" aria-labelledby="guide-h">'
+                      f'<h2 class="detail-section-title" id="guide-h">{esc(name)}の受験・活用ガイド</h2>'
+                      f'<div class="guide-body">{"".join(_blocks)}</div>'
+                      f'<p class="detail-footnote">※学習の進め方や向き・不向きは一般的な傾向の解説です。'
+                      f'最新の制度・出題内容は公式サイトでご確認ください。</p></section>')
+    else:
+        guide_html = ""
+
+    detail_nav = detail_nav_html(row["slug"], cat, rel, vs_pairs)
+
+    # 「最近見た資格」記録（localStorage）
+    _rn = esc(_rel_name(row["slug"]))
+    recent_js = ("<script>(function(){try{var k='recent',a=JSON.parse(localStorage.getItem(k)||'[]');"
+                 f"a=a.filter(function(x){{return x.s!=='{esc(row['slug'])}';}});"
+                 f"a.unshift({{s:'{esc(row['slug'])}',n:'{_rn}'}});a=a.slice(0,8);"
+                 "localStorage.setItem(k,JSON.stringify(a));}catch(e){}})();</script>")
+    partner_detail = partner_detail_html(row["slug"])
+    _rm_chain = step_up_chain(row["slug"])
+    _roadmap_track = roadmap_html(row["slug"], _rm_chain)
+    if _roadmap_track:
+        _roadmap_block = (
+            '<section class="detail-section detail-section--roadmap">'
+            '<h2 class="detail-section-title">取得ロードマップ</h2>'
+            f'<div class="roadmap">{_roadmap_track}</div></section>')
+    else:
+        _roadmap_block = ""
+    # 廃止・名称変更・補足の沿革注記（一次情報で確認済み）。薄い seed ページに
+    # 正確な案内（後継資格への内部リンク・出典）を表示し、誤誘導を防ぐ。
+    notice = ""
+    tri = TRIAGE.get(row["slug"])
+    if tri:
+        succ = ""
+        ss = tri.get("successor_slug")
+        if ss and ss in NAME_BY_SLUG:
+            succ = (f' 後継・関連資格: <a href="../c/{esc(ss)}.html">'
+                    f'{esc(NAME_BY_SLUG[ss])}</a>。')
+        src = ""
+        if tri.get("source"):
+            src = (f' <a href="{esc(tri["source"])}" rel="nofollow noopener" '
+                   f'target="_blank">出典</a>')
+        notice = (f'<div class="notice-defunct"><strong>【{esc(tri.get("kind") or "注記")}】'
+                  f'</strong>{esc(tri["note"])}{succ}{src}</div>')
+    # 主要数値のファクトカード（h1直下）: 短い値のみタイル化し、詳細はスペック表に委ねる
+    fact_tiles = []
+    _fee = fmt_nums_in_text(row["fee"]) if row["fee"] else ""
+    if _fee and len(_fee) <= 22:
+        fact_tiles.append(("受験料", esc(_fee)))
+    _pr = pass_rate_display(row["pass_rate"]) if row["pass_rate"] else ""
+    if _pr and len(_pr) <= 22:
+        fact_tiles.append(("合格率", esc(_pr)))
+    _diff = difficulty(row)
+    if _diff:
+        fact_tiles.append(("難易度の目安", _diff_meter_html(row)))
+    _study = (STUDY.get(row["slug"], {}) or {}).get("study_hours", "")
+    if _study and len(_study) <= 22:
+        fact_tiles.append(("学習時間の目安", esc(fmt_nums_in_text(_study))))
+    _elig = row["eligibility"]
+    if _elig and len(_elig) <= 18:
+        fact_tiles.append(("受験資格", esc(_elig)))
+    facts_html = ""
+    if len(fact_tiles) >= 2:
+        _tiles = "".join(f'<div class="fact"><div class="l">{l}</div>'
+                         f'<div class="v">{v}</div></div>' for l, v in fact_tiles)
+        facts_html = f'<div class="detail-facts"><div class="facts">{_tiles}</div></div>'
+    body = f"""<div class="page-detail">
+<nav class="crumbs"><a href="../index.html">トップ</a> ›
+<a href="../bunya/{esc(bslug)}.html">{esc(major)}</a> › {esc(name)}</nav>
+<header class="detail-intro">
+<div class="detail-intro-row">
+<div class="detail-intro-main">
+{detail_title_html(name, row["slug"], popular_slugs)}
+<p class="detail-audience">{lead}</p>
+{facts_html}
+</div>
+{detail_media_html(row, name)}
+</div>
+</header>
+{notice}
+{_roadmap_block}
+<section class="detail-section detail-section--spec" aria-labelledby="ds-h">
+<h2 class="detail-section-title" id="ds-h">資格情報</h2>
+<div class="spec-sections">{spec_html}</div>{SPEC_TABLE_JS}</section>
+{partner_detail}
+{guide_html}
+{faq_html}
+{detail_nav}
+{recent_js}
+</div>"""
+    # meta description は各ページで一意になるよう、必ず固有の資格名で始め、
+    # 固有の事実（受験料・合格率・実施団体）を添える（家族で共通の説明文の重複を回避）。
+    _short = re.sub(r"[（(].*?[）)]", "", name).strip() or name
+    lead_txt = hand_desc or f"{name}は{major}分野の{label}です。"
+    if _short not in lead_txt:
+        lead_txt = f"{_short}は{label}。" + lead_txt
+    _facts = []
+    if row["fee"]:
+        _facts.append("受験料" + fmt_nums_in_text(row["fee"]))
+    if row["pass_rate"]:
+        _facts.append("合格率" + pass_rate_display(row["pass_rate"]))
+    if not _facts and row["authority"]:
+        _facts.append("実施団体は" + row["authority"])
+    desc = lead_txt + ("（" + "／".join(_facts) + "）" if _facts else "")
+    desc = re.sub(r"\s+", " ", desc).strip()
+    if len(desc) < 90:
+        desc += " 受験資格・試験形式・公式サイトも掲載。"
+    desc = desc[:158]
     breadcrumb = {
         "@context": "https://schema.org", "@type": "BreadcrumbList",
         "itemListElement": [
@@ -395,10 +1415,58 @@ fetch("../data/certifications.json").then(r=>r.json()).then(all=>{{
             {"@type": "ListItem", "position": 3, "name": name},
         ],
     }
-    ld = [breadcrumb] + ([faq] if faq else [])
-    return page_shell(f"{name}｜{SITE_NAME}", body, depth=1,
-                      noindex=(not is_indexable_detail(row)),
-                      desc=desc, path=f'c/{row["slug"]}.html', jsonld=ld)
+    # schema.org/EducationalOccupationalCredential（資格＝資格証明）
+    credential = {
+        "@context": "https://schema.org",
+        "@type": "EducationalOccupationalCredential",
+        "name": name,
+        "url": f'{BASE_URL}/c/{row["slug"]}.html',
+        "credentialCategory": label,
+    }
+    cred_desc = hand_desc or f"{name}は、{major}分野の{label}です。"
+    credential["description"] = cred_desc[:300]
+    if row["authority"]:
+        credential["recognizedBy"] = {"@type": "Organization",
+                                      "name": row["authority"]}
+    if ed.get("exam_subjects"):
+        credential["competencyRequired"] = ed["exam_subjects"][:300]
+    ld = [breadcrumb, credential] + ([faq] if faq else [])
+    # 情報の鮮度シグナル（最終確認日）をWebPageとして明示
+    _checked = (row.get("source_checked_at") or "").strip()
+    if re.match(r"^\d{4}-\d{2}-\d{2}$", _checked):
+        ld.append({"@context": "https://schema.org", "@type": "WebPage",
+                   "url": f"{BASE_URL}/c/{row['slug']}.html",
+                   "name": f"{name}｜{SITE_NAME}",
+                   "dateModified": _checked,
+                   "isPartOf": {"@type": "WebSite", "name": SITE_NAME,
+                                "url": BASE_URL + "/"}})
+    indexable = is_indexable_detail(row)
+    # index対象の詳細ページは資格ごとの個別OG画像を使う（build_og.pyがCIで生成）
+    og_image = (f"{BASE_URL}/assets/ogp/{row['slug']}.png" if indexable else "")
+    # SEO: タイトルに高検索意図のキーワード（受験料・合格率・難易度等）を付与し、
+    # ロングテール検索のCTRを改善する。実データがある語のみを採用し、資格名の
+    # 長さに応じて語数を絞って過長・SERP切れを防ぐ。
+    title_mods = []
+    if row.get("fee", "").strip():
+        title_mods.append("受験料")
+    if row.get("pass_rate", "").strip():
+        title_mods.append("合格率")
+    if difficulty(row):
+        title_mods.append("難易度")
+    if not title_mods:
+        if row.get("eligibility", "").strip():
+            title_mods.append("受験資格")
+        if row.get("frequency", "").strip():
+            title_mods.append("試験日")
+    _nlen = len(name)
+    _k = 3 if _nlen <= 12 else 2 if _nlen <= 18 else 0
+    title_mods = title_mods[:_k]
+    page_title = (f"{name}の{'・'.join(title_mods)}｜{SITE_NAME}"
+                  if title_mods else f"{name}｜{SITE_NAME}")
+    return page_shell(page_title, body, depth=1,
+                      noindex=(not indexable),
+                      desc=desc, path=f'c/{row["slug"]}.html', jsonld=ld,
+                      og_image=og_image)
 
 
 def fee_yen(r):
@@ -411,6 +1479,91 @@ def pass_pct(r):
     """合格率文字列から最初の「N%」を float で。なければ None。"""
     m = re.search(r"([0-9]+(?:\.[0-9]+)?)\s*%", r.get("pass_rate", ""))
     return float(m.group(1)) if m else None
+
+
+def pass_rate_short(val):
+    """表示用: 数値と%のみ（年度・回次などの括弧書きは省略）。"""
+    if not val:
+        return ""
+    s = str(val).replace(",", "")
+    s = re.sub(r"[（(][^）)]*(?:年度|令和|平成|昭和|第\d+回)[^）)]*[）)]", "", s)
+    s = s.strip()
+    parts = re.findall(
+        r"((?:一次|二次|筆記|口頭|学科|実地|全体|上期|下期)?[0-9]+(?:\.[0-9]+)?%)",
+        s)
+    if len(parts) > 1:
+        return "/".join(parts)
+    if parts:
+        return parts[0]
+    m = re.search(r"([0-9]+(?:\.[0-9]+)?)\s*%", s)
+    return f"{m.group(1)}%" if m else ""
+
+
+def pass_rate_display(val):
+    """合格率の画面表示用文字列（カンマ整形＋年度省略）。"""
+    s = pass_rate_short(val)
+    return fmt_nums_in_text(s) if s else ""
+
+
+def spec_row_html(label, value, href=""):
+    """資格情報表の1行（クリック・ホバー対応）。"""
+    href_attr = f' data-href="{esc(href)}"' if href else ""
+    return (
+        f'<tr class="spec-row" tabindex="0"{href_attr}>'
+        f"<th>{spec_label_html(label)}</th><td>{value}</td></tr>")
+
+
+_SPEC_LINK_LABELS = frozenset({"公式サイト", "最新情報の確認"})
+
+
+def spec_table_html(rows, official_url=""):
+    """行リストから spec 表の tbody 相当 HTML を生成。"""
+    return "".join(
+        spec_row_html(
+            k, v,
+            official_url if k in _SPEC_LINK_LABELS and official_url else "",
+        )
+        for k, v in rows
+    )
+
+
+def spec_sections_html(section_rows, official_url=""):
+    """セクション見出し付きの資格情報表ブロックを生成。"""
+    parts = []
+    for title, sid, rows in section_rows:
+        if not rows:
+            continue
+        parts.append(
+            f'<div class="spec-section" id="{esc(sid)}">'
+            f'<h3 class="spec-section-title">{esc(title)}</h3>'
+            f'<div class="spec-wrap"><table class="spec">'
+            f'<colgroup><col class="spec-col-label"><col class="spec-col-value"></colgroup>'
+            f'{spec_table_html(rows, official_url)}'
+            f'</table></div></div>'
+        )
+    return "".join(parts)
+
+
+SPEC_TABLE_JS = """<script>
+(function(){
+  document.querySelectorAll(".page-detail table.spec").forEach(function(tbl){
+    tbl.querySelectorAll("tr.spec-row").forEach(function(tr){
+      tr.addEventListener("click",function(e){
+        if(e.target.closest("a"))return;
+        var href=tr.getAttribute("data-href");
+        if(href){window.open(href,"_blank","noopener");return;}
+        tbl.querySelectorAll("tr.spec-row.is-active").forEach(function(r){
+          if(r!==tr)r.classList.remove("is-active");
+        });
+        tr.classList.toggle("is-active");
+      });
+      tr.addEventListener("keydown",function(e){
+        if(e.key==="Enter"||e.key===" "){e.preventDefault();tr.click();}
+      });
+    });
+  });
+})();
+</script>"""
 
 
 def difficulty(r):
@@ -431,6 +1584,172 @@ def difficulty(r):
     if p < 80:
         return ("比較的やさしい", "diff-easy")
     return ("入門〜標準", "diff-veryeasy")
+
+
+def _diff_badge_html(r):
+    d = difficulty(r)
+    if not d:
+        return ""
+    label, cls = d
+    return f'<span class="diff-badge {cls}">{esc(label)}</span>'
+
+
+# 難易度バンド → メーターの段階（易 1 〜 難 5）
+DIFF_LEVEL = {"diff-veryeasy": 1, "diff-easy": 2, "diff-mid": 3,
+              "diff-hard": 4, "diff-veryhard": 5}
+
+
+def _diff_meter_html(r):
+    """難易度を5段階セグメントメーター＋バッジで可視化。難易度が無ければ空文字。"""
+    d = difficulty(r)
+    if not d:
+        return ""
+    label, cls = d
+    lvl = DIFF_LEVEL.get(cls, 0)
+    segs = "".join(
+        (f'<span class="seg {cls} on"></span>' if i <= lvl
+         else '<span class="seg"></span>')
+        for i in range(1, 6))
+    return (f'<span class="diff-meter" aria-hidden="true">{segs}</span>'
+            f'<span class="diff-badge {cls}">{esc(label)}</span>')
+
+
+def study_hours_max(slug):
+    """学習時間文字列から代表値（範囲なら上限）を時間で。なければ None。"""
+    s = (STUDY.get(slug, {}) or {}).get("study_hours", "")
+    nums = [int(x.replace(",", "")) for x in re.findall(r"([0-9][0-9,]*)", s)]
+    return max(nums) if nums else None
+
+
+def eff_pass_pct(r):
+    """合格率文字列の全%を段階（一次/二次・学科/実地）の積として合成した実効合格率(%)。
+    例: 一次36.7%/二次49.6% → 0.367×0.496 = 18.2%。なければ None。"""
+    nums = [float(x) for x in re.findall(r"([0-9]+(?:\.[0-9]+)?)\s*%", r.get("pass_rate", ""))]
+    if not nums:
+        return None
+    p = 1.0
+    for n in nums:
+        p *= min(max(n, 0.0), 100.0) / 100.0
+    return p * 100.0
+
+
+_ELIG_NEG = re.compile(r"(受験資格.{0,4}(なし|不問)|制限なし|どなたでも|誰でも|だれでも"
+                       r"|学歴.{0,3}不問|年齢.{0,3}不問|実務.{0,3}不問)")
+
+
+def elig_strictness(r):
+    """受験資格テキストから受験ハードルを 0-1 で粗く推定。判別不能・空は None。
+
+    注: 受験資格の厳しさは試験そのものの難しさとは別物。総合スコアでは低い重みの
+    「補助シグナル」として、主要シグナル（合格率・学習時間・難易度データ）がある資格の
+    位置を微調整する用途に限って使う（単独では極端な順位を作らない）。"""
+    t = (r.get("eligibility") or "").strip()
+    if not t:
+        return None
+    if _ELIG_NEG.search(t):
+        return 0.10
+    m = re.search(r"実務.{0,4}(?:経験|従事).{0,8}?(\d+)\s*年", t)
+    if m:
+        y = int(m.group(1))
+        return 0.85 if y >= 5 else 0.70 if y >= 3 else 0.60
+    if re.search(r"実務.{0,4}経験|業務.{0,4}経験|従事.{0,3}経験", t):
+        return 0.60
+    if re.search(r"(大学|短大|高専|専門学校|高校|学校).{0,8}(卒|修了|在学|課程|履修)", t):
+        return 0.50
+    if re.search(r"(資格.{0,5}保有|合格者|級.{0,5}(取得|保持)|上位.{0,3}資格"
+                 r"|指定.{0,5}講習|登録.{0,4}(必要|要)|養成.{0,3}課程)", t):
+        return 0.55
+    return None
+
+
+# 総合難易度ランキング（合格率・学習時間・難易度データ・受験資格からの編集部スコア）。
+# main() で build_difficulty_rank() が算出。
+DIFFICULTY_RANK = {}  # slug -> {pct,rank,total,conf,fpct,frank,ftotal,fname,...}
+
+# 各シグナルの重み（主要3軸＋補助1軸）と信頼度補正の強さ。
+_W_PASS, _W_HOUR, _W_DIFF, _W_ELIG = 1.0, 0.8, 1.0, 0.35
+_SHRINK_K0 = 0.9   # 大きいほど主要シグナルが少ない資格を中央値へ強く収縮
+_FIELD_MIN = 8     # 分野内ランキングを出す最小母数
+
+
+def build_difficulty_rank(rows):
+    """合格率(実効)・学習時間・編集部難易度データを全体内パーセンタイルに正規化し、
+    受験資格の厳しさを補助シグナルとして加重平均。主要シグナルの数に応じて中央値へ
+    収縮(shrinkage)させ、過信を抑える。全体および分野内のランキングを DIFFICULTY_RANK に格納。"""
+    import bisect
+    from collections import defaultdict
+
+    items = []  # (row, eff_pass, hours, diff_value, elig)
+    pass_vals, hour_vals, diff_vals = [], [], []
+    for r in rows:
+        ep = eff_pass_pct(r)
+        hr = study_hours_max(r["slug"])
+        dv = (DIFFICULTY_DATA.get(r["slug"], {}) or {}).get("value")
+        es = elig_strictness(r)
+        if ep is None and hr is None and dv is None:
+            continue  # 主要シグナルが1つも無ければ対象外（受験資格のみでは順位化しない）
+        items.append((r, ep, hr, dv, es))
+        if ep is not None:
+            pass_vals.append(ep)
+        if hr is not None:
+            hour_vals.append(hr)
+        if dv is not None:
+            diff_vals.append(dv)
+    pass_sorted, hour_sorted, diff_sorted = sorted(pass_vals), sorted(hour_vals), sorted(diff_vals)
+
+    def pctl(sorted_vals, v):
+        n = len(sorted_vals)
+        return (bisect.bisect_left(sorted_vals, v) + 0.5) / n if n else None
+
+    records = []  # (slug, major, hardness, conf, sources)
+    for r, ep, hr, dv, es in items:
+        sig = []  # (hardness0-1, weight, is_primary)
+        if ep is not None:
+            sig.append((1.0 - pctl(pass_sorted, ep), _W_PASS, True))   # 低合格率=難
+        if hr is not None:
+            sig.append((pctl(hour_sorted, hr), _W_HOUR, True))         # 長時間=難
+        if dv is not None:
+            sig.append((pctl(diff_sorted, dv), _W_DIFF, True))         # 難易度データ
+        if es is not None:
+            sig.append((es, _W_ELIG, False))                           # 受験資格(補助)
+        wsum = sum(w for _, w, _ in sig)
+        h_raw = sum(h * w for h, w, _ in sig) / wsum
+        prim_w = sum(w for _, w, p in sig if p)
+        nprim = sum(1 for _, _, p in sig if p)
+        # 主要シグナルの重み総和が小さいほど中央値(0.5)へ収縮 → 単一指標の過信を抑制
+        k = prim_w / (prim_w + _SHRINK_K0)
+        h = 0.5 + (h_raw - 0.5) * k
+        conf = "高" if nprim >= 2 else "中"
+        srcs = []
+        if ep is not None:
+            srcs.append("合格率(実効)")
+        if hr is not None:
+            srcs.append("学習時間")
+        if dv is not None:
+            srcs.append("編集部難易度データ")
+        if es is not None:
+            srcs.append("受験資格の要件")
+        records.append((r["slug"], r.get("major_category", ""), h, conf, srcs))
+
+    records.sort(key=lambda x: (-x[2], x[0]))  # 難しい順、slug で安定化
+    total = len(records)
+    DIFFICULTY_RANK.clear()
+    for i, (s, mj, h, conf, srcs) in enumerate(records):
+        DIFFICULTY_RANK[s] = {"pct": max(1, math.ceil((i + 1) / total * 100)),
+                              "rank": i + 1, "total": total, "conf": conf, "srcs": srcs}
+
+    # 分野内ランキング（母集団差の補正）。母数が十分な分野のみ。
+    groups = defaultdict(list)
+    for s, mj, h, conf, srcs in records:
+        groups[mj].append((s, h))
+    for mj, lst in groups.items():
+        if not mj or len(lst) < _FIELD_MIN:
+            continue
+        lst.sort(key=lambda x: (-x[1], x[0]))
+        ft = len(lst)
+        for j, (s, _h) in enumerate(lst):
+            DIFFICULTY_RANK[s].update({"fpct": max(1, math.ceil((j + 1) / ft * 100)),
+                                       "frank": j + 1, "ftotal": ft, "fname": mj})
 
 
 def n_facts(r):
@@ -472,23 +1791,128 @@ def _badge(t):
     return f'<span class="badge {cls}">{esc(label)}</span>'
 
 
-def _list_items(items, depth):
-    """資格カードのリストHTML。publishedは受験料/合格率を併記し★表示。"""
+def _list_items(items, depth, ranked=False):
+    """資格の一覧／ランキングのリストHTML。
+    2段組（資格名＋メタ情報）のカードで、ranked=True のとき順位番号を表示する。"""
     base = "../" * depth
     out = []
-    for r in items:
+    for i, r in enumerate(items, 1):
         pub = r.get("status") == "published"
-        extra = ""
+        meta = [_badge(r["type"]),
+                f'<span class="cl-major">{esc(r["major_category"])}</span>']
         if pub:
-            bits = [b for b in (r.get("fee"), (("合格率" + r["pass_rate"]) if r.get("pass_rate") else "")) if b]
-            extra = ('<span class="meta">★データ掲載 ' + esc(" / ".join(bits)) + "</span>") if bits else '<span class="meta">★データ掲載</span>'
+            bits = [b for b in (fmt_nums_in_text(r.get("fee") or ""),
+                                (("合格率" + pass_rate_display(r["pass_rate"])) if r.get("pass_rate") else "")) if b]
+            meta.append('<span class="cl-data">'
+                        + (esc(" / ".join(bits)) if bits else "データ掲載") + "</span>")
         else:
-            extra = f'<span class="meta">{esc(r["category"])}</span>'
+            meta.append(f'<span class="cl-cat">{esc(r["category"])}</span>')
+        rank = ""
+        if ranked:
+            rank = (f'<span class="cl-rank{" cl-rank--top" if i <= 3 else ""}">'
+                    f'{i}</span>')
         out.append(
-            f'<li><a href="{base}c/{esc(r["slug"])}.html">{esc(r["name"])}</a> '
-            f'{_badge(r["type"])}{extra}</li>'
-        )
-    return '<ul class="results">' + "".join(out) + "</ul>"
+            f'<li class="cl-item">{rank}'
+            f'<a class="cl-link" href="{base}c/{esc(r["slug"])}.html">'
+            f'<span class="cl-name">{esc(r["name"])}</span>'
+            f'<span class="cl-meta">{"".join(meta)}</span></a></li>')
+    cls = "cert-list" + (" cert-list--ranked" if ranked else "")
+    return f'<ul class="{cls}">' + "".join(out) + "</ul>"
+
+
+_CERTS_TABLE_SCRIPT = """<script>
+(function(){
+  document.querySelectorAll('.all-certs-table tbody').forEach(function(tb){
+    function go(tr){var h=tr.getAttribute('data-href');if(h)location.href=h;}
+    tb.addEventListener('click',function(e){var tr=e.target.closest('tr.cert-row');if(tr)go(tr);});
+    tb.addEventListener('keydown',function(e){
+      if(e.key!=='Enter'&&e.key!==' ')return;
+      var tr=e.target.closest('tr.cert-row');if(!tr)return;
+      e.preventDefault();go(tr);
+    });
+  });
+})();
+</script>"""
+
+
+def _certs_name_cell(r, popular_slugs=None):
+    trophy = ""
+    if popular_slugs and r["slug"] in popular_slugs:
+        trophy = f'<span class="all-certs-trophy" aria-hidden="true">{ICON_TROPHY}</span>'
+    return (
+        f'<td class="all-certs-name"><span class="all-certs-name-inner">'
+        f'{trophy}<span class="all-certs-name-text">{esc(r["name"])}</span></span></td>')
+
+
+def _all_certs_colgroup(show_major=False, ranked=False):
+    cols = []
+    if ranked:
+        cols.append('<col class="all-certs-col-rank">')
+    cols.append('<col class="all-certs-col-name">')
+    if show_major:
+        cols.append('<col class="all-certs-col-major">')
+    cols.extend([
+        '<col class="all-certs-col-study">',
+        '<col class="all-certs-col-pass">',
+        '<col class="all-certs-col-freq">',
+    ])
+    return "".join(cols)
+
+
+def _certs_table(items, depth=1, *, show_major=False,
+                 with_script=True, popular_slugs=None, ranked=False):
+    """資格一覧の表形式HTML（分野・目的別ガイド・特集ランキングなどで共用）。
+    ranked=True のとき先頭に順位列を表示する。"""
+    base = "../" * depth
+    col_mod = "all-certs-table--5col" if show_major else "all-certs-table--4col"
+    if ranked:
+        col_mod += " all-certs-table--ranked"
+    headers = []
+    if ranked:
+        headers.append('<th scope="col" class="all-certs-th-rank">順位</th>')
+    headers.append('<th scope="col">資格名</th>')
+    if show_major:
+        headers.append('<th scope="col">分野</th>')
+    headers.extend([
+        '<th scope="col">学習時間</th>',
+        '<th scope="col">合格率</th>',
+        '<th scope="col">実施頻度</th>',
+    ])
+    rows = []
+    for i, r in enumerate(items, 1):
+        pr = pass_rate_display(r.get("pass_rate", "")) or "—"
+        study = fmt_nums_in_text((STUDY.get(r["slug"], {}) or {}).get("study_hours", "")) or "—"
+        freq_raw = (r.get("frequency") or "").strip()
+        freq = esc(freq_raw) if freq_raw else "—"
+        cells = []
+        if ranked:
+            cells.append(
+                f'<td class="all-certs-cell all-certs-rank'
+                f'{" all-certs-rank--top" if i <= 3 else ""}">{i}</td>')
+        cells.append(_certs_name_cell(r, popular_slugs))
+        if show_major:
+            cells.append(
+                f'<td class="all-certs-cell all-certs-cell--major">{esc(r["major_category"])}</td>')
+        cells.extend([
+            f'<td class="all-certs-cell all-certs-num all-certs-cell--study">{esc(study)}</td>',
+            f'<td class="all-certs-cell all-certs-num all-certs-cell--pass">{esc(pr)}</td>',
+            f'<td class="all-certs-cell all-certs-cell--freq">{freq}</td>',
+        ])
+        rows.append(
+            f'<tr class="cert-row" tabindex="0" data-href="{base}c/{esc(r["slug"])}.html">'
+            + "".join(cells) + "</tr>")
+    table = (
+        '<div class="all-certs-table-wrap">'
+        f'<table class="all-certs-table {col_mod}">'
+        f'<colgroup>{_all_certs_colgroup(show_major, ranked)}</colgroup>'
+        f'<thead><tr>{"".join(headers)}</tr></thead>'
+        f'<tbody>{"".join(rows)}</tbody></table></div>')
+    return table + (_CERTS_TABLE_SCRIPT if with_script else "")
+
+
+def _category_table(items, depth=1, popular_slugs=None):
+    """分野別一覧ページ用の表形式HTML（トップの資格一覧と同じ列構成）。"""
+    return _certs_table(items, depth, show_major=True, popular_slugs=popular_slugs)
 
 
 # 大分類のページslug（安定・ローマ字キー）
@@ -503,7 +1927,185 @@ MAJOR_SLUGS = {
     "運輸・運転・航空": "transport", "農林水産・動物": "agriculture", "海外資格": "overseas",
 }
 
-# 業界レイヤー（分野とは別軸）。分野→業界の対応＋全業界で通用する汎用資格。
+_SVG = ('<svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"'
+        ' stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">{}</svg>')
+
+def _icon_svg(paths):
+    return _SVG.format(paths)
+
+ICON_TROPHY = _icon_svg(
+    '<path d="M8 21h8"/><path d="M12 17v4"/>'
+    '<path d="M7 4h10v5a5 5 0 0 1-10 0V4z"/>'
+    '<path d="M5 5H3v2a3 3 0 0 0 3 3"/>'
+    '<path d="M19 5h2v2a3 3 0 0 1-3 3"/>')
+
+
+def detail_title_html(name, slug, popular_slugs=None):
+    """詳細ページ h1。人気資格（受験者数上位）にはトロフィーを付ける。"""
+    text = esc(name)
+    if popular_slugs and slug in popular_slugs:
+        return (
+            f'<h1 class="detail-title">'
+            f'<span class="detail-title-inner">'
+            f'<span class="detail-title-trophy" aria-hidden="true">{ICON_TROPHY}</span>'
+            f'<span>{text}</span></span></h1>'
+        )
+    return f'<h1 class="detail-title">{text}</h1>'
+
+FIELD_ICONS = {
+    "IT・情報処理": _icon_svg(
+        '<rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8"/><path d="M12 17v4"/>'),
+    "法律・法務・知財": _icon_svg(
+        '<path d="M12 3v18"/><path d="M5 7h14"/>'
+        '<path d="M7 10l-2 7h4l-2-7z"/><path d="M17 10l-2 7h4l-2-7z"/>'),
+    "会計・金融・経営": _icon_svg(
+        '<rect x="4" y="2" width="16" height="20" rx="2"/>'
+        '<path d="M8 6h8M8 10h2M12 10h2M8 14h2M12 14h2M8 18h8"/>'),
+    "不動産": _icon_svg(
+        '<path d="M3 10.5L12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>'),
+    "建築・設備": _icon_svg(
+        '<path d="M3 21h18"/><path d="M5 21V9l7-5 7 5v12"/>'
+        '<path d="M9 21v-6h6v6"/>'),
+    "設備・プラント・機械運転": _icon_svg(
+        '<path d="M12 2v4"/><path d="M12 18v4"/>'
+        '<path d="M4.93 4.93l2.83 2.83"/><path d="M16.24 16.24l2.83 2.83"/>'
+        '<path d="M2 12h4"/><path d="M18 12h4"/>'
+        '<path d="M4.93 19.07l2.83-2.83"/><path d="M16.24 7.76l2.83-2.83"/>'
+        '<circle cx="12" cy="12" r="3"/>'),
+    "土木・測量・建設": _icon_svg(
+        '<path d="M2 20h20"/><path d="M6 20V8l6-4 6 4v12"/>'
+        '<path d="M10 12h4"/><path d="M12 10v4"/>'),
+    "電気・通信": _icon_svg('<path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>'),
+    "機械・電気・ものづくり": _icon_svg(
+        '<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>'),
+    "食品・調理・栄養": _icon_svg(
+        '<path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/>'
+        '<path d="M7 2v20"/><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3z"/>'),
+    "医療・看護・薬": _icon_svg(
+        '<path d="M12 8v8"/><path d="M8 12h8"/>'
+        '<circle cx="12" cy="12" r="9"/>'),
+    "福祉・介護・心理": _icon_svg(
+        '<path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>'),
+    "教育・保育・学術": _icon_svg(
+        '<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>'
+        '<path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>'),
+    "語学・コミュニケーション": _icon_svg(
+        '<circle cx="12" cy="12" r="10"/>'
+        '<path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>'),
+    "デザイン・美術・文化": _icon_svg(
+        '<path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z"/>'
+        '<path d="M12 2a10 10 0 0 1 0 20"/><path d="M2 12h20"/>'),
+    "美容・サービス・スポーツ": _icon_svg(
+        '<circle cx="6" cy="6" r="3"/><circle cx="18" cy="6" r="3"/>'
+        '<path d="M9 6h6"/><path d="M6 9v3a6 6 0 0 0 12 0V9"/>'),
+    "商業・販売・事務": _icon_svg(
+        '<rect x="2" y="7" width="20" height="14" rx="2"/>'
+        '<path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/>'),
+    "安全・環境・危険物": _icon_svg(
+        '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>'),
+    "運輸・運転・航空": _icon_svg(
+        '<path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"/>'
+        '<path d="M15 18H9"/><path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.624l-3.48-4.35A1 1 0 0 0 17.52 8H14"/>'
+        '<circle cx="17" cy="18" r="2"/><circle cx="7" cy="18" r="2"/>'),
+    "農林水産・動物": _icon_svg(
+        '<path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10z"/>'
+        '<path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/>'),
+    "海外資格": _icon_svg(
+        '<path d="M17.8 19.2L16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H8l-1 1 1 1h1l5-2 3.2 3.2c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/>'),
+}
+
+_FIELD_ICON_DEFAULT = _icon_svg(
+    '<path d="M4 7a2 2 0 0 1 2-2h3l2 2h7a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"/>')
+
+
+def field_icon(major):
+    return FIELD_ICONS.get(major, _FIELD_ICON_DEFAULT)
+
+
+SPEC_ICONS = {
+    "資格区分": _icon_svg('<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>'),
+    "分野（大分類）": _icon_svg(
+        '<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>'
+        '<rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>'),
+    "カテゴリ": _icon_svg(
+        '<path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/>'
+        '<circle cx="7" cy="7" r="1.5"/>'),
+    "実施団体": _icon_svg(
+        '<path d="M3 21h18"/><path d="M5 21V7l7-4 7 4v14"/>'
+        '<path d="M9 21v-6h6v6"/>'),
+    "公式サイト": _icon_svg(
+        '<path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>'
+        '<path d="M15 3h6v6"/><path d="M10 14L21 3"/>'),
+    "受験資格": _icon_svg(
+        '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>'
+        '<circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/>'
+        '<path d="M16 3.13a4 4 0 0 1 0 7.75"/>'),
+    "試験形式": _icon_svg(
+        '<path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/>'),
+    "受験料": _icon_svg(
+        '<circle cx="12" cy="12" r="9"/>'
+        '<path d="M8.5 7.5h7M8.5 11h5.5M10 15c1.2 1 2.5 1.5 4 1.5s2.8-.5 4-1.5"/>'),
+    "合格率": _icon_svg(
+        '<circle cx="12" cy="12" r="9"/><path d="M8 12l3 3 5-6"/>'),
+    "実施頻度": _icon_svg(
+        '<rect x="3" y="4" width="18" height="18" rx="2"/>'
+        '<path d="M16 2v4M8 2v4M3 10h18"/>'),
+    "ハローワークコード": _icon_svg('<path d="M4 9h16M4 15h16"/>'),
+    "受験者数": _icon_svg(
+        '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>'
+        '<circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/>'
+        '<path d="M16 3.13a4 4 0 0 1 0 7.75"/>'),
+    "難易度の目安": _icon_svg(
+        '<path d="M3 3v18h18"/><path d="M7 16l4-5 4 3 5-7"/>'),
+    "総合難易度（目安）": _icon_svg('<path d="M3 3v18h18"/><path d="M7 14l3-3 3 2 5-6"/>'),
+    "試験科目・出題範囲": _icon_svg(
+        '<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>'
+        '<path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>'),
+    "学習時間の目安": _icon_svg('<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>'),
+    "活かせる業界": _icon_svg(
+        '<rect x="2" y="7" width="20" height="14" rx="2"/>'
+        '<path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/>'),
+    "特徴・目的タグ": _icon_svg(
+        '<path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/>'
+        '<circle cx="7" cy="7" r="1.5"/>'),
+    "この資格のポイント": _icon_svg(
+        '<path d="M9 18h6"/><path d="M10 22h4"/>'
+        '<path d="M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2z"/>'),
+    "活かせる仕事・キャリア": _icon_svg(
+        '<rect x="2" y="7" width="20" height="14" rx="2"/>'
+        '<path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/>'),
+    "おすすめテキスト・講座": _icon_svg(
+        '<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>'
+        '<path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>'),
+    "最終確認日": _icon_svg(
+        '<rect x="3" y="4" width="18" height="18" rx="2"/>'
+        '<path d="M16 2v4M8 2v4M3 10h18"/><path d="M9 16l2 2 4-4"/>'),
+    "情報源": _icon_svg('<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>'
+                      '<path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>'),
+    "最新情報の確認": _icon_svg(
+        '<path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>'),
+    "データの注記": _icon_svg(
+        '<circle cx="12" cy="12" r="9"/><path d="M12 8v4"/><path d="M12 16h.01"/>'),
+}
+
+
+def _spec_label_key(label):
+    """PRバッジ等のHTML付きラベルから照合用の純テキストを取り出す。"""
+    return re.sub(r"<.*", "", label, flags=re.DOTALL).strip()
+
+
+def spec_label_html(label):
+    key = _spec_label_key(label)
+    suffix = label[len(key):] if len(label) > len(key) else ""
+    text = esc(key) + suffix
+    icon = SPEC_ICONS.get(key)
+    if not icon:
+        return text
+    return (
+        f'<span class="spec-th-inner">'
+        f'<span class="spec-th-icon" aria-hidden="true">{icon}</span>'
+        f'<span class="spec-th-text">{text}</span></span>')
+
 MAJOR_INDUSTRY = {
     "IT・情報処理": "IT・通信", "法律・法務・知財": "法律・士業",
     "会計・金融・経営": "金融・会計", "不動産": "不動産",
@@ -542,7 +2144,7 @@ def industry_tags(r):
     return out
 
 
-def build_category_pages(indexable):
+def build_category_pages(indexable, popular_slugs=None):
     """大分類ごとの一覧ページ（site/bunya/<slug>.html）。"""
     pages = {}
     by_major = {}
@@ -558,6 +2160,7 @@ def build_category_pages(indexable):
                           if tc.get(t))
         cats = sorted({r["category"] for r in items})
         body = (
+            f'<div class="page-bunya">'
             f'<nav class="crumbs"><a href="../index.html">トップ</a> › {esc(major)}</nav>'
             f"<h1>{esc(major)}の資格一覧</h1>"
             f'<p class="lead">「{esc(major)}」分野の資格 {len(items)} 件'
@@ -565,13 +2168,29 @@ def build_category_pages(indexable):
             f"合格率・実施団体・公式サイトを詳細ページで確認できます。</p>"
             f'<p class="muted">区分の内訳: {esc(tparts)}。'
             f"主なカテゴリ: {esc('、'.join(cats[:12]))}{'ほか' if len(cats) > 12 else ''}。</p>"
-            + _list_items(items, depth=1)
+            + _category_table(items, depth=1, popular_slugs=popular_slugs)
+            + "</div>"
         )
+        ld = [
+            {"@context": "https://schema.org", "@type": "BreadcrumbList",
+             "itemListElement": [
+                 {"@type": "ListItem", "position": 1, "name": "トップ",
+                  "item": BASE_URL + "/"},
+                 {"@type": "ListItem", "position": 2, "name": f"{major}の資格一覧"}]},
+            {"@context": "https://schema.org", "@type": "ItemList",
+             "name": f"{major}の資格一覧",
+             "numberOfItems": len(items),
+             "itemListElement": [
+                 {"@type": "ListItem", "position": i,
+                  "url": f'{BASE_URL}/c/{r["slug"]}.html', "name": r["name"]}
+                 for i, r in enumerate(items[:50], 1)
+                 if is_indexable_detail(r)]},
+        ]
         pages[slug] = page_shell(
             f"{major}の資格一覧｜{SITE_NAME}", body, depth=1, noindex=False,
             desc=f"「{major}」分野の資格 {len(items)} 件（うち公式データ掲載 {npub} 件）。"
                  f"受験料・試験形式・受験資格・合格率を一覧・比較できます。",
-            path=f"bunya/{slug}.html")
+            path=f"bunya/{slug}.html", jsonld=ld)
     return pages
 
 
@@ -913,25 +2532,256 @@ for _ps, _a, _b, _ in COMPARE_PAIRS:
 # main() で設定（詳細→比較リンクの表示名・存在判定に使用）
 NAME_BY_SLUG = {}
 INDEXABLE_SLUGS = set()
+# category → [(slug, name), ...]（同分野の関連資格を静的生成するための索引。main()で投入）
+CERTS_BY_CATEGORY = {}
 
 
-def build_feature_pages(indexable):
+def build_stats_page(indexable):
+    """資格データの集計・統計ページ（被リンク資産＋内部リンクハブ）。
+
+    公開資格の実データのみを集計（捏造なし）。受験料・合格率・受験者数の
+    平均/中央値/分布や、分野・区分別の件数をまとめる。引用されやすい一次集計。
+    """
+    import statistics as _st
+    pub = [r for r in indexable if r["status"] == "published"]
+    n_pub = len(pub)
+    n_idx = sum(1 for r in pub if is_indexable_detail(r))
+
+    def _median(xs):
+        return int(_st.median(xs)) if xs else None
+
+    fees = [fee_yen(r) for r in pub if fee_yen(r) is not None]
+    rates = [pass_pct(r) for r in pub if pass_pct(r) is not None]
+    apps = [(r["name"], r["slug"], applicants_num(r)) for r in pub
+            if applicants_num(r) is not None]
+
+    # 区分別・分野別の件数
+    from collections import Counter
+    by_type = Counter(r["type"] for r in pub)
+    by_major = Counter(r["major_category"] for r in pub)
+    n_national = by_type.get("国家", 0)
+    n_noreq = sum(1 for r in pub if is_noreq(r))
+    n_cbt = sum(1 for r in pub if is_cbt(r))
+
+    def stat_card(label, value, note=""):
+        note_h = f'<span class="stat-note">{esc(note)}</span>' if note else ""
+        return (f'<div class="stat-card"><span class="stat-val">{esc(str(value))}</span>'
+                f'<span class="stat-label">{esc(label)}</span>{note_h}</div>')
+
+    cards = [
+        stat_card("掲載資格数", f"{len(indexable):,}件", "国内の資格を横断収録"),
+        stat_card("情報整備済み", f"{n_pub:,}件", "公式一次情報で整備"),
+    ]
+    if fees:
+        cards.append(stat_card("受験料の中央値", f"{_median(fees):,}円",
+                               f"最安{min(fees):,}円〜最高{max(fees):,}円"))
+    if rates:
+        cards.append(stat_card("公表合格率の平均", f"{round(_st.mean(rates),1)}%",
+                               f"{len(rates)}件の公表値より"))
+    cards.append(stat_card("受験資格なしの資格", f"{n_noreq:,}件", "誰でも受験できる"))
+    cards.append(stat_card("CBT・ネット試験対応", f"{n_cbt:,}件", "在宅・テストセンター受験"))
+
+    # 区分別テーブル
+    type_rows = "".join(
+        f"<tr><th>{esc(t)}資格</th><td>{by_type.get(t,0):,}件</td></tr>"
+        for t in ("国家", "公的", "民間") if by_type.get(t))
+    # 分野別テーブル（多い順）
+    major_rows = "".join(
+        f'<tr><th><a href="bunya/{esc(MAJOR_SLUGS.get(m, "other"))}.html">{esc(m)}</a></th>'
+        f"<td>{c:,}件</td></tr>"
+        for m, c in by_major.most_common())
+
+    body = f"""<nav class="crumbs"><a href="index.html">トップ</a> › 資格データ統計</nav>
+<h1>資格データ統計・ランキングまとめ</h1>
+<p class="lead">国内の資格 {len(indexable):,} 件を横断収録する「{esc(SITE_NAME)}」のデータを集計しました。
+受験料・合格率・受験者数などの一次集計と、用途別ランキングへの早見表です。
+数値は公式の一次情報に基づく公開分の集計で、制度・金額・日程は各資格の公式サイトでご確認ください。</p>
+<section class="stats-grid">{''.join(cards)}</section>
+
+<h2>資格区分別の件数</h2>
+<table class="spec stats-table"><tbody>{type_rows}</tbody></table>
+
+<h2>分野別の資格件数</h2>
+<table class="spec stats-table"><tbody>{major_rows}</tbody></table>
+
+<h2>データから探す（ランキング）</h2>
+<ul class="detail-link-list">
+<li><a href="feature/popular.html">受験者数が多い人気資格ランキング</a></li>
+<li><a href="feature/cheap.html">受験料が安い資格ランキング</a></li>
+<li><a href="feature/high-pass.html">合格率が高い資格</a></li>
+<li><a href="feature/hard.html">合格率が低い難関資格</a></li>
+<li><a href="feature/no-requirement.html">受験資格なしで受けられる資格</a></li>
+<li><a href="feature/cbt.html">在宅・CBTで受けられる資格</a></li>
+</ul>
+<p class="muted" style="margin-top:14px">※本ページの集計値は公開・整備済みデータに基づく参考値です。
+出典として引用される場合は「{esc(SITE_NAME)}（{BASE_URL}）」とご記載ください。</p>"""
+
+    ld = [
+        {"@context": "https://schema.org", "@type": "BreadcrumbList",
+         "itemListElement": [
+             {"@type": "ListItem", "position": 1, "name": "トップ", "item": BASE_URL + "/"},
+             {"@type": "ListItem", "position": 2, "name": "資格データ統計"}]},
+        {"@context": "https://schema.org", "@type": "Dataset",
+         "name": "資格データ統計（資格マスター）",
+         "description": f"国内の資格{len(indexable)}件の受験料・合格率・受験者数・分野・区分の集計データ。",
+         "creator": {"@type": "Organization", "name": SITE_NAME},
+         "url": BASE_URL + "/toukei.html"},
+    ]
+    return page_shell(f"資格データ統計・ランキングまとめ｜{SITE_NAME}", body, depth=0,
+                      noindex=False,
+                      desc=f"国内の資格{len(indexable)}件を集計。受験料の中央値・平均合格率・"
+                           "分野別/区分別件数・用途別ランキングをまとめた資格データ統計。",
+                      path="toukei.html", jsonld=ld)
+
+
+def build_finder_page(indexable):
+    """資格の選び方・診断ハブ。目的・条件・分野から最適な一覧へ誘導する内部リンク資産。"""
+    pub = [r for r in indexable if r["status"] == "published"]
+
+    def card(href, title, desc):
+        return (f'<li class="finder-card"><a href="{href}"><span class="finder-card-t">'
+                f'{esc(title)}</span><span class="finder-card-d">{esc(desc)}</span></a></li>')
+
+    purpose = "".join(card(h, t, d) for h, t, d in [
+        ("feature/job-hunting.html", "就職・転職に役立つ資格", "採用で評価されやすい資格から"),
+        ("feature/independence.html", "独立・開業を目指せる資格", "独立につながる資格から"),
+        ("feature/remote-work.html", "在宅・リモートで活かせる資格", "在宅ワーク向けの資格から"),
+        ("feature/skilled-trade.html", "手に職をつけられる資格", "専門技能が身につく資格から"),
+        ("feature/it-beginner.html", "未経験からITを目指す資格", "IT入門の資格から"),
+        ("feature/senior.html", "定年後・シニアに役立つ資格", "セカンドキャリア向けから"),
+        ("feature/working-adults.html", "働きながら取れる資格", "社会人が取りやすい資格から"),
+    ])
+    cond = "".join(card(h, t, d) for h, t, d in [
+        ("feature/no-requirement.html", "受験資格なしで受けられる", "誰でも挑戦できる資格"),
+        ("feature/cbt.html", "在宅・CBTで受けられる", "テストセンター・在宅受験"),
+        ("feature/cheap.html", "受験料が安い", "コストを抑えて取得"),
+        ("feature/high-pass.html", "合格率が高い", "比較的取りやすい資格"),
+        ("feature/hard.html", "難関資格に挑戦", "合格率が低い難関から"),
+        ("feature/popular.html", "人気資格から選ぶ", "受験者数が多い順"),
+    ])
+    field = "".join(
+        f'<li class="finder-chip"><a href="bunya/{esc(MAJOR_SLUGS.get(m,"other"))}.html">'
+        f'{esc(m)}</a></li>'
+        for m in dict.fromkeys(r["major_category"] for r in pub))
+
+    body = f"""<nav class="crumbs"><a href="index.html">トップ</a> › 資格の選び方</nav>
+<h1>資格の選び方・かんたん診断</h1>
+<p class="lead">「どの資格を取ればいいか分からない」という方へ。目的・条件・分野の3つの切り口から、
+あなたに合った資格の一覧へご案内します。{len(indexable):,}件の資格データから絞り込めます。</p>
+
+<h2>① 目的から選ぶ</h2>
+<ul class="finder-grid">{purpose}</ul>
+
+<h2>② 条件から選ぶ</h2>
+<ul class="finder-grid">{cond}</ul>
+
+<h2>③ 分野から選ぶ</h2>
+<ul class="finder-chips">{field}</ul>
+
+<p class="muted" style="margin-top:14px">さらに細かく探すなら
+<a href="index.html#all-certs">キーワード・条件での絞り込み検索</a>や
+<a href="compare.html">資格の比較</a>もご利用ください。</p>"""
+
+    ld = {"@context": "https://schema.org", "@type": "BreadcrumbList",
+          "itemListElement": [
+              {"@type": "ListItem", "position": 1, "name": "トップ", "item": BASE_URL + "/"},
+              {"@type": "ListItem", "position": 2, "name": "資格の選び方"}]}
+    return page_shell(f"資格の選び方・かんたん診断｜{SITE_NAME}", body, depth=0,
+                      noindex=False,
+                      desc="目的・条件・分野から自分に合った資格を見つける選び方ガイド。"
+                           "就職・独立・在宅・受験資格なしなど切り口別に資格を案内します。",
+                      path="finder.html", jsonld=ld)
+
+
+def build_calendar_page(indexable):
+    """試験月カレンダー：実施頻度の記載から月を抽出し、月別に資格を一覧する。
+
+    抽出元は frequency テキストで、試験・申込・口述などの月が混在しうるため
+    「目安」と明示し、正確な日程は各資格ページ／公式で確認する導線にする。
+    """
+    pub = [r for r in indexable if r["status"] == "published"
+           and is_indexable_detail(r) and r.get("frequency", "").strip()]
+
+    def months(s):
+        return sorted(set(int(m) for m in re.findall(r"(\d{1,2})月", s)
+                          if 1 <= int(m) <= 12))
+
+    by_month = {m: [] for m in range(1, 13)}
+    for r in pub:
+        for m in months(r["frequency"]):
+            by_month[m].append(r)
+
+    sections = []
+    for m in range(1, 13):
+        certs = sorted(by_month[m], key=lambda r: (r["major_category"], r["name"]))
+        if not certs:
+            continue
+        items = "".join(
+            f'<li class="detail-link-item"><a href="c/{esc(r["slug"])}.html">'
+            f'{esc(r["name"])}</a> <span class="muted">（{esc(r["frequency"][:28])}）</span></li>'
+            for r in certs)
+        sections.append(
+            f'<section class="cal-month"><h2 id="m{m}">{m}月に試験・申込がある資格'
+            f'（{len(certs)}件）</h2><ul class="detail-link-list">{items}</ul>'
+            '<p class="cal-back"><a href="#top">↑ 月の一覧に戻る</a></p></section>')
+
+    nav = '<nav class="cal-nav">' + "".join(
+        f'<a href="#m{m}">{m}月</a>' for m in range(1, 13) if by_month[m]) + "</nav>"
+
+    body = f"""<nav class="crumbs"><a href="index.html">トップ</a> › 試験月カレンダー</nav>
+<h1>資格試験 月別カレンダー</h1>
+<p class="lead">資格試験を「実施・申込の月」から探せるカレンダーです。各資格の実施頻度の記載から
+月を抽出した目安で、試験日・申込・口述などの月が含まれます。正確な日程・申込期限は
+各資格ページおよび公式サイトで必ずご確認ください。</p>
+<div id="top"></div>
+{nav}
+{''.join(sections)}
+<p class="muted" style="margin-top:14px">※月は実施頻度の記載からの抽出による目安です。
+年度により変動するため、出願前に各資格の公式情報をご確認ください。</p>"""
+
+    ld = {"@context": "https://schema.org", "@type": "BreadcrumbList",
+          "itemListElement": [
+              {"@type": "ListItem", "position": 1, "name": "トップ", "item": BASE_URL + "/"},
+              {"@type": "ListItem", "position": 2, "name": "試験月カレンダー"}]}
+    return page_shell(f"資格試験 月別カレンダー｜{SITE_NAME}", body, depth=0,
+                      noindex=False,
+                      desc="資格試験を実施・申込の月から探せる月別カレンダー。"
+                           "何月に試験がある資格かを一覧。正確な日程は公式でご確認ください。",
+                      path="calendar.html", jsonld=ld)
+
+
+def build_feature_pages(indexable, popular_slugs=None):
     """特集・ランキングページ（site/feature/<slug>.html）。"""
     pub = [r for r in indexable if r["status"] == "published"]
     pages = {}
 
-    def page(slug, title, h1, intro, items, desc):
+    def page(slug, title, h1, intro, items, desc, ranked=False):
         body = (
             f'<nav class="crumbs"><a href="../index.html">トップ</a> › 特集</nav>'
             f"<h1>{esc(h1)}</h1>"
             f'<p class="lead">{intro}</p>'
-            + _list_items(items, depth=1)
+            + _certs_table(items, depth=1, show_major=True, ranked=ranked,
+                           popular_slugs=popular_slugs)
             + '<p class="muted" style="margin-top:14px">※受験料・合格率は公式の一次情報に基づきますが、'
               '最新の金額・制度・日程は各資格の公式サイトで必ずご確認ください。</p>'
         )
+        _ld = [
+            {"@context": "https://schema.org", "@type": "BreadcrumbList",
+             "itemListElement": [
+                 {"@type": "ListItem", "position": 1, "name": "トップ",
+                  "item": BASE_URL + "/"},
+                 {"@type": "ListItem", "position": 2, "name": h1}]},
+            {"@context": "https://schema.org", "@type": "ItemList",
+             "name": h1, "numberOfItems": len(items),
+             "itemListElement": [
+                 {"@type": "ListItem", "position": i,
+                  "url": f'{BASE_URL}/c/{r["slug"]}.html', "name": r["name"]}
+                 for i, r in enumerate(items[:50], 1)
+                 if is_indexable_detail(r)]},
+        ]
         pages[slug] = page_shell(f"{title}｜{SITE_NAME}", body, depth=1,
                                  noindex=False, desc=desc,
-                                 path=f"feature/{slug}.html")
+                                 path=f"feature/{slug}.html", jsonld=_ld)
 
     # 受験者数が多い順（公式統計のある資格）
     popular = sorted((r for r in pub if applicants_num(r) is not None),
@@ -941,7 +2791,7 @@ def build_feature_pages(indexable):
              f"公式が公表する直近の受験者数が多い順に並べた資格ランキング（データ掲載分の"
              f"上位 {len(popular)} 件）。受験者数は実施回・年度により変動します。",
              popular, "受験者数が多い人気資格を受験者数の多い順にランキング。"
-             "受験料・合格率・受験者数・公式情報を掲載。")
+             "受験料・合格率・受験者数・公式情報を掲載。", ranked=True)
 
     # 受験料が安い順（代表額のあるものを昇順・上位120）
     cheap = sorted((r for r in pub if fee_yen(r) is not None),
@@ -949,7 +2799,8 @@ def build_feature_pages(indexable):
     page("cheap", "受験料が安い資格ランキング", "受験料が安い資格ランキング",
          f"受験料（代表額）が安い順に並べた資格ランキング。データ掲載分の上位 {len(cheap)} 件。"
          "受験料は級・方式で異なる場合があります。",
-         cheap, "受験料が安い資格を安い順にランキング。受験料・合格率・公式情報を掲載。")
+         cheap, "受験料が安い資格を安い順にランキング。受験料・合格率・公式情報を掲載。",
+         ranked=True)
 
     # 合格率が高い順
     hi = sorted((r for r in pub if pass_pct(r) is not None),
@@ -957,14 +2808,16 @@ def build_feature_pages(indexable):
     page("high-pass", "合格率が高い資格", "合格率が高い資格",
          f"公表されている合格率が高い順に並べた資格一覧（上位 {len(hi)} 件）。"
          "合格率は実施回・年度により変動します。",
-         hi, "合格率が高い資格を高い順に一覧。受験料・合格率・公式情報を掲載。")
+         hi, "合格率が高い資格を高い順に一覧。受験料・合格率・公式情報を掲載。",
+         ranked=True)
 
     # 合格率が低い順（難関）
     lo = sorted((r for r in pub if pass_pct(r) is not None),
                 key=lambda r: (pass_pct(r), r["name"]))[:120]
     page("hard", "合格率が低い難関資格", "合格率が低い難関資格",
          f"公表されている合格率が低い（難易度が高い）順に並べた資格一覧（上位 {len(lo)} 件）。",
-         lo, "合格率が低い難関資格を一覧。受験料・合格率・公式情報を掲載。")
+         lo, "合格率が低い難関資格を一覧。受験料・合格率・公式情報を掲載。",
+         ranked=True)
 
     # 在宅・CBT
     cbt = sorted((r for r in pub if is_cbt(r)),
@@ -1033,10 +2886,14 @@ def build_feature_pages(indexable):
             listing = ""
             for major, its in by_major.items():
                 listing += (f'<h2 class="hub-grp">{esc(major)}</h2>'
-                            + _list_items(its, depth=1))
+                            + _certs_table(its, depth=1, with_script=False,
+                                           popular_slugs=popular_slugs))
+            listing += _CERTS_TABLE_SCRIPT
         else:
-            listing = _list_items(items, depth=1)
+            listing = _certs_table(items, depth=1, show_major=True,
+                                   popular_slugs=popular_slugs)
         body = (
+            f'<div class="page-feature">'
             f'<nav class="crumbs"><a href="../index.html">トップ</a> › ガイド</nav>'
             f"<h1>{esc(h1)}</h1>"
             f'<div class="lead">{intro_html}</div>'
@@ -1045,10 +2902,25 @@ def build_feature_pages(indexable):
               '個々の制度・受験料・合格率・独立開業や就職の条件は、各資格の公式サイトで'
               '必ずご確認ください。</p>'
             + hub_nav(slug)
+            + "</div>"
         )
+        _ld = [
+            {"@context": "https://schema.org", "@type": "BreadcrumbList",
+             "itemListElement": [
+                 {"@type": "ListItem", "position": 1, "name": "トップ",
+                  "item": BASE_URL + "/"},
+                 {"@type": "ListItem", "position": 2, "name": h1}]},
+            {"@context": "https://schema.org", "@type": "ItemList",
+             "name": h1, "numberOfItems": len(items),
+             "itemListElement": [
+                 {"@type": "ListItem", "position": i,
+                  "url": f'{BASE_URL}/c/{r["slug"]}.html', "name": r["name"]}
+                 for i, r in enumerate(items[:50], 1)
+                 if is_indexable_detail(r)]},
+        ]
         pages[slug] = page_shell(f"{title}｜{SITE_NAME}", body, depth=1,
                                  noindex=False, desc=desc,
-                                 path=f"feature/{slug}.html")
+                                 path=f"feature/{slug}.html", jsonld=_ld)
 
     ind = curated(HUB_INDEPENDENCE)
     hub("independence", "独立・開業を目指せる資格", "独立・開業を目指せる資格",
@@ -1135,6 +3007,30 @@ def build_feature_pages(indexable):
         sen, "定年後・シニアの再就職や独立に役立つ資格の一覧。マンション管理・設備・"
         "不動産・士業など、経験を活かせる資格を比較できます。", group=True)
 
+    # 特集・ランキングの一覧（ヘッダーから参照する index ページ）
+    feat_li = "".join(f'<li><a href="{s}.html">{esc(l)}</a></li>'
+                      for s, l in FEATURE_NAV if s in pages)
+    hub_li = "".join(f'<li><a href="{s}.html">{esc(l)}</a></li>'
+                     for s, l in INTENT_HUB_NAV if s in pages)
+    fidx_body = (
+        '<nav class="crumbs"><a href="../index.html">トップ</a> › 特集・ランキング</nav>'
+        '<h1>特集・ランキングから探す</h1>'
+        '<p class="lead">人気・受験料・合格率などの切り口で資格を一覧できる特集・ランキングと、'
+        '目的別のガイドをまとめています。</p>'
+        f'<h2 class="hub-grp">ランキング・特集</h2><ul class="feat-list">{feat_li}</ul>'
+        + (f'<h2 class="hub-grp">目的別ガイド</h2><ul class="feat-list">{hub_li}</ul>'
+           if hub_li else ""))
+    fidx_ld = {"@context": "https://schema.org", "@type": "BreadcrumbList",
+               "itemListElement": [
+                   {"@type": "ListItem", "position": 1, "name": "トップ",
+                    "item": BASE_URL + "/"},
+                   {"@type": "ListItem", "position": 2, "name": "特集・ランキング"}]}
+    pages["index"] = page_shell(
+        f"特集・ランキングから探す｜{SITE_NAME}", fidx_body, depth=1, noindex=False,
+        desc="人気・受験料・合格率などの切り口で資格を一覧できる特集・ランキングと、"
+             "目的別ガイドの一覧。",
+        path="feature/index.html", jsonld=fidx_ld)
+
     return pages
 
 
@@ -1149,25 +3045,22 @@ def build_comparison_pages(indexable):
 
     def cell(r, key, fallback="公式情報で確認"):
         v = r.get(key, "")
+        if key == "pass_rate" and v:
+            v = pass_rate_display(v) or v
         return esc(v) if v else f'<span class="muted">{fallback}</span>'
 
     def diff_cell(r):
-        d = difficulty(r)
-        if not d:
-            return '<span class="muted">―</span>'
-        label, cls = d
-        return f'<span class="diff-badge {cls}">{esc(label)}</span>'
+        html = _diff_badge_html(r)
+        return html if html else '<span class="muted">―</span>'
 
     for pslug, sa, sb, intro in COMPARE_PAIRS:
         ra, rb = by_slug.get(sa), by_slug.get(sb)
         if not (ra and rb and is_indexable_detail(ra) and is_indexable_detail(rb)):
             continue
         na, nb = shortname(ra), shortname(rb)
-        la = TYPE_BADGE.get(ra["type"], ("", ""))[0]
-        lb = TYPE_BADGE.get(rb["type"], ("", ""))[0]
 
         rows_spec = [
-            ("資格区分", esc(la), esc(lb)),
+            ("資格区分", _badge(ra["type"]), _badge(rb["type"])),
             ("分野", esc(ra["major_category"]), esc(rb["major_category"])),
             ("受験料", cell(ra, "fee"), cell(rb, "fee")),
             ("合格率", cell(ra, "pass_rate"), cell(rb, "pass_rate")),
@@ -1180,7 +3073,9 @@ def build_comparison_pages(indexable):
         tbody = "".join(
             f"<tr><th>{esc(k)}</th><td>{va}</td><td>{vb}</td></tr>"
             for k, va, vb in rows_spec)
-        table = (f'<table class="vs-table"><thead><tr><th></th>'
+        table = (f'<table class="vs-table"><colgroup><col class="vs-col-label">'
+                 f'<col class="vs-col-cert"><col class="vs-col-cert"></colgroup>'
+                 f'<thead><tr><th></th>'
                  f'<th>{esc(na)}</th><th>{esc(nb)}</th></tr></thead>'
                  f"<tbody>{tbody}</tbody></table>")
 
@@ -1195,7 +3090,7 @@ def build_comparison_pages(indexable):
                re.sub("<[^>]+>", "", intro))]
         if ra.get("pass_rate") and rb.get("pass_rate"):
             qa.append((f"{na}と{nb}はどちらが難しいですか？",
-                       f"公表合格率は{na}が{ra['pass_rate']}、{nb}が{rb['pass_rate']}です。"
+                       f"公表合格率は{na}が{pass_rate_display(ra['pass_rate'])}、{nb}が{pass_rate_display(rb['pass_rate'])}です。"
                        "合格率は受験者層により変わるため難易度の目安としてご覧ください。"))
         faq = {"@context": "https://schema.org", "@type": "FAQPage",
                "mainEntity": [{"@type": "Question", "name": q,
@@ -1221,9 +3116,13 @@ def build_comparison_pages(indexable):
             '一次情報に基づきますが、最新の制度・金額・日程は各資格の公式サイトで必ず'
             'ご確認ください。難易度は公表合格率に基づく簡易目安です。</p>'
             '<nav class="rel-links"><h2>関連リンク</h2><ul>'
-            f'<li><a href="../c/{esc(ra["slug"])}.html">{esc(na)}の詳細</a></li>'
-            f'<li><a href="../c/{esc(rb["slug"])}.html">{esc(nb)}の詳細</a></li>'
-            '<li><a href="../compare.html">資格を自分で比較する（最大4件）</a></li>'
+            f'<li><a href="../bunya/{esc(MAJOR_SLUGS.get(ra["major_category"], "other"))}.html">'
+            f'{esc(ra["major_category"])}の資格一覧</a></li>'
+            + (f'<li><a href="../bunya/{esc(MAJOR_SLUGS.get(rb["major_category"], "other"))}.html">'
+               f'{esc(rb["major_category"])}の資格一覧</a></li>'
+               if rb["major_category"] != ra["major_category"] else "")
+            + '<li><a href="../index.html#compare">よく比較される資格の一覧</a></li>'
+            '<li><a href="../feature/index.html">特集・ランキングから探す</a></li>'
             "</ul></nav>")
         desc = (f"{na}と{nb}の違いを比較。受験料・合格率・難易度の目安・受験資格・"
                 f"試験形式を一覧で比べ、どちらを取るべきか選ぶ参考にできます。")
@@ -1234,72 +3133,453 @@ def build_comparison_pages(indexable):
     return pages
 
 
+def _occ_short(name):
+    return re.sub(r"[（(].*?[）)]", "", name).strip() or name
+
+
+def occ_is_indexable(occ_id, shown_count):
+    """職種ページをSEOインデックス対象にするか（インデックス衛生）。
+    逆引きで十分な内部リンク（2資格以上）があるか、独自解説があるpage のみインデックス。"""
+    return shown_count >= 2 or bool(OCC_DESC.get(occ_id))
+
+
+def related_occupations(occ_id):
+    """同じ資格に共起する職種を関連度（共起資格数）順に最大8件返す。"""
+    from collections import Counter
+    c = Counter()
+    for s in OCC_CERTS.get(occ_id, []):
+        for oid in SLUG_OCC_IDS.get(s, ()):
+            if oid != occ_id:
+                c[oid] += 1
+    # 同点時は occ_id を最終キーにして決定的に（set反復順に依存させない）
+    ranked = sorted(c.items(),
+                    key=lambda kv: (-kv[1], -OCC.get(kv[0], {}).get("cert_count", 0), kv[0]))
+    return [(oid, n) for oid, n in ranked[:8]]
+
+
+def build_occupation_pages(indexable):
+    """職種ページ（site/shoku/<occ_id>.html）と職種インデックスを生成する。
+
+    各ページの主役は「この職種に活かせる資格」の逆引き一覧。資格→職種の自由記述
+    （careers）を正規化した occupations / cert_occupations をデータ源とする。
+    """
+    by_slug = {r["slug"]: r for r in indexable}
+    pages = {}
+    index_items = []  # (occ_id, name, major, shown) — インデックス対象のみ
+
+    for occ_id, info in OCC.items():
+        name = info["name"]
+        major = info["major_category"]
+        certs = [by_slug[s] for s in OCC_CERTS.get(occ_id, []) if s in by_slug]
+        certs.sort(key=lambda r: (r["status"] != "published", r["major_category"], r["name"]))
+        shown = len(certs)
+
+        dinfo = OCC_DESC.get(occ_id) or {}
+        desc_txt = dinfo.get("summary", "")
+        if desc_txt:
+            lead = esc(desc_txt)
+        else:
+            lead = (f"{esc(name)}は、関連資格の取得が役立つ職種です。"
+                    f"このページでは{esc(name)}に活かせる資格を{shown}件まとめ、"
+                    "各資格の受験料・合格率・受験資格・公式情報を確認できます。")
+
+        # 仕事内容・活かせるスキル（あれば。事実ベースの編集コンテンツ）
+        work_html = ""
+        if dinfo.get("work"):
+            work_html = ('<section class="occ-work"><h2>仕事内容</h2>'
+                         f'<p>{esc(dinfo["work"])}</p></section>')
+        if dinfo.get("skills"):
+            chips = "".join(
+                f'<span class="tag-chip">{esc(s.strip())}</span>'
+                for s in dinfo["skills"].split("、") if s.strip())
+            work_html += ('<section class="occ-work"><h2>活かせるスキル・知識</h2>'
+                          f'<p class="occ-skills">{chips}</p></section>')
+        sal = OCC_SALARY.get(occ_id)
+        if sal:
+            work_html += (
+                '<section class="occ-salary"><h2>想定年収（目安）</h2>'
+                f'<p class="salary-range">{esc(sal)} <span class="muted">／目安</span></p>'
+                '<p class="muted occ-salary-note">※年収は地域・経験・雇用形態・勤務先により'
+                '大きく異なります。公開の賃金統計・求人情報を参考にした<strong>目安</strong>で、'
+                '公式の統計値ではありません。公的な賃金データは'
+                f'<a href="{JOBTAG_URL}" rel="nofollow noopener" target="_blank">'
+                '厚生労働省 job tag</a> 等でご確認ください。</p></section>')
+
+        listing = (_certs_table(certs, depth=1, show_major=True) if certs
+                   else '<p class="muted">この職種に直接ひも付く掲載資格は精査中です。</p>')
+
+        # 資格区分の内訳（国家/公的/民間/要確認）＋関連分野チップ（既存データから機械生成）
+        from collections import Counter
+        type_cnt = Counter(r["type"] for r in certs)
+        stat_html = ""
+        if certs:
+            parts = [f'<span class="occ-stat">{esc(t)} {type_cnt[t]}</span>'
+                     for t in ("国家", "公的", "民間", "要確認") if type_cnt.get(t)]
+            major_cnt = Counter(r["major_category"] for r in certs)
+            chips = "".join(
+                f'<a class="chip" href="../bunya/{MAJOR_SLUGS.get(m, "other")}.html">'
+                f'{esc(m)}<span class="muted"> {n}</span></a>'
+                for m, n in major_cnt.most_common(6))
+            stat_html = (
+                '<div class="occ-meta">'
+                f'<p class="occ-stats"><span class="occ-stats-label">資格区分の内訳：</span>'
+                f'{"".join(parts)}</p>'
+                f'<div class="occ-fields"><span class="occ-stats-label">関連する分野：</span>'
+                f'<span class="chips">{chips}</span></div></div>')
+
+        # 逆引き資格の ItemList 構造化データ
+        itemlist = None
+        if certs:
+            itemlist = {
+                "@context": "https://schema.org", "@type": "ItemList",
+                "name": f"{name}に活かせる資格",
+                "numberOfItems": len(certs),
+                "itemListElement": [
+                    {"@type": "ListItem", "position": i + 1, "name": r["name"],
+                     "url": f'{BASE_URL}/c/{r["slug"]}.html'}
+                    for i, r in enumerate(certs)],
+            }
+
+        # 関連職種（共起）
+        rels = related_occupations(occ_id)
+        rel_html = ""
+        if rels:
+            lis = "".join(
+                f'<li><a href="{oid}.html">{esc(_occ_short(OCC[oid]["name"]))}</a>'
+                f' <span class="muted">（{OCC[oid]["cert_count"]}資格）</span></li>'
+                for oid, _ in rels if oid in OCC)
+            rel_html = ('<nav class="rel-links"><h2>関連する職種</h2>'
+                        '<p class="muted">同じ資格から目指せる近い職種です。</p>'
+                        f'<ul>{lis}</ul></nav>')
+
+        # 分野一覧・職種トップへの導線
+        bslug = MAJOR_SLUGS.get(major, "other")
+        nav_links = ['<li><a href="index.html">職種の一覧から探す</a></li>']
+        if major:
+            nav_links.append(f'<li><a href="../bunya/{bslug}.html">{esc(major)}の資格一覧</a></li>')
+        nav_links.append(f'<li><a href="{JOBTAG_URL}" rel="nofollow noopener" target="_blank">'
+                         '厚生労働省 job tag でこの職業を調べる ↗</a></li>')
+        more_nav = ('<nav class="rel-links"><h2>関連リンク</h2><ul>'
+                    + "".join(nav_links) + "</ul></nav>")
+
+        body = (
+            f'<nav class="crumbs"><a href="../index.html">トップ</a> › '
+            f'<a href="index.html">職種から探す</a> › {esc(name)}</nav>'
+            f"<h1>{esc(name)}に活かせる資格</h1>"
+            f'<p class="lead">{lead}</p>'
+            f"{work_html}{stat_html}"
+            f'<section class="careers-sec"><h2>この職種に活かせる資格（{shown}件）</h2>'
+            f"{listing}</section>"
+            f"{rel_html}{more_nav}"
+            '<p class="muted" style="margin-top:14px">※「活かせる資格」は厚生労働省の職業情報'
+            '提供サイト（job tag）等を出所に各資格の関連職業を整理したものです。資格が必須・'
+            '推奨かは職種・求人により異なります。詳細は各資格・求人の公式情報でご確認ください。</p>'
+        )
+        noindex = not occ_is_indexable(occ_id, shown)
+        if desc_txt:
+            desc = desc_txt[:118]
+        else:
+            desc = (f"{name}に活かせる資格を{shown}件まとめました。"
+                    f"{name}を目指すうえで役立つ資格の受験料・合格率・受験資格・公式情報を一覧で確認できます。")
+        breadcrumb = {
+            "@context": "https://schema.org", "@type": "BreadcrumbList",
+            "itemListElement": [
+                {"@type": "ListItem", "position": 1, "name": "トップ", "item": BASE_URL + "/"},
+                {"@type": "ListItem", "position": 2, "name": "職種から探す",
+                 "item": f"{BASE_URL}/shoku/index.html"},
+                {"@type": "ListItem", "position": 3, "name": name},
+            ]}
+        # schema.org/Occupation 構造化データ（保有データを活用）
+        occ_ld = {"@context": "https://schema.org", "@type": "Occupation",
+                  "name": name, "url": f"{BASE_URL}/shoku/{occ_id}.html"}
+        if major:
+            occ_ld["occupationalCategory"] = major
+        if desc_txt:
+            occ_ld["description"] = desc_txt
+        if dinfo.get("work"):
+            occ_ld["responsibilities"] = dinfo["work"]
+        if dinfo.get("skills"):
+            occ_ld["skills"] = dinfo["skills"]
+        qv = _salary_quantitative(OCC_SALARY.get(occ_id, ""))
+        if qv:
+            occ_ld["estimatedSalary"] = {"@type": "MonetaryAmount",
+                                         "currency": "JPY", "value": qv}
+        ld = [breadcrumb, occ_ld] + ([itemlist] if itemlist else [])
+        pages[occ_id] = page_shell(f"{name}に活かせる資格｜{SITE_NAME}", body, depth=1,
+                                   noindex=noindex, desc=desc,
+                                   path=f"shoku/{occ_id}.html", jsonld=ld)
+        if not noindex:
+            index_items.append((occ_id, name, major, shown))
+
+    # 職種インデックス（site/shoku/index.html）— 分野別に逆引きの太い職種から
+    from collections import OrderedDict
+    index_items.sort(key=lambda t: (t[2], -t[3], t[1]))
+    by_major = OrderedDict()
+    for occ_id, name, major, shown in index_items:
+        by_major.setdefault(major or "その他", []).append((occ_id, name, shown))
+    blocks = ""
+    for major, lst in by_major.items():
+        lis = "".join(
+            f'<li><a href="{oid}.html">{esc(_occ_short(nm))}</a>'
+            f' <span class="muted">（{sh}資格）</span></li>'
+            for oid, nm, sh in lst)
+        blocks += f'<h2 class="hub-grp">{esc(major)}</h2><ul class="results occ-list">{lis}</ul>'
+    total_occ = len(OCC)
+    idx_body = (
+        f'<nav class="crumbs"><a href="../index.html">トップ</a> › 職種から探す</nav>'
+        f"<h1>職種から資格を探す</h1>"
+        f'<p class="lead">資格を取得して目指せる職種から、その職種に<strong>活かせる資格を逆引き</strong>'
+        f'できます。資格ごとの「活かせる仕事」を正規化した職種データベース（全{total_occ}職種）。'
+        f'検索・分野で絞り込めます（下の一覧は関連資格が複数ある{len(index_items)}職種）。</p>'
+        '<div class="controls">'
+        '<input id="occ-q" type="search" placeholder="職種名で検索（例: エンジニア, 整備, 事務）">'
+        '<select id="occ-major"><option value="">分野（すべて）</option></select>'
+        '</div>'
+        '<p id="occ-status" class="muted"></p>'
+        '<ul id="occ-results" class="results occ-list" hidden></ul>'
+        f'<div id="occ-static">{blocks}</div>'
+        '<p class="muted" style="margin-top:14px">※職種データは厚生労働省の職業情報提供サイト'
+        '（job tag）等を出所に各資格の関連職業を整理・正規化したものです。'
+        '検索は全職種が対象です（関連資格1件のみの職種も含みます）。</p>'
+        '<script src="' + asset_url("../", "assets/occ-search.js") + '"></script>'
+    )
+    index_html = page_shell(f"職種から資格を探す｜{SITE_NAME}", idx_body, depth=1,
+                            noindex=False,
+                            desc="資格を取得して目指せる職種から、その職種に活かせる資格を逆引きできます。"
+                                 "分野別に職種を一覧。",
+                            path="shoku/index.html")
+    return pages, index_html, index_items
+
+
 def build_index(rows) -> str:
     pub = sum(1 for r in rows if r.get("status") == "published")
     majors = sorted({r["major_category"] for r in rows})
-    cat_links = " ".join(
-        f'<a class="chip" href="bunya/{MAJOR_SLUGS.get(m, "other")}.html">{esc(m)}</a>'
-        for m in majors)
-    feat_links = "".join(
-        f'<li><a href="feature/{slug}.html">{esc(label)}</a></li>'
-        for slug, label in FEATURE_NAV
-        if slug != "popular" or any(applicants_num(r) is not None for r in rows))
-    hub_links = "".join(
-        f'<li><a href="feature/{slug}.html">{esc(label)}</a></li>'
-        for slug, label in INTENT_HUB_NAV)
     by_slug = {r["slug"]: r for r in rows}
 
     def _short(r):
-        return re.sub(r"[（(].*?[）)]", "", r["name"]).strip() or r["name"]
+        return _rel_name(r["slug"])
     vs_links = ""
     for pslug, sa, sb, _ in COMPARE_PAIRS:
         ra, rb = by_slug.get(sa), by_slug.get(sb)
         if ra and rb and is_indexable_detail(ra) and is_indexable_detail(rb):
             vs_links += (f'<li><a href="vs/{pslug}.html">'
                          f'{esc(_short(ra))} と {esc(_short(rb))} の違い</a></li>')
-    body = f"""<h1>日本の資格カタログ</h1>
-<p class="lead">資格名で検索、または分野・区分で絞り込み・並び替えできます。現在 <strong id="count">-</strong> 件を収録（うち公式データ掲載 {pub} 件）。受験料・試験形式・受験資格・合格率・公式サイトを掲載しています。</p>
-<div class="controls">
-  <input id="q" type="search" placeholder="資格名で検索（例: 簿記, 電気, ボイラー）">
-  <select id="major"><option value="">分野（すべて）</option></select>
-  <select id="type"><option value="">区分（すべて）</option></select>
-  <select id="industry"><option value="">活かせる業界（すべて）</option></select>
-  <select id="study">
-    <option value="">学習時間の目安（すべて）</option>
-    <option value="0-50">〜50時間</option>
-    <option value="50-100">50〜100時間</option>
-    <option value="100-300">100〜300時間</option>
-    <option value="300-1000">300〜1000時間</option>
-    <option value="1000-">1000時間以上</option>
-  </select>
-  <select id="sort">
-    <option value="">並び順（標準）</option>
-    <option value="fee-asc">受験料が安い順</option>
-    <option value="fee-desc">受験料が高い順</option>
-    <option value="pass-desc">合格率が高い順</option>
-    <option value="pass-asc">合格率が低い順</option>
-  </select>
-</div>
-<div class="filters">
-  <label><input type="checkbox" id="f-pub"> データ掲載のみ</label>
-  <span class="muted" id="studynote" style="display:none">学習時間は編集部調べの目安（非公式）</span>
-</div>
-<div id="tagfilter" class="tagfilter"><span class="tf-label">目的・特徴で絞り込み：</span></div>
-<p id="status" class="muted"></p>
-<p class="muted hint">行頭のチェックを入れて資格を選ぶと、最大4件まで並べて比較できます。</p>
-<ul id="results" class="results"></ul>
-<div id="cmpbar" class="cmpbar"></div>
-<section class="feature-nav">
-  <h2>目的から探す</h2>
-  <ul class="feat-list">{hub_links}</ul>
-  <h2>資格を比べる（人気の比較）</h2>
-  <ul class="feat-list">{vs_links}</ul>
-  <h2>特集・ランキング</h2>
-  <ul class="feat-list">{feat_links}</ul>
-  <h2>分野から探す</h2>
-  <div class="chips">{cat_links}</div>
+    # --- 人気の資格（受験者数の多い順 上位8） ---
+    ranked = sorted((r for r in rows
+                     if applicants_num(r) is not None and is_indexable_detail(r)),
+                    key=lambda r: -(applicants_num(r) or 0))
+    pop = ranked[:8]
+    pop_html = ""
+    for i, r in enumerate(pop):
+        more = " pop-card--more" if i >= 4 else ""
+        facts = ""
+        d = difficulty(r)
+        if d:
+            facts += (f'<li class="pop-card-diff"><span class="k">難易度</span>'
+                      f'<span class="v">{_diff_badge_html(r)}</span></li>')
+        sh = (STUDY.get(r["slug"], {}) or {}).get("study_hours", "")
+        if sh:
+            facts += f'<li><span class="k">学習目安</span><span class="v">{esc(fmt_nums_in_text(sh))}</span></li>'
+        pop_html += (f'<a class="pop-card card-link{more}" href="c/{r["slug"]}.html">'
+                     f'<div class="pop-card-head">'
+                     f'<span class="pop-card-trophy" aria-hidden="true">{ICON_TROPHY}</span>'
+                     f'<div class="pop-card-name">{esc(_short(r))}</div></div>'
+                     f'<ul class="pop-card-facts">{facts}</ul></a>')
+
+    # --- 分野から探す（収録数の多い順 上位8） ---
+    mcount = Counter(r["major_category"] for r in rows)
+    by_major = {}
+    for r in rows:
+        by_major.setdefault(r["major_category"], []).append(r)
+
+    def _examples(m):
+        cs = sorted(by_major[m], key=lambda r: -(applicants_num(r) or 0))
+        return "・".join(_short(r) for r in cs[:3]) + "など"
+    fld_html = ""
+    for m in sorted(mcount, key=lambda m: -mcount[m])[:8]:
+        fld_html += (f'<a class="field-card" href="bunya/{MAJOR_SLUGS.get(m, "other")}.html">'
+                     f'<div class="icon">{field_icon(m)}</div>'
+                     f'<div class="field-card-body">'
+                     f'<div class="field-card-top"><h3>{esc(m)}</h3>'
+                     f'<span class="field-count">{mcount[m]}件</span></div>'
+                     f'<p class="field-examples">{esc(_examples(m))}</p></div></a>')
+
+    # --- よく比較される資格（COMPARE_PAIRS 先頭6） ---
+    def _cmpname(r):
+        return (_short(r).replace("ファイナンシャル・プランニング", "FP")
+                .replace("ファイナンシャルプランニング", "FP"))
+    cmp_html = ""
+    _n = 0
+    for pslug, sa, sb, intro in COMPARE_PAIRS:
+        ra, rb = by_slug.get(sa), by_slug.get(sb)
+        if not (ra and rb and is_indexable_detail(ra) and is_indexable_detail(rb)):
+            continue
+        cmp_html += (f'<a class="compare-card" href="vs/{pslug}.html">'
+                     f'<span class="compare-tag">{esc(ra["major_category"])}</span>'
+                     f'<div class="compare-names">{esc(_cmpname(ra))} <span class="compare-sep" aria-hidden="true">⇄</span> {esc(_cmpname(rb))}</div>'
+                     f'<span class="compare-go" aria-hidden="true">→</span></a>')
+        _n += 1
+        if _n >= 6:
+            break
+
+    PURPOSE_ICON_JOB = ('<svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"'
+                        ' stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+                        '<path d="M12 3L2 8l10 5 10-5-10-5z"/><path d="M5 11v5c0 2.5 3.5 5 7 5s7-2.5 7-5v-5"/><path d="M22 8v6"/></svg>')
+    PURPOSE_ICON_CHANGE = ('<svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"'
+                           ' stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+                           '<path d="M4 9h12l-3-3"/><path d="M20 9V5"/><path d="M20 15H8l3 3"/><path d="M4 15v4"/></svg>')
+    PURPOSE_ICON_SKILL = ('<svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"'
+                          ' stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+                          '<path d="M4 18h16"/><path d="M7 15l4-6 3 3 5-7"/></svg>')
+
+    suggest = ranked[:8]
+    suggest_items = "".join(
+        f'<li><button type="button" class="hero-suggest-item" role="option" '
+        f'data-q="{esc(_short(r))}">{esc(_short(r))}'
+        f'<span class="hero-suggest-meta">{esc(r["major_category"])}</span></button></li>'
+        for r in suggest)
+
+    body = f"""<section class="hero">
+  <div class="hero-inner">
+  <h1><span class="hero-h1-line">就職・転職・スキルアップの</span><span class="hero-h1-line">資格情報サイト</span></h1>
+  <p class="hero-sub">日本国内の資格を <strong id="count">{len(rows):,}</strong> 件以上掲載。受験料・受験資格・試験形式・合格率・公式サイトを、公式の一次情報に基づいて整理しています。</p>
+  <div class="hero-search">
+    <span class="ico"><svg class="ico-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/></svg></span>
+    <input id="q" type="search" placeholder="資格名で検索（例: 簿記, 宅建, ITパスポート）" aria-label="資格名で検索" autocomplete="off" aria-controls="heroSuggest" aria-expanded="false" aria-autocomplete="list">
+    <div class="hero-suggest" id="heroSuggest" role="listbox" aria-label="よく探される資格" hidden>
+      <p class="hero-suggest-label">よく探される資格</p>
+      <ul class="hero-suggest-list">{suggest_items}</ul>
+    </div>
+  </div>
+  <p class="hero-result" id="heroResult" hidden></p>
+  </div>
 </section>
-<script src="assets/search.js"></script>
+
+<section class="block block-band block-band--white block-shindan" id="shindan">
+  <div class="block-head"><h2>あなたに合う資格を診断</h2><p>目的・分野・学習時間・こだわり条件から、おすすめの資格をその場で提案します</p></div>
+  <div class="shindan">
+    <div class="shindan-fields">
+      <div class="shindan-field">
+        <span class="shindan-label" id="sdGoalLabel">目的</span>
+        <div class="shindan-seg" role="group" aria-labelledby="sdGoalLabel" id="sdGoal">
+          <button type="button" class="sd-chip is-on" data-goal="job" aria-pressed="true">就職</button>
+          <button type="button" class="sd-chip" data-goal="change" aria-pressed="false">転職</button>
+          <button type="button" class="sd-chip" data-goal="skill" aria-pressed="false">スキルアップ</button>
+          <button type="button" class="sd-chip" data-goal="independent" aria-pressed="false">独立・開業</button>
+        </div>
+      </div>
+      <div class="shindan-field">
+        <label class="shindan-label" for="sdField">興味のある分野・いまの業界</label>
+        <select id="sdField"><option value="">指定なし（すべての分野）</option></select>
+      </div>
+      <div class="shindan-field">
+        <label class="shindan-label" for="sdTime">使える学習時間の目安</label>
+        <select id="sdTime">
+          <option value="">こだわらない</option>
+          <option value="0-50">〜50時間（数週間で狙える）</option>
+          <option value="50-100">50〜100時間</option>
+          <option value="100-300">100〜300時間</option>
+          <option value="300-1000">300〜1000時間</option>
+          <option value="1000-">1000時間以上（難関に挑戦）</option>
+        </select>
+      </div>
+    </div>
+    <div class="shindan-prefs">
+      <span class="shindan-label" id="sdPrefLabel">こだわり条件（複数選択できます・任意）</span>
+      <div class="shindan-seg" role="group" aria-labelledby="sdPrefLabel" id="sdPref">
+        <button type="button" class="sd-chip" data-pref="nolic" aria-pressed="false">受験資格なし（誰でも受けられる）</button>
+        <button type="button" class="sd-chip" data-pref="cbt" aria-pressed="false">在宅・CBTで受けられる</button>
+        <button type="button" class="sd-chip" data-pref="working" aria-pressed="false">働きながら取りやすい</button>
+        <button type="button" class="sd-chip" data-pref="kokka" aria-pressed="false">国家資格</button>
+      </div>
+    </div>
+    <div class="shindan-result" id="sdResult" hidden></div>
+  </div>
+</section>
+
+<section class="block block-band block-band--gray">
+  <div class="block-head"><h2>人気の資格</h2><p>受験者数の多い順</p></div>
+  <div class="popular-grid">{pop_html}</div>
+  <p class="popular-more"><a href="feature/popular.html">人気資格をすべて見る →</a></p>
+</section>
+
+<section class="block block-band block-band--white" id="fields">
+  <div class="block-head"><h2>分野から探す</h2></div>
+  <div class="field-grid">{fld_html}</div>
+  <p class="field-more"><a href="#all-certs">すべての分野・条件で絞り込む →</a></p>
+</section>
+
+<section class="block block-band block-band--gray block-compare" id="compare">
+  <div class="block-head"><h2>よく比較される資格</h2><p>2つ以上を並べて違いを確認</p></div>
+  <div class="compare-grid">{cmp_html}</div>
+</section>
+
+<section class="block block-band block-band--white block-all-certs" id="all-certs">
+  <div class="block-head"><h2>すべての資格から探す</h2><p>資格名・分野・学習時間・合格率・実施頻度で絞り込み</p></div>
+  <div class="all-certs-filters">
+    <div class="filter-field"><label for="list-q">資格名</label><input type="search" id="list-q" placeholder="例: 簿記、宅建" aria-label="資格名で絞り込み"></div>
+    <div class="filter-field"><label for="major">分野</label><select id="major" aria-label="分野で絞り込み"><option value="">すべて</option></select></div>
+    <div class="filter-field"><label for="study">学習時間</label><select id="study" aria-label="学習時間で絞り込み">
+      <option value="">すべて</option>
+      <option value="0-50">〜50時間</option>
+      <option value="50-100">50〜100時間</option>
+      <option value="100-300">100〜300時間</option>
+      <option value="300-1000">300〜1000時間</option>
+      <option value="1000-">1000時間以上</option>
+    </select></div>
+    <div class="filter-field"><label for="pass">合格率</label><select id="pass" aria-label="合格率で絞り込み">
+      <option value="">すべて</option>
+      <option value="80-">80%以上</option>
+      <option value="60-80">60〜80%</option>
+      <option value="40-60">40〜60%</option>
+      <option value="20-40">20〜40%</option>
+      <option value="0-20">20%未満</option>
+      <option value="unknown">データなし</option>
+    </select></div>
+    <div class="filter-field"><label for="frequency">実施頻度</label><select id="frequency" aria-label="実施頻度で絞り込み">
+      <option value="">すべて</option>
+      <option value="anytime">通年・随時</option>
+      <option value="once">年1回</option>
+      <option value="twice">年2回</option>
+      <option value="3plus">年3回以上</option>
+      <option value="other">その他</option>
+      <option value="unknown">データなし</option>
+    </select></div>
+    <div class="filter-field"><label for="sort">並び順</label><select id="sort" aria-label="並び順">
+      <option value="app-desc" selected>受験者数が多い順</option>
+      <option value="study-asc">学習時間が短い順</option>
+      <option value="study-desc">学習時間が長い順</option>
+      <option value="pass-desc">合格率が高い順</option>
+      <option value="pass-asc">合格率が低い順</option>
+    </select></div>
+  </div>
+  <label class="all-certs-check"><input type="checkbox" id="f-pub"> データ掲載のみ</label>
+  <span class="muted" id="studynote" style="display:none">学習時間は編集部調べの目安（非公式）</span>
+  <div class="results-bar"><button type="button" id="clearFilters" class="clear-filters" hidden>× 条件をクリア</button></div>
+  <p class="all-certs-count" id="allCertsCount"></p>
+  <div class="all-certs-table-wrap">
+    <table class="all-certs-table all-certs-table--5col">
+      <colgroup><col class="all-certs-col-name"><col class="all-certs-col-major"><col class="all-certs-col-study"><col class="all-certs-col-pass"><col class="all-certs-col-freq"></colgroup>
+      <thead>
+        <tr>
+          <th scope="col">資格名</th>
+          <th scope="col">分野</th>
+          <th scope="col">学習時間</th>
+          <th scope="col">合格率</th>
+          <th scope="col">実施頻度</th>
+        </tr>
+      </thead>
+      <tbody id="results"><tr><td colspan="5" class="muted">読み込み中…</td></tr></tbody>
+    </table>
+  </div>
+  <nav class="pagination" id="pagination" aria-label="資格一覧のページ送り" hidden></nav>
+</section>
+
+<section class="block block-band block-band--gray" id="partners">
+  <div class="block-head"><h2>おすすめの資格対策サイト</h2><p>当サイト運営者が制作している資格別の学習・対策サイト</p></div>
+  <div class="partner-grid">{partner_cards_html()}</div>
+</section>
+<script src="{asset_url('', 'assets/search.js')}"></script>
 """
     site_ld = [
         {"@context": "https://schema.org", "@type": "WebSite",
@@ -1310,60 +3590,230 @@ def build_index(rows) -> str:
                              "query-input": "required name=search_term_string"}},
         {"@context": "https://schema.org", "@type": "Organization",
          "name": SITE_NAME, "url": BASE_URL + "/",
-         "logo": BASE_URL + "/assets/favicon.svg"},
+         "logo": BASE_URL + "/assets/favicon.svg",
+         "image": BASE_URL + "/assets/og.png",
+         "description": "日本国内の資格を、各資格の公式の一次情報に基づいて整理・"
+                        "掲載する資格情報サイト。受験料・受験資格・試験形式・合格率・"
+                        "実施団体・公式サイトを横断的に検索・比較できます。"},
     ]
-    return page_shell(SITE_NAME, body, depth=0, noindex=False,
-                      desc=SITE_DESC, path="", jsonld=site_ld)
+    return page_shell(
+        f"{SITE_NAME}｜就職・転職・スキルアップの資格を検索・比較（{len(rows)}件以上）",
+        body, depth=0, noindex=False,
+        desc=SITE_DESC, path="", jsonld=site_ld)
 
 
 def build_compare() -> str:
-    body = """<nav class="crumbs"><a href="index.html">トップ</a> › 比較</nav>
+    body = f"""<nav class="crumbs"><a href="index.html">トップ</a> › 比較</nav>
 <h1>資格を比較</h1>
 <p class="lead">選択した資格を並べて比較します（最大4件）。数値・制度は各資格の公式情報で必ずご確認ください。</p>
-<div id="cmp" class="cmp-wrap"></div>
+<div id="cmpVerdict"></div>
+<div id="cmp" class="cmp-wrap"><p class="muted">読み込み中…</p></div>
 <p style="margin-top:18px"><a href="index.html">← 検索に戻って選び直す</a></p>
-<script src="assets/compare.js"></script>
+<script src="{asset_url('', 'assets/compare.js')}"></script>
 """
     return page_shell(f"資格を比較｜{SITE_NAME}", body, depth=0, noindex=False,
                       desc="選んだ資格を受験料・試験形式・受験資格・合格率などで横並びに比較できます。",
                       path="compare.html")
 
 
+def build_courses_page(indexable):
+    """おすすめの試験対策講座一覧。表形式・キーワードで絞り込み。"""
+    cert_info = {r["slug"]: r for r in indexable}
+    table_rows = []
+    has_aff = False
+    for slug in sorted(MATERIALS, key=lambda s: cert_info.get(s, {}).get("name", s)):
+        if slug not in cert_info:
+            continue
+        courses = courses_for_slug(slug)
+        if not courses:
+            continue
+        cert = cert_info[slug]
+        for m in courses:
+            if m["affiliate"]:
+                has_aff = True
+            link = m["affiliate"] or m["url"]
+            rel = "sponsored nofollow noopener" if m["affiliate"] else "nofollow noopener"
+            if link:
+                title_cell = (
+                    f'<a href="{esc(link)}" rel="{rel}" target="_blank">'
+                    f'{esc(m["title"])} <span class="course-ext" aria-hidden="true">↗</span></a>')
+            else:
+                title_cell = esc(m["title"])
+            table_rows.append(
+                f'<tr>'
+                f'<td class="courses-cell-name">'
+                f'<a href="c/{esc(slug)}.html">{esc(cert["name"])}</a></td>'
+                f'<td class="courses-cell-title">{title_cell}</td>'
+                f'</tr>')
+
+    n = len(table_rows)
+    pr = '<span class="pr-badge">PR</span>' if has_aff else ""
+
+    if table_rows:
+        tbody = "".join(table_rows) + (
+            '<tr id="course-empty" hidden>'
+            '<td colspan="2" class="empty-state">'
+            '条件に一致する講座が見つかりませんでした。キーワードを短くしてみてください。</td></tr>')
+    else:
+        tbody = (
+            '<tr><td colspan="2" class="empty-state">'
+            '現在、掲載中の講座はありません。</td></tr>')
+
+    body = f"""<nav class="crumbs"><a href="index.html">トップ</a> › おすすめの試験対策講座</nav>
+<h1>おすすめの試験対策講座{pr}</h1>
+<p class="lead">資格別の通信講座・オンライン講座を一覧表で掲載しています。
+キーワードで絞り込み、1つの資格に複数ある講座も横並びで比較できます。</p>
+<div class="controls course-controls">
+<label class="course-filter-field">
+<span class="course-filter-label">キーワード</span>
+<input id="course-q" type="search" placeholder="資格名・講座名で検索" aria-controls="course-table">
+</label>
+</div>
+<p id="course-count" class="courses-count muted" aria-live="polite">{n}件</p>
+<div class="all-certs-table-wrap courses-table-wrap">
+<table class="all-certs-table courses-table" id="course-table">
+<colgroup>
+<col class="courses-col-name"><col class="courses-col-title">
+</colgroup>
+<thead><tr>
+<th>資格名</th><th>講座名</th>
+</tr></thead>
+<tbody>{tbody}</tbody>
+</table>
+</div>
+<p class="muted courses-foot">最新の価格・開講状況・カリキュラムは各提供元の公式情報で必ずご確認ください。
+各資格の詳細ページにも、テキスト・講座の例を掲載しています。</p>
+<script src="{asset_url('', 'assets/courses-search.js')}"></script>"""
+
+    ld = {"@context": "https://schema.org", "@type": "BreadcrumbList",
+          "itemListElement": [
+              {"@type": "ListItem", "position": 1, "name": "トップ", "item": BASE_URL + "/"},
+              {"@type": "ListItem", "position": 2, "name": "おすすめの試験対策講座"}]}
+    return page_shell(f"おすすめの試験対策講座｜{SITE_NAME}", body, depth=0, noindex=False,
+                      desc="資格別におすすめの通信講座・オンライン講座を紹介。"
+                           "簿記・宅建・ITパスポートなど人気資格の試験対策講座を編集部が選定。",
+                      path="courses.html", jsonld=ld)
+
+
 SEARCH_JS = """(function(){
-  var q=document.getElementById('q'),majorSel=document.getElementById('major'),
-      typeSel=document.getElementById('type'),sortSel=document.getElementById('sort'),
-      industrySel=document.getElementById('industry'),studySel=document.getElementById('study'),
-      fPub=document.getElementById('f-pub'),tagFilter=document.getElementById('tagfilter'),
+  var q=document.getElementById('q'),listQ=document.getElementById('list-q'),
+      majorSel=document.getElementById('major'),sortSel=document.getElementById('sort'),
+      studySel=document.getElementById('study'),passSel=document.getElementById('pass'),
+      freqSel=document.getElementById('frequency'),
+      fPub=document.getElementById('f-pub'),
       studyNote=document.getElementById('studynote'),
       results=document.getElementById('results'),
-      status=document.getElementById('status'),count=document.getElementById('count'),
-      bar=document.getElementById('cmpbar');
-  var DATA=[], MAX=4, selected=loadSel(), activeTags=new Set();
-  // 目的・特徴チップの表示順（存在するものだけ描画）
-  var TAG_ORDER=['就職・転職','独立・開業','在宅ワーク','手に職','未経験からIT','定年後・シニア','受験資格なし','CBT・ネット試験','働きながら'];
-  function loadSel(){try{return new Set(JSON.parse(localStorage.getItem('cmp')||'[]'));}catch(e){return new Set();}}
-  function saveSel(){try{localStorage.setItem('cmp',JSON.stringify([].slice.call(selected)));}catch(e){}}
+      countEl=document.getElementById('allCertsCount'),
+      pagination=document.getElementById('pagination'),
+      count=document.getElementById('count'),
+      heroResult=document.getElementById('heroResult'),
+      heroSuggest=document.getElementById('heroSuggest'),
+      clearBtn=document.getElementById('clearFilters');
+  var DATA=[], activeTags=new Set(), currentPage=1, PAGE_SIZE=20, resetPage=true,TROPHY=__TROPHY_HTML__;
+  var legacyType='',legacyIndustry='';
   function esc(s){return (s||'').replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+  function fmtN(n){return Number(n).toLocaleString('ja-JP');}
+  function certDisplayName(x){return (x&&(x.display_name||x.name))||'';}
+  // 検索用正規化: 小文字化・全角英数→半角・ひらがな→カタカナ・空白/中点/括弧の除去
+  function norm(s){
+    s=(s||'').toLowerCase();
+    s=s.replace(/[Ａ-Ｚａ-ｚ０-９]/g,function(c){return String.fromCharCode(c.charCodeAt(0)-0xFEE0);});
+    s=s.replace(/[ぁ-ゖ]/g,function(c){return String.fromCharCode(c.charCodeAt(0)+0x60);});
+    return s.replace(/[\s・･·()（）　]/g,'');
+  }
+  function searchText(x){
+    if(!x._st)x._st=norm([x.name,x.display_name||''].concat(x.aliases||[]).join(' '));
+    return x._st;
+  }
   function opt(sel,v){var o=document.createElement('option');o.value=v;o.textContent=v;sel.appendChild(o);}
-  function feeNum(x){var m=(x.fee||'').replace(/,/g,'').match(/([0-9]+)\\s*円/);return m?parseInt(m[1],10):null;}
   function passNum(x){var m=(x.pass_rate||'').replace(/,/g,'').match(/([0-9]+(?:\\.[0-9]+)?)\\s*%/);return m?parseFloat(m[1]):null;}
   function studyLow(x){var m=(x.study_hours||'').replace(/,/g,'').match(/([0-9]+)/);return m?parseInt(m[1],10):null;}
+  function appNum(x){var m=(x.applicants||'').replace(/,/g,'').match(/([0-9]+)\\s*[人名]/);return m?parseInt(m[1],10):null;}
+  function queryText(){return ((q&&q.value)||(listQ&&listQ.value)||'').trim().toLowerCase();}
+  function syncQueryInputs(src){
+    var v=src?src.value:'';
+    if(q&&src!==q)q.value=v;
+    if(listQ&&src!==listQ)listQ.value=v;
+  }
+  function freqBucket(f){
+    f=(f||'').trim();
+    if(!f)return 'unknown';
+    if(/休止/.test(f))return 'other';
+    if(/通年|随時|CBT|ネット/i.test(f))return 'anytime';
+    if(/年5回|年6回|年複数|年[34]回/.test(f))return '3plus';
+    if(/年2回/.test(f))return 'twice';
+    if(/年1回/.test(f))return 'once';
+    return 'other';
+  }
+  function passHit(x,band){
+    var v=passNum(x);
+    if(band==='unknown')return v===null;
+    if(v===null)return false;
+    if(band==='80-')return v>=80;
+    var p=band.split('-'),lo=parseFloat(p[0],10),hi=p[1]===''?Infinity:parseFloat(p[1],10);
+    return v>=lo&&v<hi;
+  }
+  function syncURL(){
+    try{
+      var p=new URLSearchParams();
+      var qt=queryText();
+      if(qt)p.set('q',qt);
+      if(majorSel.value)p.set('major',majorSel.value);
+      if(studySel.value)p.set('study',studySel.value);
+      if(passSel&&passSel.value)p.set('pass',passSel.value);
+      if(freqSel&&freqSel.value)p.set('frequency',freqSel.value);
+      if(sortSel.value&&sortSel.value!=='app-desc')p.set('sort',sortSel.value);
+      if(fPub.checked)p.set('pub','1');
+      if(activeTags.size)p.set('tag',[].slice.call(activeTags).join(','));
+      if(legacyType)p.set('type',legacyType);
+      if(legacyIndustry)p.set('industry',legacyIndustry);
+      if(currentPage>1)p.set('page',String(currentPage));
+      var qs=p.toString();
+      history.replaceState(null,'',qs?('?'+qs):location.pathname);
+    }catch(e){}
+  }
   function studyHit(x,band){
     var v=studyLow(x); if(v===null)return false;
     var p=band.split('-'),lo=parseInt(p[0],10),hi=p[1]===''?Infinity:parseInt(p[1],10);
     return v>=lo&&v<hi;
   }
+  function renderPagination(total){
+    if(!pagination)return;
+    var pages=Math.max(1,Math.ceil(total/PAGE_SIZE));
+    if(total<=PAGE_SIZE){pagination.innerHTML='';pagination.hidden=true;return;}
+    pagination.hidden=false;
+    if(currentPage>pages)currentPage=pages;
+    var start=(currentPage-1)*PAGE_SIZE+1;
+    var end=Math.min(currentPage*PAGE_SIZE,total);
+    var links='';
+    links+='<button type="button" class="pagination-btn'+(currentPage<=1?' is-disabled':'')+'" data-page="'+(currentPage-1)+'"'+(currentPage<=1?' aria-disabled="true"':'')+'>← 前へ</button>';
+    var nums=[];
+    for(var i=1;i<=pages;i++){
+      if(i===1||i===pages||Math.abs(i-currentPage)<=1)nums.push(i);
+      else if(nums[nums.length-1]!=='…')nums.push('…');
+    }
+    nums.forEach(function(n){
+      if(n==='…')links+='<span class="pagination-ellipsis" aria-hidden="true">…</span>';
+      else links+='<button type="button" class="pagination-num'+(n===currentPage?' is-current':'')+'" data-page="'+n+'"'+(n===currentPage?' aria-current="page"':'')+'>'+n+'</button>';
+    });
+    links+='<button type="button" class="pagination-btn'+(currentPage>=pages?' is-disabled':'')+'" data-page="'+(currentPage+1)+'"'+(currentPage>=pages?' aria-disabled="true"':'')+'>次へ →</button>';
+    pagination.innerHTML='<span class="pagination-status">'+fmtN(start)+'–'+fmtN(end)+'件 / 全'+fmtN(total)+'件</span><div class="pagination-links">'+links+'</div>';
+  }
   function render(){
-    var t=(q.value||'').trim().toLowerCase(),mj=majorSel.value,tp=typeSel.value,sk=sortSel.value,
-        ind=industrySel.value,band=studySel.value;
-    studyNote.style.display=band?'inline':'none';
+    if(resetPage){currentPage=1;resetPage=false;}
+    var t=queryText(),mj=majorSel.value,sk=sortSel.value||'app-desc',
+        band=studySel.value,pBand=passSel?passSel.value:'',fBand=freqSel?freqSel.value:'';
+    if(studyNote)studyNote.style.display=band?'inline':'none';
+    var tn=norm(t);
     var out=DATA.filter(function(x){
       if(mj&&x.major!==mj)return false;
-      if(tp&&x.type!==tp)return false;
-      if(t&&x.name.toLowerCase().indexOf(t)<0)return false;
+      if(legacyType&&x.type!==legacyType)return false;
+      if(tn&&searchText(x).indexOf(tn)<0)return false;
       if(fPub.checked&&x.status!=='published')return false;
-      if(ind&&(x.industries||[]).indexOf(ind)<0)return false;
+      if(legacyIndustry&&(x.industries||[]).indexOf(legacyIndustry)<0)return false;
       if(band&&!studyHit(x,band))return false;
+      if(pBand&&!passHit(x,pBand))return false;
+      if(fBand&&freqBucket(x.frequency)!==fBand)return false;
       if(activeTags.size){
         var tg=x.tags||[],ok=true;
         activeTags.forEach(function(a){if(tg.indexOf(a)<0)ok=false;});
@@ -1371,81 +3821,340 @@ SEARCH_JS = """(function(){
       }
       return true;
     });
-    if(sk){
-      var key=sk.indexOf('fee')===0?feeNum:passNum, asc=sk.indexOf('asc')>=0;
-      out=out.slice().sort(function(a,b){
-        var va=key(a),vb=key(b);
-        if(va===null&&vb===null)return 0;
-        if(va===null)return 1; if(vb===null)return -1;
-        return asc?va-vb:vb-va;
-      });
+    var key=sk.indexOf('app')===0?appNum:(sk.indexOf('study')===0?studyLow:(sk.indexOf('pass')===0?passNum:appNum)), asc=sk.indexOf('asc')>=0;
+    out=out.slice().sort(function(a,b){
+      var va=key(a),vb=key(b);
+      if(va===null&&vb===null)return 0;
+      if(va===null)return 1; if(vb===null)return -1;
+      return asc?va-vb:vb-va;
+    });
+    var pages=Math.max(1,Math.ceil(out.length/PAGE_SIZE));
+    if(currentPage>pages)currentPage=pages;
+    var sliceStart=(currentPage-1)*PAGE_SIZE;
+    var pageItems=out.slice(sliceStart,sliceStart+PAGE_SIZE);
+    var anyFilter=t||mj||band||pBand||fBand||activeTags.size||fPub.checked||legacyType||legacyIndustry;
+    if(clearBtn)clearBtn.hidden=!anyFilter;
+    if(countEl){
+      if(out.length){
+        countEl.innerHTML='全 <strong>'+fmtN(out.length)+'</strong> 件 · '+fmtN(sliceStart+1)+'–'+fmtN(sliceStart+pageItems.length)+'件を表示';
+      } else countEl.textContent='該当する資格はありません';
     }
-    status.textContent=out.length+' 件';
-    results.innerHTML=out.slice(0,300).map(function(x){
-      var ck=selected.has(x.slug)?' checked':'';
-      var extra=x.status==='published'?[feeNum(x)!==null?esc(x.fee):'',passNum(x)!==null?'合格率'+esc(x.pass_rate):''].filter(Boolean).join(' / '):'';
-      return '<li><label class="cmp-add" title="比較に追加"><input type="checkbox" data-slug="'+x.slug+'"'+ck+'></label>'+
-        '<a href="c/'+x.slug+'.html">'+esc(x.name)+'</a>'+
-        '<span class="meta"><span class="badge b-'+x.type+'">'+x.type+'</span> '+esc(x.major)+' / '+esc(x.category)+(extra?' ・ '+extra:'')+'</span></li>';
-    }).join('')||'<li class="muted">該当なし</li>';
-    if(out.length>300) results.innerHTML+='<li class="muted">…他 '+(out.length-300)+' 件（絞り込んでください）</li>';
+    if(heroResult){
+      if(anyFilter){
+        heroResult.hidden=false;
+        heroResult.innerHTML=(t?'「<strong>'+esc(t)+'</strong>」を含む資格 ':'絞り込み結果 ')+
+          '<strong>'+fmtN(out.length)+'</strong> 件 <a href="#all-certs">一覧へ ↓</a>';
+      } else { heroResult.hidden=true; heroResult.innerHTML=''; }
+    }
+    results.innerHTML=pageItems.map(function(x){
+      var study=x.study_hours?esc(x.study_hours):'—';
+      var pass=x.pass_rate?esc(x.pass_rate):'—';
+      var freq=x.frequency?esc(x.frequency):'—';
+      return '<tr class="cert-row" tabindex="0" data-href="c/'+esc(x.slug)+'.html">'+
+        '<td class="all-certs-name"><span class="all-certs-name-inner">'+
+        (x.popular?TROPHY:'')+
+        '<span class="all-certs-name-text">'+esc(certDisplayName(x))+'</span></span></td>'+
+        '<td class="all-certs-cell all-certs-cell--major">'+esc(x.major)+'</td>'+
+        '<td class="all-certs-cell all-certs-num all-certs-cell--study">'+study+'</td>'+
+        '<td class="all-certs-cell all-certs-num all-certs-cell--pass">'+pass+'</td>'+
+        '<td class="all-certs-cell all-certs-cell--freq">'+freq+'</td></tr>';
+    }).join('')||'<tr><td colspan="5" class="empty-state">条件に一致する資格が見つかりませんでした。<br>キーワードを短くするか、上の「× 条件をクリア」で絞り込みを解除してください。</td></tr>';
+    renderPagination(out.length);
+    syncURL();
   }
-  function updateBar(){
-    if(!bar)return;
-    var n=selected.size;
-    if(!n){bar.classList.remove('on');bar.innerHTML='';return;}
-    bar.classList.add('on');
-    bar.innerHTML='<span>'+n+' 件を選択中（最大'+MAX+'）</span>'+
-      '<a class="btn" href="compare.html?ids='+[].slice.call(selected).join(',')+'">比較する</a>'+
-      '<button type="button" id="cmpclear" class="btn-ghost">クリア</button>';
-    document.getElementById('cmpclear').onclick=function(){selected.clear();saveSel();render();updateBar();};
-  }
-  results.addEventListener('change',function(e){
-    var cb=e.target;
-    if(!cb||cb.tagName!=='INPUT')return;
-    var slug=cb.getAttribute('data-slug');
-    if(cb.checked){
-      if(selected.size>=MAX&&!selected.has(slug)){cb.checked=false;alert('比較は最大'+MAX+'件までです');return;}
-      selected.add(slug);
-    } else selected.delete(slug);
-    saveSel();updateBar();
+  if(pagination)pagination.addEventListener('click',function(e){
+    var btn=e.target.closest('[data-page]');
+    if(!btn||btn.classList.contains('is-disabled'))return;
+    var p=parseInt(btn.getAttribute('data-page'),10);
+    if(!p||p===currentPage)return;
+    currentPage=p; render();
+    var sec=document.getElementById('all-certs'); if(sec)sec.scrollIntoView({behavior:'smooth',block:'start'});
   });
-  function buildTagChips(all){
-    var present={},counts={};
-    all.forEach(function(x){(x.tags||[]).forEach(function(tg){present[tg]=1;counts[tg]=(counts[tg]||0)+1;});});
-    TAG_ORDER.forEach(function(tg){
-      if(!present[tg])return;
-      var b=document.createElement('button');
-      b.type='button';b.className='tf-chip';b.setAttribute('data-tag',tg);
-      b.textContent=tg+'（'+counts[tg]+'）';
-      b.onclick=function(){
-        if(activeTags.has(tg)){activeTags.delete(tg);b.classList.remove('on');}
-        else{activeTags.add(tg);b.classList.add('on');}
-        render();
-      };
-      tagFilter.appendChild(b);
+  if(results){
+    results.addEventListener('click',function(e){
+      var tr=e.target.closest('tr.cert-row');
+      if(!tr)return;
+      var href=tr.getAttribute('data-href');
+      if(href)location.href=href;
+    });
+    results.addEventListener('keydown',function(e){
+      if(e.key!=='Enter'&&e.key!==' ')return;
+      var tr=e.target.closest('tr.cert-row');
+      if(!tr)return;
+      e.preventDefault();
+      var href=tr.getAttribute('data-href');
+      if(href)location.href=href;
     });
   }
   fetch('data/certifications.json').then(function(r){return r.json();}).then(function(all){
-    DATA=all; count.textContent=all.length;
-    var majors={},types={},inds={};
-    all.forEach(function(x){majors[x.major]=1;types[x.type]=1;(x.industries||[]).forEach(function(i){inds[i]=(inds[i]||0)+1;});});
+    DATA=all; if(count)count.textContent=fmtN(all.length);
+    var majors={};
+    all.forEach(function(x){majors[x.major]=1;});
     Object.keys(majors).sort().forEach(function(v){opt(majorSel,v);});
-    ['国家','公的','民間','要確認'].forEach(function(v){if(types[v])opt(typeSel,v);});
-    Object.keys(inds).sort(function(a,b){return inds[b]-inds[a];}).forEach(function(v){
-      var o=document.createElement('option');o.value=v;o.textContent=v+'（'+inds[v]+'）';industrySel.appendChild(o);});
-    buildTagChips(all);
     var p=new URLSearchParams(location.search);
-    if(p.get('q'))q.value=p.get('q');
+    if(p.get('q')){syncQueryInputs({value:p.get('q')});}
     if(p.get('major'))majorSel.value=p.get('major');
-    if(p.get('industry'))industrySel.value=p.get('industry');
-    if(p.get('tag')){p.get('tag').split(',').forEach(function(tg){
-      activeTags.add(tg);
-      var c=tagFilter.querySelector('[data-tag="'+tg+'"]'); if(c)c.classList.add('on');});}
-    render();updateBar();
+    if(p.get('study'))studySel.value=p.get('study');
+    if(passSel&&p.get('pass'))passSel.value=p.get('pass');
+    if(freqSel&&p.get('frequency'))freqSel.value=p.get('frequency');
+    sortSel.value=p.get('sort')||'app-desc';
+    if(p.get('pub')==='1')fPub.checked=true;
+    if(p.get('page'))currentPage=Math.max(1,parseInt(p.get('page'),10)||1);
+    if(p.get('tag')){p.get('tag').split(',').forEach(function(tg){activeTags.add(tg);});}
+    if(p.get('type'))legacyType=p.get('type');
+    if(p.get('industry'))legacyIndustry=p.get('industry');
+    if(location.hash==='#all')location.hash='#all-certs';
+    render();
+    initShindan();
   });
-  [q,majorSel,typeSel,sortSel,industrySel,studySel].forEach(function(el){el.addEventListener('input',render);});
-  fPub.addEventListener('change',render);
+  function initShindan(){
+    var goalWrap=document.getElementById('sdGoal'),
+        fieldSel=document.getElementById('sdField'),
+        timeSel=document.getElementById('sdTime'),
+        prefWrap=document.getElementById('sdPref'),
+        runBtn=document.getElementById('sdRun'),
+        resultBox=document.getElementById('sdResult');
+    if(!goalWrap||!fieldSel||!timeSel||!resultBox)return;
+    // こだわり条件（複数選択・AND絞り込み）
+    var PREF={
+      nolic:{label:'受験資格なし',test:function(x){return (x.tags||[]).indexOf('受験資格なし')>=0;}},
+      cbt:{label:'在宅・CBT',test:function(x){return (x.tags||[]).indexOf('CBT・ネット試験')>=0;}},
+      working:{label:'働きながら',test:function(x){return (x.tags||[]).indexOf('働きながら')>=0;}},
+      kokka:{label:'国家資格',test:function(x){return x.type==='国家';}}
+    };
+    var activePrefs=[];
+    // 目的 → タグの重み（希少なタグほど強いシグナル）
+    var GOAL_TAGS={
+      job:{'就職・転職':1,'受験資格なし':2,'未経験からIT':3},
+      change:{'就職・転職':1,'手に職':3,'未経験からIT':2},
+      skill:{'働きながら':3,'CBT・ネット試験':2},
+      independent:{'独立・開業':6,'手に職':3}
+    };
+    var GOAL_LABEL={job:'就職',change:'転職',skill:'スキルアップ',independent:'独立・開業'};
+    var TIME_LABEL={'0-50':'〜50時間','50-100':'50〜100時間','100-300':'100〜300時間','300-1000':'300〜1000時間','1000-':'1000時間以上'};
+    var goal='job';
+    // 分野プルダウンを industries から生成（件数の多い順）
+    var indCount={};
+    DATA.forEach(function(x){(x.industries||[]).forEach(function(i){indCount[i]=(indCount[i]||0)+1;});});
+    Object.keys(indCount).sort(function(a,b){return indCount[b]-indCount[a];}).forEach(function(v){
+      opt(fieldSel,v);
+    });
+    function bandHit(x,band){
+      var v=studyLow(x); if(v===null)return null;
+      var pr=band.split('-'),lo=parseInt(pr[0],10),hi=pr[1]===''?Infinity:parseInt(pr[1],10);
+      return v>=lo&&v<hi;
+    }
+    function scoreOf(x,field,time){
+      if(x.status!=='published')return null;
+      var score=0,reasons=[];
+      var tw=GOAL_TAGS[goal]||{},tg=x.tags||[],goalScore=0;
+      for(var k in tw){if(tg.indexOf(k)>=0)goalScore+=tw[k];}
+      score+=goalScore;
+      if(goal==='independent'&&tg.indexOf('独立・開業')>=0)reasons.push('独立・開業向き');
+      else if(goal==='skill'&&tg.indexOf('働きながら')>=0)reasons.push('働きながら取りやすい');
+      else if(goal==='job'&&tg.indexOf('受験資格なし')>=0)reasons.push('受験資格なし');
+      else if(goal==='change'&&tg.indexOf('手に職')>=0)reasons.push('手に職');
+      if(field){
+        if((x.industries||[]).indexOf(field)>=0){score+=6;reasons.push(field);}
+        else return null; // 分野指定時はその業界で活かせる資格のみ
+      }
+      // こだわり条件は必須（すべて満たすものだけ）
+      for(var pi=0;pi<activePrefs.length;pi++){
+        var pk=activePrefs[pi];
+        if(!PREF[pk].test(x))return null;
+        score+=2;reasons.push(PREF[pk].label);
+      }
+      if(time){
+        // 学習時間を指定したら、その帯に収まる資格のみ（不明・帯外は除外）
+        if(bandHit(x,time)!==true)return null;
+        score+=4;reasons.push('学習時間が合う');
+      }
+      if(x.popular){score+=2;if(reasons.length<4)reasons.push('人気');}
+      var ap=appNum(x);if(ap)score+=Math.min(2,ap/50000);
+      var uniq=[],seen={};
+      for(var ri=0;ri<reasons.length;ri++){if(!seen[reasons[ri]]){seen[reasons[ri]]=1;uniq.push(reasons[ri]);}}
+      return {x:x,score:score,reasons:uniq.slice(0,4)};
+    }
+    function run(){
+      var field=fieldSel.value,time=timeSel.value;
+      var scored=[];
+      DATA.forEach(function(x){var s=scoreOf(x,field,time);if(s)scored.push(s);});
+      scored.sort(function(a,b){
+        if(b.score!==a.score)return b.score-a.score;
+        return (appNum(b.x)||0)-(appNum(a.x)||0);
+      });
+      var top=scored.slice(0,6);
+      var prefTxt=activePrefs.map(function(k){return PREF[k].label;}).join('・');
+      var cond='「<strong>'+esc(GOAL_LABEL[goal])+'</strong>」'+
+        (field?'／<strong>'+esc(field)+'</strong>':'')+
+        (time?'／学習時間 <strong>'+esc(TIME_LABEL[time]||time)+'</strong>':'')+
+        (prefTxt?'／<strong>'+esc(prefTxt)+'</strong>':'');
+      if(!top.length){
+        resultBox.innerHTML='<p class="shindan-result-head">'+cond+' の条件に合う資格が見つかりませんでした。分野・学習時間・こだわり条件をゆるめてお試しください。</p>';
+        resultBox.hidden=false;return;
+      }
+      var head='<p class="shindan-result-head">'+cond+' のおすすめ資格 <strong>'+top.length+'</strong> 件</p>';
+      var cards=top.map(function(s,i){
+        var x=s.x;
+        var meta=[x.major,x.study_hours?'学習 '+x.study_hours:'',x.pass_rate?'合格率 '+x.pass_rate:''].filter(Boolean).join('　·　');
+        var rs=s.reasons.map(function(r){return '<span class="sd-reason">'+esc(r)+'</span>';}).join('');
+        return '<li><a class="sd-card" href="c/'+esc(x.slug)+'.html">'+
+          '<span class="sd-card-rank">'+(i+1)+'位</span>'+
+          '<span class="sd-card-name">'+esc(certDisplayName(x))+'</span>'+
+          '<span class="sd-card-meta">'+esc(meta)+'</span>'+
+          (rs?'<span class="sd-card-reasons">'+rs+'</span>':'')+
+          '</a></li>';
+      }).join('');
+      resultBox.innerHTML=head+'<ul class="sd-cards">'+cards+'</ul>';
+      resultBox.hidden=false;
+    }
+    goalWrap.addEventListener('click',function(e){
+      var b=e.target.closest('.sd-chip');if(!b)return;
+      goal=b.getAttribute('data-goal')||'job';
+      goalWrap.querySelectorAll('.sd-chip').forEach(function(c){
+        var on=c===b;c.classList.toggle('is-on',on);c.setAttribute('aria-pressed',on?'true':'false');
+      });
+      run();
+    });
+    if(prefWrap)prefWrap.addEventListener('click',function(e){
+      var b=e.target.closest('.sd-chip');if(!b)return;
+      var pk=b.getAttribute('data-pref');if(!pk||!PREF[pk])return;
+      var idx=activePrefs.indexOf(pk),on;
+      if(idx>=0){activePrefs.splice(idx,1);on=false;}else{activePrefs.push(pk);on=true;}
+      b.classList.toggle('is-on',on);b.setAttribute('aria-pressed',on?'true':'false');
+      run();
+    });
+    fieldSel.addEventListener('change',run);
+    timeSel.addEventListener('change',run);
+    if(runBtn)runBtn.addEventListener('click',run);
+    run(); // 初期表示（既定の目的で候補を出しておく）
+  }
+  function onFilter(){resetPage=true;render();}
+  function onQueryInput(e){syncQueryInputs(e.target);onFilter();}
+  var suggestList=heroSuggest?heroSuggest.querySelector('.hero-suggest-list'):null;
+  var suggestLabel=heroSuggest?heroSuggest.querySelector('.hero-suggest-label'):null;
+  var staticSuggest=suggestList?suggestList.innerHTML:'';
+  function showHeroSuggest(filter){
+    if(!heroSuggest||!q||!suggestList)return;
+    var t=norm((filter||'').trim());
+    if(!t){
+      suggestList.innerHTML=staticSuggest;
+      if(suggestLabel)suggestLabel.textContent='よく探される資格';
+      heroSuggest.hidden=false;q.setAttribute('aria-expanded','true');return;
+    }
+    if(!DATA.length){heroSuggest.hidden=true;q.setAttribute('aria-expanded','false');return;}
+    var hits=DATA.filter(function(x){return searchText(x).indexOf(t)>=0;});
+    hits.sort(function(a,b){
+      var pa=a.popular?1:0,pb=b.popular?1:0;
+      if(pa!==pb)return pb-pa;
+      return (appNum(b)||0)-(appNum(a)||0);
+    });
+    hits=hits.slice(0,8);
+    if(!hits.length){heroSuggest.hidden=true;q.setAttribute('aria-expanded','false');return;}
+    if(suggestLabel)suggestLabel.textContent='候補の資格';
+    suggestList.innerHTML=hits.map(function(x){
+      return '<li><a class="hero-suggest-item" href="c/'+esc(x.slug)+'.html">'+esc(certDisplayName(x))+
+        '<span class="hero-suggest-meta">'+esc(x.major)+'</span></a></li>';
+    }).join('');
+    heroSuggest.hidden=false;q.setAttribute('aria-expanded','true');
+  }
+  function hideHeroSuggest(){
+    if(!heroSuggest)return;
+    heroSuggest.hidden=true;
+    if(q)q.setAttribute('aria-expanded','false');
+  }
+  if(q)q.addEventListener('input',function(e){showHeroSuggest(e.target.value);onQueryInput(e);});
+  if(listQ)listQ.addEventListener('input',onQueryInput);
+  [majorSel,sortSel,studySel,passSel,freqSel].forEach(function(el){if(el)el.addEventListener('input',onFilter);});
+  fPub.addEventListener('change',onFilter);
+  if(q){
+    q.addEventListener('focus',function(){showHeroSuggest(q.value);});
+    q.addEventListener('blur',function(){setTimeout(hideHeroSuggest,150);});
+    q.addEventListener('keydown',function(e){
+      if(e.key==='Escape'){hideHeroSuggest();return;}
+      if(e.key==='Enter'){hideHeroSuggest();var a=document.getElementById('all-certs');if(a){e.preventDefault();a.scrollIntoView();}}
+    });
+  }
+  if(heroSuggest){
+    heroSuggest.addEventListener('mousedown',function(e){e.preventDefault();});
+    heroSuggest.addEventListener('click',function(e){
+      var btn=e.target.closest('.hero-suggest-item');
+      if(!btn)return;
+      if(btn.tagName==='A')return; // 動的候補は詳細ページへそのまま遷移
+      var val=btn.getAttribute('data-q')||'';
+      syncQueryInputs({value:val});
+      hideHeroSuggest();
+      onFilter();
+      var sec=document.getElementById('all-certs');
+      if(sec)sec.scrollIntoView({behavior:'smooth',block:'start'});
+    });
+  }
+  if(listQ)listQ.addEventListener('keydown',function(e){
+    if(e.key==='Enter'){e.preventDefault();onFilter();}
+  });
+  if(clearBtn)clearBtn.addEventListener('click',function(){
+    syncQueryInputs({value:''});
+    majorSel.value='';studySel.value='';
+    if(passSel)passSel.value='';
+    if(freqSel)freqSel.value='';
+    sortSel.value='app-desc';fPub.checked=false;
+    legacyType='';legacyIndustry='';
+    activeTags.clear();resetPage=true;render();
+  });
+})();
+"""
+
+SEARCH_JS = SEARCH_JS.replace(
+    "__TROPHY_HTML__",
+    json.dumps(f'<span class="all-certs-trophy" aria-hidden="true">{ICON_TROPHY}</span>'))
+
+
+COMPARE_BAR_JS = """(function(){
+  var MAX=4;
+  function load(){try{return JSON.parse(localStorage.getItem('cmp')||'[]');}catch(e){return [];}}
+  function names(){try{return JSON.parse(localStorage.getItem('cmpNames')||'{}');}catch(e){return {};}}
+  function save(a,nm){try{localStorage.setItem('cmp',JSON.stringify(a));localStorage.setItem('cmpNames',JSON.stringify(nm));}catch(e){}}
+  function esc(s){return (s||'').replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+  function toggle(slug,name){
+    var a=load(),nm=names(),i=a.indexOf(slug);
+    if(i>=0){a.splice(i,1);delete nm[slug];}
+    else{if(a.length>=MAX){alert('比較は最大'+MAX+'件までです');return;}a.push(slug);if(name)nm[slug]=name;}
+    save(a,nm);refresh();
+  }
+  function remove(slug){var a=load(),nm=names(),i=a.indexOf(slug);if(i>=0){a.splice(i,1);delete nm[slug];save(a,nm);refresh();}}
+  function clear(){save([],{});refresh();}
+  function refresh(){
+    var a=load(),nm=names();
+    var sel={};a.forEach(function(s){sel[s]=1;});
+    var btns=document.querySelectorAll('.cmp-add-btn[data-slug]');
+    for(var i=0;i<btns.length;i++){
+      var b=btns[i],on=!!sel[b.getAttribute('data-slug')];
+      b.classList.toggle('is-active',on);
+      b.textContent=on?'✓ 比較中':'＋ 比較';
+      b.setAttribute('aria-pressed',on?'true':'false');
+    }
+    var bar=document.getElementById('cmpbar');
+    if(!bar)return;
+    if(!a.length){bar.className='cmpbar';bar.innerHTML='';document.body.classList.remove('cmp-open');return;}
+    var base=bar.getAttribute('data-base')||'';
+    var pills=a.map(function(s){return '<span class="pill">'+esc(nm[s]||s)+' <button type="button" data-rm="'+esc(s)+'" aria-label="比較から外す">×</button></span>';}).join('');
+    bar.className='cmpbar on';
+    bar.innerHTML='<div class="cmpbar-inner"><span class="cmpbar-lbl">比較リスト</span>'+pills+
+      '<a class="btn btn-sm" href="'+base+'compare.html?ids='+a.join(',')+'">'+a.length+'件を比較する →</a>'+
+      '<button type="button" class="btn-ghost" data-cmpclear>クリア</button></div>';
+    document.body.classList.add('cmp-open');
+  }
+  document.addEventListener('click',function(e){
+    var t=e.target;
+    var add=t.closest?t.closest('.cmp-add-btn[data-slug]'):null;
+    if(add){e.preventDefault();toggle(add.getAttribute('data-slug'),add.getAttribute('data-name'));return;}
+    var rm=t.closest?t.closest('[data-rm]'):null;
+    if(rm){e.preventDefault();remove(rm.getAttribute('data-rm'));return;}
+    if(t.closest&&t.closest('[data-cmpclear]')){clear();return;}
+  });
+  window.CmpBar={refresh:refresh,toggle:toggle,get:load};
+  if(document.readyState!=='loading')refresh();
+  else document.addEventListener('DOMContentLoaded',refresh);
 })();
 """
 
@@ -1455,22 +4164,48 @@ COMPARE_JS = """(function(){
   var ids=(p.get('ids')||'').split(',').filter(Boolean);
   var root=document.getElementById('cmp');
   function esc(s){return (s||'').replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
-  if(!ids.length){root.innerHTML='<p class="muted">比較する資格が選択されていません。<a href="index.html">トップ</a>で資格にチェックを入れて選んでください。</p>';return;}
+  if(!ids.length){root.innerHTML='<p class="muted">比較する資格が選択されていません。<a href="index.html">資格一覧</a>から各行の「＋比較」で資格を選んでください。</p>';return;}
+  function feeNum(x){var m=(x.fee||'').replace(/,/g,'').match(/([0-9]+)\\s*円/);return m?parseInt(m[1],10):null;}
+  function passNum(x){var m=(x.pass_rate||'').replace(/,/g,'').match(/([0-9]+(?:\\.[0-9]+)?)\\s*%/);return m?parseFloat(m[1]):null;}
   var FIELDS=[['区分','type'],['分野','major'],['カテゴリ','category'],
     ['実施団体','authority'],['受験資格','eligibility'],['試験形式','exam_format'],
     ['受験料','fee'],['合格率','pass_rate'],['実施頻度','frequency']];
+  var TYPE_BADGE={国家:['国家資格','badge-national'],公的:['公的資格','badge-public'],
+    民間:['民間資格','badge-private'],要確認:['区分要確認','badge-unknown'],
+    海外:['海外資格','badge-overseas']};
+  function typeBadge(t){
+    var b=TYPE_BADGE[t]||['区分要確認','badge-unknown'];
+    return '<span class="badge '+b[1]+'">'+esc(b[0])+'</span>';
+  }
   fetch('data/certifications.json').then(function(r){return r.json();}).then(function(all){
     var map={};all.forEach(function(x){map[x.slug]=x;});
     var items=ids.map(function(s){return map[s];}).filter(Boolean);
     if(!items.length){root.innerHTML='<p class="muted">該当する資格データが見つかりませんでした。</p>';return;}
-    var h='<table class="cmp"><thead><tr><th></th>';
-    items.forEach(function(x){h+='<th><a href="c/'+x.slug+'.html">'+esc(x.name)+'</a></th>';});
+    var v=[],seen={};
+    function card(label,x,why){if(!x||seen[label+x.slug])return;seen[label+x.slug]=1;
+      v.push('<div class="cmp-verdict-card"><div class="pick">'+label+'</div>'+
+        '<div class="pickname"><a href="c/'+x.slug+'.html">'+esc(x.name)+'</a></div>'+
+        '<div class="why">'+why+'</div></div>');}
+    if(items.length>=2){
+      var cheap=items.filter(function(x){return feeNum(x)!==null;}).sort(function(a,b){return feeNum(a)-feeNum(b);})[0];
+      if(cheap)card('費用を抑えたいなら',cheap,'受験料が最も安い：'+esc(cheap.fee));
+      var hp=items.filter(function(x){return passNum(x)!==null;}).sort(function(a,b){return passNum(b)-passNum(a);})[0];
+      if(hp)card('合格しやすさなら',hp,'公表合格率が最も高い：'+esc(hp.pass_rate));
+      var nr=items.filter(function(x){return /(なし|不問|制限なし)/.test(x.eligibility||'');})[0];
+      if(nr)card('誰でも受けたいなら',nr,'受験資格の制限なし');
+    }
+    var vhtml=v.length?('<section class="cmp-verdict"><h2 class="cmp-verdict-title">選び方の目安（掲載データに基づく簡易判定）</h2><div class="cmp-verdict-grid">'+v.join('')+'</div></section>'):'';
+    var vroot=document.getElementById('cmpVerdict'); if(vroot)vroot.innerHTML=vhtml;
+    var h='<table class="cmp" style="min-width:'+(130+items.length*150)+'px"><colgroup><col class="cmp-col-label">';
+    items.forEach(function(){h+='<col class="cmp-col-cert">';});
+    h+='</colgroup><thead><tr><th></th>';
+    items.forEach(function(x){h+='<th><a href="c/'+x.slug+'.html">'+esc(x.display_name||x.name)+'</a></th>';});
     h+='</tr></thead><tbody>';
     FIELDS.forEach(function(f){
       h+='<tr><th>'+f[0]+'</th>';
       items.forEach(function(x){
         var v;
-        if(f[1]==='type')v='<span class="badge b-'+x.type+'">'+esc(x.type)+'</span>';
+        if(f[1]==='type')v=typeBadge(x.type);
         else v=x[f[1]]?esc(x[f[1]]):'<span class="muted">公式で確認</span>';
         h+='<td>'+v+'</td>';
       });
@@ -1486,91 +4221,1048 @@ COMPARE_JS = """(function(){
 })();
 """
 
-APP_CSS = """*{box-sizing:border-box}body{margin:0;padding-bottom:64px;font-family:system-ui,-apple-system,"Hiragino Kaku Gothic ProN",Meiryo,sans-serif;color:#1b2430;line-height:1.7;background:#f7f8fa}
-a{color:#1565c0;text-decoration:none}a:hover{text-decoration:underline}
-.site-header{background:#0d47a1;color:#fff;padding:14px 20px;display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
-.site-header .logo{color:#fff;font-weight:700;font-size:1.15rem}.tagline{color:#cfe0fb;font-size:.85rem}
-.container{max-width:920px;margin:0 auto;padding:22px 18px}
-h1{font-size:1.5rem;margin:.2em 0 .4em}.lead{color:#43505f}
-.controls{display:flex;gap:10px;flex-wrap:wrap;margin:16px 0}
-.controls input,.controls select{padding:10px 12px;border:1px solid #c5ccd6;border-radius:8px;font-size:1rem}
-.controls input{flex:1 1 260px}
-.results{list-style:none;padding:0;margin:0}
-.results li{background:#fff;border:1px solid #e6e9ef;border-radius:10px;padding:12px 14px;margin-bottom:8px}
-.results li a{font-weight:600}.results .meta{display:block;color:#6b7682;font-size:.82rem;margin-top:3px}
-.badge{display:inline-block;padding:1px 8px;border-radius:999px;font-size:.75rem;font-weight:700;color:#fff;vertical-align:middle}
-.badge-national,.b-国家{background:#c62828}.badge-public,.b-公的{background:#1565c0}
-.badge-private,.b-民間{background:#2e7d32}.badge-unknown,.b-要確認{background:#8a939e}.badge-overseas{background:#6a1b9a}
-.crumbs{font-size:.85rem;color:#6b7682;margin-bottom:8px}
-table.spec{width:100%;border-collapse:collapse;background:#fff;border:1px solid #e6e9ef;border-radius:10px;overflow:hidden}
-table.spec th,table.spec td{text-align:left;padding:10px 14px;border-bottom:1px solid #eef1f5;vertical-align:top}
-table.spec th{width:34%;background:#f2f5fa;color:#3a4757;font-weight:600;white-space:nowrap}
-.muted{color:#98a1ad}.related{margin-top:24px}.related ul{padding-left:1.1em}
+
+OCC_SEARCH_JS = """(function(){
+  var q=document.getElementById('occ-q'),mj=document.getElementById('occ-major'),
+      res=document.getElementById('occ-results'),stat=document.getElementById('occ-status'),
+      stat0=document.getElementById('occ-static');
+  if(!q)return;
+  var DATA=[];
+  function esc(s){return (s||'').replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+  function render(){
+    var t=(q.value||'').trim().toLowerCase(),m=mj.value;
+    if(!t&&!m){res.hidden=true;stat0.hidden=false;stat.textContent='';return;}
+    var out=DATA.filter(function(x){
+      if(m&&x.m!==m)return false;
+      if(t&&x.n.toLowerCase().indexOf(t)<0)return false;
+      return true;
+    });
+    stat0.hidden=true;res.hidden=false;
+    stat.textContent=out.length+' 件';
+    res.innerHTML=out.slice(0,400).map(function(x){
+      return '<li><a href="'+x.id+'.html">'+esc(x.n)+'</a> <span class="muted">（'+x.c+'資格）</span></li>';
+    }).join('')||'<li class="empty-state">条件に一致する職種が見つかりませんでした。キーワードを短くするか、分野を「すべて」に戻してみてください。</li>';
+    if(out.length>400)res.innerHTML+='<li class="muted">…他 '+(out.length-400)+' 件（絞り込んでください）</li>';
+  }
+  fetch('../data/occupations.json').then(function(r){return r.json();}).then(function(all){
+    DATA=all.slice().sort(function(a,b){return b.c-a.c||(a.n<b.n?-1:1);});
+    var mset={};all.forEach(function(x){if(x.m)mset[x.m]=1;});
+    Object.keys(mset).sort().forEach(function(v){var o=document.createElement('option');o.value=v;o.textContent=v;mj.appendChild(o);});
+    render();
+  });
+  q.addEventListener('input',render);mj.addEventListener('change',render);
+})();
+"""
+
+COURSES_SEARCH_JS = """(function(){
+  var q=document.getElementById('course-q'),
+      tb=document.querySelector('#course-table tbody'),
+      cnt=document.getElementById('course-count'),
+      empty=document.getElementById('course-empty');
+  if(!tb)return;
+  var rows=[].slice.call(tb.querySelectorAll('tr:not(#course-empty)'));
+  function render(){
+    var t=(q&&q.value||'').trim().toLowerCase();
+    var vis=0;
+    rows.forEach(function(tr){
+      var ok=!t||tr.textContent.toLowerCase().indexOf(t)>=0;
+      tr.hidden=!ok;
+      if(ok)vis++;
+    });
+    if(empty)empty.hidden=vis>0||!rows.length;
+    if(cnt)cnt.textContent=vis+'件';
+  }
+  if(q)q.addEventListener('input',render);
+})();
+"""
+
+APP_CSS = """:root{
+--ink-deep:#1a1a1a;--ink:#1a1a1a;--muted:#666666;
+--header-bg:#ffffff;
+--on-dark:#c4c4c4;--on-dark-muted:#888888;
+--gray-300:#c4c4c4;--gray-200:#dcdcdc;--gray-100:#f0f0f0;--gray-50:#f7f7f7;
+--table-head-bg:#edf2f8;--table-border:#cddbeb;--table-hover-bg:#e9f1fa;
+--gray-800:#434343;--gray-700:#525252;--gray-400:#7f7f7f;--white:#fff;--page-bg:#eef0f1;
+--accent:#0b57d0;--accent-hover:#0847ad;--accent-light:#e8f1fd;--accent-ring:rgba(11,87,208,.25);
+--radius:6px;
+/* テキスト色: ink-deep=見出し / ink=本文・表・通常リンク / muted=補足。on-dark*=ヘッダー等 */
+/* タイプスケール: xl=大見出し / lg=セクション見出し(20px) / md=本文 / sm=補助・メタ / table=表(15px) */
+--text-xl:clamp(1.375rem,4vw,2.25rem);--text-lg:1.25rem;--text-md:1.0625rem;--text-sm:0.875rem;--text-table:0.9375rem;
+/* フォントウェイト: regular=本文 / semibold=ラベル・カード名・h3 / bold=見出し・強調 */
+--fw-regular:400;--fw-semibold:600;--fw-bold:700;--page-gutter:36px}
+*{box-sizing:border-box}
+html{font-size:16px}
+body{margin:0;min-height:100vh;display:flex;flex-direction:column;font-family:"Noto Sans JP",system-ui,-apple-system,"Hiragino Kaku Gothic ProN",Meiryo,sans-serif;font-size:var(--text-md);font-weight:var(--fw-regular);color:var(--ink);background:var(--page-bg);line-height:1.7;-webkit-font-smoothing:antialiased;overflow-wrap:break-word;overflow-x:clip}
+h2{font-size:var(--text-lg);font-weight:var(--fw-bold);color:var(--ink-deep)}
+h3{font-size:var(--text-lg);font-weight:var(--fw-semibold);color:var(--ink-deep)}
+a{color:var(--ink)}a:hover{text-decoration:underline}
+img{max-width:100%}
+:focus-visible{outline:3px solid var(--accent-ring);outline-offset:2px}
+.skip-link{position:absolute;left:-9999px}.skip-link:focus{left:8px;top:8px;background:#fff;padding:8px 12px;z-index:50;border-radius:6px}
+
+/* Header */
+.site-header{background:var(--header-bg);color:var(--ink);border-bottom:1px solid var(--gray-200);position:sticky;top:0;z-index:30;box-shadow:0 1px 0 rgba(0,0,0,.04)}
+@media(prefers-reduced-motion:no-preference){html{scroll-behavior:smooth}}
+html{scroll-padding-top:64px}
+.header-inner{max-width:1200px;margin:0 auto;padding:12px var(--page-gutter);display:flex;align-items:center;gap:16px;min-width:0}
+.header-brand{flex-shrink:0;display:flex;align-items:center}
+.logo{display:flex;align-items:center;gap:9px;text-decoration:none;color:var(--ink-deep);flex-shrink:0}
+.logo-mark{min-width:54px;min-height:36px;padding:6px 10px 5px;border-radius:4px;background:linear-gradient(120deg,#0b57d0,#28a3e6);display:inline-flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;flex-shrink:0;color:#fff;box-sizing:border-box;transition:opacity .15s}
+.logo-mark-line{display:block;font-size:12px;font-weight:700;line-height:1.05;text-align:center;white-space:nowrap;letter-spacing:.02em}
+.logo-mark-line--sub{font-size:11px;letter-spacing:.04em}
+.logo-stack{display:flex;flex-direction:column;align-items:flex-start;gap:1px;line-height:1.15;min-width:0}
+.logo-text{font-size:16px;font-weight:700;letter-spacing:-0.01em;white-space:nowrap;color:var(--ink-deep)}
+.logo-sub{font-size:11.5px;font-weight:600;color:var(--muted);letter-spacing:0;line-height:1.25;white-space:normal;max-width:min(240px,52vw)}
+.logo:hover{text-decoration:none;color:var(--ink-deep)}
+.logo:hover .logo-mark{opacity:.88}
+.site-tagline{color:var(--muted);font-size:var(--text-sm);font-weight:400;line-height:1.3}
+.ico-svg{width:18px;height:18px;display:block;flex-shrink:0}
+.header-nav{display:flex;align-items:center;flex-wrap:wrap;margin-left:auto;min-width:0}
+.header-nav a:not(.header-nav-cta){color:var(--ink);font-size:var(--text-sm);text-decoration:none;padding:6px 8px;white-space:nowrap;border-radius:4px}
+.header-nav a:not(.header-nav-cta):hover{color:var(--ink-deep);background:var(--gray-50);text-decoration:none}
+.header-nav a.is-current{color:var(--ink-deep);font-weight:600}
+.header-nav-cta{margin-left:8px;padding:7px 12px;background:var(--accent);color:#fff !important;font-size:var(--text-sm);font-weight:600;border-radius:var(--radius);line-height:1.2;text-decoration:none}
+.header-nav a.header-nav-cta:hover,.header-nav a.header-nav-cta:focus-visible{background:var(--accent-hover);color:#fff !important;text-decoration:none}
+.header-nav-cta--course{background:#127a3e}
+.header-nav a.header-nav-cta--course:hover,.header-nav a.header-nav-cta--course:focus-visible{background:#0e6231}
+.header-nav-sep{color:var(--gray-400);font-size:var(--text-sm);user-select:none;padding:0 1px}
+.header-actions{display:none;align-items:center;gap:2px;margin-left:auto;flex-shrink:0}
+.header-icon-btn{display:inline-flex;align-items:center;justify-content:center;background:transparent;border:none;color:var(--ink);cursor:pointer;padding:8px;border-radius:6px;line-height:0;font-family:inherit}
+.header-icon-btn:hover{color:var(--ink-deep);background:var(--gray-100)}
+.header-search-panel,.header-menu-panel{display:none;border-top:1px solid var(--gray-200);background:var(--header-bg)}
+.site-header--search-open .header-search-panel{display:block}
+.site-header--menu-open .header-menu-panel{display:flex}
+.header-search-panel{padding:12px var(--page-gutter) 14px}
+.header-search-form{max-width:1200px;margin:0 auto;display:flex;gap:8px;min-width:0}
+.header-search-form input{flex:1;min-width:0;padding:10px 14px;border:1px solid var(--gray-300);border-radius:var(--radius);background:#fff;color:var(--ink);font-size:var(--text-md);font-family:inherit}
+.header-search-form input::placeholder{color:var(--muted)}
+.header-search-form button{padding:10px 16px;background:var(--accent);color:#fff;border:none;border-radius:var(--radius);font-family:inherit;font-weight:600;cursor:pointer;white-space:nowrap}
+.header-search-form button:hover{background:var(--accent-hover)}
+.header-menu-panel{flex-direction:column;max-width:1200px;margin:0 auto;padding:4px var(--page-gutter) 10px;width:100%}
+.header-menu-panel a{color:var(--ink);text-decoration:none;padding:12px 4px;border-bottom:1px solid var(--gray-200);font-size:var(--text-md)}
+.header-menu-panel a:last-child{border-bottom:none}
+.header-menu-panel a:hover{color:var(--ink-deep);background:var(--gray-50);text-decoration:none}
+@media(max-width:768px){:root{--page-gutter:20px}.header-nav{display:none}.header-actions{display:flex}.header-inner{padding:10px var(--page-gutter)}.logo-mark{min-width:48px;min-height:32px;padding:5px 8px 4px}.logo-mark-line{font-size:11px}.logo-mark-line--sub{font-size:10px}.logo-text{font-size:15px}.logo-sub{font-size:11px;max-width:min(210px,60vw)}.site-tagline{display:none}.container{padding:20px var(--page-gutter) 36px}.block-band{margin-left:calc(-1*var(--page-gutter));margin-right:calc(-1*var(--page-gutter));padding:32px var(--page-gutter)}.block-all-certs{padding:40px var(--page-gutter)}}
+
+.container{max-width:1200px;margin:0 auto;padding:28px var(--page-gutter) 36px;width:100%;flex:1 0 auto;min-width:0;background:#fff;box-shadow:0 0 24px rgba(0,0,0,.05)}
+.container:has(.page-detail){padding-top:36px;padding-bottom:56px}
+
+/* Hero（濃紺グラデーション＋白文字。検索ボックスを主役に） */
+.hero{margin-top:-28px;margin-bottom:0;margin-left:calc(50% - 50vw);margin-right:calc(50% - 50vw);padding:64px var(--page-gutter) 48px;text-align:center;background:linear-gradient(120deg,#0b57d0 0%,#1877e0 55%,#28a3e6 100%)}
+.hero-inner{max-width:1200px;margin:0 auto}
+.hero h1{font-weight:800;line-height:1.4;margin:0 0 16px;letter-spacing:.02em}
+.hero-h1-line{display:block;font-size:var(--text-xl);font-weight:800;color:#fff;letter-spacing:.02em}
+.hero-h1-line+.hero-h1-line{margin-top:2px}
+.hero-sub{font-size:1.125rem;color:#d9e4f2;line-height:1.75;max-width:40em;margin:0 auto}
+.hero-sub #count{color:#fff;font-weight:700;text-decoration:underline;text-decoration-color:rgba(255,255,255,.6);text-underline-offset:3px}
+.hero-search{margin:24px auto 0;max-width:680px;position:relative;text-align:left}
+.hero-search input{width:100%;padding:15px 18px 15px 46px;border:none;border-radius:10px;font-size:1.0625rem;background:#fff;color:var(--ink);font-family:inherit;box-shadow:0 8px 28px rgba(6,20,40,.35)}
+.hero-search input::placeholder{color:var(--muted)}
+.hero-search input:focus,.hero-search input:focus-visible{outline:3px solid #fff;outline-offset:2px}
+.hero-search .ico{position:absolute;left:16px;top:50%;transform:translateY(-50%);color:#5a7ba6;display:flex;pointer-events:none;z-index:1}
+.hero-suggest{position:absolute;left:0;right:0;top:calc(100% + 6px);background:#fff;border:1px solid var(--gray-200);border-radius:var(--radius);box-shadow:0 8px 24px rgba(0,0,0,.1);z-index:25;padding:10px 0 6px;text-align:left}
+.hero-suggest-label{margin:0 0 6px;padding:0 16px;font-size:var(--text-sm);font-weight:var(--fw-semibold);color:var(--muted)}
+.hero-suggest-list{list-style:none;margin:0;padding:0;max-height:min(320px,50vh);overflow-y:auto}
+.hero-suggest-item{display:flex;align-items:baseline;justify-content:space-between;gap:12px;width:100%;text-align:left;padding:10px 16px;border:none;background:transparent;font:inherit;font-size:var(--text-md);font-weight:var(--fw-semibold);color:var(--ink-deep);cursor:pointer;line-height:1.4}
+.hero-suggest-item:hover,.hero-suggest-item:focus-visible{background:var(--accent-light);outline:none}
+a.hero-suggest-item{text-decoration:none}a.hero-suggest-item:hover{text-decoration:none}
+.hero-suggest-meta{font-size:var(--text-sm);font-weight:var(--fw-regular);color:var(--muted);white-space:nowrap;flex-shrink:0}
+.hero-result{margin-top:12px;font-size:var(--text-sm);color:#c7d5e8}
+.hero-result a{color:#fff;font-weight:600;text-decoration:underline;text-underline-offset:2px}
+.hero-result strong{color:#fff}
+@media(max-width:768px){.hero{margin-top:-20px}}
+
+/* Blocks */
+.block{margin-bottom:0}
+.block-primary{margin-bottom:40px}.block-secondary{margin-bottom:34px}
+.block-band{margin-left:calc(-1*var(--page-gutter));margin-right:calc(-1*var(--page-gutter));padding:40px var(--page-gutter);border-top:1px solid var(--gray-200);margin-bottom:0}
+.hero+.block-band{border-top:none}
+.container>.block-band:last-of-type{margin-bottom:-36px}
+.block-band--gray{background:#f4f7fb}
+.block-band--white{background:#fff}
+.recent-inset{margin-top:32px;padding-top:32px}
+.recent-inset .block-head{margin-bottom:14px}
+.block-head{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:18px;gap:8px;flex-wrap:wrap}
+.block-head h2{font-size:var(--text-lg);font-weight:700;color:var(--ink-deep);margin:0;padding-left:12px;border-left:4px solid var(--accent);line-height:1.4}
+.block-head p{font-size:var(--text-sm);color:var(--muted);margin:0}
+.block-all-certs{padding:48px var(--page-gutter);margin-bottom:0}
+.block-all-certs .block-head{margin-bottom:24px}
+.card-link{position:relative}
+.card-link::after{content:"→";position:absolute;right:12px;top:14px;font-size:var(--text-sm);font-weight:600;color:var(--muted);opacity:0;transition:opacity .15s,color .15s;pointer-events:none}
+.card-link:hover::after,.card-link:focus-visible::after{opacity:1;color:var(--accent)}
+.card-link:hover,.card-link:focus-visible{background:var(--accent-light);border-color:var(--accent);text-decoration:none}
+
+
+/* Popular */
+.popular-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.pop-card{display:flex;flex-direction:column;background:#fff;color:var(--ink);border-radius:var(--radius);padding:14px 32px 12px 13px;text-decoration:none;border:1px solid var(--gray-200);border-top:3px solid #ead9ac;transition:border-color .15s,background .15s}
+.pop-card:hover{border-top-color:#c9971c}
+.pop-card-head{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.pop-card-trophy{flex-shrink:0;width:36px;height:36px;display:flex;align-items:center;justify-content:center;background:#f7f3e8;border-radius:var(--radius);color:#b8860b}
+.pop-card-trophy .icon-svg{width:20px;height:20px}
+.pop-card-name{font-size:1rem;font-weight:var(--fw-semibold);line-height:1.35;color:var(--ink-deep);margin:0;flex:1;min-width:0}
+.pop-card-facts{list-style:none;margin:auto 0 0;padding:6px 0 0;display:flex;flex-direction:column;gap:5px}
+.pop-card-facts li{display:grid;grid-template-columns:4.8em 1fr;gap:4px;font-size:var(--text-sm);line-height:1.45}
+.pop-card-facts .k{color:#5a6570}.pop-card-facts .v{color:var(--ink);font-weight:600}
+.pop-card-facts li.pop-card-diff .v{font-weight:400}
+.pop-card-facts .diff-badge{font-size:var(--text-sm);vertical-align:middle}
+@media(max-width:720px){.popular-grid{grid-template-columns:repeat(2,1fr);gap:10px}.pop-card--more{display:none}.popular-more{display:block}}
+.popular-more,.field-more,.compare-more{margin:16px 0 0;text-align:right;display:none}
+.popular-more a,.field-more a,.compare-more a{font-size:var(--text-sm);font-weight:var(--fw-semibold);color:var(--ink);text-decoration:underline;text-underline-offset:2px}
+@media(max-width:720px){.popular-more{display:block}}
+.purpose-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+@media(max-width:640px){.purpose-grid{grid-template-columns:1fr}}
+.purpose-card{display:flex;align-items:flex-start;gap:12px;background:#fff;border:1px solid var(--gray-200);border-radius:var(--radius);padding:16px 36px 16px 14px;text-decoration:none;color:inherit;transition:border-color .15s,background .15s;position:relative}
+.purpose-card .icon{flex-shrink:0;width:44px;height:44px;display:flex;align-items:center;justify-content:center;background:var(--accent-light);border-radius:var(--radius);color:var(--accent-hover)}
+.purpose-card .icon-svg{width:26px;height:26px}
+.purpose-card-body{min-width:0;flex:1}
+.purpose-card h3{font-size:1rem;font-weight:var(--fw-semibold);line-height:1.35;margin:0 0 4px;color:var(--ink-deep)}
+.purpose-card-for{font-size:var(--text-sm);color:#5a6570;line-height:1.5;margin:0}
+.purpose-card::after{content:"→";position:absolute;right:12px;top:14px;font-size:var(--text-sm);font-weight:600;color:var(--muted);opacity:0;transition:opacity .15s,color .15s;pointer-events:none}
+.purpose-card:hover::after,.purpose-card:focus-visible::after{opacity:1;color:var(--accent)}
+.purpose-card:hover,.purpose-card:focus-visible{border-color:var(--muted);background:var(--accent-light);text-decoration:none}
+/* 資格診断 */
+.shindan{background:#fff;border:1px solid var(--gray-200);border-radius:10px;padding:20px 20px 22px}
+.shindan-fields{display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:16px}
+@media(max-width:760px){.shindan-fields{grid-template-columns:1fr}}
+.shindan-field{min-width:0;display:flex;flex-direction:column}
+.shindan-label{display:block;font-size:var(--text-sm);color:var(--muted);font-weight:600;margin-bottom:7px}
+.shindan-seg{display:flex;flex-wrap:wrap;gap:7px}
+.sd-chip{font-family:inherit;font-size:var(--text-sm);font-weight:600;color:var(--ink);background:#fff;border:1px solid var(--gray-300);border-radius:999px;padding:7px 14px;cursor:pointer;transition:.12s}
+.sd-chip:hover{border-color:var(--accent);color:var(--accent)}
+.sd-chip.is-on{background:var(--accent);border-color:var(--accent);color:#fff}
+.shindan-field select{width:100%;padding:9px 11px;border:1px solid var(--gray-300);border-radius:var(--radius);font-size:var(--text-md);font-family:inherit;background:#fff;color:var(--ink);cursor:pointer}
+.shindan-prefs{margin-top:16px}
+.shindan-actions{display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin-top:16px}
+.sd-run{font-family:inherit;font-size:var(--text-md);font-weight:700;color:#fff;background:var(--accent);border:none;border-radius:var(--radius);padding:11px 24px;cursor:pointer;transition:background .15s}
+.sd-run:hover{background:var(--accent-hover)}
+.shindan-note{font-size:var(--text-sm);color:var(--muted);line-height:1.5}
+.shindan-result{margin-top:18px}
+.shindan-result-head{font-size:var(--text-sm);color:var(--muted);margin:0 0 12px}
+.shindan-result-head strong{color:var(--ink-deep)}
+.sd-cards{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin:0;padding:0;list-style:none}
+@media(max-width:640px){.sd-cards{grid-template-columns:1fr}}
+.sd-card{display:flex;flex-direction:column;gap:6px;background:#fff;border:1px solid var(--gray-200);border-radius:var(--radius);padding:14px 40px 14px 15px;text-decoration:none;color:inherit;position:relative;transition:border-color .15s,background .15s}
+.sd-card:hover,.sd-card:focus-visible{border-color:var(--muted);background:var(--accent-light);text-decoration:none}
+.sd-card::after{content:"→";position:absolute;right:14px;top:14px;font-weight:700;color:var(--muted);opacity:0;transition:opacity .15s,color .15s}
+.sd-card:hover::after,.sd-card:focus-visible::after{opacity:1;color:var(--accent)}
+.sd-card-rank{position:absolute;left:0;top:0;background:var(--accent);color:#fff;font-size:11px;font-weight:700;padding:2px 8px;border-radius:var(--radius) 0 var(--radius) 0}
+.sd-card-name{font-size:var(--text-md);font-weight:700;color:var(--ink-deep);line-height:1.4;padding-left:34px}
+.sd-card-meta{font-size:var(--text-sm);color:#5a6570;line-height:1.5}
+.sd-card-reasons{display:flex;flex-wrap:wrap;gap:6px;margin-top:2px}
+.sd-reason{font-size:12px;font-weight:600;color:var(--accent-hover);background:var(--accent-light);border-radius:999px;padding:2px 9px}
+.shindan-empty{font-size:var(--text-md);color:var(--muted);padding:8px 0}
+.recent-list{list-style:none;display:flex;flex-wrap:wrap;gap:8px;margin:0;padding:0}
+.recent-list a{display:inline-block;padding:8px 12px;border:1px solid var(--gray-200);border-radius:var(--radius);font-size:var(--text-sm);font-weight:600;color:var(--ink-deep);text-decoration:none;background:#fff}
+.recent-list a:hover{border-color:var(--muted);text-decoration:none}
+.all-certs-filters{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:14px 12px;margin-bottom:16px}
+.block-all-certs .filter-field label{display:block;font-size:var(--text-sm);color:var(--muted);margin-bottom:6px;font-weight:600}
+.block-all-certs .filter-field select,.block-all-certs .filter-field input[type=search]{width:100%;padding:8px 10px;border:1px solid var(--gray-300);border-radius:4px;font-size:var(--text-sm);font-family:inherit;background:#fff;color:var(--ink)}
+.block-all-certs .all-certs-check{display:inline-flex;align-items:center;gap:6px;font-size:var(--text-sm);color:var(--ink);margin-bottom:20px;cursor:pointer}
+.all-certs-check input{width:17px;height:17px;accent-color:var(--accent)}
+.block-all-certs .all-certs-count{font-size:var(--text-sm);color:var(--muted);margin-bottom:12px}
+.all-certs-table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;border:1px solid var(--table-border);border-radius:var(--radius);background:#fff}
+.hscroll{position:relative}
+.hscroll-fade{position:absolute;top:1px;right:1px;bottom:1px;width:30px;pointer-events:none;border-radius:0 var(--radius) var(--radius) 0;background:linear-gradient(to left,rgba(15,30,60,.15),rgba(15,30,60,0));opacity:0;transition:opacity .18s}
+.hscroll.can-right .hscroll-fade{opacity:1}
+@media(hover:none){.hscroll.can-right .hscroll-fade{opacity:1}}
+.all-certs-table{width:100%;border-collapse:collapse;background:#fff;border:none;border-radius:0;font-size:var(--text-table);color:var(--ink);table-layout:fixed}
+.all-certs-table--4col{min-width:640px}
+.all-certs-table--5col{min-width:760px}
+.all-certs-table--4col col.all-certs-col-name{width:32%}
+.all-certs-table--4col col.all-certs-col-study{width:14%}
+.all-certs-table--4col col.all-certs-col-pass{width:16%}
+.all-certs-table--4col col.all-certs-col-freq{width:38%}
+.all-certs-table--5col col.all-certs-col-name{width:23%}
+.all-certs-table--5col col.all-certs-col-major{width:17%}
+.all-certs-table--5col col.all-certs-col-study{width:14%}
+.all-certs-table--5col col.all-certs-col-pass{width:13%}
+.all-certs-table--5col col.all-certs-col-freq{width:33%}
+.all-certs-table--ranked{min-width:780px}
+.all-certs-table--ranked col.all-certs-col-rank{width:56px}
+.all-certs-table--ranked.all-certs-table--5col col.all-certs-col-name{width:22%}
+.all-certs-table--ranked.all-certs-table--5col col.all-certs-col-major{width:15%}
+.all-certs-table--ranked.all-certs-table--5col col.all-certs-col-study{width:17%}
+.all-certs-table--ranked.all-certs-table--5col col.all-certs-col-pass{width:12%}
+.all-certs-table--ranked.all-certs-table--5col col.all-certs-col-freq{width:29%}
+.all-certs-table--4col thead th:nth-child(2),
+.all-certs-table--4col thead th:nth-child(3),
+.all-certs-table--5col thead th:nth-child(3),
+.all-certs-table--5col thead th:nth-child(4){text-align:right}
+.all-certs-table--ranked.all-certs-table--5col thead th:nth-child(3){text-align:left}
+.all-certs-table--ranked.all-certs-table--5col thead th:nth-child(5){text-align:right}
+.all-certs-th-rank{text-align:center}
+.all-certs-rank{text-align:center;color:var(--muted);font-weight:700;font-variant-numeric:tabular-nums}
+.all-certs-rank--top{color:var(--accent)}
+.all-certs-table thead th{text-align:left;padding:11px 14px;background:#edf2f8;color:var(--ink);font-weight:var(--fw-semibold);font-size:1rem;border-bottom:2px solid #cddbeb;white-space:nowrap}
+.all-certs-table tbody td{padding:11px 14px;border-bottom:1px solid var(--table-border);vertical-align:middle;line-height:1.5;font-size:var(--text-table);color:var(--ink);overflow-wrap:break-word;word-break:break-word;overflow:hidden}
+.all-certs-table tbody tr.cert-row{cursor:pointer;transition:background-color .12s ease}
+.all-certs-table tbody tr.cert-row:hover td{background:var(--accent-light)}
+.all-certs-table tbody tr.cert-row:focus-visible{outline:2px solid var(--accent-ring);outline-offset:-2px}
+.all-certs-table tbody tr:last-child td{border-bottom:none}
+.all-certs-name{min-width:12em;max-width:0}
+.all-certs-name-inner{display:inline-flex;align-items:center;gap:6px;max-width:100%;min-width:0}
+.all-certs-trophy{flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;color:#b8860b;background:#f7f3e8;border-radius:4px}
+.all-certs-trophy .icon-svg{width:14px;height:14px}
+.all-certs-name-text{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;font-weight:var(--fw-semibold);color:var(--ink-deep)}
+.all-certs-table tbody tr.cert-row:hover .all-certs-name-text{color:var(--accent)}
+.all-certs-cell{font-weight:400;color:var(--ink)}
+.all-certs-cell--major,.all-certs-cell--pass,.all-certs-cell--freq{white-space:normal}
+.all-certs-cell--study{white-space:nowrap;text-align:right}
+.all-certs-cell--pass{text-align:right}
+.all-certs-num{font-variant-numeric:tabular-nums;color:var(--ink)}
+.all-certs-table .empty-state{white-space:normal;text-align:center;color:var(--muted);background:var(--gray-50);padding:22px 16px;line-height:1.75;font-size:var(--text-sm)}
+.pagination{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin-top:28px;padding-top:4px}
+.block-all-certs .pagination-status{font-size:var(--text-sm);color:var(--muted)}
+.pagination-links{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.block-all-certs .pagination-btn,.block-all-certs .pagination-num{font-size:var(--text-sm);color:var(--ink)}
+.pagination-btn,.pagination-num{display:inline-flex;align-items:center;justify-content:center;min-width:34px;min-height:34px;padding:0 9px;font-size:var(--text-sm);font-weight:600;border:1px solid var(--gray-200);border-radius:4px;background:#fff;color:var(--ink-deep);text-decoration:none;line-height:1;cursor:pointer;font-family:inherit}
+.pagination-btn:hover,.pagination-num:hover{border-color:var(--muted);text-decoration:none}
+.pagination-num.is-current{background:var(--ink-deep);color:#fff;border-color:var(--ink-deep)}
+.pagination-btn.is-disabled,.pagination-num.is-disabled{opacity:.4;pointer-events:none}
+.pagination-ellipsis{font-size:var(--text-sm);color:var(--muted);padding:0 2px}
+@media(max-width:1024px){.all-certs-filters{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:720px){.all-certs-filters{grid-template-columns:repeat(2,minmax(0,1fr))}.pagination{flex-direction:column;align-items:stretch}.pagination-links{justify-content:center}}
+
+/* 分野別・目的別ガイド（トップの資格一覧表と同じデザイン） */
+.page-bunya .all-certs-table-wrap,
+.page-feature .all-certs-table-wrap{margin-top:8px}
+.page-feature .hub-grp + .all-certs-table-wrap{margin-top:4px}
+.page-bunya .all-certs-cell--cat,
+.page-feature .all-certs-cell--cat{white-space:normal;min-width:8em;max-width:14em}
+
+/* Stats page */
+.stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:16px 0}
+.stat-card{display:flex;flex-direction:column;gap:2px;background:var(--gray-50);border:1px solid var(--gray-200);border-radius:var(--radius);padding:14px 16px}
+.stat-val{font-size:1.5rem;font-weight:700;color:var(--accent,#1a4f8f)}
+.stat-label{font-size:var(--text-sm);font-weight:600;color:var(--ink-deep)}
+.stat-note{font-size:var(--text-xs,.78rem);color:var(--muted)}
+.stats-table th{text-align:left;font-size:1rem}.stats-table td{text-align:right;white-space:nowrap}
+@media(max-width:640px){.stats-grid{grid-template-columns:repeat(2,1fr)}}
+.cal-nav{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0}
+.cal-nav a{font-size:var(--text-sm);padding:5px 11px;background:var(--gray-50);border:1px solid var(--gray-200);border-radius:999px;text-decoration:none;color:var(--ink-deep)}
+.cal-month{margin:18px 0}.cal-month h2{font-size:1.1rem}
+.cal-back{font-size:var(--text-sm);margin:10px 0 0}.cal-back a{color:var(--muted)}
+.detail-faq{margin:32px 0}
+.faq-item{border:1px solid var(--gray-200);border-radius:var(--radius);margin:8px 0;background:var(--gray-50)}
+.faq-item summary{cursor:pointer;padding:12px 15px;font-weight:600;color:var(--ink-deep);list-style-position:inside}
+.faq-item summary:hover{color:var(--accent,#1a4f8f)}
+.faq-item .faq-a{padding:0 15px 13px;color:var(--ink,#333);line-height:1.7}
+.finder-grid{list-style:none;padding:0;display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:10px 0}
+.finder-card a{display:flex;flex-direction:column;gap:3px;padding:13px 15px;background:var(--gray-50);border:1px solid var(--gray-200);border-radius:var(--radius);text-decoration:none;height:100%}
+.finder-card a:hover{border-color:var(--accent,#1a4f8f)}
+.finder-card-t{font-weight:700;color:var(--ink-deep)}.finder-card-d{font-size:var(--text-sm);color:var(--muted)}
+.finder-chips,.finder-grid{margin:10px 0}.finder-chips{list-style:none;padding:0;display:flex;flex-wrap:wrap;gap:8px}
+.finder-chip a{display:inline-block;padding:7px 13px;background:var(--gray-50);border:1px solid var(--gray-200);border-radius:999px;text-decoration:none;color:var(--ink-deep);font-size:var(--text-sm)}
+@media(max-width:640px){.finder-grid{grid-template-columns:1fr}}
+
+/* Courses (おすすめ試験対策講座) */
+.course-controls{align-items:flex-end;margin-top:20px}
+.course-filter-field{display:flex;flex-direction:column;gap:6px;flex:1 1 260px;min-width:0}
+.course-filter-field input,.course-filter-field select{width:100%;flex:0 0 auto}
+.course-filter-label{font-size:var(--text-sm);font-weight:600;color:var(--muted)}
+.courses-count{margin:-4px 0 12px}
+.courses-table-wrap{margin-bottom:20px}
+.courses-table{min-width:480px}
+.courses-col-name{width:38%}
+.courses-col-title{width:62%}
+.courses-table .courses-cell-name a{font-weight:var(--fw-semibold);color:var(--ink-deep);text-decoration:none}
+.courses-table .courses-cell-name a:hover{color:var(--accent);text-decoration:underline;text-underline-offset:2px}
+.courses-table .courses-cell-title a{color:var(--accent);font-weight:var(--fw-semibold);text-decoration:none}
+.courses-table .courses-cell-title a:hover{text-decoration:underline;text-underline-offset:2px}
+.course-ext{font-size:.85em;margin-left:2px;font-weight:700}
+.courses-foot{margin-top:18px}
+
+/* Fields */
+.field-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+@media(max-width:900px){.field-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:520px){.field-grid{grid-template-columns:1fr}}
+.field-card{display:flex;align-items:flex-start;gap:12px;background:#fff;border:1px solid var(--gray-200);border-radius:8px;padding:13px;text-decoration:none;color:inherit;transition:border-color .15s,background .15s}
+.field-card:hover,.field-card:focus-visible{background:var(--accent-light);border-color:var(--accent);text-decoration:none}
+.field-card .icon{flex-shrink:0;width:40px;height:40px;display:flex;align-items:center;justify-content:center;background:var(--accent-light);border-radius:var(--radius);color:var(--accent-hover)}
+.field-card .icon-svg{width:22px;height:22px}
+.field-card-body{min-width:0;flex:1}
+.field-card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin:0 0 4px}
+.field-card h3{font-size:1rem;font-weight:var(--fw-semibold);line-height:1.35;color:var(--ink-deep);margin:0}
+.field-count{flex-shrink:0;margin-top:1px;padding:3px 7px;border-radius:4px;font-size:var(--text-sm);font-weight:600;color:var(--muted);background:var(--gray-100);border:1px solid var(--gray-200);line-height:1.2;white-space:nowrap}
+.field-examples{font-size:var(--text-sm);color:#5a6570;line-height:1.45;margin:0}
+
+/* Compare cards */
+.compare-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+@media(max-width:900px){.compare-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:560px){.compare-grid{grid-template-columns:1fr}}
+.compare-card{display:flex;flex-direction:column;position:relative;background:#fff;border:1px solid var(--gray-200);border-radius:8px;padding:14px 40px 14px 14px;text-decoration:none;color:inherit;transition:border-color .15s,background .15s}
+.compare-card:hover,.compare-card:focus-visible{background:var(--accent-light);border-color:var(--accent);text-decoration:none}
+.compare-tag{font-size:var(--text-sm);font-weight:600;color:var(--accent-hover);letter-spacing:.04em;margin-bottom:6px}
+.compare-names{font-size:1rem;font-weight:var(--fw-semibold);line-height:1.45;color:var(--ink-deep);margin:0;flex:1}
+.compare-names .compare-sep{color:var(--muted);font-weight:400;font-size:var(--text-sm);margin:0 .2em}
+.compare-go{position:absolute;right:14px;top:50%;transform:translateY(-50%);font-size:var(--text-md);font-weight:600;color:var(--accent);line-height:1}
+.compare-card:hover .compare-go,.compare-card:focus-visible .compare-go{color:var(--accent-hover)}
+
+/* Buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;background:var(--accent);color:#fff;padding:9px 18px;border-radius:var(--radius);font-size:var(--text-md);font-weight:600;text-decoration:none;border:none;cursor:pointer;font-family:inherit}
+.btn:hover{background:var(--accent-hover);text-decoration:none}
+.btn-outline{background:#fff;color:var(--accent);border:1px solid var(--accent)}
+.btn-outline:hover{background:var(--gray-100)}
+
+/* Lists / search */
+h1{font-size:var(--text-xl);margin:.1em 0 .35em;color:var(--ink-deep);font-weight:var(--fw-bold)}
+h2{color:var(--ink-deep)}
+.lead{color:var(--ink);font-size:var(--text-md);margin:0 0 14px;line-height:1.75}
+.lead p{margin:0 0 .75em;color:inherit}
+.lead p:last-child{margin-bottom:0}
+.lead strong{color:var(--accent);font-weight:var(--fw-semibold);text-decoration:underline;text-underline-offset:2px}
+.controls{display:flex;gap:10px 14px;flex-wrap:wrap;margin:16px 0;align-items:flex-end}
+.controls input,.controls select{padding:10px 12px;border:1px solid var(--gray-300);border-radius:var(--radius);font-size:var(--text-md);font-family:inherit;background:#fff;color:var(--ink)}
+.controls > input{flex:1 1 260px}.controls select{cursor:pointer}
+.ctl{display:inline-flex;flex-direction:column;gap:3px;min-width:0}
+.ctl-l{font-size:var(--text-sm);font-weight:600;color:var(--muted);letter-spacing:.02em}
+.ctl select{width:100%;min-width:130px}
+@media(max-width:560px){.ctl{flex:1 1 44%}}
+.filters{display:flex;flex-wrap:wrap;gap:14px;margin:-6px 0 6px;font-size:var(--text-sm);color:var(--muted)}
+.filters label{display:inline-flex;align-items:center;gap:5px;cursor:pointer}
+.results{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:7px}
+.results li{background:#fff;border:1px solid var(--gray-200);border-radius:8px;padding:11px 14px}
+.results li a{font-weight:600;color:var(--ink);text-decoration:none}
+.results li a:hover{color:var(--accent)}
+/* 資格の一覧・ランキングリスト */
+.cert-list{list-style:none;padding:0;margin:.5em 0 0;display:flex;flex-direction:column;gap:8px}
+.cl-item{display:flex;align-items:stretch;gap:10px}
+.cl-rank{flex-shrink:0;display:flex;align-items:center;justify-content:center;min-width:30px;font-weight:700;font-size:var(--text-lg);color:var(--muted);font-variant-numeric:tabular-nums;line-height:1}
+.cl-rank--top{color:var(--accent)}
+.cl-link{flex:1;min-width:0;display:flex;flex-direction:column;gap:5px;background:#fff;border:1px solid var(--gray-200);border-radius:8px;padding:12px 14px;text-decoration:none;color:inherit;box-shadow:0 1px 3px rgba(0,0,0,.06);transition:border-color .15s,background .15s}
+.cl-link:hover,.cl-link:focus-visible{border-color:var(--accent);background:var(--accent-light);text-decoration:none}
+.cl-name{font-size:var(--text-md);font-weight:var(--fw-semibold);color:var(--ink);line-height:1.4}
+.cl-link:hover .cl-name{color:var(--accent-hover)}
+.cl-meta{display:flex;flex-wrap:wrap;align-items:center;gap:5px 9px;font-size:var(--text-sm);color:var(--muted);line-height:1.4}
+.cl-major,.cl-cat{color:var(--muted)}
+.cl-data{color:var(--muted);font-weight:600}
+.cert-list--ranked .cl-rank{min-width:34px}
+@media(max-width:480px){.cl-rank{min-width:22px;font-size:var(--text-md)}.cert-list--ranked .cl-rank{min-width:26px}}
+.results .meta{display:block;color:var(--muted);font-size:var(--text-sm);margin-top:3px}
+.hint{font-size:var(--text-sm);margin:4px 0 10px;color:var(--muted)}
+.results-bar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:2px 0 2px}
+.results-bar #status{margin:0}
+.clear-filters{background:none;border:none;color:var(--accent);font-family:inherit;font-size:var(--text-sm);font-weight:600;cursor:pointer;padding:0;text-decoration:underline;text-underline-offset:2px}
+.clear-filters:hover{color:var(--accent-hover)}
+.muted,.note-muted{color:var(--muted)}
+.prov-tag{display:inline-block;background:#fff3e0;color:#e65100;border:1px solid #ffcc80;border-radius:4px;padding:0 6px;font-size:.72rem;font-weight:700;margin-left:2px;vertical-align:middle}
+.prov-note{font-size:.78rem}
+.pop-card,.field-card,.compare-card,.faq-item,table.spec,.results li,.occ-list li{box-shadow:0 1px 3px rgba(0,0,0,.07)}
+.crumbs{font-size:var(--text-sm);color:var(--muted);margin-bottom:10px}
+.crumbs a{color:var(--ink)}
+
+/* Badges (subtle) */
+.badge{display:inline-block;padding:1px 8px;border-radius:4px;font-size:var(--text-sm);font-weight:600;border:1px solid var(--gray-300);color:var(--muted);background:var(--gray-100);vertical-align:middle}
+.badge-national,.b-国家{color:#9a3b32;background:#fbeeec;border-color:#eccfca}
+.badge-public,.b-公的{color:var(--accent-hover);background:var(--accent-light);border-color:rgba(26,79,143,.22)}
+.badge-private,.b-民間{color:#3a6b46;background:#eef5f0;border-color:#cfe2d5}
+.badge-unknown,.b-要確認{color:var(--muted);background:var(--gray-100);border-color:var(--gray-300)}
+.badge-overseas{color:#6a4a8a;background:#f3eef8;border-color:#ddd0ea}
+
+/* Spec table (detail) */
+table.spec{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--table-border);border-radius:var(--radius);overflow:hidden;font-size:var(--text-table);font-weight:var(--fw-regular);color:var(--ink)}
+.spec-wrap{border:1px solid var(--table-border);border-radius:var(--radius);overflow:hidden;background:#fff}
+.spec-wrap table.spec{border:none;border-radius:0}
+table.spec tr:last-child th,table.spec tr:last-child td{border-bottom:none}
+table.spec th,table.spec td{text-align:left;padding:10px 14px;border-bottom:1px solid var(--table-border);vertical-align:middle;line-height:1.55}
+table.spec th{width:34%;background:var(--table-head-bg);color:var(--ink);font-weight:var(--fw-regular);font-size:1rem;white-space:nowrap}
+@media(max-width:600px){table.spec,table.spec tbody,table.spec tr,table.spec th,table.spec td{display:block;width:auto}.page-detail .spec-sections table.spec{table-layout:auto}table.spec th{white-space:normal;border-bottom:none;padding:9px 14px 1px}table.spec td{padding:1px 14px 11px}}
+.related{margin-top:24px}.related ul{padding-left:1.1em}
 .official-cta{margin:16px 0 6px}
-.btn-official{display:inline-block;background:#0d47a1;color:#fff;font-weight:700;padding:11px 20px;border-radius:8px}
-.btn-official:hover{background:#0b3c8a;text-decoration:none}
-.provenance{font-size:.82rem;color:#6b7682;background:#f2f5fa;border:1px solid #e1e8f2;border-radius:8px;padding:11px 14px;margin:10px 0 0}
+.btn-official{display:inline-block;background:var(--accent);color:#fff;font-size:var(--text-table);font-weight:var(--fw-semibold);padding:11px 20px;border-radius:var(--radius);text-decoration:none}
+.btn-official:hover{background:var(--accent-hover);color:#fff;text-decoration:none}
+.provenance{font-size:var(--text-sm);color:var(--muted);background:var(--gray-50);border:1px solid var(--gray-200);border-radius:var(--radius);padding:11px 14px;margin:10px 0 0}
 .feat-list{margin:.2em 0 .6em;padding-left:1.1em}.feat-list li{margin:2px 0}
-.updated{font-size:.82rem;color:#6b7682;margin:.1em 0 .6em}.updated .muted{margin-left:.4em}
-.tag-chip{display:inline-block;background:#eef4ff;color:#0d47a1;border:1px solid #cfe0fb;border-radius:12px;padding:2px 10px;margin:2px 4px 2px 0;font-size:.82rem}
-.tag-ind{background:#eafaf1;color:#1b6e3c;border-color:#bfe6cf}
-.tagfilter{display:flex;flex-wrap:wrap;align-items:center;gap:7px;margin:2px 0 10px}
-.tagfilter .tf-label{font-size:.85rem;color:#43505f;margin-right:2px}
-.tf-chip{background:#fff;color:#0d47a1;border:1px solid #cfe0fb;border-radius:999px;padding:5px 13px;font-size:.85rem;cursor:pointer;transition:.12s}
-.tf-chip:hover{background:#eef4ff}
-.tf-chip.on{background:#0d47a1;color:#fff;border-color:#0d47a1}
-.diff-badge{display:inline-block;font-weight:700;font-size:.82rem;padding:2px 9px;border-radius:11px;color:#fff}
-.diff-veryhard{background:#b71c1c}.diff-hard{background:#e65100}.diff-mid{background:#f9a825;color:#3a2c00}
-.diff-easy{background:#388e3c}.diff-veryeasy{background:#1565c0}
-.careers-sec{margin:18px 0 0;border-top:1px solid #e6e9ef;padding-top:12px}
-.careers-sec h2{font-size:1.05rem;margin:.2em 0 .4em}
-.careers{margin:.2em 0;padding-left:1.1em}.careers li{margin:2px 0}
-.careers-src{font-size:.8rem;margin:.3em 0 0}
-.jobtag{margin:.5em 0 0;font-size:.92rem}
-.rel-links{margin:18px 0 0;border-top:1px solid #e6e9ef;padding-top:12px}
-.rel-links h2{font-size:1.05rem;margin:.2em 0 .3em}
-.rel-links ul{margin:.2em 0;padding-left:1.1em}.rel-links li{margin:2px 0}
-.site-footer{max-width:920px;margin:30px auto;padding:16px 18px;color:#7a838f;font-size:.8rem;border-top:1px solid #e6e9ef}
-.hub-grp{font-size:1.0rem;margin:1.1em 0 .3em;color:#0d47a1;border-bottom:1px solid #e6e9ef;padding-bottom:3px}
-.vs-table{width:100%;border-collapse:collapse;margin:14px 0;font-size:.94rem}
-.vs-table th,.vs-table td{border:1px solid #e1e8f2;padding:8px 10px;text-align:left;vertical-align:top}
-.vs-table thead th{background:#0d47a1;color:#fff;text-align:center}
-.vs-table tbody th{background:#f2f5fa;white-space:nowrap;width:7.5em}
+.notice-defunct{font-size:var(--text-sm);color:#7a4f00;background:#fff7e6;border:1px solid #ffd591;border-left:4px solid #fa8c16;border-radius:var(--radius);padding:11px 14px;margin:18px 0 0;line-height:1.7}
+.notice-defunct a{color:#9a3412}
+.page-article{max-width:760px;margin:0 auto}
+.page-article .article-section{margin:26px 0}
+.page-article .article-section p{line-height:1.85;margin:.6em 0}
+.article-meta{display:flex;gap:14px;flex-wrap:wrap;font-size:var(--text-sm);color:var(--muted);margin:.3em 0 1.1em}
+.article-cat{font-size:var(--text-sm);color:var(--accent,#1a4f8f);font-weight:600}
+.article-list{display:grid;gap:14px;margin-top:18px}
+.article-card{border:1px solid var(--gray-200);border-radius:var(--radius);padding:16px 18px;background:#fff}
+.article-card h2{font-size:1rem;margin:.25em 0}
+.article-card-desc{font-size:var(--text-sm);color:var(--ink,#333);line-height:1.7}
+.article-cert-links{margin:12px 0}
+.article-related{margin-top:26px}
+.article-inline-link{margin:8px 0}
+.article-foot-note{font-size:var(--text-sm);color:var(--muted);margin-top:28px;border-top:1px solid var(--gray-200);padding-top:14px;line-height:1.7}
+.article-answer{background:#eef4fb;border:1px solid #c4d8ef;border-left:4px solid var(--accent,#1a4f8f);border-radius:var(--radius);padding:14px 16px;margin:18px 0}
+.article-answer-h{font-weight:700;color:var(--accent,#1a4f8f);font-size:var(--text-sm);margin:0 0 4px}
+.article-answer p{margin:0;line-height:1.8}
+.article-toc{background:var(--gray-50);border:1px solid var(--gray-200);border-radius:var(--radius);padding:14px 18px;margin:18px 0}
+.article-toc-h{font-weight:700;margin:0 0 6px}
+.article-toc ol{margin:0;padding-left:1.4em}.article-toc li{margin:3px 0}
+.article-table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:14px 0;border:1px solid var(--table-border);border-radius:var(--radius);background:#fff}
+.article-table{border-collapse:collapse;width:100%;font-size:var(--text-table);color:var(--ink);background:#fff}
+.article-table th,.article-table td{padding:11px 14px;text-align:left;vertical-align:top;line-height:1.6;border-bottom:1px solid var(--table-border)}
+.article-table tbody tr:last-child th,.article-table tbody tr:last-child td{border-bottom:none}
+.article-table thead th{background:#edf2f8;color:var(--ink);font-weight:var(--fw-semibold);white-space:nowrap;font-size:1rem;border-bottom:2px solid #cddbeb}
+.article-table tbody td:first-child{font-weight:var(--fw-semibold);color:var(--ink-deep)}
+.feat-list a{color:var(--ink)}
+.updated{font-size:var(--text-sm);color:var(--muted);margin:.1em 0 .6em}.updated .muted{margin-left:.4em}
+.tag-chip{display:inline-block;background:var(--gray-100);color:var(--muted);border:1px solid var(--gray-200);border-radius:12px;padding:2px 10px;margin:2px 4px 2px 0;font-size:var(--text-sm)}
+.tag-ind{background:var(--accent-light);color:var(--accent-hover);border-color:rgba(26,79,143,.18)}
+a.tag-chip{text-decoration:none;cursor:pointer;transition:border-color .12s,background .12s}
+a.tag-chip:hover{border-color:var(--accent);background:var(--accent-light);text-decoration:none}
+.diff-badge{display:inline-block;font-weight:var(--fw-semibold);font-size:var(--text-sm);padding:2px 9px;border-radius:6px;border:1px solid;vertical-align:middle;line-height:1.35}
+.diff-veryeasy{color:var(--accent-hover);background:var(--accent-light);border-color:rgba(26,79,143,.22)}
+.diff-easy{color:#3a6b46;background:#eef5f0;border-color:#cfe2d5}
+.diff-mid{color:var(--gray-700);background:var(--gray-100);border-color:var(--gray-300)}
+.diff-hard{color:#8a5a2a;background:#f7f0e8;border-color:#e8dcc8}
+.diff-veryhard{color:#9a3b32;background:#fbeeec;border-color:#eccfca}
+.diff-meter{display:inline-flex;gap:3px;vertical-align:middle;margin-right:8px}
+.diff-meter .seg{width:13px;height:7px;border-radius:2px;background:var(--gray-200)}
+.diff-meter .seg.on.diff-veryeasy{background:#4a90d9}
+.diff-meter .seg.on.diff-easy{background:#4a9e6b}
+.diff-meter .seg.on.diff-mid{background:#c9a227}
+.diff-meter .seg.on.diff-hard{background:#cc7a33}
+.diff-meter .seg.on.diff-veryhard{background:#c0453b}
+.diff-rank{display:inline-block;font-weight:700;font-size:var(--text-sm);padding:2px 10px;border-radius:6px;background:var(--gray-700);color:#fff;margin:1px 2px 1px 0}
+.diff-rank-field{background:var(--accent-hover)}
+.diff-meta{font-size:var(--text-sm);margin-top:3px}
+.roadmap{margin:.4em 0 .8em}.roadmap h3{font-size:var(--text-lg);font-weight:var(--fw-bold);margin:.7em 0 .5em;color:var(--ink-deep)}
+.rm-track{list-style:none;display:flex;flex-wrap:wrap;align-items:stretch;gap:12px 20px;padding:0;margin:.2em 0}
+.rm-step{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid var(--gray-300);border-radius:8px;padding:10px 14px;position:relative;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.rm-num{flex-shrink:0;display:flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;background:var(--gray-200);color:var(--muted);font-size:var(--text-sm);font-weight:700;font-variant-numeric:tabular-nums}
+.rm-name{font-weight:600;line-height:1.3}
+a.rm-name{color:var(--accent);text-decoration:none}
+a.rm-name:hover{text-decoration:underline}
+.rm-step:not(:last-child)::after{content:"›";position:absolute;right:-14px;top:50%;transform:translateY(-50%);color:var(--muted);font-weight:700;font-size:1.3rem;line-height:1}
+.rm-cur{background:var(--accent-light);border-color:var(--accent);box-shadow:0 0 0 1px var(--accent) inset}
+.rm-cur .rm-num{background:var(--accent);color:#fff}
+.rm-cur .rm-name{color:var(--ink-deep);font-weight:700}
+.rm-badge{flex-shrink:0;font-size:var(--text-sm);font-weight:700;color:#fff;background:var(--accent);border-radius:4px;padding:2px 7px;white-space:nowrap}
+@media(max-width:560px){.rm-track{flex-direction:column;gap:18px 0}.rm-step{width:100%}.rm-step:not(:last-child)::after{content:"▾";right:auto;left:25px;top:auto;bottom:-15px;transform:translateX(-50%)}}
+.careers-sec,.rel-links{margin:18px 0 0;border-top:1px solid var(--gray-200);padding-top:12px}
+.careers-sec h2,.rel-links h2,.occ-work h2,.occ-salary h2{font-size:var(--text-lg);font-weight:var(--fw-bold);margin:.2em 0 .4em}
+.careers,.rel-links ul{margin:.2em 0;padding-left:1.1em}.careers li{margin:2px 0}
+.careers-src{font-size:var(--text-sm);margin:.3em 0 0}
+.occ-list{columns:2;column-gap:22px}.occ-list li{break-inside:avoid;background:#fff;border:1px solid var(--gray-200);border-radius:8px;padding:8px 11px;margin-bottom:7px}
+@media(max-width:560px){.occ-list{columns:1}}
+.jobtag{margin:.5em 0 0;font-size:var(--text-sm)}
+.pr-badge{display:inline-block;background:var(--gray-400);color:#fff;font-size:var(--text-sm);font-weight:700;padding:1px 6px;border-radius:4px;margin-left:8px;vertical-align:middle;letter-spacing:.05em}
+.ad-disclosure{font-size:var(--text-sm);color:var(--muted);background:#fbf6ee;border:1px solid #efe1c8;border-radius:8px;padding:9px 12px;margin:0 0 10px}
+.materials{list-style:none;padding:0;margin:.2em 0}
+.materials li{display:flex;gap:10px;align-items:flex-start;background:#fff;border:1px solid var(--gray-200);border-radius:8px;padding:9px 12px;margin-bottom:7px}
+.mat-kind{flex:0 0 auto;background:var(--accent-light);color:var(--accent-hover);border:1px solid rgba(26,79,143,.18);border-radius:6px;font-size:var(--text-sm);font-weight:var(--fw-semibold);padding:2px 8px;margin-top:2px}
+.mat-body{flex:1}.mat-note{display:block;color:var(--muted);font-size:var(--text-sm);margin-top:2px}
+.materials a{color:var(--accent);font-weight:var(--fw-semibold);text-decoration:underline;text-underline-offset:2px}
+.materials a:hover{color:var(--accent-hover)}
+.mat-foot{font-size:var(--text-sm);margin:.4em 0 0}
+.occ-meta{background:var(--gray-50);border:1px solid var(--gray-200);border-radius:8px;padding:10px 13px;margin:10px 0}
+.occ-stats{margin:0 0 6px}.occ-fields{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px}
+.occ-stats-label{font-size:var(--text-sm);color:var(--muted);font-weight:600;margin-right:4px}
+.occ-stat{display:inline-block;background:var(--accent-light);color:var(--accent-hover);border:1px solid rgba(26,79,143,.18);border-radius:6px;font-size:var(--text-sm);padding:1px 8px;margin-right:6px}
+.occ-work{margin:14px 0 0}.occ-work p{margin:.2em 0}
+.occ-salary{margin:14px 0 0}
+.salary-range{font-size:var(--text-lg);font-weight:700;color:var(--accent);margin:.1em 0}
+.occ-salary-note{font-size:var(--text-sm)}
+.occ-skills{display:flex;flex-wrap:wrap;gap:2px 0}
+.hub-grp{font-size:var(--text-lg);font-weight:var(--fw-bold);margin:1.1em 0 .3em;color:var(--ink-deep)}
+.vs-table{width:100%;border-collapse:collapse;margin:14px 0;font-size:var(--text-table);color:var(--ink);table-layout:fixed;--vs-label-w:9rem}
+.vs-table col.vs-col-label{width:var(--vs-label-w)}
+.vs-table th,.vs-table td{border:1px solid var(--gray-200);padding:10px 14px;text-align:left;vertical-align:top;overflow-wrap:break-word;font-size:var(--text-table);line-height:1.5}
+.vs-table thead th{background:#edf2f8;color:var(--ink-deep);text-align:center;font-size:1rem;border-bottom:2px solid #cddbeb}
+.vs-table tbody th{background:#f4f7fb;white-space:nowrap;width:var(--vs-label-w);font-size:1rem}
 .vs-cta{margin:14px 0;display:flex;gap:10px;flex-wrap:wrap}
-.feature-nav{margin-top:28px;border-top:1px solid #e6e9ef;padding-top:14px}
-.feature-nav h2{font-size:1.05rem;margin:.6em 0 .3em}
+.feature-nav{margin-top:0;padding-top:0}
+.feature-nav h2{font-size:var(--text-lg);margin:.6em 0 .3em}
+.feature-nav h3{font-size:var(--text-lg);font-weight:600;color:var(--ink);margin:.9em 0 .3em}
 .feature-nav ul{margin:.2em 0 .6em;padding-left:1.1em}
 .chips{display:flex;flex-wrap:wrap;gap:8px}
-.chip{display:inline-block;padding:5px 11px;border:1px solid #c5d3ea;background:#eef4fc;border-radius:999px;font-size:.85rem}
-.chip:hover{background:#dce9fb;text-decoration:none}
-.hint{font-size:.82rem;margin:4px 0 10px}
-.filters{display:flex;flex-wrap:wrap;gap:14px;margin:-6px 0 6px;font-size:.9rem;color:#43505f}
-.filters label{display:inline-flex;align-items:center;gap:5px;cursor:pointer}
-.controls select{cursor:pointer}
+.chip{display:inline-block;padding:5px 11px;border:1px solid var(--gray-300);background:#fff;border-radius:999px;font-size:var(--text-sm);color:var(--ink)}
+.chip:hover{background:var(--accent-light);border-color:var(--accent);text-decoration:none}
+
+/* Compare bar + table */
 .cmp-add{margin-right:9px;cursor:pointer}.cmp-add input{width:16px;height:16px;vertical-align:middle;cursor:pointer}
-.cmpbar{position:fixed;left:0;right:0;bottom:0;background:#0d47a1;color:#fff;padding:11px 18px;display:none;align-items:center;gap:14px;flex-wrap:wrap;box-shadow:0 -2px 10px rgba(0,0,0,.18);z-index:20}
-.cmpbar.on{display:flex}
-.cmpbar .btn{background:#fff;color:#0d47a1;font-weight:700;padding:7px 16px;border-radius:8px}
-.cmpbar .btn:hover{background:#e8f0fe;text-decoration:none}
-.cmpbar .btn-ghost{background:transparent;color:#cfe0fb;border:1px solid #4f7ec4;padding:6px 13px;border-radius:8px;cursor:pointer;font:inherit;font-size:.9rem}
-.cmpbar .btn-ghost:hover{background:#1257b8}
+.cmpbar{position:fixed;left:0;right:0;bottom:0;background:var(--ink-deep);color:#fff;display:none;z-index:20;border-top:1px solid var(--gray-800)}
+.cmpbar.on{display:block}
+.cmpbar-inner{max-width:1200px;margin:0 auto;padding:10px var(--page-gutter);display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.cmpbar-lbl{font-size:var(--text-sm);color:var(--on-dark-muted)}
+.cmpbar .pill{display:inline-flex;align-items:center;gap:5px;background:var(--gray-800);padding:4px 10px;border-radius:999px;font-size:var(--text-sm);border:1px solid var(--gray-700);color:#fff}
+.cmpbar .pill button{background:none;border:none;color:var(--on-dark-muted);cursor:pointer;font:inherit;padding:0 0 0 2px;line-height:1}
+.cmpbar .pill button:hover{color:#fff}
+.cmpbar .btn{margin-left:auto}
+body.cmp-open{padding-bottom:76px}
+.cmpbar .btn{background:var(--accent);color:#fff;font-weight:var(--fw-semibold);padding:7px 16px;border-radius:var(--radius)}
+.cmpbar .btn:hover{background:var(--accent-hover)}
+.cmpbar .btn-ghost{background:transparent;color:var(--on-dark);border:1px solid var(--gray-700);padding:6px 13px;border-radius:var(--radius);cursor:pointer;font:inherit;font-size:var(--text-sm)}
+.cmpbar .btn-ghost:hover{background:rgba(255,255,255,.08)}
 .cmp-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
-table.cmp{border-collapse:collapse;background:#fff;border:1px solid #e6e9ef;border-radius:10px;min-width:100%}
-table.cmp th,table.cmp td{text-align:left;padding:10px 14px;border-bottom:1px solid #eef1f5;border-right:1px solid #eef1f5;vertical-align:top;font-size:.9rem;min-width:150px}
-table.cmp thead th{background:#f2f5fa;color:#1b2430;font-weight:700}
-table.cmp tbody th{background:#f7f9fc;color:#3a4757;white-space:nowrap;min-width:110px;width:110px}
+table.cmp{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--gray-200);border-radius:8px;table-layout:fixed;--cmp-label-w:9rem;font-size:var(--text-table);color:var(--ink)}
+table.cmp col.cmp-col-label{width:var(--cmp-label-w)}
+table.cmp th,table.cmp td{text-align:left;padding:10px 14px;border-bottom:1px solid var(--gray-200);border-right:1px solid var(--gray-200);vertical-align:top;font-size:var(--text-table);color:var(--ink);line-height:1.5;overflow-wrap:break-word}
+table.cmp thead th{background:#edf2f8;color:var(--ink-deep);font-weight:700;font-size:1rem;border-bottom:2px solid #cddbeb}
+table.cmp tbody th{background:#f4f7fb;color:var(--ink);white-space:nowrap;width:var(--cmp-label-w);font-size:1rem}
+table.cmp tbody th,table.cmp thead th:first-child{position:sticky;left:0;z-index:1}
+table.cmp thead th:first-child{background:#edf2f8;z-index:2}
+
+/* Footer */
+.site-footer{background:var(--gray-50);border-top:1px solid var(--gray-200);margin-top:auto;color:var(--muted)}
+.site-footer-inner{max-width:1200px;margin:0 auto;padding:24px var(--page-gutter) 20px}
+.footer-recent{margin:0 0 20px;padding-bottom:18px;border-bottom:1px solid var(--gray-200)}
+.footer-recent-label{display:block;font-size:var(--text-sm);color:var(--muted);font-weight:600;margin-bottom:9px}
+.footer-recent-list{list-style:none;display:flex;flex-wrap:wrap;gap:7px;margin:0;padding:0}
+.footer-recent-list a{display:inline-block;max-width:220px;padding:5px 12px;border:1px solid var(--gray-200);border-radius:999px;font-size:var(--text-sm);color:var(--muted);text-decoration:none;background:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:middle}
+.footer-recent-list a:hover{color:var(--ink);border-color:var(--gray-300);text-decoration:none}
+.site-footer-brand{font-size:var(--text-md);font-weight:700;color:var(--ink-deep);margin:0 0 10px}
+.site-footer-nav{display:flex;flex-wrap:wrap;gap:6px 18px;margin-bottom:12px}
+.site-footer-nav a{font-size:var(--text-sm);color:var(--muted);text-decoration:none}
+.site-footer-nav a:hover{color:var(--ink);text-decoration:underline;text-underline-offset:2px}
+.site-footer-copy{font-size:var(--text-sm);color:var(--muted);line-height:1.5;margin:0}
+/* Partner sites (おすすめ対策サイト) */
+.partner-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+@media(max-width:720px){.partner-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:460px){.partner-grid{grid-template-columns:1fr}}
+.partner-card{display:flex;flex-direction:column;gap:2px;min-width:0;overflow:hidden;background:#fff;border:1px solid var(--gray-200);border-radius:var(--radius);padding:10px 11px;text-decoration:none;color:inherit;box-shadow:0 1px 3px rgba(0,0,0,.07);transition:border-color .15s,background .15s}
+.partner-card:hover{border-color:var(--accent);background:var(--accent-light)}
+.partner-card-name,.partner-card-tag{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.partner-card-name{font-size:1rem;font-weight:var(--fw-semibold);color:var(--ink-deep);line-height:1.35}
+.partner-card-tag{font-size:var(--text-sm);color:var(--muted);line-height:1.45}
+.partner-ext{font-size:.78em;color:var(--accent);margin-left:5px;font-weight:700}
+.partner-detail-grid{display:flex;flex-wrap:wrap;gap:10px}
+.partner-detail-card{display:flex;flex-direction:column;gap:2px;flex:1 1 220px;background:#fff;border:1px solid var(--table-border);border-radius:0;padding:14px 16px;text-decoration:none;color:inherit;transition:border-color .15s}
+.partner-detail-card:hover{border-color:var(--accent)}
+.pd-name{font-size:1rem;font-weight:var(--fw-semibold);color:var(--accent-hover)}
+.pd-tag{font-size:var(--text-sm);color:var(--muted);line-height:1.45}
+.partner-note{font-size:var(--text-sm);margin:8px 0 0}
+/* Detail */
+.detail-title-inner{display:inline-flex;align-items:center;gap:10px}
+.detail-title-trophy{flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;color:#b8860b;background:#f7f3e8;border-radius:var(--radius)}
+.detail-title-trophy .icon-svg{width:20px;height:20px}
+.detail-official{margin-top:28px;padding-top:24px;border-top:1px solid var(--gray-200)}
+.detail-official .btn{padding:10px 18px;font-size:var(--text-sm)}
+.page-detail{--detail-body:1rem;--detail-body-lh:1.85;--detail-h1:clamp(1.625rem,3vw,2rem);--detail-h2:1.25rem;--detail-h3:1.125rem;--detail-section-y:52px;--detail-block-gap:32px;max-width:none;width:100%;font-size:var(--detail-body);line-height:var(--detail-body-lh);color:var(--ink)}
+.page-detail .crumbs{margin-bottom:28px}
+.page-detail .detail-intro{padding:0;margin:0;border:none;background:transparent}
+.page-detail .detail-intro::after{content:"";display:block;width:100%;height:1px;background:var(--gray-200);margin-top:40px}
+.detail-intro-row{display:flex;gap:28px;align-items:stretch}
+.detail-intro-main{flex:1 1 auto;min-width:0}
+.detail-intro-media{flex:0 0 auto;width:280px;margin:0}
+.detail-intro-media img{display:block;width:280px;height:100%;min-height:188px;object-fit:cover;border-radius:10px;border:1px solid var(--gray-200);background:var(--gray-100)}
+.cert-cover{position:relative;overflow:hidden;width:280px;height:100%;min-height:188px;border-radius:10px;color:#fff;box-sizing:border-box}
+.cert-cover-deco{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.cert-cover-inner{position:absolute;inset:0;z-index:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center;padding:16px}
+.cert-cover-icon{display:flex;align-items:center;justify-content:center;width:48px;height:48px;border-radius:50%;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.28);margin-bottom:4px;flex-shrink:0}
+.cert-cover-icon .icon-svg{width:26px;height:26px;stroke-width:1.6;color:#fff}
+.cert-cover-name{font-weight:700;line-height:1.32;letter-spacing:.01em;text-shadow:0 1px 4px rgba(0,0,0,.32);display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden;max-width:100%}
+.cert-cover-label{font-size:11.5px;font-weight:600;color:rgba(255,255,255,.88);line-height:1.3;letter-spacing:.04em;text-shadow:0 1px 2px rgba(0,0,0,.22);margin-top:3px}
+.detail-intro-credit{font-size:11px;color:var(--muted);line-height:1.4;margin-top:6px}
+.detail-intro-credit a{color:var(--muted);text-decoration:underline}
+@media(max-width:720px){.detail-intro-row{flex-direction:column-reverse;gap:16px}.detail-intro-media,.detail-intro-media img,.cert-cover{width:100%}.detail-intro-media img,.cert-cover{height:190px}}
+.page-detail .detail-title{font-size:var(--detail-h1);font-weight:700;color:var(--ink-deep);line-height:1.28;margin:0 0 24px;letter-spacing:-.01em}
+.page-detail .detail-audience{font-size:var(--detail-body);color:var(--ink);line-height:var(--detail-body-lh);margin:0}
+.page-detail .detail-section{padding:var(--detail-section-y) 0 0;border:none}
+.page-detail .detail-section--alt{margin:0;padding:var(--detail-section-y) 0 0;background:transparent}
+.page-detail .detail-section-title{font-size:var(--detail-h2);font-weight:var(--fw-bold);color:var(--ink-deep);margin:0 0 28px;line-height:1.35;padding:0;border:none;letter-spacing:-.01em}
+.page-detail .detail-footnote{font-size:var(--text-sm);color:var(--muted);margin:28px 0 0;line-height:1.75}
+.page-detail .guide-body{display:flex;flex-direction:column;gap:0}
+.page-detail .guide-block{padding:0 0 var(--detail-block-gap);border:none}
+.page-detail .guide-block:last-child{padding-bottom:0}
+.page-detail .guide-block+.guide-block{padding-top:var(--detail-block-gap);border-top:1px solid var(--gray-200)}
+.page-detail .guide-h{font-size:var(--detail-h3);font-weight:var(--fw-bold);color:var(--ink-deep);margin:0 0 16px;line-height:1.45;padding-left:14px;border-left:3px solid var(--accent)}
+.page-detail .guide-block p{margin:0;line-height:var(--detail-body-lh);color:var(--ink)}
+.page-detail .guide-steps{list-style:none;margin:6px 0 0;padding:0;display:flex;flex-direction:column;gap:16px;counter-reset:guide-step}
+.page-detail .guide-steps li{position:relative;margin:0;padding:3px 0 3px 44px;background:none;border:none;border-radius:0;line-height:var(--detail-body-lh);color:var(--ink);counter-increment:guide-step}
+.page-detail .guide-steps li::before{content:counter(guide-step);position:absolute;left:0;top:3px;width:30px;height:30px;display:flex;align-items:center;justify-content:center;background:var(--accent);color:#fff;font-size:var(--text-sm);font-weight:700;border-radius:50%;line-height:1}
+.page-detail .faq-list{display:flex;flex-direction:column;gap:12px;margin-top:0;border:none;background:transparent}
+.page-detail .faq-item{border:1px solid var(--gray-200);border-radius:0;margin:0;background:#fff}
+.page-detail .faq-item summary{cursor:pointer;padding:18px 48px 18px 20px;font-size:var(--detail-body);font-weight:var(--fw-semibold);color:var(--ink-deep);line-height:1.55;list-style:none;position:relative}
+.page-detail .faq-item .faq-a{color:var(--ink);font-size:var(--detail-body);line-height:var(--detail-body-lh);padding:16px 20px;border-top:1px solid var(--gray-100)}
+.page-detail .detail-nav{margin:var(--detail-section-y) 0 0;padding:40px 0 8px;border-top:1px solid var(--gray-200);background:transparent;font-size:1rem;line-height:1.75}
+.page-detail .detail-nav-block+.detail-nav-block{margin-top:40px;padding-top:40px;border-top:1px solid var(--gray-200)}
+.page-detail .detail-nav-head{font-size:var(--detail-h2);font-weight:var(--fw-bold);color:var(--ink-deep);margin:0 0 22px;line-height:1.35;padding:0;border:none}
+.page-detail .detail-nav-subhead{font-size:1rem;font-weight:var(--fw-semibold);color:var(--ink-deep);margin:0 0 10px;line-height:1.45}
+.page-detail .detail-nav-subhead-title{font-size:1rem;font-weight:var(--fw-bold);color:var(--ink-deep);margin:0 0 12px;line-height:1.45}
+.page-detail .detail-nav-subhead+.detail-nav-subhead,.page-detail .detail-link-list+.detail-nav-subhead,.page-detail .detail-link-grid+.detail-nav-subhead,.page-detail .detail-compare-row+.detail-nav-subhead{margin-top:28px}
+.page-detail .detail-link-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
+.page-detail .detail-link-item{font-size:.9375rem;line-height:1.7;color:var(--ink)}
+.page-detail .detail-link-grid{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 24px}
+.page-detail .detail-link-grid a{display:block;font-size:.9375rem;font-weight:600;color:var(--accent);text-decoration:none;line-height:1.7;padding:2px 0}
+.page-detail .detail-compare-row{font-size:.9375rem;color:var(--ink);line-height:1.7;margin:0;display:flex;flex-direction:column;gap:9px}
+.page-detail .detail-link-desc{display:block;margin-top:1px;line-height:1.5}
+.page-detail .spec-sections{gap:44px}
+.page-detail .spec-section-title{font-size:var(--detail-h3);font-weight:var(--fw-bold);color:var(--ink-deep);margin:0 0 18px;line-height:1.45;padding-left:12px;border-left:3px solid var(--gray-300)}
+.page-detail .rm-track{gap:14px 24px;margin-top:0}
+.page-detail .rm-step{padding:12px 16px;font-size:.9375rem;line-height:1.5;border-radius:0;box-shadow:none}
+.page-detail .partner-detail-grid{margin-top:0}
+.spec-section-title{font-size:var(--text-md);font-weight:var(--fw-bold);color:var(--ink-deep);margin:0 0 12px;line-height:1.4}
+.page-detail .faq-item summary::-webkit-details-marker{display:none}
+.page-detail .faq-item summary::after{content:"＋";position:absolute;right:20px;top:18px;color:var(--accent);font-weight:700}
+.page-detail .faq-item[open] summary::after{content:"−"}
+.page-detail .faq-item summary:hover{background:var(--gray-50)}
+.page-detail .detail-link-item a{color:var(--accent);font-weight:600;text-decoration:none}
+.page-detail .detail-link-item a:hover{text-decoration:underline;text-underline-offset:2px}
+.page-detail .detail-link-grid a:hover{text-decoration:underline;text-underline-offset:2px}
+.page-detail .detail-compare-row a{display:inline-flex;align-items:baseline;width:fit-content;max-width:100%;color:var(--accent);font-weight:600;text-decoration:none}
+.page-detail .detail-compare-row a::before{content:"⇄";margin-right:7px;color:var(--muted);font-weight:400}
+.page-detail .detail-compare-row a:hover{text-decoration:underline;text-underline-offset:2px}
+.page-detail .detail-footnote,.page-detail .detail-nav-note{font-size:var(--text-sm);color:var(--muted)}
+.detail-compare-label{color:var(--muted);font-weight:400}
+.detail-nav-note{font-size:var(--text-sm);color:var(--muted);margin-top:16px;line-height:1.7}
+@media(max-width:560px){.page-detail .detail-link-grid{grid-template-columns:1fr}}
+.detail-facts{margin-bottom:18px}
+.page-detail .detail-intro .detail-facts{margin:24px 0 0}
+.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px}
+.fact{background:var(--gray-50);border-radius:8px;padding:9px 11px;border:1px solid var(--gray-200)}
+.fact .l{font-size:var(--text-sm);color:var(--muted)}
+.fact .v{font-size:var(--text-md);font-weight:var(--fw-semibold);color:var(--ink-deep)}
+.detail-actions{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:22px;align-items:center}
+.detail-actions .official-cta{margin:0}
+.detail-section-title{font-size:var(--text-lg);font-weight:var(--fw-bold);color:var(--ink-deep);margin:0 0 16px}
+.detail-related{margin:18px 0 0;border-top:1px solid var(--gray-200);padding-top:14px}
+.detail-related h3{font-size:var(--text-lg);font-weight:var(--fw-semibold);margin:.9em 0 .35em;color:var(--ink-deep)}
+.detail-related h3:first-of-type{margin-top:.2em}
+.detail-related ul{margin:.2em 0;padding-left:1.1em}
+.detail-related .more-compare p{margin:.2em 0;line-height:1.55;color:var(--muted);font-size:var(--text-md)}
+.detail-related .more-compare a{color:var(--accent);font-weight:600}
+.detail-related .more-same ul{columns:2;column-gap:22px}
+.detail-related .more-same li{break-inside:avoid;margin:2px 0}
+@media(max-width:560px){.detail-related .more-same ul{columns:1}}
+.detail-spec{margin-bottom:8px}
+.spec-sections{display:flex;flex-direction:column;gap:36px;--spec-label-w:14.5rem}
+.spec-section{margin:0}
+.page-detail .spec-sections table.spec{table-layout:fixed;width:100%}
+.page-detail .spec-sections table.spec col.spec-col-label{width:var(--spec-label-w)}
+.page-detail .spec-sections table.spec col.spec-col-value{width:auto}
+.page-detail .spec-sections table.spec th{width:var(--spec-label-w);box-sizing:border-box}
+.page-detail .spec-sections table.spec td{box-sizing:border-box;width:auto}
+@media(max-width:600px){.page-detail .spec-sections table.spec,.page-detail .spec-sections table.spec th,.page-detail .spec-sections table.spec td{width:auto;display:block}}
+.page-detail .spec-wrap,.page-detail table.spec{border-radius:0}
+.detail-source{margin-top:22px;padding:14px 0 0;border-top:1px solid var(--gray-200);font-size:var(--text-sm);color:var(--muted);line-height:1.65}
+.detail-source p{margin:0 0 5px}.detail-source .k{font-weight:600;color:var(--muted)}
+.detail-source a{color:var(--ink);text-decoration:underline;text-underline-offset:2px}
+.detail-source-note{margin-top:8px;color:var(--muted);font-size:var(--text-sm)}
+.detail-points{margin:0 0 22px}
+.point-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:7px}
+.point-list li{position:relative;padding:8px 12px 8px 32px;background:var(--accent-light);border:1px solid rgba(26,79,143,.15);border-radius:var(--radius);font-size:var(--text-md);color:var(--ink);line-height:1.55}
+.point-list li::before{content:"✓";position:absolute;left:12px;top:8px;color:var(--accent);font-weight:700}
+.detail-faq{margin:0 0 22px}
+.faq-item{border:1px solid var(--gray-200);border-radius:var(--radius);margin-bottom:8px;background:#fff;overflow:hidden}
+.faq-item summary{cursor:pointer;padding:12px 14px;font-weight:600;color:var(--ink-deep);font-size:var(--text-md);list-style:none;position:relative;padding-right:36px}
+.faq-item summary::-webkit-details-marker{display:none}
+.faq-item summary::after{content:"＋";position:absolute;right:14px;top:12px;color:var(--accent);font-weight:700}
+.faq-item[open] summary::after{content:"−"}
+.faq-item summary:hover{background:var(--gray-50)}
+.faq-a{padding:0 14px 13px;color:var(--ink);line-height:1.7;font-size:var(--text-md)}
+.btn-sm{padding:7px 14px;font-size:var(--text-sm)}
+/* 一覧の行＋比較ボタン */
+.results li{display:flex;gap:12px;align-items:center}
+.results li.empty-state{display:block;text-align:center;color:var(--muted);background:var(--gray-50);border:1px dashed var(--gray-300);padding:22px 16px;line-height:1.75}
+.result-main{flex:1;min-width:0}
+.result-label{display:inline-block;font-size:var(--text-sm);font-weight:600;color:var(--muted);background:var(--gray-100);border:1px solid var(--gray-300);border-radius:4px;padding:1px 6px;margin-left:6px;vertical-align:middle}
+.cmp-add-btn{flex-shrink:0;min-width:78px;padding:8px 10px;font-size:var(--text-sm);font-weight:600;line-height:1.2;border:1px solid var(--accent);border-radius:8px;background:var(--white);color:var(--accent);cursor:pointer;font-family:inherit;text-align:center;transition:border-color .15s,background .15s,color .15s}
+.cmp-add-btn:hover{background:var(--gray-50)}
+.cmp-add-btn.is-active{background:var(--accent);border-color:var(--accent);color:#fff}
+/* 比較ページの結論カード */
+.cmp-verdict{margin:2px 0 18px}
+.cmp-verdict-title{font-size:var(--text-sm);font-weight:600;color:var(--ink-deep);margin:0 0 10px}
+.cmp-verdict-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px}
+.cmp-verdict-card{border:1px solid var(--gray-200);border-radius:var(--radius);padding:12px 14px;background:var(--white)}
+.cmp-verdict-card .pick{font-size:var(--text-sm);font-weight:700;color:var(--accent-hover);margin-bottom:4px}
+.cmp-verdict-card .pickname{font-size:1rem;font-weight:var(--fw-semibold);color:var(--ink-deep);line-height:1.4}
+.cmp-verdict-card .pickname a{color:var(--ink-deep);text-decoration:underline;text-underline-offset:2px}
+.cmp-verdict-card .why{font-size:var(--text-sm);color:var(--muted);margin-top:3px;line-height:1.5}
+/* Detail page typography（表・タグ等の詳細調整） */
+.page-detail{color:var(--ink);font-weight:var(--fw-regular)}
+.page-detail .crumbs{font-size:var(--text-sm);color:var(--muted);line-height:1.6}
+.page-detail .crumbs a{color:var(--ink)}
+.page-detail .note-muted,.page-detail .muted{font-size:inherit;color:var(--muted);font-weight:400}
+.page-detail .roadmap{margin:0}
+.page-detail .rm-step{border-radius:0;box-shadow:none;border:1px solid var(--gray-200)}
+.page-detail .rm-cur{box-shadow:none}
+.page-detail .fact .l{font-size:var(--text-sm);color:var(--muted)}
+.page-detail .fact .v{font-size:var(--detail-body);font-weight:600;color:var(--ink)}
+.page-detail table.spec{font-size:1rem;color:var(--ink);line-height:1.65}
+.page-detail table.spec th,.page-detail table.spec td{padding:13px 18px}
+.page-detail table.spec th{background:var(--table-head-bg);color:var(--ink);font-weight:var(--fw-regular);font-size:1rem}
+.page-detail table.spec th .spec-th-inner{display:inline-flex;align-items:center;gap:7px}
+.page-detail table.spec th .spec-th-icon{flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;color:var(--ink);opacity:.55}
+.page-detail table.spec th .spec-th-icon .icon-svg{width:15px;height:15px}
+.page-detail table.spec th .spec-th-text{font-weight:inherit;line-height:inherit}
+.page-detail table.spec td{color:var(--ink);font-size:1rem;font-weight:var(--fw-regular);vertical-align:middle;line-height:1.65}
+.page-detail table.spec tr.spec-row{cursor:pointer;transition:background-color .12s ease}
+.page-detail table.spec tr.spec-row:hover th,.page-detail table.spec tr.spec-row:hover td{background:var(--table-hover-bg)}
+.page-detail table.spec tr.spec-row.is-active th,.page-detail table.spec tr.spec-row.is-active td{background:var(--accent-light)}
+.page-detail table.spec tr.spec-row:focus-visible{outline:2px solid var(--accent-ring);outline-offset:-2px}
+.page-detail table.spec .badge{font-size:var(--text-sm);font-weight:600;vertical-align:middle}
+.page-detail table.spec .diff-badge{vertical-align:middle}
+.page-detail table.spec .tag-chip,.page-detail table.spec .tag-ind{font-size:inherit;font-weight:var(--fw-regular);color:var(--ink);background:var(--gray-100);border-color:var(--table-border)}
+.page-detail table.spec a.tag-chip:hover{background:var(--table-hover-bg);border-color:var(--table-border);color:var(--ink)}
+.page-detail table.spec .spec-list{list-style:disc;margin:.15em 0 .3em;padding-left:1.25em;font-size:inherit}
+.page-detail table.spec .spec-list li{margin:2px 0;line-height:inherit;font-size:inherit;color:var(--ink)}
+.page-detail table.spec .materials{margin:.15em 0 .25em;font-size:inherit}
+.page-detail table.spec .materials li{display:block;background:none;border:none;border-radius:0;padding:2px 0;margin:0 0 4px;line-height:inherit;font-size:inherit;font-weight:var(--fw-regular);color:var(--ink)}
+.page-detail table.spec .materials a{color:var(--accent);font-weight:var(--fw-semibold);font-size:inherit;text-decoration:underline;text-underline-offset:2px}
+.page-detail table.spec .spec-list a,.page-detail table.spec .jobtag a{color:var(--ink);font-weight:var(--fw-regular);font-size:inherit;text-decoration:underline;text-underline-offset:2px}
+.page-detail table.spec .materials a:hover{color:var(--accent-hover);opacity:1}
+.page-detail table.spec .spec-list a:hover,.page-detail table.spec .jobtag a:hover{color:var(--ink);opacity:.85}
+.page-detail table.spec .mat-kind{display:inline;background:none;border:none;padding:0;margin:0;font-weight:var(--fw-regular);font-size:inherit;color:var(--ink)}
+.page-detail table.spec a{font-weight:var(--fw-regular);color:var(--ink)}
+.page-detail table.spec .mat-kind::after{content:"："}
+.page-detail table.spec .muted,.page-detail table.spec .note-muted{font-size:inherit;font-weight:var(--fw-regular);color:var(--muted)}
+.page-detail table.spec .materials .muted,.page-detail table.spec .materials .note-muted{font-size:inherit;font-weight:var(--fw-regular);color:var(--muted)}
+.page-detail table.spec .mat-foot,.page-detail table.spec .careers-src,.page-detail table.spec .jobtag,.page-detail table.spec .detail-source-note{margin-top:6px;font-size:inherit;font-weight:var(--fw-regular);color:var(--muted);line-height:inherit}
+.page-detail table.spec .ad-disclosure{margin:0 0 6px;padding:8px 10px;font-size:inherit;font-weight:var(--fw-regular);color:var(--muted);line-height:inherit;background:var(--table-head-bg);border:1px solid var(--table-border);border-radius:var(--radius)}
+.page-detail .tag-chip{font-size:var(--text-sm);background:var(--gray-50);color:var(--ink);border-color:var(--gray-200)}
+.page-detail .tag-ind{background:var(--gray-50);color:var(--ink);border-color:var(--gray-200)}
+.page-detail a.tag-chip:hover{background:var(--gray-100);border-color:var(--gray-300)}
+.page-detail .point-list li{font-size:var(--text-md);color:var(--ink);background:var(--gray-50);border-color:var(--gray-200)}
+.page-detail .point-list li::before{color:var(--muted)}
+.page-detail .detail-link-desc,.page-detail .detail-nav-note,.page-detail .detail-source-note{font-size:var(--text-sm);color:var(--muted)}
+.page-detail .detail-source{font-size:var(--text-sm);color:var(--muted)}
+.page-detail .careers-sec{margin-top:20px;padding-top:14px}
+.page-detail .careers-sec h2{margin:.2em 0 .5em}
+.page-detail .careers li,.page-detail .jobtag{font-size:var(--text-md);color:var(--ink)}
+.page-detail table.spec .careers li,.page-detail table.spec .jobtag{font-size:inherit;color:var(--ink)}
+.page-detail .careers-src,.page-detail .mat-foot{font-size:var(--text-sm);color:var(--muted)}
+.page-detail .mat-kind{background:var(--gray-100);color:var(--muted);border-color:var(--gray-200);font-size:var(--text-sm)}
+.page-detail .mat-body{font-size:var(--text-md)}
+.page-detail .mat-note{font-size:var(--text-sm);color:var(--muted)}
+.page-detail .ad-disclosure{font-size:var(--text-sm);color:var(--muted);background:var(--gray-50);border-color:var(--gray-200)}
+.page-detail .pd-name{font-size:1rem;font-weight:var(--fw-semibold);color:var(--ink)}
+.page-detail .pd-tag{font-size:var(--text-sm);color:var(--muted)}
+.page-detail .detail-related .more-compare p{font-size:var(--text-sm);color:var(--muted)}
+.page-detail .provenance{font-size:var(--text-sm);color:var(--muted)}
+.page-detail .updated{font-size:var(--text-sm);color:var(--muted)}
+/* ===== モバイル最適化（可読性・余白・タップ領域） ===== */
+@media(max-width:600px){
+  /* タイプスケールを引き締めて1画面の情報量を増やす（本文17→16px・見出し20→18px・行間も圧縮） */
+  :root{--text-md:1rem;--text-lg:1.125rem;--text-table:0.875rem;--page-gutter:16px}
+  body{line-height:1.6}
+  h2,h3{line-height:1.35}
+  /* ヒーロー：余白を圧縮 */
+  .hero{padding:28px var(--page-gutter) 24px}
+  .hero h1{margin-bottom:10px}
+  .hero-sub{font-size:var(--text-md);line-height:1.6}
+  .hero-search{margin-top:16px;max-width:min(680px,100%)}
+  /* セクション間隔を圧縮 */
+  .block-primary{margin-bottom:22px}.block-secondary{margin-bottom:20px}
+  .recent-inset{margin-top:18px;padding-top:18px}
+  .recent-inset .block-head{margin-bottom:10px}
+  .block-head{margin-bottom:10px}
+  /* コンテナ余白を圧縮 */
+  .container{padding:16px var(--page-gutter) 28px}
+  /* 人気の資格は1列にして各カードの情報を見やすく */
+  .popular-grid{grid-template-columns:1fr;gap:10px}
+  .pop-card{padding:14px 16px}
+  .pop-card-facts li{grid-template-columns:5.5em 1fr}
+  /* 比較カードのタイトルが詰まらないように */
+  .compare-names{font-size:1rem}
+  /* 一覧・ランキングのタップ領域と余白 */
+  .cl-link{padding:13px 14px}
+  /* 詳細ページ（読みやすさ優先） */
+  .container:has(.page-detail){padding-top:24px;padding-bottom:40px}
+  .page-detail{--detail-content:100%;max-width:none;margin:0;--detail-body:1rem;--detail-body-lh:1.8;--detail-h1:1.375rem;--detail-h2:1.1875rem;--detail-h3:1.0625rem;--detail-section-y:36px;--detail-block-gap:24px}
+  .page-detail .detail-intro::after{margin-top:28px}
+  .page-detail .detail-section-title{margin-bottom:22px}
+  .page-detail .faq-item summary{padding:16px 44px 16px 18px;font-size:var(--detail-body)}
+  .page-detail .faq-item summary::after{right:18px;top:16px}
+  .page-detail .faq-item .faq-a{padding:14px 18px}
+  .page-detail .detail-nav{padding-top:32px;padding-bottom:4px}
+  .page-detail table.spec th{padding:12px 14px}.page-detail table.spec td{padding:12px 14px;font-size:0.9375rem}
+  .page-detail .point-list li{font-size:var(--detail-body)}
+  /* 比較バーが内容に被らないよう余白を増やす */
+  body.cmp-open{padding-bottom:96px}
+}
+
 """
 
 
+def _article_table_html(tbl):
+    """{headers:[...], rows:[[...],...]} → 比較表HTML。"""
+    if not tbl or not tbl.get("rows"):
+        return ""
+    thead = ""
+    if tbl.get("headers"):
+        thead = ("<thead><tr>"
+                 + "".join(f"<th>{esc(h)}</th>" for h in tbl["headers"])
+                 + "</tr></thead>")
+    trs = "".join("<tr>" + "".join(f"<td>{esc(c)}</td>" for c in row) + "</tr>"
+                  for row in tbl["rows"])
+    return f'<div class="article-table-wrap"><table class="article-table">{thead}<tbody>{trs}</tbody></table></div>'
+
+
+def _article_sections_html(a, base):
+    out = []
+    for i, s in enumerate(a.get("sections", []), 1):
+        sid = f"sec-{i}"
+        h = f'<h2 id="{sid}" class="detail-section-title">{esc(s.get("h2",""))}</h2>'
+        ps = "".join(f"<p>{esc(p)}</p>" for p in s.get("paras", []))
+        tb = _article_table_html(s.get("table"))
+        ul = ""
+        if s.get("list"):
+            ul = ('<ul class="point-list">'
+                  + "".join(f"<li>{esc(x)}</li>" for x in s["list"]) + "</ul>")
+        cl = ""
+        items = []
+        for slug in s.get("cert_links", []):
+            nm = NAME_BY_SLUG.get(slug)
+            if nm:
+                items.append(f'<li><a href="{base}c/{esc(slug)}.html">{esc(nm)}</a></li>')
+        if items:
+            cl = ('<ul class="results article-cert-links">' + "".join(items) + "</ul>")
+        fi = ""
+        if s.get("feature_inline"):
+            href, txt = s["feature_inline"]
+            fi = f'<p class="article-inline-link"><a href="{base}{esc(href)}">▶ {esc(txt)}</a></p>'
+        out.append(f'<section class="article-section">{h}{ps}{tb}{ul}{cl}{fi}</section>')
+    return "".join(out)
+
+
+def _article_toc_html(a):
+    """セクション見出しから目次を生成（4見出し以上で表示）。"""
+    secs = a.get("sections", [])
+    if len(secs) < 4:
+        return ""
+    lis = "".join(f'<li><a href="#sec-{i}">{esc(s.get("h2",""))}</a></li>'
+                  for i, s in enumerate(secs, 1))
+    return (f'<nav class="article-toc" aria-label="目次"><p class="article-toc-h">目次</p>'
+            f'<ol>{lis}</ol></nav>')
+
+
+def build_articles():
+    """SEO記事（コラム）を個別ページ + 一覧ページとして生成する。
+    返り値: (index_html, {slug: html})。記事は関連する資格詳細・特集へ送客する。"""
+    if not ARTICLES:
+        return "", {}
+    base = "../"
+    pages = {}
+    for a in ARTICLES:
+        slug = a["slug"]
+        canon = f"{BASE_URL}/articles/{slug}.html"
+        sections_html = _article_sections_html(a, base)
+        # 関連リンク（特集・ハブ）
+        feat = a.get("feature_links", [])
+        rel_html = ""
+        if feat:
+            lis = "".join(f'<li><a href="{base}{esc(h)}">{esc(t)}</a></li>' for h, t in feat)
+            rel_html = (f'<nav class="rel-links article-related"><h2 class="detail-section-title">'
+                        f'関連する特集・一覧</h2><ul>{lis}</ul></nav>')
+        # FAQ
+        faq = a.get("faq", [])
+        faq_html = ""
+        faq_ld = None
+        if faq:
+            qa = "".join(
+                f'<details class="faq-item"><summary>{esc(q)}</summary>'
+                f'<div class="faq-a">{esc(ans)}</div></details>' for q, ans in faq)
+            faq_html = (f'<section class="article-section detail-section--faq">'
+                        f'<h2 class="detail-section-title">よくある質問</h2>{qa}</section>')
+            faq_ld = {"@context": "https://schema.org", "@type": "FAQPage",
+                      "mainEntity": [{"@type": "Question", "name": q,
+                                      "acceptedAnswer": {"@type": "Answer", "text": ans}}
+                                     for q, ans in faq]}
+        updated = a.get("updated", a.get("date", ""))
+        meta_line = ""
+        if a.get("date"):
+            meta_line = (f'<p class="article-meta"><span>公開: {esc(a["date"])}</span>'
+                         + (f'<span>更新: {esc(updated)}</span>' if updated else "")
+                         + f'<span class="article-cat">{esc(a.get("category",""))}</span></p>')
+        # 結論先出し（検索意図に即答。スニペット獲得＆読み手の離脱防止）
+        answer_html = ""
+        if a.get("answer"):
+            answer_html = (f'<div class="article-answer"><p class="article-answer-h">結論</p>'
+                           f'<p>{esc(a["answer"])}</p></div>')
+        toc_html = _article_toc_html(a)
+        body = f"""<div class="page-article">
+<nav class="crumbs"><a href="{base}index.html">トップ</a> ›
+<a href="{base}articles/index.html">記事・コラム</a> › {esc(a["h1"])}</nav>
+<article>
+<header class="article-head">
+<h1>{esc(a["h1"])}</h1>
+{meta_line}
+<p class="lead">{esc(a.get("lead",""))}</p>
+</header>
+{answer_html}
+{toc_html}
+{sections_html}
+{rel_html}
+{faq_html}
+<p class="article-foot-note">本記事は一般的な情報をまとめたものです。受験料・合格率・日程など個別の条件は各資格の公式サイト・詳細ページで必ずご確認ください。</p>
+</article>
+</div>"""
+        blogposting = {
+            "@context": "https://schema.org", "@type": "BlogPosting",
+            "headline": a.get("title") or a["h1"],
+            "description": a.get("description", ""),
+            "datePublished": a.get("date", ""),
+            "dateModified": updated or a.get("date", ""),
+            "author": {"@type": "Organization", "name": SITE_NAME},
+            "publisher": {"@type": "Organization", "name": SITE_NAME,
+                          "logo": {"@type": "ImageObject",
+                                   "url": BASE_URL + "/assets/favicon.svg"}},
+            "mainEntityOfPage": {"@type": "WebPage", "@id": canon},
+            "image": BASE_URL + "/assets/og.png",
+        }
+        breadcrumb = {
+            "@context": "https://schema.org", "@type": "BreadcrumbList",
+            "itemListElement": [
+                {"@type": "ListItem", "position": 1, "name": "トップ", "item": BASE_URL + "/"},
+                {"@type": "ListItem", "position": 2, "name": "記事・コラム",
+                 "item": BASE_URL + "/articles/index.html"},
+                {"@type": "ListItem", "position": 3, "name": a["h1"]},
+            ]}
+        ld = [blogposting, breadcrumb] + ([faq_ld] if faq_ld else [])
+        pages[slug] = page_shell(f'{a.get("title") or a["h1"]}｜{SITE_NAME}', body,
+                                 depth=1, noindex=False, desc=a.get("description", ""),
+                                 path=f"articles/{slug}.html", jsonld=ld)
+    # 一覧ページ
+    cards = "".join(
+        f'<article class="article-card">'
+        f'<p class="article-cat">{esc(a.get("category",""))}</p>'
+        f'<h2><a href="{base}articles/{esc(a["slug"])}.html">{esc(a["h1"])}</a></h2>'
+        f'<p class="article-card-desc">{esc(a.get("description",""))}</p></article>'
+        for a in ARTICLES)
+    idx_body = f"""<div class="page-article">
+<nav class="crumbs"><a href="{base}index.html">トップ</a> › 記事・コラム</nav>
+<h1>記事・コラム</h1>
+<p class="lead">資格選び・勉強法・転職に役立つ情報をまとめた記事一覧です。気になるテーマから、関連する資格や特集ページもあわせてご覧ください。</p>
+<div class="article-list">{cards}</div>
+</div>"""
+    idx_ld = [
+        {"@context": "https://schema.org", "@type": "BreadcrumbList",
+         "itemListElement": [
+             {"@type": "ListItem", "position": 1, "name": "トップ", "item": BASE_URL + "/"},
+             {"@type": "ListItem", "position": 2, "name": "記事・コラム"}]},
+        {"@context": "https://schema.org", "@type": "ItemList",
+         "name": "記事・コラム", "numberOfItems": len(ARTICLES),
+         "itemListElement": [
+             {"@type": "ListItem", "position": i, "name": a["h1"],
+              "url": f'{BASE_URL}/articles/{a["slug"]}.html'}
+             for i, a in enumerate(ARTICLES, 1)]},
+    ]
+    index_html = page_shell(f"記事・コラム｜{SITE_NAME}", idx_body, depth=1, noindex=False,
+                            desc="資格選び・勉強法・転職に役立つ記事一覧。目的別の資格ガイドや国家資格・民間資格の違い、働きながらの勉強法などを掲載。",
+                            path="articles/index.html", jsonld=idx_ld)
+    return index_html, pages
+
+
 def main() -> int:
+    global ASSET_V
     rows = load_rows()
     indexable = [r for r in rows
                  if r["is_bucket"] == "0" and r["is_duplicate"] == "0"
                  and r["scope"] == "domestic"]
 
+    # 同分野の関連資格を静的生成するための索引（787KB JSONのfetchを詳細ページから排除）
+    CERTS_BY_CATEGORY.clear()
+    for r in sorted(indexable, key=lambda x: (x["major_category"], x["category"], x["name"])):
+        CERTS_BY_CATEGORY.setdefault(r["category"], []).append((r["slug"], r["name"]))
+
     # 詳細→比較ページの相互リンク用グローバルを設定
     NAME_BY_SLUG.update({r["slug"]: r["name"] for r in rows})
     INDEXABLE_SLUGS.update(r["slug"] for r in indexable if is_indexable_detail(r))
+    # 総合難易度ランキング（合格率・学習時間ベース）を算出
+    build_difficulty_rank(indexable)
+
+    ASSET_V = hashlib.sha256(
+        (APP_CSS + SEARCH_JS + COMPARE_JS + COMPARE_BAR_JS + OCC_SEARCH_JS
+         + COURSES_SEARCH_JS).encode()
+    ).hexdigest()[:10]
 
     if SITE.exists():
         shutil.rmtree(SITE)
@@ -1582,18 +5274,26 @@ def main() -> int:
     def _diff_label(r):
         d = difficulty(r)
         return d[0] if d else ""
+    _pop_ranked = sorted((r for r in indexable if applicants_num(r) is not None),
+                         key=lambda r: (-(applicants_num(r) or 0), r["name"]))
+    popular_set = {r["slug"] for r in _pop_ranked[:80]}
     payload = [{
-        "slug": r["slug"], "name": r["name"], "major": r["major_category"],
+        "popular": (r["slug"] in popular_set),
+        "slug": r["slug"], "name": r["name"],
+        "display_name": _rel_name(r["slug"]),
+        "major": r["major_category"],
         "category": r["category"], "type": r["type"],
         "authority": r["authority"], "official_url": r["official_url"],
         "eligibility": r["eligibility"], "exam_format": r["exam_format"],
-        "fee": r["fee"], "pass_rate": r["pass_rate"], "frequency": r["frequency"],
+        "fee": fmt_nums_in_text(r["fee"]), "pass_rate": pass_rate_display(r["pass_rate"]),
+        "frequency": r["frequency"],
         "status": r.get("status", ""),
         "tags": cert_tags(r),
         "industries": industry_tags(r),
         "difficulty": _diff_label(r),
-        "applicants": (EXAM.get(r["slug"], {}) or {}).get("applicants", ""),
-        "study_hours": (STUDY.get(r["slug"], {}) or {}).get("study_hours", ""),
+        "applicants": fmt_nums_in_text((EXAM.get(r["slug"], {}) or {}).get("applicants", "")),
+        "study_hours": fmt_nums_in_text((STUDY.get(r["slug"], {}) or {}).get("study_hours", "")),
+        "aliases": ALIASES.get(r["slug"], []),
     } for r in indexable]
     payload.sort(key=lambda x: (x["major"], x["category"], x["name"]))
     (SITE / "data" / "certifications.json").write_text(
@@ -1602,6 +5302,8 @@ def main() -> int:
     (SITE / "assets" / "app.css").write_text(APP_CSS, encoding="utf-8")
     (SITE / "assets" / "search.js").write_text(SEARCH_JS, encoding="utf-8")
     (SITE / "assets" / "compare.js").write_text(COMPARE_JS, encoding="utf-8")
+    (SITE / "assets" / "compare-bar.js").write_text(COMPARE_BAR_JS, encoding="utf-8")
+    (SITE / "assets" / "courses-search.js").write_text(COURSES_SEARCH_JS, encoding="utf-8")
     for name in ("favicon.svg", "favicon.ico", "favicon-16.png", "favicon-32.png", "apple-touch-icon.png"):
         src = BRAND / name
         if src.exists():
@@ -1610,21 +5312,33 @@ def main() -> int:
         shutil.copy2(BRAND / "favicon.ico", SITE / "favicon.ico")
     (SITE / "index.html").write_text(build_index(indexable), encoding="utf-8")
     (SITE / "compare.html").write_text(build_compare(), encoding="utf-8")
+    (SITE / "courses.html").write_text(build_courses_page(indexable), encoding="utf-8")
+    (SITE / "toukei.html").write_text(build_stats_page(indexable), encoding="utf-8")
+    (SITE / "calendar.html").write_text(build_calendar_page(indexable), encoding="utf-8")
+    (SITE / "finder.html").write_text(build_finder_page(indexable), encoding="utf-8")
 
     for r in indexable:
-        (SITE / "c" / f'{r["slug"]}.html').write_text(build_detail(r), encoding="utf-8")
+        (SITE / "c" / f'{r["slug"]}.html').write_text(build_detail(r, popular_set), encoding="utf-8")
 
     # 集約: 分野別一覧
     (SITE / "bunya").mkdir()
-    cat_pages = build_category_pages(indexable)
+    cat_pages = build_category_pages(indexable, popular_set)
     for slug, htmlc in cat_pages.items():
         (SITE / "bunya" / f"{slug}.html").write_text(htmlc, encoding="utf-8")
 
     # 特集
     (SITE / "feature").mkdir()
-    feat_pages = build_feature_pages(indexable)
+    feat_pages = build_feature_pages(indexable, popular_set)
     for slug, htmlc in feat_pages.items():
         (SITE / "feature" / f"{slug}.html").write_text(htmlc, encoding="utf-8")
+
+    # SEO記事（コラム）
+    article_index_html, article_pages = build_articles()
+    if article_index_html:
+        (SITE / "articles").mkdir()
+        (SITE / "articles" / "index.html").write_text(article_index_html, encoding="utf-8")
+        for slug, htmlc in article_pages.items():
+            (SITE / "articles" / f"{slug}.html").write_text(htmlc, encoding="utf-8")
 
     # 比較（人気ペア）
     (SITE / "vs").mkdir()
@@ -1632,15 +5346,44 @@ def main() -> int:
     for slug, htmlc in vs_pages.items():
         (SITE / "vs" / f"{slug}.html").write_text(htmlc, encoding="utf-8")
 
+    # 職種DB（職種ページ＋「活かせる仕事」からの逆引きインデックス）
+    occ_index_items = []
+    if OCC:
+        (SITE / "shoku").mkdir()
+        occ_pages, occ_index_html, occ_index_items = build_occupation_pages(indexable)
+        for oid, htmlc in occ_pages.items():
+            (SITE / "shoku" / f"{oid}.html").write_text(htmlc, encoding="utf-8")
+        (SITE / "shoku" / "index.html").write_text(occ_index_html, encoding="utf-8")
+        # 職種の検索用JSON（全職種。索引ページのクライアント検索・分野フィルタで使用）
+        occ_payload = sorted(
+            ({"id": oid, "n": info["name"], "m": info["major_category"],
+              "c": info["cert_count"]} for oid, info in OCC.items()),
+            key=lambda x: (-x["c"], x["n"]))
+        (SITE / "data" / "occupations.json").write_text(
+            json.dumps(occ_payload, ensure_ascii=False), encoding="utf-8")
+        (SITE / "assets" / "occ-search.js").write_text(OCC_SEARCH_JS, encoding="utf-8")
+
     # sitemap.xml（index対象 = トップ・比較・分野別・特集・インデックス対象の詳細のみ）
     # noindex のページは sitemap に入れない（インデックス衛生・整合性）。
     from datetime import date
     today = date.today().isoformat()
     # (path, lastmod, priority)
-    entries = [("", today, "1.0"), ("compare.html", today, "0.7")]
+    entries = [("", today, "1.0"), ("compare.html", today, "0.7"),
+               ("courses.html", today, "0.8"),
+               ("toukei.html", today, "0.7"), ("calendar.html", today, "0.7"),
+               ("finder.html", today, "0.8"), ("about.html", today, "0.5")]
     entries += [(f"bunya/{s}.html", today, "0.8") for s in cat_pages]
     entries += [(f"feature/{s}.html", today, "0.8") for s in feat_pages]
+    if article_index_html:
+        entries.append(("articles/index.html", today, "0.7"))
+        entries += [(f'articles/{a["slug"]}.html',
+                     (a.get("updated") or a.get("date") or today), "0.7")
+                    for a in ARTICLES]
     entries += [(f"vs/{s}.html", today, "0.7") for s in vs_pages]
+    if OCC:
+        entries.append(("shoku/index.html", today, "0.7"))
+        entries += [(f"shoku/{oid}.html", today, "0.6")
+                    for oid, _, _, _ in occ_index_items]
     idx_details = [r for r in indexable if is_indexable_detail(r)]
     entries += [(f'c/{r["slug"]}.html',
                  (r.get("source_checked_at") or today), "0.6") for r in idx_details]
@@ -1659,11 +5402,73 @@ def main() -> int:
     if CUSTOM_DOMAIN:
         (SITE / "CNAME").write_text(CUSTOM_DOMAIN + "\n", encoding="utf-8")
 
+    # サイトについて・編集方針（E-E-A-T: 出典・信頼性の明示）
+    _n_total = len(indexable)
+    _n_checked = sum(1 for r in indexable if (r.get("source_checked_at") or "").strip())
+    about_body = f"""<nav class="crumbs"><a href="index.html">トップ</a> › サイトについて</nav>
+<h1>サイトについて・編集方針</h1>
+<p class="lead">{esc(SITE_NAME)}は、日本国内の資格を「探せる・絞れる・比べられる」ことを目的に、
+各資格の<strong>公式の一次情報</strong>に基づいて情報を整理・掲載する資格情報サイトです。
+就職・転職・スキルアップに役立つ資格選びを支援します。</p>
+
+<section class="detail-spec"><h2 class="detail-section-title">掲載範囲</h2>
+<p>国内の資格 <strong>{_n_total}件</strong> を収録し、各資格について受験料・受験資格・試験形式・
+合格率・実施頻度・実施団体・公式サイトを掲載しています。資格は国家・公的・民間・要確認に区分し、
+区分の判定基準は編集方針として明文化しています。</p></section>
+
+<section class="detail-spec"><h2 class="detail-section-title">編集方針・情報源</h2>
+<ul class="point-list">
+<li>掲載値は各資格の<strong>実施団体公式・所管省庁などの一次情報</strong>に基づいて整備しています。</li>
+<li>各詳細ページに<strong>最終確認日</strong>と<strong>情報源</strong>を表示し、確認状況を追跡できるようにしています（確認済み {_n_checked}/{_n_total}件）。</li>
+<li>一次情報で確認できない項目は推測で埋めず、「公式で確認」と表示しています。</li>
+<li>資格名・区分は厚生労働省 ハローワーク「免許・資格コード一覧」を出発点に、各実施団体の公式情報で精査しています。</li>
+<li>学習時間・難易度・総合スコアは編集部による<strong>目安</strong>であり、公式の数値ではありません。</li>
+</ul></section>
+
+<section class="detail-spec"><h2 class="detail-section-title">ご利用にあたっての注意</h2>
+<p>掲載内容は参考情報です。受験料・合格率・制度・日程等は変更される場合があるため、出願前に各資格の公式情報で必ずご確認ください。各詳細ページに最終確認日と情報源を表示しています。本サイトの情報の利用により生じたいかなる損害についても責任を負いかねます。</p></section>
+
+<section class="detail-spec"><h2 class="detail-section-title">運営者の資格対策サイト</h2>
+<p>当サイトの運営者は、個別資格の学習・対策に特化した以下のサイトも制作・運営しています。
+各資格の試験対策には、あわせてご活用ください。</p>
+<div class="partner-grid">{partner_cards_html()}</div></section>
+
+<aside class="detail-source"><p class="detail-source-note">
+一覧データ出典: 厚生労働省 ハローワーク「免許・資格コード一覧」ほか、各資格の公式の一次情報。
+関連: 厚生労働省 職業情報提供サイト（job tag）等。</p></aside>"""
+    about_ld = {"@context": "https://schema.org", "@type": "AboutPage",
+                "name": f"サイトについて・編集方針｜{SITE_NAME}",
+                "url": BASE_URL + "/about.html",
+                "publisher": {"@type": "Organization", "name": SITE_NAME,
+                              "url": BASE_URL + "/"}}
+    (SITE / "about.html").write_text(
+        page_shell(f"サイトについて・編集方針｜{SITE_NAME}", about_body, depth=0,
+                   noindex=False,
+                   desc=f"{SITE_NAME}の編集方針・情報源・免責。各資格の公式の一次情報に基づき"
+                        f"国内の資格{_n_total}件を整理。最終確認日と情報源を明示しています。",
+                   path="about.html", jsonld=about_ld),
+        encoding="utf-8")
+
     # カスタム 404（GitHub Pages が未検出時に配信）
-    nf_body = ('<h1>ページが見つかりません（404）</h1>'
-               '<p class="lead">お探しのページは移動または削除された可能性があります。'
-               'トップから資格名で検索してください。</p>'
-               '<p><a href="/">▶ トップページへ</a></p>')
+    _nf_pop = "".join(
+        f'<li><a href="/c/{r["slug"]}.html">'
+        f'{esc(re.sub(r"[（(].*?[）)]", "", r["name"]).strip() or r["name"])}</a></li>'
+        for r in _pop_ranked[:8])
+    nf_body = (
+        '<h1>ページが見つかりません（404）</h1>'
+        '<p class="lead">お探しのページは移動または削除された可能性があります。'
+        '資格名で検索するか、人気の資格・分野からお探しください。</p>'
+        '<form class="hero-search" action="/index.html" method="get" style="max-width:480px;margin-bottom:8px">'
+        '<span class="ico"><svg class="ico-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" '
+        'stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/>'
+        '<path d="M15.5 15.5L21 21"/></svg></span>'
+        '<input type="search" name="q" placeholder="資格名で検索（例: 簿記, 宅建）" aria-label="資格名で検索">'
+        '</form>'
+        '<section class="block block-secondary" style="margin-top:22px">'
+        '<div class="block-head"><h2>人気の資格</h2></div>'
+        f'<ul class="feat-list">{_nf_pop}</ul></section>'
+        '<p><a href="/">▶ トップページへ</a>　・　<a href="/index.html#fields">分野から探す</a>'
+        '　・　<a href="/shoku/index.html">職種から探す</a></p>')
     (SITE / "404.html").write_text(
         page_shell(f"404 ページが見つかりません｜{SITE_NAME}", nf_body, depth=0,
                    noindex=True, desc="ページが見つかりません。", path="404.html"),
@@ -1673,6 +5478,8 @@ def main() -> int:
     print(f"  index + {len(indexable)} detail pages")
     print(f"  sitemap urls: {len(entries)} (index対象詳細: {len(idx_details)})")
     print(f"  分野別一覧: {len(cat_pages)}  特集: {len(feat_pages)}")
+    if OCC:
+        print(f"  職種ページ: {len(OCC)}（うちindex対象 {len(occ_index_items)}）")
     print(f"  excluded: bucket/duplicate/overseas = {len(rows)-len(indexable)}")
     return 0
 
