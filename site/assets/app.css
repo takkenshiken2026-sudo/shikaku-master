@@ -410,12 +410,12 @@ table.spec th{width:34%;background:var(--table-head-bg);color:var(--ink);font-we
 .article-cert-links{margin:12px 0}
 .article-related{margin-top:26px}
 .article-inline-link{margin:8px 0}
-.article-foot-note{font-size:var(--text-sm);color:var(--muted);margin-top:28px;border-top:1px solid var(--gray-200);padding-top:14px;line-height:1.7}
+.article-foot-note{font-size:var(--text-sm);color:var(--muted);margin-top:28px;line-height:1.7}
 .article-answer{background:#eef4fb;border:1px solid #c4d8ef;border-left:4px solid var(--accent,#1a4f8f);border-radius:var(--radius);padding:14px 16px;margin:18px 0}
 .article-answer-h{font-weight:700;color:var(--accent,#1a4f8f);font-size:var(--text-sm);margin:0 0 4px}
 .article-answer p{margin:0;line-height:1.8}
 .article-toc{background:var(--gray-50);border:1px solid var(--gray-200);border-radius:var(--radius);padding:14px 18px;margin:18px 0}
-.article-toc-h{font-weight:700;margin:0 0 6px}
+.article-toc-h{font-weight:700;font-size:var(--text-sm);margin:0 0 6px}
 .article-toc ol{margin:0;padding-left:1.4em}.article-toc li{margin:3px 0}
 .article-table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:14px 0;border:1px solid var(--table-border);border-radius:var(--radius);background:#fff}
 .article-table{border-collapse:collapse;width:100%;font-size:var(--text-table);color:var(--ink);background:#fff}
@@ -433,7 +433,7 @@ table.spec th{width:34%;background:var(--table-head-bg);color:var(--ink);font-we
 .page-article .article-cert-links li::before{content:"›";color:var(--accent);font-weight:700;font-size:1.2em;line-height:1}
 .page-article .article-cert-links li a{flex:1;min-width:0}
 .page-article .article-cert-links li:hover{border-color:var(--accent);box-shadow:0 2px 10px rgba(11,87,208,.13)}
-.page-article .article-related{border-top:1px solid var(--gray-200);padding-top:22px}
+.page-article .article-related{border-top:none;padding-top:0}
 .page-article .article-related ul{list-style:none;padding:0;margin:0;display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .page-article .article-related li a{display:block;padding:11px 14px;background:var(--gray-50);border:1px solid var(--gray-200);border-radius:var(--radius);color:var(--ink);text-decoration:none;transition:border-color .12s,background .12s}
 .page-article .article-related li a::before{content:"▶";color:var(--accent);font-size:.75em;margin-right:8px;vertical-align:middle}
