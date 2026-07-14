@@ -4676,6 +4676,7 @@ table.spec th{width:34%;background:var(--table-head-bg);color:var(--ink);font-we
 .feat-list{margin:.2em 0 .6em;padding-left:1.1em}.feat-list li{margin:2px 0}
 .notice-defunct{font-size:var(--text-sm);color:#7a4f00;background:#fff7e6;border:1px solid #ffd591;border-left:4px solid #fa8c16;border-radius:var(--radius);padding:11px 14px;margin:18px 0 0;line-height:1.7}
 .notice-defunct a{color:#9a3412}
+.container:has(.page-article){max-width:800px}
 .page-article{max-width:100%;margin:0 auto}
 .page-article .article-section{margin:26px 0}
 .page-article .article-section p{line-height:1.85;margin:.6em 0}
