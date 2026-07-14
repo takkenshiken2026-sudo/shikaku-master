@@ -4680,6 +4680,8 @@ table.spec th{width:34%;background:var(--table-head-bg);color:var(--ink);font-we
 .page-article{max-width:100%;margin:0 auto}
 .page-article .article-section{margin:26px 0}
 .page-article .article-section p{line-height:1.85;margin:.6em 0}
+.page-article .article-section strong{font-weight:700}
+.page-article .article-section .em-accent{color:var(--accent);font-weight:700}
 .article-meta{display:flex;gap:14px;flex-wrap:wrap;font-size:var(--text-sm);color:var(--muted);margin:.3em 0 1.1em}
 .article-cat{font-size:var(--text-sm);color:var(--accent,#1a4f8f);font-weight:600}
 .article-list{display:grid;gap:14px;margin-top:18px}
@@ -5103,17 +5105,26 @@ def _article_table_html(tbl):
     return f'<div class="article-table-wrap"><table class="article-table">{thead}<tbody>{trs}</tbody></table></div>'
 
 
+def _article_inline(text: str) -> str:
+    """記事本文のインライン強調。まずHTMLエスケープした上で、
+    **…** を太字（<strong>）、%%…%% を太字青文字（<strong class="em-accent">）に変換する。"""
+    s = esc(text)
+    s = re.sub(r"%%(.+?)%%", r'<strong class="em-accent">\1</strong>', s)
+    s = re.sub(r"\*\*(.+?)\*\*", r"<strong>\1</strong>", s)
+    return s
+
+
 def _article_sections_html(a, base):
     out = []
     for i, s in enumerate(a.get("sections", []), 1):
         sid = f"sec-{i}"
         h = f'<h2 id="{sid}" class="detail-section-title">{esc(s.get("h2",""))}</h2>'
-        ps = "".join(f"<p>{esc(p)}</p>" for p in s.get("paras", []))
+        ps = "".join(f"<p>{_article_inline(p)}</p>" for p in s.get("paras", []))
         tb = _article_table_html(s.get("table"))
         ul = ""
         if s.get("list"):
             ul = ('<ul class="point-list">'
-                  + "".join(f"<li>{esc(x)}</li>" for x in s["list"]) + "</ul>")
+                  + "".join(f"<li>{_article_inline(x)}</li>" for x in s["list"]) + "</ul>")
         cl = ""
         items = []
         for slug in s.get("cert_links", []):
