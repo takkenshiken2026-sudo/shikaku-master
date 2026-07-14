@@ -4681,7 +4681,7 @@ table.spec th{width:34%;background:var(--table-head-bg);color:var(--ink);font-we
 .page-article .article-section{margin:26px 0}
 .page-article .article-section p{line-height:1.85;margin:.6em 0}
 .page-article .article-section strong{font-weight:700}
-.page-article .article-section .em-accent{color:var(--accent);font-weight:700}
+.page-article .article-section .em-accent{color:var(--accent);font-weight:700;text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:2px}
 .article-meta{display:flex;gap:14px;flex-wrap:wrap;font-size:var(--text-sm);color:var(--muted);margin:.3em 0 1.1em}
 .article-cat{font-size:var(--text-sm);color:var(--accent,#1a4f8f);font-weight:600}
 .article-list{display:grid;gap:14px;margin-top:18px}
