@@ -2200,6 +2200,8 @@ FEATURE_NAV = [
     ("cheap", "受験料が安い資格ランキング"),
     ("high-pass", "合格率が高い資格"),
     ("hard", "合格率が低い難関資格"),
+    ("study-short", "勉強時間が短い資格ランキング"),
+    ("study-long", "勉強時間が長い難関資格ランキング"),
     ("cbt", "在宅・CBTで受けられる資格"),
     ("no-requirement", "受験資格なしで受けられる資格"),
     ("no-requirement-national", "受験資格なしで取れる国家資格"),
@@ -2818,6 +2820,29 @@ def build_feature_pages(indexable, popular_slugs=None):
          f"公表されている合格率が低い（難易度が高い）順に並べた資格一覧（上位 {len(lo)} 件）。",
          lo, "合格率が低い難関資格を一覧。受験料・合格率・公式情報を掲載。",
          ranked=True)
+
+    # 勉強時間が短い順（学習時間データのある資格）
+    with_study = [r for r in pub if study_hours_max(r["slug"]) is not None]
+    study_short = sorted(with_study,
+                         key=lambda r: (study_hours_max(r["slug"]), r["name"]))[:120]
+    page("study-short", "勉強時間が短い資格ランキング",
+         "勉強時間が短い資格ランキング【短期間で取れる】",
+         f"合格に必要な勉強時間の目安が短い順に並べた資格ランキング（データ掲載分の"
+         f"上位 {len(study_short)} 件）。まず1つ短期間で取りたい人の目安に。"
+         "学習時間は編集部調べの一般的な目安（非公式）で、もともとの知識により変わります。",
+         study_short, "勉強時間の目安が短い資格を短い順にランキング。"
+         "短期間で取れる資格を勉強時間の目安つきで一覧。", ranked=True)
+
+    # 勉強時間が長い順（難関・じっくり取り組む資格）
+    study_long = sorted(with_study,
+                        key=lambda r: (-study_hours_max(r["slug"]), r["name"]))[:120]
+    page("study-long", "勉強時間が長い難関資格ランキング",
+         "勉強時間が長い資格ランキング【難関・腰を据えて】",
+         f"合格に必要な勉強時間の目安が長い順に並べた資格ランキング（データ掲載分の"
+         f"上位 {len(study_long)} 件）。腰を据えて挑む難関資格の学習量の目安に。"
+         "学習時間は編集部調べの一般的な目安（非公式）です。",
+         study_long, "勉強時間の目安が長い難関資格を長い順にランキング。"
+         "取得に時間のかかる資格を勉強時間の目安つきで一覧。", ranked=True)
 
     # 在宅・CBT
     cbt = sorted((r for r in pub if is_cbt(r)),
