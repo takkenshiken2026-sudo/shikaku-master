@@ -4709,10 +4709,21 @@ table.spec th{width:34%;background:var(--table-head-bg);color:var(--ink);font-we
 .page-article .article-section .em-accent{color:var(--accent);font-weight:700;text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:2px}
 .article-meta{display:flex;gap:14px;flex-wrap:wrap;font-size:var(--text-sm);color:var(--muted);margin:.3em 0 1.1em}
 .article-cat{font-size:var(--text-sm);color:var(--accent,#1a4f8f);font-weight:600}
-.article-list{display:grid;gap:14px;margin-top:18px}
-.article-card{border:1px solid var(--gray-200);border-radius:var(--radius);padding:16px 18px;background:#fff}
-.article-card h2{font-size:1rem;margin:.25em 0}
-.article-card-desc{font-size:var(--text-sm);color:var(--ink,#333);line-height:1.7}
+.article-toc{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0 6px}
+.article-toc-link{display:inline-flex;align-items:center;gap:7px;padding:6px 12px;border:1px solid var(--gray-200);border-radius:999px;background:#fff;color:var(--ink);font-size:var(--text-sm);font-weight:600;text-decoration:none}
+.article-toc-link:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-light);text-decoration:none}
+.article-toc-count{display:inline-flex;align-items:center;justify-content:center;min-width:1.5em;height:1.5em;padding:0 .35em;border-radius:999px;background:var(--gray-100);color:var(--muted);font-size:.75rem;font-weight:700}
+.article-group{margin-top:28px;scroll-margin-top:84px}
+.article-group-title{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;font-size:var(--text-lg);padding-bottom:8px;border-bottom:2px solid var(--gray-200)}
+.article-group-count{font-size:var(--text-sm);font-weight:var(--fw-regular);color:var(--muted)}
+.article-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:14px;margin-top:14px}
+.article-card{display:flex;flex-direction:column;border:1px solid var(--gray-200);border-radius:var(--radius);padding:15px 17px;background:#fff;transition:border-color .15s ease,box-shadow .15s ease,transform .15s ease}
+.article-card:hover{border-color:var(--accent);box-shadow:0 6px 18px rgba(11,87,208,.10);transform:translateY(-2px)}
+.article-card-title{font-size:1.0625rem;font-weight:var(--fw-bold);line-height:1.5;margin:0}
+.article-card-title a{color:var(--accent);text-decoration:none}
+.article-card:hover .article-card-title a{text-decoration:underline}
+.article-card-desc{font-size:var(--text-sm);color:var(--muted);line-height:1.7;margin:.5em 0 0;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.article-card-more{margin-top:auto;padding-top:.7em;color:var(--accent);font-size:var(--text-sm);font-weight:var(--fw-bold)}
 .article-cert-links{margin:12px 0}
 .article-related{margin-top:26px}
 .article-inline-link{margin:8px 0}
@@ -5263,30 +5274,55 @@ def build_articles():
         pages[slug] = page_shell(f'{a.get("title") or a["h1"]}｜{SITE_NAME}', body,
                                  depth=1, noindex=False, desc=a.get("description", ""),
                                  path=f"articles/{slug}.html", jsonld=ld)
-    # 一覧ページ
-    cards = "".join(
-        f'<article class="article-card">'
-        f'<p class="article-cat">{esc(a.get("category",""))}</p>'
-        f'<h2><a href="{base}articles/{esc(a["slug"])}.html">{esc(a["h1"])}</a></h2>'
-        f'<p class="article-card-desc">{esc(a.get("description",""))}</p></article>'
-        for a in ARTICLES)
+    # 一覧ページ: 109本をフラットに並べると一覧しにくいため、カテゴリ別の
+    # セクション（初出順を保持）に分割し、上部にカテゴリ目次を置いて回遊しやすくする。
+    groups = {}
+    for a in ARTICLES:
+        groups.setdefault(a.get("category") or "その他", []).append(a)
+    grouped = list(groups.items())
+
+    def _article_card(a):
+        return (
+            f'<article class="article-card">'
+            f'<h3 class="article-card-title">'
+            f'<a href="{base}articles/{esc(a["slug"])}.html">{esc(a["h1"])}</a></h3>'
+            f'<p class="article-card-desc">{esc(a.get("description",""))}</p>'
+            f'<span class="article-card-more" aria-hidden="true">続きを読む →</span>'
+            f'</article>')
+
+    toc = "".join(
+        f'<a class="article-toc-link" href="#g{i}">{esc(cat)}'
+        f'<span class="article-toc-count">{len(items)}</span></a>'
+        for i, (cat, items) in enumerate(grouped, 1))
+
+    sections = "".join(
+        f'<section class="article-group" id="g{i}">'
+        f'<h2 class="article-group-title">{esc(cat)}'
+        f'<span class="article-group-count">{len(items)}記事</span></h2>'
+        f'<div class="article-list">'
+        + "".join(_article_card(a) for a in items)
+        + '</div></section>'
+        for i, (cat, items) in enumerate(grouped, 1))
+
     idx_body = f"""<div class="page-article">
 <nav class="crumbs"><a href="{base}index.html">トップ</a> › 記事・コラム</nav>
 <h1>記事・コラム</h1>
 <p class="lead">資格選び・勉強法・転職に役立つ情報をまとめた記事一覧です。気になるテーマから、関連する資格や特集ページもあわせてご覧ください。</p>
-<div class="article-list">{cards}</div>
+<nav class="article-toc" aria-label="記事カテゴリ">{toc}</nav>
+{sections}
 </div>"""
+    ordered = [a for _, items in grouped for a in items]
     idx_ld = [
         {"@context": "https://schema.org", "@type": "BreadcrumbList",
          "itemListElement": [
              {"@type": "ListItem", "position": 1, "name": "トップ", "item": BASE_URL + "/"},
              {"@type": "ListItem", "position": 2, "name": "記事・コラム"}]},
         {"@context": "https://schema.org", "@type": "ItemList",
-         "name": "記事・コラム", "numberOfItems": len(ARTICLES),
+         "name": "記事・コラム", "numberOfItems": len(ordered),
          "itemListElement": [
              {"@type": "ListItem", "position": i, "name": a["h1"],
               "url": f'{BASE_URL}/articles/{a["slug"]}.html'}
-             for i, a in enumerate(ARTICLES, 1)]},
+             for i, a in enumerate(ordered, 1)]},
     ]
     index_html = page_shell(f"記事・コラム｜{SITE_NAME}", idx_body, depth=1, noindex=False,
                             desc="資格選び・勉強法・転職に役立つ記事一覧。目的別の資格ガイドや国家資格・民間資格の違い、働きながらの勉強法などを掲載。",
