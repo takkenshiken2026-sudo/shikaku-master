@@ -417,9 +417,9 @@ table.spec th{width:34%;background:var(--table-head-bg);color:var(--ink);font-we
 .article-card{display:flex;flex-direction:column;border:1px solid var(--gray-200);border-radius:var(--radius);padding:15px 17px;background:#fff;transition:border-color .15s ease,box-shadow .15s ease,transform .15s ease}
 .article-card:hover{border-color:var(--accent);box-shadow:0 6px 18px rgba(11,87,208,.10);transform:translateY(-2px)}
 .article-card-title{font-size:1.0625rem;font-weight:var(--fw-bold);line-height:1.5;margin:0}
-.article-card-title a{color:var(--accent);text-decoration:none}
+.article-card-title a{color:var(--ink-deep);text-decoration:none}
 .article-card:hover .article-card-title a{text-decoration:underline}
-.article-card-desc{font-size:var(--text-sm);color:var(--muted);line-height:1.7;margin:.5em 0 0;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.article-card-desc{font-size:var(--text-sm);color:var(--muted);line-height:1.7;margin:.5em 0 0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .article-card-more{margin-top:auto;padding-top:.7em;color:var(--accent);font-size:var(--text-sm);font-weight:var(--fw-bold)}
 .article-cert-links{margin:12px 0}
 .article-related{margin-top:26px}
