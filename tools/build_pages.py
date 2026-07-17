@@ -1185,6 +1185,10 @@ def build_detail(row, popular_slugs=None) -> str:
     # 関連内部リンク
     bslug = MAJOR_SLUGS.get(major, "other")
     rel = [(f"../bunya/{bslug}.html", f"{major}の資格一覧")]
+    # 総称ハブ（級・種目に分断された検定の集約ページ）への逆リンク
+    if row["slug"] in SERIES_OF:
+        _ss, _st = SERIES_OF[row["slug"]]
+        rel.append((f"../series/{_ss}.html", _st))
     tslug = {"国家": "national", "公的": "public"}.get(row["type"])
     if tslug:
         rel.append((f"../feature/{tslug}.html", f"{label}の一覧"))
@@ -3059,6 +3063,134 @@ def build_feature_pages(indexable, popular_slugs=None):
              "目的別ガイドの一覧。",
         path="feature/index.html", jsonld=fidx_ld)
 
+    return pages
+
+
+# 級・種目に分断された検定を1枚に集約する「総称ハブ」。
+# 総称クエリ（例:「情報処理技能検定」）は個別の級ページしか無いと検索意図に
+# 答えられずCTR0%になりがち。カタログ内の同系列を横断し、級・種目・受験料を
+# 一覧化した集約ページを用意する（分断ページの重複＝ドアウェイではなく、逆に
+# 統合してユーザーの比較検討を助けるページ）。掲載は検索需要のある系列に限定。
+SERIES = [
+    {
+        "slug": "joho-shori-ginou-kentei",
+        "prefix": "情報処理技能検定",
+        "title": "情報処理技能検定の級・受験料一覧",
+        "h1": "情報処理技能検定とは？｜表計算・データベースの級と受験料",
+        "lead": (
+            "<p><strong>情報処理技能検定</strong>は、日本情報処理検定協会（日検）が"
+            "実施する、表計算ソフト・データベースソフトを使ったデータ処理技能を"
+            "認定する検定です。<strong>「表計算」</strong>と<strong>「データベース」</strong>"
+            "の2種目があり、それぞれ級ごとに実施されます（年複数回）。一般事務・"
+            "データ管理など実務的なPC操作スキルの証明に使えます。</p>"
+            "<p>このページでは、当サイトに掲載している情報処理技能検定の各級・種目を"
+            "受験料つきで一覧にしています。級ごとの試験科目・受験資格などの詳細は、"
+            "各級のページでご確認ください。金額・日程・制度は改定されることがあるため、"
+            "出願前に必ず公式サイトで最新情報をご確認ください。</p>"),
+        "desc": ("情報処理技能検定（日本情報処理検定協会）の表計算・データベース各級を"
+                 "受験料つきで一覧。級の構成・実施頻度・各級の詳細ページへのリンクを"
+                 "まとめています。"),
+        "faqs": [
+            ("情報処理技能検定とはどんな検定ですか？",
+             "日本情報処理検定協会（日検）が実施する、表計算・データベースソフトによる"
+             "データ処理技能を認定する検定です。表計算・データベースの2種目があり、"
+             "級ごとに実施されます。"),
+            ("情報処理技能検定にはどんな級・種目がありますか？",
+             "「表計算」と「データベース」の2種目があり、それぞれ4級から上位級まで"
+             "段階的に設定されています。各級の詳細はページ内の一覧・各級ページを"
+             "ご確認ください。"),
+            ("情報処理技能検定の受験料はいくらですか？",
+             "級・種目によって異なります。詳しい金額は本ページの一覧および各級の"
+             "詳細ページに掲載しています。最新の金額は公式サイトでご確認ください。"),
+        ],
+    },
+]
+
+# slug → (series_slug, series_title)。build_detail からの逆リンクに使用。
+SERIES_OF = {}
+
+
+def _series_members(series, pool):
+    """系列に属する資格行を返す（名前が prefix で始まる published 行）。"""
+    ms = [r for r in pool if r["name"].startswith(series["prefix"])]
+    return sorted(ms, key=lambda r: r["slug"])
+
+
+def build_series_pages(indexable):
+    """総称ハブ（site/series/<slug>.html）。級・種目に分断された検定を集約。"""
+    pages = {}
+    SERIES_OF.clear()
+    for s in SERIES:
+        members = _series_members(s, indexable)
+        if len(members) < 3:
+            continue  # 集約する意味があるのは複数の級・種目がある系列のみ
+        # 種目（(表計算) 等の丸括弧内）でグルーピングして表を作る
+        from collections import OrderedDict
+        groups = OrderedDict()
+        for r in members:
+            m = re.search(r"[（(]([^（(）)]+)[）)]", r["name"])
+            key = m.group(1) if m else "区分"
+            groups.setdefault(key, []).append(r)
+        listing = ""
+        for gname, rs in groups.items():
+            body_rows = ""
+            for r in rs:
+                fee = fmt_nums_in_text(r["fee"]) if r["fee"].strip() else "—"
+                freq = esc(r["frequency"]) if r["frequency"].strip() else "—"
+                body_rows += (
+                    f'<tr><th scope="row"><a href="../c/{r["slug"]}.html">'
+                    f'{esc(r["name"])}</a></th>'
+                    f'<td>{esc(fee)}</td><td>{freq}</td></tr>')
+            listing += (
+                f'<h2 class="hub-grp">{esc(gname)}</h2>'
+                f'<table class="spec series-table">'
+                f'<thead><tr><th scope="col">級・区分</th>'
+                f'<th scope="col">受験料</th><th scope="col">実施頻度</th></tr></thead>'
+                f'<tbody>{body_rows}</tbody></table>')
+            for r in rs:
+                SERIES_OF[r["slug"]] = (s["slug"], s["title"])
+        faq_html = ""
+        if s.get("faqs"):
+            items = "".join(
+                f'<details class="faq-item"><summary>{esc(q)}</summary>'
+                f'<div class="faq-a">{esc(a)}</div></details>' for q, a in s["faqs"])
+            faq_html = ('<section class="faq-block"><h2>よくある質問</h2>'
+                        f'<div class="faq-list">{items}</div></section>')
+        body = (
+            f'<div class="page-feature">'
+            f'<nav class="crumbs"><a href="../index.html">トップ</a> › '
+            f'{esc(s["h1"].split("｜")[0].split("？")[0])}</nav>'
+            f'<h1>{esc(s["h1"])}</h1>'
+            f'<div class="lead">{s["lead"]}</div>'
+            + listing
+            + '<p class="muted" style="margin-top:14px">※受験料・実施頻度・制度は'
+              '改定されることがあります。出願前に各資格の公式サイトで必ず最新情報を'
+              'ご確認ください。</p>'
+            + faq_html
+            + "</div>")
+        idx_members = [r for r in members if is_indexable_detail(r)]
+        ld = [
+            {"@context": "https://schema.org", "@type": "BreadcrumbList",
+             "itemListElement": [
+                 {"@type": "ListItem", "position": 1, "name": "トップ",
+                  "item": BASE_URL + "/"},
+                 {"@type": "ListItem", "position": 2, "name": s["title"]}]},
+            {"@context": "https://schema.org", "@type": "ItemList",
+             "name": s["title"], "numberOfItems": len(idx_members),
+             "itemListElement": [
+                 {"@type": "ListItem", "position": i,
+                  "url": f'{BASE_URL}/c/{r["slug"]}.html', "name": r["name"]}
+                 for i, r in enumerate(idx_members, 1)]},
+        ]
+        if s.get("faqs"):
+            ld.append({"@context": "https://schema.org", "@type": "FAQPage",
+                       "mainEntity": [
+                           {"@type": "Question", "name": q,
+                            "acceptedAnswer": {"@type": "Answer", "text": a}}
+                           for q, a in s["faqs"]]})
+        pages[s["slug"]] = page_shell(
+            f'{s["title"]}｜{SITE_NAME}', body, depth=1, noindex=False,
+            desc=s["desc"], path=f'series/{s["slug"]}.html', jsonld=ld)
     return pages
 
 
@@ -5409,6 +5541,14 @@ def main() -> int:
     (SITE / "calendar.html").write_text(build_calendar_page(indexable), encoding="utf-8")
     (SITE / "finder.html").write_text(build_finder_page(indexable), encoding="utf-8")
 
+    # 総称ハブ（級・種目に分断された検定の集約）は詳細ページより先に生成して
+    # SERIES_OF を確定させ、各詳細ページからハブへ逆リンクできるようにする。
+    series_pages = build_series_pages(indexable)
+    if series_pages:
+        (SITE / "series").mkdir()
+        for slug, htmlc in series_pages.items():
+            (SITE / "series" / f"{slug}.html").write_text(htmlc, encoding="utf-8")
+
     for r in indexable:
         (SITE / "c" / f'{r["slug"]}.html').write_text(build_detail(r, popular_set), encoding="utf-8")
 
@@ -5466,6 +5606,7 @@ def main() -> int:
                ("finder.html", today, "0.8"), ("about.html", today, "0.5")]
     entries += [(f"bunya/{s}.html", today, "0.8") for s in cat_pages]
     entries += [(f"feature/{s}.html", today, "0.8") for s in feat_pages]
+    entries += [(f"series/{s}.html", today, "0.8") for s in series_pages]
     if article_index_html:
         entries.append(("articles/index.html", today, "0.7"))
         entries += [(f'articles/{a["slug"]}.html',
