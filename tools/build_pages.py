@@ -1458,8 +1458,11 @@ def build_detail(row, popular_slugs=None) -> str:
             title_mods.append("受験資格")
         if row.get("frequency", "").strip():
             title_mods.append("試験日")
+    # 名前の長さに応じて語数を絞る。19〜24字の長名でも、SERPで語が見える範囲で
+    # キーワードを1つは残す（「情報処理技能検定試験…」など長名の高表示ページが
+    # フックを失いCTR0%になるのを防ぐ）。25字以上は名前自体が切れるため付与しない。
     _nlen = len(name)
-    _k = 3 if _nlen <= 12 else 2 if _nlen <= 18 else 0
+    _k = 3 if _nlen <= 12 else 2 if _nlen <= 18 else 1 if _nlen <= 24 else 0
     title_mods = title_mods[:_k]
     page_title = (f"{name}の{'・'.join(title_mods)}｜{SITE_NAME}"
                   if title_mods else f"{name}｜{SITE_NAME}")
