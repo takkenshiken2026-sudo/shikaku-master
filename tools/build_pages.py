@@ -1464,6 +1464,16 @@ def build_detail(row, popular_slugs=None) -> str:
         _tiles = "".join(f'<div class="fact"><div class="l">{l}</div>'
                          f'<div class="v">{v}</div></div>' for l, v in fact_tiles)
         facts_html = f'<div class="detail-facts"><div class="facts">{_tiles}</div></div>'
+    _radar = _cert_radar_svg(row)
+    radar_block = (
+        '<section class="detail-section detail-section--radar" aria-labelledby="radar-h">'
+        '<h2 class="detail-section-title" id="radar-h">この資格の特性</h2>'
+        '<div class="radar-flex">' + _radar
+        + '<p class="radar-desc muted">難易度・学習量・合格率・受験しやすさ・年収期待の5軸で'
+          f'{esc(name)}の特性を可視化しました。各軸は掲載資格全体の中での相対的な位置づけで、'
+          '難易度・学習時間・想定年収は編集部の目安（非公式）です。</p>'
+        '</div></section>') if _radar else ""
+
     body = f"""<div class="page-detail">
 <nav class="crumbs"><a href="../index.html">トップ</a> ›
 <a href="../bunya/{esc(bslug)}.html">{esc(major)}</a> › {esc(name)}</nav>
@@ -1482,6 +1492,7 @@ def build_detail(row, popular_slugs=None) -> str:
 <section class="detail-section detail-section--spec" aria-labelledby="ds-h">
 <h2 class="detail-section-title" id="ds-h">資格情報</h2>
 <div class="spec-sections">{spec_html}</div>{SPEC_TABLE_JS}</section>
+{radar_block}
 {partner_detail}
 {guide_html}
 {faq_html}
@@ -2719,6 +2730,254 @@ def _difficulty_matrix_svg(pub, popular_slugs):
             f'点は両データのある公開資格 {len(pts):,} 件。</span></p>')
 
 
+def _cospa_scatter_svg(pub, popular_slugs):
+    """コスパ散布図: X=難易度偏差値・Y=想定年収上限。左上（低難易度×高年収）が狙い目。"""
+    pts = []
+    for r in pub:
+        hn = (DIFFICULTY_RANK.get(r["slug"], {}) or {}).get("hensa")
+        cs = cert_salary(r["slug"])
+        if hn is None or not cs:
+            continue
+        pts.append((r, hn, cs[0], r["slug"] in (popular_slugs or set())))
+    if len(pts) < 10:
+        return ""
+    W, H = 760, 460
+    ML, MR, MT, MB = 64, 20, 22, 46
+    px0, px1, py0, py1 = ML, W - MR, MT, H - MB
+    xlo, xhi, ylo, yhi = 25, 75, 300, 2000
+
+    def xpos(v):
+        return px0 + (max(xlo, min(xhi, v)) - xlo) / (xhi - xlo) * (px1 - px0)
+
+    def ypos(v):
+        return py1 - (max(ylo, min(yhi, v)) - ylo) / (yhi - ylo) * (py1 - py0)
+
+    parts = [f'<svg class="chart-svg" viewBox="0 0 {W} {H}" role="img" '
+             'aria-label="難易度偏差値と想定年収の散布図（コスパ）">']
+    zx, zy = xpos(50), ypos(800)
+    parts.append(f'<rect x="{px0}" y="{py0}" width="{zx-px0:.0f}" height="{zy-py0:.0f}" class="chart-zone"/>')
+    parts.append(f'<text x="{px0+8}" y="{py0+16}" class="chart-zone-label">狙い目（低難易度・高年収）</text>')
+    for yv in (300, 600, 900, 1200, 1500, 1800):
+        yy = ypos(yv)
+        parts.append(f'<line x1="{px0}" y1="{yy:.0f}" x2="{px1}" y2="{yy:.0f}" class="dm-grid"/>')
+        parts.append(f'<text x="{px0-8}" y="{yy+4:.0f}" class="dm-axis dm-axis--y">{yv}</text>')
+    for xv in (30, 40, 50, 60, 70):
+        xx = xpos(xv)
+        parts.append(f'<line x1="{xx:.0f}" y1="{py0}" x2="{xx:.0f}" y2="{py1}" class="dm-grid"/>')
+        parts.append(f'<text x="{xx:.0f}" y="{py1+18}" class="dm-axis dm-axis--x">{xv}</text>')
+    normal, pops = [], []
+    for r, hn, sal, ip in pts:
+        (pops if ip else normal).append((xpos(hn), ypos(sal)))
+    for x, y in normal:
+        parts.append(f'<circle cx="{x:.1f}" cy="{y:.1f}" r="3" class="dm-dot"/>')
+    for x, y in pops:
+        parts.append(f'<circle cx="{x:.1f}" cy="{y:.1f}" r="4.5" class="dm-dot dm-dot--pop"/>')
+    parts.append(f'<text x="{(px0+px1)/2:.0f}" y="{H-6}" text-anchor="middle" class="dm-title">難易度偏差値（右ほど難関）</text>')
+    parts.append(f'<text x="16" y="{(py0+py1)/2:.0f}" text-anchor="middle" class="dm-title" '
+                 f'transform="rotate(-90 16 {(py0+py1)/2:.0f})">想定年収の上限（万円）</text>')
+    parts.append('</svg>')
+    return (f'<div class="diff-matrix-wrap">{"".join(parts)}</div>'
+            f'<p class="dm-legend"><span class="dm-key dm-key--pop"></span>受験者数の多い資格'
+            f'　<span class="dm-key"></span>その他　'
+            f'<span class="muted">／ 想定年収・難易度偏差値はいずれも編集部の目安（非公式）。'
+            f'点は両データのある公開資格 {len(pts):,} 件。</span></p>')
+
+
+def _field_range_svg(pub, min_n=6):
+    """分野別の難易度偏差値レンジ（最小〜最大＋中央値）を横棒で表示。"""
+    from collections import defaultdict
+    groups = defaultdict(list)
+    for r in pub:
+        hn = (DIFFICULTY_RANK.get(r["slug"], {}) or {}).get("hensa")
+        if hn is not None:
+            groups[r["major_category"]].append(hn)
+    rows = []
+    for mj, vals in groups.items():
+        if not mj or len(vals) < min_n:
+            continue
+        vals.sort()
+        med = vals[len(vals) // 2]
+        rows.append((mj, vals[0], vals[-1], med, len(vals)))
+    if not rows:
+        return ""
+    rows.sort(key=lambda t: -t[3])
+    W = 760
+    ML, MR, MT = 150, 54, 10
+    row_h = 26
+    H = MT + len(rows) * row_h + 26
+    px0, px1 = ML, W - MR
+    lo, hi = 25, 75
+
+    def xpos(v):
+        return px0 + (max(lo, min(hi, v)) - lo) / (hi - lo) * (px1 - px0)
+
+    parts = [f'<svg class="chart-svg chart-range" viewBox="0 0 {W} {H}" role="img" '
+             'aria-label="分野別の難易度偏差値レンジ">']
+    for xv in (30, 40, 50, 60, 70):
+        xx = xpos(xv)
+        parts.append(f'<line x1="{xx:.0f}" y1="{MT}" x2="{xx:.0f}" y2="{MT+len(rows)*row_h}" class="dm-grid"/>')
+        parts.append(f'<text x="{xx:.0f}" y="{MT+len(rows)*row_h+16}" class="dm-axis dm-axis--x">{xv}</text>')
+    for i, (mj, vmin, vmax, med, n) in enumerate(rows):
+        y = MT + i * row_h + row_h / 2
+        parts.append(f'<text x="{ML-10}" y="{y+4:.0f}" class="range-label">{esc(mj)}</text>')
+        parts.append(f'<line x1="{xpos(vmin):.1f}" y1="{y:.0f}" x2="{xpos(vmax):.1f}" y2="{y:.0f}" class="range-bar"/>')
+        parts.append(f'<circle cx="{xpos(med):.1f}" cy="{y:.0f}" r="4" class="range-med"/>')
+        parts.append(f'<text x="{px1+6}" y="{y+4:.0f}" class="range-n">{n}件</text>')
+    parts.append('</svg>')
+    return (f'<div class="diff-matrix-wrap">{"".join(parts)}</div>'
+            '<p class="dm-legend"><span class="dm-key dm-key--line"></span>最小〜最大　'
+            '<span class="dm-key dm-key--med"></span>中央値　'
+            '<span class="muted">／ 難易度偏差値は編集部の目安。掲載数が一定以上の分野のみ表示。</span></p>')
+
+
+def _bar_chart_svg(cats, title, x_title, aria):
+    """(ラベル, 件数) の縦棒グラフ。"""
+    if not cats:
+        return ""
+    W, H = 760, 300
+    ML, MR, MT, MB = 48, 16, 16, 54
+    px0, px1, py0, py1 = ML, W - MR, MT, H - MB
+    mx = max(c for _, c in cats) or 1
+    n = len(cats)
+    slot = (px1 - px0) / n
+    bw = slot * 0.62
+    parts = [f'<svg class="chart-svg" viewBox="0 0 {W} {H}" role="img" aria-label="{esc(aria)}">']
+    for g in (0, 0.25, 0.5, 0.75, 1.0):
+        yy = py1 - g * (py1 - py0)
+        parts.append(f'<line x1="{px0}" y1="{yy:.0f}" x2="{px1}" y2="{yy:.0f}" class="dm-grid"/>')
+        parts.append(f'<text x="{px0-6}" y="{yy+4:.0f}" class="dm-axis dm-axis--y">{int(mx*g)}</text>')
+    for i, (label, c) in enumerate(cats):
+        x = px0 + i * slot + (slot - bw) / 2
+        h = (c / mx) * (py1 - py0)
+        parts.append(f'<rect x="{x:.1f}" y="{py1-h:.1f}" width="{bw:.1f}" height="{h:.1f}" class="bar-rect"/>')
+        parts.append(f'<text x="{x+bw/2:.1f}" y="{py1-h-5:.1f}" text-anchor="middle" class="bar-val">{c}</text>')
+        parts.append(f'<text x="{x+bw/2:.1f}" y="{py1+16:.0f}" text-anchor="middle" class="dm-axis dm-axis--x">{esc(label)}</text>')
+    parts.append(f'<text x="{(px0+px1)/2:.0f}" y="{H-6}" text-anchor="middle" class="dm-title">{esc(x_title)}</text>')
+    parts.append('</svg>')
+    return f'<div class="diff-matrix-wrap">{"".join(parts)}</div>'
+
+
+def _bubble_svg(pub):
+    """バブルチャート: X=学習時間(対数)・Y=想定年収・径=受験者数・色=区分。"""
+    pts = []
+    for r in pub:
+        hr = study_hours_max(r["slug"])
+        cs = cert_salary(r["slug"])
+        ap = applicants_num(r)
+        if hr is None or not cs or ap is None or hr <= 0:
+            continue
+        pts.append((r, float(hr), cs[0], ap))
+    if len(pts) < 8:
+        return ""
+    W, H = 760, 460
+    ML, MR, MT, MB = 64, 20, 22, 46
+    px0, px1, py0, py1 = ML, W - MR, MT, H - MB
+    lo_l, hi_l = math.log10(10), math.log10(1200)
+    ylo, yhi = 300, 2000
+    color = {"国家": "var(--accent)", "公的": "#0b7a3b", "民間": "#b8860b"}
+
+    def xpos(hr):
+        return px0 + (max(lo_l, min(hi_l, math.log10(hr))) - lo_l) / (hi_l - lo_l) * (px1 - px0)
+
+    def ypos(v):
+        return py1 - (max(ylo, min(yhi, v)) - ylo) / (yhi - ylo) * (py1 - py0)
+
+    def rad(ap):
+        return 4 + min(18, (ap / 100000.0) ** 0.5 * 18)
+
+    parts = [f'<svg class="chart-svg" viewBox="0 0 {W} {H}" role="img" '
+             'aria-label="学習時間・想定年収・受験者数のバブルチャート">']
+    for yv in (300, 600, 900, 1200, 1500, 1800):
+        yy = ypos(yv)
+        parts.append(f'<line x1="{px0}" y1="{yy:.0f}" x2="{px1}" y2="{yy:.0f}" class="dm-grid"/>')
+        parts.append(f'<text x="{px0-8}" y="{yy+4:.0f}" class="dm-axis dm-axis--y">{yv}</text>')
+    for xv in (10, 30, 100, 300, 1000):
+        xx = xpos(xv)
+        parts.append(f'<line x1="{xx:.0f}" y1="{py0}" x2="{xx:.0f}" y2="{py1}" class="dm-grid"/>')
+        parts.append(f'<text x="{xx:.0f}" y="{py1+18}" class="dm-axis dm-axis--x">{xv}h</text>')
+    for r, hr, sal, ap in sorted(pts, key=lambda t: -t[3]):
+        c = color.get(r["type"], "var(--muted)")
+        parts.append(f'<circle cx="{xpos(hr):.1f}" cy="{ypos(sal):.1f}" r="{rad(ap):.1f}" '
+                     f'fill="{c}" class="bubble-dot"/>')
+    parts.append(f'<text x="{(px0+px1)/2:.0f}" y="{H-6}" text-anchor="middle" class="dm-title">学習時間（時間・対数目盛）</text>')
+    parts.append(f'<text x="16" y="{(py0+py1)/2:.0f}" text-anchor="middle" class="dm-title" '
+                 f'transform="rotate(-90 16 {(py0+py1)/2:.0f})">想定年収の上限（万円）</text>')
+    parts.append('</svg>')
+    return (f'<div class="diff-matrix-wrap">{"".join(parts)}</div>'
+            '<p class="dm-legend"><span class="dm-key" style="background:var(--accent);opacity:.55"></span>国家'
+            '　<span class="dm-key" style="background:#0b7a3b;opacity:.55"></span>公的'
+            '　<span class="dm-key" style="background:#b8860b;opacity:.55"></span>民間'
+            f'　<span class="muted">／ 円の大きさ＝受験者数。学習時間・想定年収は編集部の目安。'
+            f'点は3データの揃う公開資格 {len(pts):,} 件。</span></p>')
+
+
+def _ease_score(row):
+    """受験しやすさスコア（0〜100）: 受験資格なし・CBT・実施頻度から算出。常に計算可能。"""
+    tags = set(cert_tags(row) or [])
+    s = 35
+    if "受験資格なし" in tags or re.search(r"(なし|不問|制限なし)", row.get("eligibility", "") or ""):
+        s += 35
+    if "CBT・ネット試験" in tags or re.search(r"CBT|ネット", row.get("exam_format", "") or ""):
+        s += 20
+    if re.search(r"通年|随時|年[3-9]回|年複数", row.get("frequency", "") or ""):
+        s += 10
+    return max(0, min(100, s))
+
+
+def _radar_values(row):
+    """資格の特性レーダー5軸（各0〜100、データ無しは None）。"""
+    hn = (DIFFICULTY_RANK.get(row["slug"], {}) or {}).get("hensa")
+    hr = study_hours_max(row["slug"])
+    pp = pass_pct(row)
+    cs = cert_salary(row["slug"])
+    v_diff = None if hn is None else max(0, min(100, (hn - 25) / 50 * 100))
+    v_study = None if not hr else max(0, min(100, (math.log10(hr) - 1) / (math.log10(1200) - 1) * 100))
+    v_pass = None if pp is None else max(0, min(100, pp))
+    v_sal = None if not cs else max(0, min(100, (cs[0] - 300) / (1500 - 300) * 100))
+    return [("難易度", v_diff), ("学習量", v_study), ("合格率", v_pass),
+            ("受験しやすさ", _ease_score(row)), ("年収期待", v_sal)]
+
+
+def _cert_radar_svg(row):
+    """個別資格の特性レーダーチャート（5軸）。データが4軸以上揃う場合のみ描画。"""
+    axes = _radar_values(row)
+    have = sum(1 for _, v in axes if v is not None)
+    if have < 4:
+        return ""
+    W = H = 300
+    cx, cy, R, n = W / 2, H / 2 + 4, 100, len(axes)
+
+    def pt(i, frac):
+        ang = -math.pi / 2 + i * 2 * math.pi / n
+        return (cx + R * frac * math.cos(ang), cy + R * frac * math.sin(ang))
+
+    parts = [f'<svg class="radar-svg" viewBox="0 0 {W} {H}" role="img" '
+             f'aria-label="{esc(row["name"])}の特性レーダーチャート">']
+    for g in (0.25, 0.5, 0.75, 1.0):
+        pp = " ".join(f"{pt(i, g)[0]:.1f},{pt(i, g)[1]:.1f}" for i in range(n))
+        parts.append(f'<polygon points="{pp}" class="radar-ring"/>')
+    for i, (label, _v) in enumerate(axes):
+        ex, ey = pt(i, 1.0)
+        parts.append(f'<line x1="{cx}" y1="{cy}" x2="{ex:.1f}" y2="{ey:.1f}" class="radar-spoke"/>')
+        lx, ly = pt(i, 1.16)
+        anc = "middle"
+        if lx > cx + 8:
+            anc = "start"
+        elif lx < cx - 8:
+            anc = "end"
+        parts.append(f'<text x="{lx:.1f}" y="{ly+4:.1f}" text-anchor="{anc}" class="radar-label">{esc(label)}</text>')
+    dpts = " ".join(f"{pt(i, (v or 0)/100)[0]:.1f},{pt(i, (v or 0)/100)[1]:.1f}"
+                    for i, (_l, v) in enumerate(axes))
+    parts.append(f'<polygon points="{dpts}" class="radar-area"/>')
+    for i, (_l, v) in enumerate(axes):
+        x, y = pt(i, (v or 0) / 100)
+        parts.append(f'<circle cx="{x:.1f}" cy="{y:.1f}" r="3" class="radar-dot"/>')
+    parts.append('</svg>')
+    note = ('' if have == n else
+            '<p class="radar-note muted">※データのある指標のみで作図（不足指標は0）。</p>')
+    return (f'<div class="radar-wrap">{"".join(parts)}</div>{note}')
+
+
 def build_stats_page(indexable, popular_slugs=None):
     """資格データの集計・統計ページ（被リンク資産＋内部リンクハブ）。
 
@@ -2790,6 +3049,65 @@ def build_stats_page(indexable, popular_slugs=None):
         '資格を配置した散布図です。左上ほど「短時間で受かりやすい」、右下ほど「時間がかかり合格率も'
         '低い難関」の傾向を表します。</p>'
         + matrix_svg) if matrix_svg else ""
+
+    # コスパ散布図（難易度偏差値 × 想定年収）
+    cospa_svg = _cospa_scatter_svg(pub, popular_slugs)
+    cospa_section = (
+        '<h2>コスパ散布図（難易度 × 想定年収）</h2>'
+        '<p class="stats-sec-lead">難易度偏差値（横軸）と、その資格が活かせる職業の想定年収の上限（縦軸）で'
+        '資格を配置しました。左上の色つきゾーンは「難易度が低いのに想定年収が高い」＝コスパの良い狙い目の'
+        '傾向を示します。いずれも編集部の目安（非公式）です。</p>'
+        + cospa_svg) if cospa_svg else ""
+
+    # 分野別 難易度偏差値レンジ
+    range_svg = _field_range_svg(pub)
+    range_section = (
+        '<h2>分野別の難易度レンジ</h2>'
+        '<p class="stats-sec-lead">分野ごとの難易度偏差値の最小〜最大と中央値です。'
+        '同じ分野でも入門級から難関まで幅があることが分かります。</p>'
+        + range_svg) if range_svg else ""
+
+    # 合格率・学習時間のヒストグラム
+    pass_bins = [(0, 20, "〜20"), (20, 40, "20-40"), (40, 60, "40-60"),
+                 (60, 80, "60-80"), (80, 101, "80〜")]
+    pc = [0] * len(pass_bins)
+    for r in pub:
+        v = pass_pct(r)
+        if v is None:
+            continue
+        for i, (lo, hi, _l) in enumerate(pass_bins):
+            if lo <= v < hi:
+                pc[i] += 1
+                break
+    pass_hist = _bar_chart_svg([(l, pc[i]) for i, (_a, _b, l) in enumerate(pass_bins)],
+                               "", "公表合格率（％）の分布", "公表合格率の分布")
+    study_bins = [(0, 50, "〜50"), (50, 100, "50-100"), (100, 300, "100-300"),
+                  (300, 1000, "300-1000"), (1000, 10 ** 9, "1000〜")]
+    sc = [0] * len(study_bins)
+    for r in pub:
+        v = study_hours_max(r["slug"])
+        if v is None:
+            continue
+        for i, (lo, hi, _l) in enumerate(study_bins):
+            if lo <= v < hi:
+                sc[i] += 1
+                break
+    study_hist = _bar_chart_svg([(l, sc[i]) for i, (_a, _b, l) in enumerate(study_bins)],
+                                "", "学習時間の目安（時間）の分布", "学習時間の分布")
+    hist_section = (
+        '<h2>合格率・学習時間の分布</h2>'
+        '<p class="stats-sec-lead">掲載資格の公表合格率と、学習時間の目安の分布です。相場観の目安に。</p>'
+        '<h3 class="stats-sub">公表合格率の分布（％）</h3>' + pass_hist
+        + '<h3 class="stats-sub">学習時間の目安の分布（時間）</h3>' + study_hist
+    ) if (pass_hist or study_hist) else ""
+
+    # バブルチャート（学習時間 × 年収 × 受験者数 × 区分）
+    bubble_svg = _bubble_svg(pub)
+    bubble_section = (
+        '<h2>学習時間 × 年収 × 人気（バブルチャート）</h2>'
+        '<p class="stats-sec-lead">横軸＝学習時間（対数）、縦軸＝想定年収の上限、円の大きさ＝受験者数、'
+        '色＝資格区分。学習コストと年収・人気を一枚で見比べられます。</p>'
+        + bubble_svg) if bubble_svg else ""
     hensa_section = (
         '<h2>難易度偏差値が高い資格</h2>'
         '<p class="stats-sec-lead">合格率（実効）・学習時間・受験資格などを掲載資格全体で標準化した'
@@ -2813,6 +3131,14 @@ def build_stats_page(indexable, popular_slugs=None):
 <table class="spec stats-table"><tbody>{major_rows}</tbody></table>
 
 {matrix_section}
+
+{cospa_section}
+
+{bubble_section}
+
+{range_section}
+
+{hist_section}
 
 {hensa_section}
 
@@ -4170,6 +4496,7 @@ def build_compare() -> str:
 <h1>資格を比較</h1>
 <p class="lead">選択した資格を並べて比較します（最大4件）。数値・制度は各資格の公式情報で必ずご確認ください。</p>
 <div id="cmpVerdict"></div>
+<div id="cmpRadar"></div>
 <div id="cmp" class="cmp-wrap"><p class="muted">読み込み中…</p></div>
 <p style="margin-top:18px"><a href="index.html">← 検索に戻って選び直す</a></p>
 <script src="{asset_url('', 'assets/compare.js')}"></script>
@@ -4773,6 +5100,53 @@ COMPARE_JS = """(function(){
   if(!ids.length){root.innerHTML='<p class="muted">比較する資格が選択されていません。<a href="index.html">資格一覧</a>から各行の「＋比較」で資格を選んでください。</p>';return;}
   function feeNum(x){var m=(x.fee||'').replace(/,/g,'').match(/([0-9]+)\\s*円/);return m?parseInt(m[1],10):null;}
   function passNum(x){var m=(x.pass_rate||'').replace(/,/g,'').match(/([0-9]+(?:\\.[0-9]+)?)\\s*%/);return m?parseFloat(m[1]):null;}
+  function studyNum(x){var a=(x.study_hours||'').replace(/,/g,'').match(/[0-9]+/g);if(!a)return null;var m=0;a.forEach(function(n){n=parseInt(n,10);if(n>m)m=n;});return m||null;}
+  function clamp(v){return Math.max(0,Math.min(100,v));}
+  function easeScore(x){var t=x.tags||[],s=35;
+    if(t.indexOf('受験資格なし')>=0||/(なし|不問|制限なし)/.test(x.eligibility||''))s+=35;
+    if(t.indexOf('CBT・ネット試験')>=0||/CBT|ネット/.test(x.exam_format||''))s+=20;
+    if(/通年|随時|年[3-9]回|年複数/.test(x.frequency||''))s+=10;
+    return clamp(s);}
+  var RADAR_AXES=['難易度','学習量','合格率','受験しやすさ','年収期待'];
+  function radarVals(x){
+    var hn=(typeof x.hensa==='number')?x.hensa:null;
+    var hr=studyNum(x),pp=passNum(x),su=(typeof x.salary_upper==='number')?x.salary_upper:null;
+    return [
+      hn===null?null:clamp((hn-25)/50*100),
+      hr===null?null:clamp((Math.log(hr)/Math.LN10-1)/(Math.log(1200)/Math.LN10-1)*100),
+      pp===null?null:clamp(pp),
+      easeScore(x),
+      su===null?null:clamp((su-300)/1200*100)
+    ];
+  }
+  var RADAR_COLORS=['#0b57d0','#b8860b','#0b7a3b','#c0392b'];
+  function buildRadar(items){
+    var elig=items.map(radarVals);
+    var usable=items.filter(function(_x,i){return elig[i].filter(function(v){return v!==null;}).length>=3;});
+    if(usable.length<2)return '';
+    var W=380,H=340,cx=W/2,cy=H/2+2,R=118,n=RADAR_AXES.length;
+    function pt(i,frac){var a=-Math.PI/2+i*2*Math.PI/n;return [cx+R*frac*Math.cos(a),cy+R*frac*Math.sin(a)];}
+    var s='<svg class="radar-svg" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="選択した資格の特性レーダー比較">';
+    [0.25,0.5,0.75,1].forEach(function(g){
+      var pts=[];for(var i=0;i<n;i++){var p=pt(i,g);pts.push(p[0].toFixed(1)+','+p[1].toFixed(1));}
+      s+='<polygon points="'+pts.join(' ')+'" class="radar-ring"/>';});
+    for(var i=0;i<n;i++){var e=pt(i,1);s+='<line x1="'+cx+'" y1="'+cy+'" x2="'+e[0].toFixed(1)+'" y2="'+e[1].toFixed(1)+'" class="radar-spoke"/>';
+      var l=pt(i,1.14),anc='middle';if(l[0]>cx+8)anc='start';else if(l[0]<cx-8)anc='end';
+      s+='<text x="'+l[0].toFixed(1)+'" y="'+(l[1]+4).toFixed(1)+'" text-anchor="'+anc+'" class="radar-label">'+esc(RADAR_AXES[i])+'</text>';}
+    items.forEach(function(x,idx){
+      var v=elig[idx];if(v.filter(function(z){return z!==null;}).length<3)return;
+      var c=RADAR_COLORS[idx%RADAR_COLORS.length],pts=[];
+      for(var i=0;i<n;i++){var p=pt(i,(v[i]||0)/100);pts.push(p[0].toFixed(1)+','+p[1].toFixed(1));}
+      s+='<polygon points="'+pts.join(' ')+'" fill="'+c+'" fill-opacity="0.14" stroke="'+c+'" stroke-width="2"/>';
+    });
+    s+='</svg>';
+    var leg=items.map(function(x,idx){var v=elig[idx];if(v.filter(function(z){return z!==null;}).length<3)return '';
+      var c=RADAR_COLORS[idx%RADAR_COLORS.length];
+      return '<span class="radar-leg"><span class="radar-leg-key" style="background:'+c+'"></span>'+esc(x.display_name||x.name)+'</span>';}).join('');
+    return '<section class="cmp-radar"><h2 class="cmp-verdict-title">特性レーダー比較</h2>'+
+      '<div class="radar-wrap radar-wrap--cmp">'+s+'</div><p class="radar-leg-row">'+leg+'</p>'+
+      '<p class="muted radar-note">難易度・学習量・合格率・受験しやすさ・年収期待の5軸。難易度・学習時間・想定年収は編集部の目安（非公式）。3軸以上のデータがある資格のみ表示。</p></section>';
+  }
   var FIELDS=[['区分','type'],['分野','major'],['カテゴリ','category'],
     ['実施団体','authority'],['受験資格','eligibility'],['試験形式','exam_format'],
     ['受験料','fee'],['合格率','pass_rate'],['実施頻度','frequency']];
@@ -4802,6 +5176,7 @@ COMPARE_JS = """(function(){
     }
     var vhtml=v.length?('<section class="cmp-verdict"><h2 class="cmp-verdict-title">選び方の目安（掲載データに基づく簡易判定）</h2><div class="cmp-verdict-grid">'+v.join('')+'</div></section>'):'';
     var vroot=document.getElementById('cmpVerdict'); if(vroot)vroot.innerHTML=vhtml;
+    var rroot=document.getElementById('cmpRadar'); if(rroot)rroot.innerHTML=buildRadar(items);
     var h='<table class="cmp" style="min-width:'+(130+items.length*150)+'px"><colgroup><col class="cmp-col-label">';
     items.forEach(function(){h+='<col class="cmp-col-cert">';});
     h+='</colgroup><thead><tr><th></th>';
@@ -5176,6 +5551,37 @@ a.hero-suggest-item{text-decoration:none}a.hero-suggest-item:hover{text-decorati
 .dm-legend{font-size:var(--text-sm);color:var(--ink);margin:8px 0 0}
 .dm-key{display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--accent);opacity:.42;vertical-align:middle;margin-right:4px}
 .dm-key--pop{background:#b8860b;opacity:.9}
+.dm-key--line{width:16px;height:0;border-radius:0;border-top:3px solid var(--accent);opacity:.6}
+.dm-key--med{background:var(--accent);opacity:1}
+.chart-svg{display:block;width:100%;min-width:520px;height:auto}
+.chart-svg .bar-rect{fill:var(--accent);opacity:.78}
+.chart-svg .bar-val{fill:var(--ink-deep);font-size:11px;font-weight:600}
+.chart-zone{fill:#0b7a3b;opacity:.08}
+.chart-zone-label{fill:#0b7a3b;font-size:11px;font-weight:600;opacity:.9}
+.chart-range{min-width:520px}
+.chart-range .range-label{fill:var(--ink);font-size:12px;text-anchor:end}
+.chart-range .range-bar{stroke:var(--accent);stroke-width:4;stroke-linecap:round;opacity:.55}
+.chart-range .range-med{fill:var(--accent)}
+.chart-range .range-n{fill:var(--muted);font-size:11px}
+.bubble-dot{opacity:.5;stroke:#fff;stroke-width:.5}
+.stats-sub{font-size:var(--text-md);margin:1.1em 0 .2em;color:var(--ink-deep)}
+.radar-wrap{max-width:340px;margin:0 auto}
+.radar-svg{display:block;width:100%;height:auto}
+.radar-svg .radar-ring{fill:none;stroke:var(--gray-200);stroke-width:1}
+.radar-svg .radar-spoke{stroke:var(--gray-200);stroke-width:1}
+.radar-svg .radar-label{fill:var(--muted);font-size:11px;font-weight:600}
+.radar-svg .radar-area{fill:var(--accent);fill-opacity:.22;stroke:var(--accent);stroke-width:2}
+.radar-svg .radar-dot{fill:var(--accent)}
+.radar-note{font-size:var(--text-sm);margin:.2em 0 0;text-align:center}
+.radar-flex{display:flex;flex-wrap:wrap;gap:18px 24px;align-items:center}
+.radar-flex .radar-wrap{flex:0 0 300px;max-width:300px;margin:0}
+.radar-desc{flex:1 1 240px;font-size:var(--text-sm);line-height:1.7}
+@media(max-width:560px){.radar-flex .radar-wrap{flex-basis:100%}}
+.cmp-radar{margin:14px 0 6px}
+.radar-wrap--cmp{max-width:420px}
+.radar-leg-row{display:flex;flex-wrap:wrap;gap:6px 16px;justify-content:center;margin:6px 0 0}
+.radar-leg{display:inline-flex;align-items:center;gap:6px;font-size:var(--text-sm);color:var(--ink)}
+.radar-leg-key{display:inline-block;width:12px;height:12px;border-radius:3px}
 .stats-hensa-table td.stat-hensa{text-align:center;font-weight:700;color:var(--accent);font-variant-numeric:tabular-nums;width:4em}
 .stats-hensa-table th{font-weight:600}.stats-hensa-table td:last-child{text-align:right;color:var(--muted)}
 .stats-hensa-table thead th{text-align:left;background:#edf2f8}
@@ -6012,6 +6418,8 @@ def main() -> int:
         "difficulty": _diff_label(r),
         "applicants": fmt_nums_in_text((EXAM.get(r["slug"], {}) or {}).get("applicants", "")),
         "study_hours": fmt_nums_in_text((STUDY.get(r["slug"], {}) or {}).get("study_hours", "")),
+        "hensa": (DIFFICULTY_RANK.get(r["slug"], {}) or {}).get("hensa"),
+        "salary_upper": (cert_salary(r["slug"]) or [None])[0],
         "aliases": ALIASES.get(r["slug"], []),
     } for r in indexable]
     payload.sort(key=lambda x: (x["major"], x["category"], x["name"]))
