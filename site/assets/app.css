@@ -278,6 +278,18 @@ a.hero-suggest-item{text-decoration:none}a.hero-suggest-item:hover{text-decorati
 .finder-chip a{display:inline-block;padding:7px 13px;background:var(--gray-50);border:1px solid var(--gray-200);border-radius:999px;text-decoration:none;color:var(--ink-deep);font-size:var(--text-sm)}
 @media(max-width:640px){.finder-grid{grid-template-columns:1fr}}
 
+/* 転職・就職CTA（職種ページ） */
+.jobchange{margin:20px 0 0;border:1px solid #cfe3d6;background:#f2faf5;border-radius:12px;padding:16px 18px}
+.jobchange h2{font-size:1.08rem;margin:.1em 0 .4em;color:#0e6231;border:none;padding:0}
+.jc-lead{margin:.2em 0 .8em;color:#33404f;font-size:.95rem}
+.jc-list{list-style:none;padding:0;margin:0;display:grid;gap:10px}
+.jc-card{background:#fff;border:1px solid #d7e6dc;border-radius:10px;padding:12px 14px}
+.jc-name{font-weight:700;color:#1b2430}
+.jc-note{display:block;color:#5a6b60;font-size:.85rem;margin:2px 0 9px}
+.btn-jobchange{display:inline-block;background:#127a3e;color:#fff;font-weight:700;padding:9px 18px;border-radius:8px}
+.btn-jobchange:hover{background:#0e6231;text-decoration:none;color:#fff}
+.jc-disclosure{font-size:.78rem;margin:.7em 0 0}
+
 /* Courses (おすすめ試験対策講座) */
 .course-controls{align-items:flex-end;margin-top:20px}
 .course-filter-field{display:flex;flex-direction:column;gap:6px;flex:1 1 260px;min-width:0}

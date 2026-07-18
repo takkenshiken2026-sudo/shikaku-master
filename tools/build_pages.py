@@ -488,6 +488,75 @@ def load_materials():
 MATERIALS = load_materials()
 
 
+# ── 転職・就職サービス（アフィリエイト。職種の分野別/職種別/資格別に出し分け）──
+JOBCHANGE_CSV = ROOT / "data" / "jobchange.csv"
+
+
+def load_jobchange():
+    """(key_type, key) → [service dict]。転職・就職アフィリの掲載データ。
+    key_type は occ_category（職種の分野）/ occ_id（特定職種）/ slug（特定資格）。"""
+    out = {}
+    if not JOBCHANGE_CSV.exists():
+        return out
+    with JOBCHANGE_CSV.open(encoding="utf-8") as f:
+        for i, r in enumerate(csv.DictReader(f)):
+            kt = (r.get("key_type") or "").strip()
+            k = (r.get("key") or "").strip()
+            svc = (r.get("service") or "").strip()
+            aff = (r.get("affiliate") or "").strip()
+            if not kt or not k or not svc or not aff:
+                continue
+            out.setdefault((kt, k), []).append({
+                "service": svc,
+                "provider": (r.get("provider") or "").strip(),
+                "affiliate": aff,
+                "note": (r.get("note") or "").strip(),
+                "sort": (r.get("sort") or "").strip(),
+                "_order": i,
+            })
+    for v in out.values():
+        v.sort(key=lambda m: (int(m["sort"]) if m["sort"].isdigit() else 999, m["_order"]))
+    return out
+
+
+JOBCHANGE = load_jobchange()
+
+
+def jobchange_services(major_category=None, occ_id=None, slug=None):
+    """優先度順（資格個別→職種個別→分野）に転職サービスを集約（重複除去）。"""
+    seen, out = set(), []
+    for kt, k in (("slug", slug), ("occ_id", occ_id), ("occ_category", major_category)):
+        if not k:
+            continue
+        for s in JOBCHANGE.get((kt, k), []):
+            key = s["affiliate"] or s["service"]
+            if key in seen:
+                continue
+            seen.add(key)
+            out.append(s)
+    return out
+
+
+def render_jobchange_block(services, lead_html):
+    """転職・就職CTAブロック（広告開示つき）。servicesが空なら空文字。"""
+    if not services:
+        return ""
+    cards = []
+    for s in services:
+        note = f'<span class="jc-note">{esc(s["note"])}</span>' if s.get("note") else ""
+        cards.append(
+            f'<li class="jc-card"><div class="jc-name">{esc(s["service"])}</div>{note}'
+            f'<a class="btn-jobchange" href="{esc(s["affiliate"])}" '
+            f'rel="sponsored nofollow noopener" target="_blank">無料で相談・登録する ↗</a></li>')
+    return (
+        '<section class="jobchange"><h2>転職・就職を考えている方へ</h2>'
+        f'<p class="jc-lead">{lead_html}</p>'
+        f'<ul class="jc-list">{"".join(cards)}</ul>'
+        '<p class="jc-disclosure muted">※広告（アフィリエイト）を含みます。登録・相談は無料の'
+        '場合が多いですが、対象地域・条件は各サービスの公式ページで必ずご確認ください。</p>'
+        '</section>')
+
+
 def _material_sort_key(m):
     """同一資格内の表示順（sort列 → CSV登録順 → 提供元 → タイトル）。"""
     raw = m.get("sort", "")
@@ -3507,12 +3576,18 @@ def build_occupation_pages(indexable):
         more_nav = ('<nav class="rel-links"><h2>関連リンク</h2><ul>'
                     + "".join(nav_links) + "</ul></nav>")
 
+        jobs_html = render_jobchange_block(
+            jobchange_services(major_category=major, occ_id=occ_id),
+            f'{esc(name)}として転職・就職を考えているなら、'
+            f'{esc(major)}分野に強い転職・就職サービスの活用が近道です。'
+            'まずは無料の登録・相談から始められます。')
+
         body = (
             f'<nav class="crumbs"><a href="../index.html">トップ</a> › '
             f'<a href="index.html">職種から探す</a> › {esc(name)}</nav>'
             f"<h1>{esc(name)}に活かせる資格</h1>"
             f'<p class="lead">{lead}</p>'
-            f"{work_html}{stat_html}"
+            f"{work_html}{stat_html}{jobs_html}"
             f'<section class="careers-sec"><h2>この職種に活かせる資格（{shown}件）</h2>'
             f"{listing}</section>"
             f"{rel_html}{more_nav}"
@@ -4800,6 +4875,18 @@ a.hero-suggest-item{text-decoration:none}a.hero-suggest-item:hover{text-decorati
 .finder-chips,.finder-grid{margin:10px 0}.finder-chips{list-style:none;padding:0;display:flex;flex-wrap:wrap;gap:8px}
 .finder-chip a{display:inline-block;padding:7px 13px;background:var(--gray-50);border:1px solid var(--gray-200);border-radius:999px;text-decoration:none;color:var(--ink-deep);font-size:var(--text-sm)}
 @media(max-width:640px){.finder-grid{grid-template-columns:1fr}}
+
+/* 転職・就職CTA（職種ページ） */
+.jobchange{margin:20px 0 0;border:1px solid #cfe3d6;background:#f2faf5;border-radius:12px;padding:16px 18px}
+.jobchange h2{font-size:1.08rem;margin:.1em 0 .4em;color:#0e6231;border:none;padding:0}
+.jc-lead{margin:.2em 0 .8em;color:#33404f;font-size:.95rem}
+.jc-list{list-style:none;padding:0;margin:0;display:grid;gap:10px}
+.jc-card{background:#fff;border:1px solid #d7e6dc;border-radius:10px;padding:12px 14px}
+.jc-name{font-weight:700;color:#1b2430}
+.jc-note{display:block;color:#5a6b60;font-size:.85rem;margin:2px 0 9px}
+.btn-jobchange{display:inline-block;background:#127a3e;color:#fff;font-weight:700;padding:9px 18px;border-radius:8px}
+.btn-jobchange:hover{background:#0e6231;text-decoration:none;color:#fff}
+.jc-disclosure{font-size:.78rem;margin:.7em 0 0}
 
 /* Courses (おすすめ試験対策講座) */
 .course-controls{align-items:flex-end;margin-top:20px}
