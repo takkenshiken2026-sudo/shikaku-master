@@ -134,19 +134,21 @@ def applicants_num(r):
 
 
 def page_shell(title: str, body: str, depth: int, noindex: bool = True,
-               desc: str = "", path: str = "", jsonld=None) -> str:
+               desc: str = "", path: str = "", jsonld=None,
+               og_type: str = "website", head_extra: str = "") -> str:
     base = "../" * depth
     robots = ('<meta name="robots" content="noindex">\n' if noindex else "")
     desc = desc or SITE_DESC
     canon = BASE_URL + "/" + path
     og = (f'<link rel="canonical" href="{esc(canon)}">\n'
-          f'<meta property="og:type" content="website">\n'
+          f'<meta property="og:type" content="{esc(og_type)}">\n'
           f'<meta property="og:site_name" content="{esc(SITE_NAME)}">\n'
           f'<meta property="og:title" content="{esc(title)}">\n'
           f'<meta property="og:description" content="{esc(desc)}">\n'
           f'<meta property="og:url" content="{esc(canon)}">\n'
           f'<meta property="og:locale" content="ja_JP">\n'
-          f'<meta name="twitter:card" content="summary">\n')
+          f'<meta name="twitter:card" content="summary">\n'
+          + head_extra)
     ld = ""
     if jsonld:
         for obj in (jsonld if isinstance(jsonld, list) else [jsonld]):
@@ -1423,8 +1425,11 @@ def build_articles(indexable):
         rel_items = [by_slug[s] for s in rel_slugs if s in by_slug]
         related_html = ""
         if rel_items:
-            related_html = ('<section class="rel-links"><h2>この記事で紹介した資格</h2>'
-                            + _list_items(rel_items, depth=1) + "</section>")
+            rel_lis = "".join(
+                f'<li><a href="../c/{esc(r["slug"])}.html">{esc(r["name"])}</a></li>'
+                for r in rel_items)
+            related_html = ('<nav class="rel-links"><h2>この記事で紹介した資格</h2><ul>'
+                            + rel_lis + "</ul></nav>")
 
         hub_lis = "".join(f'<li><a href="../feature/{s}.html">{esc(l)}</a></li>'
                           for s, l in INTENT_HUB_NAV)
@@ -1449,14 +1454,24 @@ def build_articles(indexable):
         )
 
         canon = f"{BASE_URL}/article/{slug}.html"
+        keywords = [k.strip() for k in meta.get("keywords", "").split(",") if k.strip()]
         article_ld = {
             "@context": "https://schema.org", "@type": "Article",
             "headline": title, "description": desc or SITE_DESC,
             "inLanguage": "ja",
-            "author": {"@type": "Organization", "name": SITE_NAME},
-            "publisher": {"@type": "Organization", "name": SITE_NAME},
+            "articleSection": "資格コラム",
+            "author": {"@type": "Organization", "name": SITE_NAME,
+                       "url": BASE_URL + "/"},
+            "publisher": {
+                "@type": "Organization", "name": SITE_NAME,
+                "url": BASE_URL + "/",
+                "logo": {"@type": "ImageObject",
+                         "url": BASE_URL + "/assets/apple-touch-icon.png"},
+            },
             "mainEntityOfPage": {"@type": "WebPage", "@id": canon},
         }
+        if keywords:
+            article_ld["keywords"] = keywords
         if date:
             article_ld["datePublished"] = date
             article_ld["dateModified"] = date
@@ -1479,9 +1494,14 @@ def build_articles(indexable):
                      "acceptedAnswer": {"@type": "Answer", "text": a}}
                     for q, a in faqs],
             })
+        art_meta = '<meta property="article:section" content="資格コラム">\n'
+        if date:
+            art_meta += (f'<meta property="article:published_time" content="{esc(date)}">\n'
+                         f'<meta property="article:modified_time" content="{esc(date)}">\n')
         pages[slug] = page_shell(f"{title}｜{SITE_NAME}", body, depth=1,
                                  noindex=False, desc=desc, path=f"article/{slug}.html",
-                                 jsonld=jsonld)
+                                 jsonld=jsonld, og_type="article",
+                                 head_extra=art_meta)
         metas.append({"slug": slug, "title": title, "h1": h1,
                       "desc": desc, "date": date})
 
