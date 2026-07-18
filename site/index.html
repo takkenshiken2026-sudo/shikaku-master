@@ -33,7 +33,7 @@ gtag('config','G-KERDMXDPSR');
 <link rel="icon" href="assets/favicon.ico" sizes="32x32">
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
-<link rel="stylesheet" href="assets/app.css?v=ce0aeea18c">
+<link rel="stylesheet" href="assets/app.css?v=99b1844389">
 <script type="application/ld+json">{"@context": "https://schema.org", "@type": "WebSite", "name": "資格マスター", "url": "https://shikaku-master.jp/", "potentialAction": {"@type": "SearchAction", "target": {"@type": "EntryPoint", "urlTemplate": "https://shikaku-master.jp/?q={search_term_string}"}, "query-input": "required name=search_term_string"}}</script>
 <script type="application/ld+json">{"@context": "https://schema.org", "@type": "Organization", "name": "資格マスター", "url": "https://shikaku-master.jp/", "logo": "https://shikaku-master.jp/assets/favicon.svg", "image": "https://shikaku-master.jp/assets/og.png", "description": "日本国内の資格を、各資格の公式の一次情報に基づいて整理・掲載する資格情報サイト。受験料・受験資格・試験形式・合格率・実施団体・公式サイトを横断的に検索・比較できます。"}</script>
 </head>
@@ -80,6 +80,55 @@ gtag('config','G-KERDMXDPSR');
     <div class="hero-suggest" id="heroSuggest" role="listbox" aria-label="よく探される資格" hidden>
       <p class="hero-suggest-label">よく探される資格</p>
       <ul class="hero-suggest-list"><li><button type="button" class="hero-suggest-item" role="option" data-q="ITパスポート">ITパスポート<span class="hero-suggest-meta">IT・情報処理</span></button></li><li><button type="button" class="hero-suggest-item" role="option" data-q="宅地建物取引士">宅地建物取引士<span class="hero-suggest-meta">不動産</span></button></li><li><button type="button" class="hero-suggest-item" role="option" data-q="危険物取扱者(乙種)">危険物取扱者(乙種)<span class="hero-suggest-meta">機械・電気・ものづくり</span></button></li><li><button type="button" class="hero-suggest-item" role="option" data-q="日商簿記3級">日商簿記3級<span class="hero-suggest-meta">会計・金融・経営</span></button></li><li><button type="button" class="hero-suggest-item" role="option" data-q="基本情報技術者">基本情報技術者<span class="hero-suggest-meta">IT・情報処理</span></button></li><li><button type="button" class="hero-suggest-item" role="option" data-q="日本漢字能力検定2級">日本漢字能力検定2級<span class="hero-suggest-meta">語学・コミュニケーション</span></button></li><li><button type="button" class="hero-suggest-item" role="option" data-q="日商簿記2級">日商簿記2級<span class="hero-suggest-meta">会計・金融・経営</span></button></li><li><button type="button" class="hero-suggest-item" role="option" data-q="生成AIパスポート">生成AIパスポート<span class="hero-suggest-meta">IT・情報処理</span></button></li></ul>
+    </div>
+  </div>
+  <div class="hero-adv">
+    <button type="button" class="hero-adv-toggle" id="heroAdvToggle" aria-expanded="false" aria-controls="heroAdvPanel">
+      <svg class="ico-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M6 12h12"/><path d="M10 18h4"/></svg>
+      <span>詳細検索</span>
+      <svg class="hero-adv-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+    </button>
+    <div class="hero-adv-panel" id="heroAdvPanel" hidden>
+      <div class="hero-adv-grid">
+        <div class="hero-adv-field"><label for="hero-major">分野</label><select id="hero-major" aria-label="分野で絞り込み"><option value="">すべて</option></select></div>
+        <div class="hero-adv-field"><label for="hero-study">学習時間</label><select id="hero-study" aria-label="学習時間で絞り込み">
+          <option value="">すべて</option>
+          <option value="0-50">〜50時間</option>
+          <option value="50-100">50〜100時間</option>
+          <option value="100-300">100〜300時間</option>
+          <option value="300-1000">300〜1000時間</option>
+          <option value="1000-">1000時間以上</option>
+        </select></div>
+        <div class="hero-adv-field"><label for="hero-pass">合格率</label><select id="hero-pass" aria-label="合格率で絞り込み">
+          <option value="">すべて</option>
+          <option value="80-">80%以上</option>
+          <option value="60-80">60〜80%</option>
+          <option value="40-60">40〜60%</option>
+          <option value="20-40">20〜40%</option>
+          <option value="0-20">20%未満</option>
+          <option value="unknown">データなし</option>
+        </select></div>
+        <div class="hero-adv-field"><label for="hero-frequency">実施頻度</label><select id="hero-frequency" aria-label="実施頻度で絞り込み">
+          <option value="">すべて</option>
+          <option value="anytime">通年・随時</option>
+          <option value="once">年1回</option>
+          <option value="twice">年2回</option>
+          <option value="3plus">年3回以上</option>
+          <option value="other">その他</option>
+          <option value="unknown">データなし</option>
+        </select></div>
+        <div class="hero-adv-field"><label for="hero-sort">並び順</label><select id="hero-sort" aria-label="並び順">
+          <option value="app-desc" selected>受験者数が多い順</option>
+          <option value="study-asc">学習時間が短い順</option>
+          <option value="study-desc">学習時間が長い順</option>
+          <option value="pass-desc">合格率が高い順</option>
+          <option value="pass-asc">合格率が低い順</option>
+        </select></div>
+      </div>
+      <div class="hero-adv-foot">
+        <label class="hero-adv-check"><input type="checkbox" id="hero-pub"> データ掲載のみ</label>
+        <button type="button" class="hero-adv-apply" id="heroAdvApply">この条件で一覧を見る</button>
+      </div>
     </div>
   </div>
   <p class="hero-result" id="heroResult" hidden></p>
@@ -210,11 +259,11 @@ gtag('config','G-KERDMXDPSR');
   <div class="block-head"><h2>おすすめの資格対策サイト</h2><p>当サイト運営者が制作している資格別の学習・対策サイト</p></div>
   <div class="partner-grid"><a class="partner-card" href="https://takken-master.jp/" target="_blank" rel="noopener"><span class="partner-card-name">宅建対策サイト<span class="partner-ext" aria-hidden="true">↗</span></span><span class="partner-card-tag">宅地建物取引士（不動産）</span></a><a class="partner-card" href="https://mankan-master.jp/" target="_blank" rel="noopener"><span class="partner-card-name">マンション管理士対策サイト<span class="partner-ext" aria-hidden="true">↗</span></span><span class="partner-card-tag">不動産・マンション管理</span></a><a class="partner-card" href="https://kangyou-master.jp/" target="_blank" rel="noopener"><span class="partner-card-name">管理業務主任者対策サイト<span class="partner-ext" aria-hidden="true">↗</span></span><span class="partner-card-tag">不動産・マンション管理</span></a><a class="partner-card" href="https://chintaikanrishi-master.jp/" target="_blank" rel="noopener"><span class="partner-card-name">賃貸不動産経営管理士対策サイト<span class="partner-ext" aria-hidden="true">↗</span></span><span class="partner-card-tag">不動産・賃貸管理</span></a><a class="partner-card" href="https://fp-master.jp/" target="_blank" rel="noopener"><span class="partner-card-name">FP対策サイト<span class="partner-ext" aria-hidden="true">↗</span></span><span class="partner-card-tag">FP技能士 1〜3級・CFP/AFP</span></a><a class="partner-card" href="https://gaimuin-master.jp/" target="_blank" rel="noopener"><span class="partner-card-name">証券外務員対策サイト<span class="partner-ext" aria-hidden="true">↗</span></span><span class="partner-card-tag">一種・二種外務員資格</span></a><a class="partner-card" href="https://kikenbutsu-master.jp/" target="_blank" rel="noopener"><span class="partner-card-name">危険物取扱者対策サイト<span class="partner-ext" aria-hidden="true">↗</span></span><span class="partner-card-tag">甲種・乙種・丙種</span></a><a class="partner-card" href="https://boiler-master.jp/" target="_blank" rel="noopener"><span class="partner-card-name">ボイラー技士対策サイト<span class="partner-ext" aria-hidden="true">↗</span></span><span class="partner-card-tag">特級・1級・2級</span></a><a class="partner-card" href="https://eisei1shu-master.jp/" target="_blank" rel="noopener"><span class="partner-card-name">第一種衛生管理者対策サイト<span class="partner-ext" aria-hidden="true">↗</span></span><span class="partner-card-tag">労働衛生管理</span></a><a class="partner-card" href="https://eisei2shu-master.jp/" target="_blank" rel="noopener"><span class="partner-card-name">第二種衛生管理者対策サイト<span class="partner-ext" aria-hidden="true">↗</span></span><span class="partner-card-tag">労働衛生管理</span></a><a class="partner-card" href="https://unkan-master.jp/" target="_blank" rel="noopener"><span class="partner-card-name">運行管理者対策サイト<span class="partner-ext" aria-hidden="true">↗</span></span><span class="partner-card-tag">旅客・貨物</span></a><a class="partner-card" href="https://mentalhealth-master.jp/" target="_blank" rel="noopener"><span class="partner-card-name">メンタルヘルス・マネジメント検定対策サイト<span class="partner-ext" aria-hidden="true">↗</span></span><span class="partner-card-tag">II種ほか</span></a><a class="partner-card" href="https://ai-master.jp/" target="_blank" rel="noopener"><span class="partner-card-name">AI資格対策サイト<span class="partner-ext" aria-hidden="true">↗</span></span><span class="partner-card-tag">AI・データサイエンス系</span></a></div>
 </section>
-<script src="assets/search.js?v=ce0aeea18c"></script>
+<script src="assets/search.js?v=99b1844389"></script>
 
 </main>
 <div id="cmpbar" class="cmpbar" data-base="" aria-live="polite"></div>
-<script src="assets/compare-bar.js?v=ce0aeea18c"></script>
+<script src="assets/compare-bar.js?v=99b1844389"></script>
 <footer class="site-footer">
   <div class="site-footer-inner">
     <div class="footer-recent" id="recentBlock" data-base="" hidden>

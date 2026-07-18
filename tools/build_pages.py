@@ -3771,6 +3771,55 @@ def build_index(rows) -> str:
       <ul class="hero-suggest-list">{suggest_items}</ul>
     </div>
   </div>
+  <div class="hero-adv">
+    <button type="button" class="hero-adv-toggle" id="heroAdvToggle" aria-expanded="false" aria-controls="heroAdvPanel">
+      <svg class="ico-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M6 12h12"/><path d="M10 18h4"/></svg>
+      <span>詳細検索</span>
+      <svg class="hero-adv-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+    </button>
+    <div class="hero-adv-panel" id="heroAdvPanel" hidden>
+      <div class="hero-adv-grid">
+        <div class="hero-adv-field"><label for="hero-major">分野</label><select id="hero-major" aria-label="分野で絞り込み"><option value="">すべて</option></select></div>
+        <div class="hero-adv-field"><label for="hero-study">学習時間</label><select id="hero-study" aria-label="学習時間で絞り込み">
+          <option value="">すべて</option>
+          <option value="0-50">〜50時間</option>
+          <option value="50-100">50〜100時間</option>
+          <option value="100-300">100〜300時間</option>
+          <option value="300-1000">300〜1000時間</option>
+          <option value="1000-">1000時間以上</option>
+        </select></div>
+        <div class="hero-adv-field"><label for="hero-pass">合格率</label><select id="hero-pass" aria-label="合格率で絞り込み">
+          <option value="">すべて</option>
+          <option value="80-">80%以上</option>
+          <option value="60-80">60〜80%</option>
+          <option value="40-60">40〜60%</option>
+          <option value="20-40">20〜40%</option>
+          <option value="0-20">20%未満</option>
+          <option value="unknown">データなし</option>
+        </select></div>
+        <div class="hero-adv-field"><label for="hero-frequency">実施頻度</label><select id="hero-frequency" aria-label="実施頻度で絞り込み">
+          <option value="">すべて</option>
+          <option value="anytime">通年・随時</option>
+          <option value="once">年1回</option>
+          <option value="twice">年2回</option>
+          <option value="3plus">年3回以上</option>
+          <option value="other">その他</option>
+          <option value="unknown">データなし</option>
+        </select></div>
+        <div class="hero-adv-field"><label for="hero-sort">並び順</label><select id="hero-sort" aria-label="並び順">
+          <option value="app-desc" selected>受験者数が多い順</option>
+          <option value="study-asc">学習時間が短い順</option>
+          <option value="study-desc">学習時間が長い順</option>
+          <option value="pass-desc">合格率が高い順</option>
+          <option value="pass-asc">合格率が低い順</option>
+        </select></div>
+      </div>
+      <div class="hero-adv-foot">
+        <label class="hero-adv-check"><input type="checkbox" id="hero-pub"> データ掲載のみ</label>
+        <button type="button" class="hero-adv-apply" id="heroAdvApply">この条件で一覧を見る</button>
+      </div>
+    </div>
+  </div>
   <p class="hero-result" id="heroResult" hidden></p>
   </div>
 </section>
@@ -4028,7 +4077,16 @@ SEARCH_JS = """(function(){
       count=document.getElementById('count'),
       heroResult=document.getElementById('heroResult'),
       heroSuggest=document.getElementById('heroSuggest'),
-      clearBtn=document.getElementById('clearFilters');
+      clearBtn=document.getElementById('clearFilters'),
+      heroMajorSel=document.getElementById('hero-major'),
+      heroStudySel=document.getElementById('hero-study'),
+      heroPassSel=document.getElementById('hero-pass'),
+      heroFreqSel=document.getElementById('hero-frequency'),
+      heroSortSel=document.getElementById('hero-sort'),
+      heroPub=document.getElementById('hero-pub'),
+      heroAdvToggle=document.getElementById('heroAdvToggle'),
+      heroAdvPanel=document.getElementById('heroAdvPanel'),
+      heroAdvApply=document.getElementById('heroAdvApply');
   var DATA=[], activeTags=new Set(), currentPage=1, PAGE_SIZE=20, resetPage=true,TROPHY=__TROPHY_HTML__;
   var legacyType='',legacyIndustry='';
   function esc(s){return (s||'').replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
@@ -4210,7 +4268,7 @@ SEARCH_JS = """(function(){
     DATA=all; if(count)count.textContent=fmtN(all.length);
     var majors={};
     all.forEach(function(x){majors[x.major]=1;});
-    Object.keys(majors).sort().forEach(function(v){opt(majorSel,v);});
+    Object.keys(majors).sort().forEach(function(v){opt(majorSel,v);if(heroMajorSel)opt(heroMajorSel,v);});
     var p=new URLSearchParams(location.search);
     if(p.get('q')){syncQueryInputs({value:p.get('q')});}
     if(p.get('major'))majorSel.value=p.get('major');
@@ -4224,6 +4282,8 @@ SEARCH_JS = """(function(){
     if(p.get('type'))legacyType=p.get('type');
     if(p.get('industry'))legacyIndustry=p.get('industry');
     if(location.hash==='#all')location.hash='#all-certs';
+    syncAdvFromMain();
+    if(advActive())setAdvOpen(true);
     render();
     initShindan();
   });
@@ -4347,7 +4407,7 @@ SEARCH_JS = """(function(){
     fieldSel.addEventListener('change',run);
     timeSel.addEventListener('change',run);
     if(runBtn)runBtn.addEventListener('click',run);
-    run(); // 初期表示（既定の目的で候補を出しておく）
+    // 初期は結果を表示しない。目的/こだわりチップの選択、または分野・学習時間の変更で run() され表示される
   }
   function onFilter(){resetPage=true;render();}
   function onQueryInput(e){syncQueryInputs(e.target);onFilter();}
@@ -4387,6 +4447,37 @@ SEARCH_JS = """(function(){
   if(listQ)listQ.addEventListener('input',onQueryInput);
   [majorSel,sortSel,studySel,passSel,freqSel].forEach(function(el){if(el)el.addEventListener('input',onFilter);});
   fPub.addEventListener('change',onFilter);
+  // 詳細検索（ヒーロー内パネル）— 本体フィルタと双方向同期
+  var advPairs=[[heroMajorSel,majorSel],[heroStudySel,studySel],[heroPassSel,passSel],[heroFreqSel,freqSel],[heroSortSel,sortSel]];
+  function syncAdvFromMain(){
+    advPairs.forEach(function(p){if(p[0]&&p[1]&&p[0].value!==p[1].value)p[0].value=p[1].value;});
+    if(heroPub)heroPub.checked=fPub.checked;
+  }
+  function advActive(){
+    return !!(majorSel.value||studySel.value||(passSel&&passSel.value)||(freqSel&&freqSel.value)||
+      (sortSel.value&&sortSel.value!=='app-desc')||fPub.checked);
+  }
+  function setAdvOpen(open){
+    if(!heroAdvPanel||!heroAdvToggle)return;
+    heroAdvPanel.hidden=!open;
+    heroAdvToggle.setAttribute('aria-expanded',open?'true':'false');
+    heroAdvToggle.classList.toggle('is-open',open);
+  }
+  advPairs.forEach(function(p){
+    var hero=p[0],main=p[1];if(!hero||!main)return;
+    hero.addEventListener('input',function(){main.value=hero.value;onFilter();});
+    main.addEventListener('input',function(){if(hero.value!==main.value)hero.value=main.value;});
+  });
+  if(heroPub){
+    heroPub.addEventListener('change',function(){fPub.checked=heroPub.checked;onFilter();});
+    fPub.addEventListener('change',function(){heroPub.checked=fPub.checked;});
+  }
+  if(heroAdvToggle&&heroAdvPanel)heroAdvToggle.addEventListener('click',function(){setAdvOpen(heroAdvPanel.hidden);});
+  if(heroAdvApply)heroAdvApply.addEventListener('click',function(){
+    onFilter();
+    var sec=document.getElementById('all-certs');
+    if(sec)sec.scrollIntoView({behavior:'smooth',block:'start'});
+  });
   if(q){
     q.addEventListener('focus',function(){showHeroSuggest(q.value);});
     q.addEventListener('blur',function(){setTimeout(hideHeroSuggest,150);});
@@ -4419,6 +4510,7 @@ SEARCH_JS = """(function(){
     if(freqSel)freqSel.value='';
     sortSel.value='app-desc';fPub.checked=false;
     legacyType='';legacyIndustry='';
+    syncAdvFromMain();
     activeTags.clear();resetPage=true;render();
   });
 })();
@@ -4690,6 +4782,22 @@ a.hero-suggest-item{text-decoration:none}a.hero-suggest-item:hover{text-decorati
 .hero-result{margin-top:12px;font-size:var(--text-sm);color:#c7d5e8}
 .hero-result a{color:#fff;font-weight:600;text-decoration:underline;text-underline-offset:2px}
 .hero-result strong{color:#fff}
+.hero-adv{max-width:680px;margin:12px auto 0;text-align:left}
+.hero-adv-toggle{display:inline-flex;align-items:center;gap:7px;padding:8px 14px;background:rgba(255,255,255,.14);color:#fff;border:1px solid rgba(255,255,255,.55);border-radius:999px;font-family:inherit;font-size:var(--text-sm);font-weight:600;cursor:pointer;transition:.12s}
+.hero-adv-toggle:hover{background:rgba(255,255,255,.26)}
+.hero-adv-toggle .ico-svg{width:16px;height:16px}
+.hero-adv-caret{width:15px;height:15px;transition:transform .15s ease}
+.hero-adv-toggle.is-open .hero-adv-caret{transform:rotate(180deg)}
+.hero-adv-panel{margin-top:10px;background:#fff;border-radius:12px;box-shadow:0 8px 28px rgba(6,20,40,.28);padding:18px 18px 16px}
+.hero-adv-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px 14px}
+.hero-adv-field label{display:block;font-size:var(--text-sm);color:var(--muted);margin-bottom:6px;font-weight:600}
+.hero-adv-field select{width:100%;padding:9px 10px;border:1px solid var(--gray-300);border-radius:var(--radius);font-size:var(--text-table);font-family:inherit;background:#fff;color:var(--ink)}
+.hero-adv-foot{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin-top:14px}
+.hero-adv-check{display:inline-flex;align-items:center;gap:6px;font-size:var(--text-sm);color:var(--ink);cursor:pointer}
+.hero-adv-check input{width:17px;height:17px;accent-color:var(--accent)}
+.hero-adv-apply{padding:10px 18px;background:var(--accent);color:#fff;border:none;border-radius:var(--radius);font-family:inherit;font-weight:600;font-size:var(--text-sm);cursor:pointer;transition:.12s}
+.hero-adv-apply:hover{background:var(--accent-hover)}
+@media(max-width:600px){.hero-adv-grid{grid-template-columns:1fr 1fr}.hero-adv-apply{flex:1}}
 @media(max-width:768px){.hero{margin-top:-20px}}
 
 /* Blocks */
