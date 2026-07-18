@@ -457,6 +457,30 @@ def _salary_quantitative(sal):
             "unitText": "YEAR"}
 
 
+def _salary_upper_man(sal):
+    """『約400〜560万円』等から上限（万円・整数）を取り出す。無ければ None。"""
+    nums = re.findall(r"([0-9,]+)\s*万", sal or "")
+    if not nums:
+        return None
+    return max(int(n.replace(",", "")) for n in nums)
+
+
+def cert_salary(slug):
+    """資格slugが活かせる職業のうち、想定年収（編集部目安）の上限が最も高いものを返す。
+    (上限万円, 職業名, 年収レンジ表記) または None。職業ベースの目安で公式値ではない。"""
+    best = None
+    for oid in SLUG_OCC_IDS.get(slug, ()):
+        sal = OCC_SALARY.get(oid)
+        if not sal:
+            continue
+        up = _salary_upper_man(sal)
+        if up is None:
+            continue
+        if best is None or up > best[0]:
+            best = (up, (OCC.get(oid, {}) or {}).get("name", ""), sal)
+    return best
+
+
 # ── おすすめ教材・講座（アフィリエイト対応。本体DBとは分離）──
 MATERIALS_CSV = ROOT / "data" / "materials.csv"
 
@@ -1100,7 +1124,10 @@ def build_detail(row, popular_slugs=None) -> str:
                           + f' <span class="note-muted">（公表合格率 {esc(pass_rate_display(row["pass_rate"]))} に基づく簡易目安）</span>'))
     dr = DIFFICULTY_RANK.get(row["slug"])
     if dr:
-        rank_parts = [f'掲載資格中 上位{dr["pct"]}%']
+        rank_parts = []
+        if dr.get("hensa"):
+            rank_parts.append(f'難易度偏差値 {dr["hensa"]}')
+        rank_parts.append(f'掲載資格中 上位{dr["pct"]}%')
         if dr.get("fpct"):
             rank_parts.append(f'{dr["fname"]}分野内 上位{dr["fpct"]}%')
         conf_note = {"高": "高（主要指標2つ以上で算出）",
@@ -1809,10 +1836,17 @@ def build_difficulty_rank(rows):
 
     records.sort(key=lambda x: (-x[2], x[0]))  # 難しい順、slug で安定化
     total = len(records)
+    # 難易度偏差値（T得点）: hardness を全体分布で標準化し 50+10z に変換（25〜75にクランプ）
+    _hs = [h for _, _, h, _, _ in records]
+    _mean = sum(_hs) / len(_hs) if _hs else 0.5
+    _var = sum((h - _mean) ** 2 for h in _hs) / len(_hs) if _hs else 0.0
+    _std = math.sqrt(_var) or 1e-9
     DIFFICULTY_RANK.clear()
     for i, (s, mj, h, conf, srcs) in enumerate(records):
+        hensa = max(25, min(75, round(50 + 10 * (h - _mean) / _std)))
         DIFFICULTY_RANK[s] = {"pct": max(1, math.ceil((i + 1) / total * 100)),
-                              "rank": i + 1, "total": total, "conf": conf, "srcs": srcs}
+                              "rank": i + 1, "total": total, "conf": conf, "srcs": srcs,
+                              "hensa": hensa}
 
     # 分野内ランキング（母集団差の補正）。母数が十分な分野のみ。
     groups = defaultdict(list)
@@ -2276,6 +2310,7 @@ FEATURE_NAV = [
     ("cheap", "受験料が安い資格ランキング"),
     ("high-pass", "合格率が高い資格"),
     ("hard", "合格率が低い難関資格"),
+    ("high-salary", "年収が高い職業につながる資格ランキング"),
     ("study-short", "勉強時間が短い資格ランキング"),
     ("study-long", "勉強時間が長い難関資格ランキング"),
     ("cbt", "在宅・CBTで受けられる資格"),
@@ -2614,7 +2649,77 @@ INDEXABLE_SLUGS = set()
 CERTS_BY_CATEGORY = {}
 
 
-def build_stats_page(indexable):
+def _difficulty_matrix_svg(pub, popular_slugs):
+    """学習時間 × 合格率 の散布図（難易度マトリクス）をインラインSVGで描く。
+    外部ライブラリなし。X=学習時間(対数)・Y=合格率。データのある公開資格のみ。"""
+    pts = []
+    for r in pub:
+        hr = study_hours_max(r["slug"])
+        pp = pass_pct(r)
+        if hr is None or pp is None or hr <= 0:
+            continue
+        pts.append((r, float(hr), float(pp), r["slug"] in (popular_slugs or set())))
+    if len(pts) < 10:
+        return ""
+    W, H = 760, 460
+    ML, MR, MT, MB = 58, 20, 22, 46
+    px0, px1 = ML, W - MR
+    py0, py1 = MT, H - MB
+    x_ticks = [10, 30, 100, 300, 1000]
+    lo_l, hi_l = math.log10(10), math.log10(1200)
+
+    def xpos(hr):
+        v = max(lo_l, min(hi_l, math.log10(hr)))
+        return px0 + (v - lo_l) / (hi_l - lo_l) * (px1 - px0)
+
+    def ypos(pp):
+        v = max(0.0, min(100.0, pp))
+        return py1 - v / 100.0 * (py1 - py0)
+
+    parts = [f'<svg class="diff-matrix" viewBox="0 0 {W} {H}" role="img" '
+             f'aria-label="学習時間と合格率による資格難易度の散布図">']
+    # 象限の目安ガイド（学習時間100h・合格率50%）
+    gx, gy = xpos(100), ypos(50)
+    parts.append(f'<line x1="{gx:.0f}" y1="{py0}" x2="{gx:.0f}" y2="{py1}" class="dm-guide"/>')
+    parts.append(f'<line x1="{px0}" y1="{gy:.0f}" x2="{px1}" y2="{gy:.0f}" class="dm-guide"/>')
+    # Y軸グリッド＋ラベル（合格率）
+    for pv in (0, 20, 40, 60, 80, 100):
+        yy = ypos(pv)
+        parts.append(f'<line x1="{px0}" y1="{yy:.0f}" x2="{px1}" y2="{yy:.0f}" class="dm-grid"/>')
+        parts.append(f'<text x="{px0-8}" y="{yy+4:.0f}" class="dm-axis dm-axis--y">{pv}</text>')
+    # X軸グリッド＋ラベル（学習時間・対数）
+    for xv in x_ticks:
+        xx = xpos(xv)
+        parts.append(f'<line x1="{xx:.0f}" y1="{py0}" x2="{xx:.0f}" y2="{py1}" class="dm-grid"/>')
+        parts.append(f'<text x="{xx:.0f}" y="{py1+18}" class="dm-axis dm-axis--x">{xv}h</text>')
+    # 象限ラベル
+    quad = [(px0+6, py0+16, 'start', '狙い目（短時間・受かりやすい）'),
+            (px1-6, py0+16, 'end', '王道（時間はかかるが受かる）'),
+            (px0+6, py1-8, 'start', '一発勝負（短時間・低合格率）'),
+            (px1-6, py1-8, 'end', '難関（長時間・低合格率）')]
+    for qx, qy, anc, label in quad:
+        parts.append(f'<text x="{qx:.0f}" y="{qy:.0f}" text-anchor="{anc}" class="dm-quad">{esc(label)}</text>')
+    # 点（人気資格は強調）
+    normal, pops = [], []
+    for r, hr, pp, is_pop in pts:
+        (pops if is_pop else normal).append((xpos(hr), ypos(pp)))
+    for x, y in normal:
+        parts.append(f'<circle cx="{x:.1f}" cy="{y:.1f}" r="3" class="dm-dot"/>')
+    for x, y in pops:
+        parts.append(f'<circle cx="{x:.1f}" cy="{y:.1f}" r="4.5" class="dm-dot dm-dot--pop"/>')
+    # 軸タイトル
+    parts.append(f'<text x="{(px0+px1)/2:.0f}" y="{H-6}" text-anchor="middle" class="dm-title">学習時間（時間・対数目盛）</text>')
+    parts.append(f'<text x="14" y="{(py0+py1)/2:.0f}" text-anchor="middle" class="dm-title" '
+                 f'transform="rotate(-90 14 {(py0+py1)/2:.0f})">合格率（％）</text>')
+    parts.append('</svg>')
+    return (f'<div class="diff-matrix-wrap">{"".join(parts)}</div>'
+            f'<p class="dm-legend"><span class="dm-key dm-key--pop"></span>受験者数の多い資格'
+            f'　<span class="dm-key"></span>その他　'
+            f'<span class="muted">／ 学習時間は編集部調べの目安（非公式）、合格率は公表値。'
+            f'点は両データのある公開資格 {len(pts):,} 件。</span></p>')
+
+
+def build_stats_page(indexable, popular_slugs=None):
     """資格データの集計・統計ページ（被リンク資産＋内部リンクハブ）。
 
     公開資格の実データのみを集計（捏造なし）。受験料・合格率・受験者数の
@@ -2669,6 +2774,31 @@ def build_stats_page(indexable):
         f"<td>{c:,}件</td></tr>"
         for m, c in by_major.most_common())
 
+    # 難易度マトリクス（散布図）と難易度偏差値ランキング
+    matrix_svg = _difficulty_matrix_svg(pub, popular_slugs)
+    hensa_ranked = sorted(
+        (r for r in pub if (DIFFICULTY_RANK.get(r["slug"], {}) or {}).get("hensa")),
+        key=lambda r: (-DIFFICULTY_RANK[r["slug"]]["hensa"], r["name"]))[:15]
+    hensa_rows = "".join(
+        f'<tr><td class="stat-hensa">{DIFFICULTY_RANK[r["slug"]]["hensa"]}</td>'
+        f'<th><a href="c/{esc(r["slug"])}.html">{esc(r["name"])}</a></th>'
+        f'<td>{esc(pass_rate_display(r["pass_rate"]) or "—")}</td></tr>'
+        for r in hensa_ranked)
+    matrix_section = (
+        '<h2>難易度マトリクス（学習時間 × 合格率）</h2>'
+        '<p class="stats-sec-lead">合格に必要な学習時間の目安（横軸・対数）と公表合格率（縦軸）で'
+        '資格を配置した散布図です。左上ほど「短時間で受かりやすい」、右下ほど「時間がかかり合格率も'
+        '低い難関」の傾向を表します。</p>'
+        + matrix_svg) if matrix_svg else ""
+    hensa_section = (
+        '<h2>難易度偏差値が高い資格</h2>'
+        '<p class="stats-sec-lead">合格率（実効）・学習時間・受験資格などを掲載資格全体で標準化した'
+        '「難易度偏差値」（平均50・高いほど難しい）の上位です。編集部の総合スコアで、難易度の絶対指標'
+        'ではありません。</p>'
+        '<table class="spec stats-table stats-hensa-table"><thead><tr>'
+        '<th>偏差値</th><th>資格名</th><th>公表合格率</th></tr></thead>'
+        f'<tbody>{hensa_rows}</tbody></table>') if hensa_rows else ""
+
     body = f"""<nav class="crumbs"><a href="index.html">トップ</a> › 資格データ統計</nav>
 <h1>資格データ統計・ランキングまとめ</h1>
 <p class="lead">国内の資格 {len(indexable):,} 件を横断収録する「{esc(SITE_NAME)}」のデータを集計しました。
@@ -2682,12 +2812,17 @@ def build_stats_page(indexable):
 <h2>分野別の資格件数</h2>
 <table class="spec stats-table"><tbody>{major_rows}</tbody></table>
 
+{matrix_section}
+
+{hensa_section}
+
 <h2>データから探す（ランキング）</h2>
 <ul class="detail-link-list">
 <li><a href="feature/popular.html">受験者数が多い人気資格ランキング</a></li>
 <li><a href="feature/cheap.html">受験料が安い資格ランキング</a></li>
 <li><a href="feature/high-pass.html">合格率が高い資格</a></li>
 <li><a href="feature/hard.html">合格率が低い難関資格</a></li>
+<li><a href="feature/high-salary.html">年収が高い職業につながる資格</a></li>
 <li><a href="feature/no-requirement.html">受験資格なしで受けられる資格</a></li>
 <li><a href="feature/cbt.html">在宅・CBTで受けられる資格</a></li>
 </ul>
@@ -2896,6 +3031,65 @@ def build_feature_pages(indexable, popular_slugs=None):
          f"公表されている合格率が低い（難易度が高い）順に並べた資格一覧（上位 {len(lo)} 件）。",
          lo, "合格率が低い難関資格を一覧。受験料・合格率・公式情報を掲載。",
          ranked=True)
+
+    # 年収が高い職業につながる資格（職業ベースの想定年収・編集部目安）
+    salaried = []
+    for r in pub:
+        cs = cert_salary(r["slug"])
+        if cs:
+            salaried.append((r, cs))
+    salaried.sort(key=lambda t: (-t[1][0], t[0]["name"]))
+    top_sal = salaried[:120]
+    if top_sal:
+        sal_rows = []
+        for i, (r, (up, occ_name, sal_str)) in enumerate(top_sal, 1):
+            rank_cls = " all-certs-rank--top" if i <= 3 else ""
+            sal_rows.append(
+                f'<tr class="cert-row" tabindex="0" data-href="../c/{esc(r["slug"])}.html">'
+                f'<td class="all-certs-cell all-certs-rank{rank_cls}">{i}</td>'
+                + _certs_name_cell(r, popular_slugs)
+                + f'<td class="all-certs-cell all-certs-cell--major">{esc(r["major_category"])}</td>'
+                f'<td class="all-certs-cell all-certs-num sal-cell">{esc(sal_str)}</td>'
+                f'<td class="all-certs-cell sal-occ">{esc(occ_name)}</td></tr>')
+        sal_table = (
+            '<div class="all-certs-table-wrap"><table class="all-certs-table all-certs-table--5col all-certs-table--ranked sal-table">'
+            '<colgroup><col class="all-certs-col-rank"><col class="all-certs-col-name">'
+            '<col class="all-certs-col-major"><col class="sal-col-salary"><col class="sal-col-occ"></colgroup>'
+            '<thead><tr><th scope="col" class="all-certs-th-rank">順位</th><th scope="col">資格名</th>'
+            '<th scope="col">分野</th><th scope="col">想定年収（目安）</th><th scope="col">代表的な職業</th></tr></thead>'
+            f'<tbody>{"".join(sal_rows)}</tbody></table></div>'
+            + _CERTS_TABLE_SCRIPT)
+        sal_body = (
+            '<nav class="crumbs"><a href="../index.html">トップ</a> › 特集</nav>'
+            '<h1>年収が高い職業につながる資格ランキング</h1>'
+            '<p class="lead">その資格が活かせる職業の<strong>想定年収の目安</strong>が高い順に並べた資格ランキング'
+            f'（データ掲載分の上位 {len(top_sal)} 件）。各資格に結びつく職業のうち、最も年収レンジの上限が高い'
+            '職業の目安を表示しています。</p>'
+            '<p class="muted" style="margin:-6px 0 14px">※想定年収は公開の賃金統計・求人情報を参考にした'
+            '<strong>職業ベースの編集部の目安（非公式）</strong>で、その資格を取得すれば年収が上がることを'
+            '保証するものではありません。実際の年収は勤務先・地域・経験・雇用形態で大きく異なります。</p>'
+            + sal_table
+            + '<p class="muted" style="margin-top:14px">出典: 職業別の想定年収は公開の賃金統計・求人情報を'
+              'もとにした編集部の目安です。資格・試験の詳細は各公式サイトでご確認ください。</p>')
+        sal_ld = [
+            {"@context": "https://schema.org", "@type": "BreadcrumbList",
+             "itemListElement": [
+                 {"@type": "ListItem", "position": 1, "name": "トップ", "item": BASE_URL + "/"},
+                 {"@type": "ListItem", "position": 2, "name": "年収が高い職業につながる資格ランキング"}]},
+            {"@context": "https://schema.org", "@type": "ItemList",
+             "name": "年収が高い職業につながる資格ランキング", "numberOfItems": len(top_sal),
+             "itemListElement": [
+                 {"@type": "ListItem", "position": i,
+                  "url": f'{BASE_URL}/c/{r["slug"]}.html', "name": r["name"]}
+                 for i, (r, _cs) in enumerate(top_sal[:50], 1)
+                 if is_indexable_detail(r)]},
+        ]
+        pages["high-salary"] = page_shell(
+            f"年収が高い職業につながる資格ランキング｜{SITE_NAME}", sal_body, depth=1,
+            noindex=False,
+            desc="資格が活かせる職業の想定年収（編集部目安）が高い順にランキング。"
+                 "高年収の職業につながる資格を分野・想定年収つきで一覧。",
+            path="feature/high-salary.html", jsonld=sal_ld)
 
     # 勉強時間が短い順（学習時間データのある資格）
     with_study = [r for r in pub if study_hours_max(r["slug"]) is not None]
@@ -4768,7 +4962,7 @@ html{scroll-padding-top:64px}
 .hero-sub{font-size:1.125rem;color:#d9e4f2;line-height:1.75;max-width:40em;margin:0 auto}
 .hero-sub #count{color:#fff;font-weight:700;text-decoration:underline;text-decoration-color:rgba(255,255,255,.6);text-underline-offset:3px}
 .hero-search{margin:24px auto 0;max-width:680px;position:relative;text-align:left}
-.hero-search input{width:100%;padding:15px 18px 15px 46px;border:none;border-radius:10px;font-size:1.0625rem;background:#fff;color:var(--ink);font-family:inherit;box-shadow:0 8px 28px rgba(6,20,40,.35)}
+.hero-search input{width:100%;padding:15px 18px 15px 46px;border:none;border-radius:10px;font-size:var(--text-table);background:#fff;color:var(--ink);font-family:inherit;box-shadow:0 8px 28px rgba(6,20,40,.35)}
 .hero-search input::placeholder{color:var(--muted)}
 .hero-search input:focus,.hero-search input:focus-visible{outline:3px solid #fff;outline-offset:2px}
 .hero-search .ico{position:absolute;left:16px;top:50%;transform:translateY(-50%);color:#5a7ba6;display:flex;pointer-events:none;z-index:1}
@@ -4967,6 +5161,27 @@ a.hero-suggest-item{text-decoration:none}a.hero-suggest-item:hover{text-decorati
 .stat-note{font-size:var(--text-xs,.78rem);color:var(--muted)}
 .stats-table th{text-align:left;font-size:1rem}.stats-table td{text-align:right;white-space:nowrap}
 @media(max-width:640px){.stats-grid{grid-template-columns:repeat(2,1fr)}}
+.stats-sec-lead{color:var(--muted);font-size:var(--text-sm);margin:.2em 0 .8em}
+.diff-matrix-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;border:1px solid var(--gray-200);border-radius:var(--radius);background:#fff;padding:8px}
+.diff-matrix{display:block;width:100%;min-width:520px;height:auto}
+.diff-matrix .dm-grid{stroke:var(--gray-100);stroke-width:1}
+.diff-matrix .dm-guide{stroke:var(--gray-300);stroke-width:1;stroke-dasharray:4 4}
+.diff-matrix .dm-axis{fill:var(--muted);font-size:11px}
+.diff-matrix .dm-axis--y{text-anchor:end}
+.diff-matrix .dm-axis--x{text-anchor:middle}
+.diff-matrix .dm-title{fill:var(--ink-deep);font-size:12px;font-weight:600}
+.diff-matrix .dm-quad{fill:var(--muted);font-size:11px;font-weight:600;opacity:.85}
+.diff-matrix .dm-dot{fill:var(--accent);opacity:.42}
+.diff-matrix .dm-dot--pop{fill:#b8860b;opacity:.9}
+.dm-legend{font-size:var(--text-sm);color:var(--ink);margin:8px 0 0}
+.dm-key{display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--accent);opacity:.42;vertical-align:middle;margin-right:4px}
+.dm-key--pop{background:#b8860b;opacity:.9}
+.stats-hensa-table td.stat-hensa{text-align:center;font-weight:700;color:var(--accent);font-variant-numeric:tabular-nums;width:4em}
+.stats-hensa-table th{font-weight:600}.stats-hensa-table td:last-child{text-align:right;color:var(--muted)}
+.stats-hensa-table thead th{text-align:left;background:#edf2f8}
+.sal-table col.sal-col-salary{width:20%}.sal-table col.sal-col-occ{width:26%}
+.sal-table .sal-cell{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums;font-weight:600}
+.sal-table .sal-occ{color:var(--muted);white-space:normal}
 .cal-nav{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0}
 .cal-nav a{font-size:var(--text-sm);padding:5px 11px;background:var(--gray-50);border:1px solid var(--gray-200);border-radius:999px;text-decoration:none;color:var(--ink-deep)}
 .cal-month{margin:18px 0}.cal-month h2{font-size:1.1rem}
@@ -5817,7 +6032,7 @@ def main() -> int:
     (SITE / "index.html").write_text(build_index(indexable), encoding="utf-8")
     (SITE / "compare.html").write_text(build_compare(), encoding="utf-8")
     (SITE / "courses.html").write_text(build_courses_page(indexable), encoding="utf-8")
-    (SITE / "toukei.html").write_text(build_stats_page(indexable), encoding="utf-8")
+    (SITE / "toukei.html").write_text(build_stats_page(indexable, popular_set), encoding="utf-8")
     (SITE / "calendar.html").write_text(build_calendar_page(indexable), encoding="utf-8")
     (SITE / "finder.html").write_text(build_finder_page(indexable), encoding="utf-8")
 
