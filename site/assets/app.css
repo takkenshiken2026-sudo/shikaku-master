@@ -92,6 +92,22 @@ a.hero-suggest-item{text-decoration:none}a.hero-suggest-item:hover{text-decorati
 .hero-result{margin-top:12px;font-size:var(--text-sm);color:#c7d5e8}
 .hero-result a{color:#fff;font-weight:600;text-decoration:underline;text-underline-offset:2px}
 .hero-result strong{color:#fff}
+.hero-adv{max-width:680px;margin:12px auto 0;text-align:left}
+.hero-adv-toggle{display:inline-flex;align-items:center;gap:7px;padding:8px 14px;background:rgba(255,255,255,.14);color:#fff;border:1px solid rgba(255,255,255,.55);border-radius:999px;font-family:inherit;font-size:var(--text-sm);font-weight:600;cursor:pointer;transition:.12s}
+.hero-adv-toggle:hover{background:rgba(255,255,255,.26)}
+.hero-adv-toggle .ico-svg{width:16px;height:16px}
+.hero-adv-caret{width:15px;height:15px;transition:transform .15s ease}
+.hero-adv-toggle.is-open .hero-adv-caret{transform:rotate(180deg)}
+.hero-adv-panel{margin-top:10px;background:#fff;border-radius:12px;box-shadow:0 8px 28px rgba(6,20,40,.28);padding:18px 18px 16px}
+.hero-adv-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px 14px}
+.hero-adv-field label{display:block;font-size:var(--text-sm);color:var(--muted);margin-bottom:6px;font-weight:600}
+.hero-adv-field select{width:100%;padding:9px 10px;border:1px solid var(--gray-300);border-radius:var(--radius);font-size:var(--text-table);font-family:inherit;background:#fff;color:var(--ink)}
+.hero-adv-foot{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin-top:14px}
+.hero-adv-check{display:inline-flex;align-items:center;gap:6px;font-size:var(--text-sm);color:var(--ink);cursor:pointer}
+.hero-adv-check input{width:17px;height:17px;accent-color:var(--accent)}
+.hero-adv-apply{padding:10px 18px;background:var(--accent);color:#fff;border:none;border-radius:var(--radius);font-family:inherit;font-weight:600;font-size:var(--text-sm);cursor:pointer;transition:.12s}
+.hero-adv-apply:hover{background:var(--accent-hover)}
+@media(max-width:600px){.hero-adv-grid{grid-template-columns:1fr 1fr}.hero-adv-apply{flex:1}}
 @media(max-width:768px){.hero{margin-top:-20px}}
 
 /* Blocks */
