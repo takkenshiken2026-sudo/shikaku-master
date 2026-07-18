@@ -178,7 +178,7 @@ a.hero-suggest-item{text-decoration:none}a.hero-suggest-item:hover{text-decorati
 .recent-list a{display:inline-block;padding:8px 12px;border:1px solid var(--gray-200);border-radius:var(--radius);font-size:var(--text-sm);font-weight:600;color:var(--ink-deep);text-decoration:none;background:#fff}
 .recent-list a:hover{border-color:var(--muted);text-decoration:none}
 .all-certs-filters{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:14px 12px;margin-bottom:16px}
-.block-all-certs .filter-field label{display:block;font-size:var(--text-sm);color:var(--muted);margin-bottom:6px;font-weight:600}
+.block-all-certs .filter-field label{display:block;font-size:var(--text-table);color:var(--muted);margin-bottom:6px;font-weight:600}
 .block-all-certs .filter-field select,.block-all-certs .filter-field input[type=search]{width:100%;padding:8px 10px;border:1px solid var(--gray-300);border-radius:4px;font-size:var(--text-sm);font-family:inherit;background:#fff;color:var(--ink)}
 .block-all-certs .all-certs-check{display:inline-flex;align-items:center;gap:6px;font-size:var(--text-sm);color:var(--ink);margin-bottom:20px;cursor:pointer}
 .all-certs-check input{width:17px;height:17px;accent-color:var(--accent)}
