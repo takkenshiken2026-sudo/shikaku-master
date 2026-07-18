@@ -6,6 +6,53 @@
   if(!ids.length){root.innerHTML='<p class="muted">比較する資格が選択されていません。<a href="index.html">資格一覧</a>から各行の「＋比較」で資格を選んでください。</p>';return;}
   function feeNum(x){var m=(x.fee||'').replace(/,/g,'').match(/([0-9]+)\s*円/);return m?parseInt(m[1],10):null;}
   function passNum(x){var m=(x.pass_rate||'').replace(/,/g,'').match(/([0-9]+(?:\.[0-9]+)?)\s*%/);return m?parseFloat(m[1]):null;}
+  function studyNum(x){var a=(x.study_hours||'').replace(/,/g,'').match(/[0-9]+/g);if(!a)return null;var m=0;a.forEach(function(n){n=parseInt(n,10);if(n>m)m=n;});return m||null;}
+  function clamp(v){return Math.max(0,Math.min(100,v));}
+  function easeScore(x){var t=x.tags||[],s=35;
+    if(t.indexOf('受験資格なし')>=0||/(なし|不問|制限なし)/.test(x.eligibility||''))s+=35;
+    if(t.indexOf('CBT・ネット試験')>=0||/CBT|ネット/.test(x.exam_format||''))s+=20;
+    if(/通年|随時|年[3-9]回|年複数/.test(x.frequency||''))s+=10;
+    return clamp(s);}
+  var RADAR_AXES=['難易度','学習量','合格率','受験しやすさ','年収期待'];
+  function radarVals(x){
+    var hn=(typeof x.hensa==='number')?x.hensa:null;
+    var hr=studyNum(x),pp=passNum(x),su=(typeof x.salary_upper==='number')?x.salary_upper:null;
+    return [
+      hn===null?null:clamp((hn-25)/50*100),
+      hr===null?null:clamp((Math.log(hr)/Math.LN10-1)/(Math.log(1200)/Math.LN10-1)*100),
+      pp===null?null:clamp(pp),
+      easeScore(x),
+      su===null?null:clamp((su-300)/1200*100)
+    ];
+  }
+  var RADAR_COLORS=['#0b57d0','#b8860b','#0b7a3b','#c0392b'];
+  function buildRadar(items){
+    var elig=items.map(radarVals);
+    var usable=items.filter(function(_x,i){return elig[i].filter(function(v){return v!==null;}).length>=3;});
+    if(usable.length<2)return '';
+    var W=380,H=340,cx=W/2,cy=H/2+2,R=118,n=RADAR_AXES.length;
+    function pt(i,frac){var a=-Math.PI/2+i*2*Math.PI/n;return [cx+R*frac*Math.cos(a),cy+R*frac*Math.sin(a)];}
+    var s='<svg class="radar-svg" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="選択した資格の特性レーダー比較">';
+    [0.25,0.5,0.75,1].forEach(function(g){
+      var pts=[];for(var i=0;i<n;i++){var p=pt(i,g);pts.push(p[0].toFixed(1)+','+p[1].toFixed(1));}
+      s+='<polygon points="'+pts.join(' ')+'" class="radar-ring"/>';});
+    for(var i=0;i<n;i++){var e=pt(i,1);s+='<line x1="'+cx+'" y1="'+cy+'" x2="'+e[0].toFixed(1)+'" y2="'+e[1].toFixed(1)+'" class="radar-spoke"/>';
+      var l=pt(i,1.14),anc='middle';if(l[0]>cx+8)anc='start';else if(l[0]<cx-8)anc='end';
+      s+='<text x="'+l[0].toFixed(1)+'" y="'+(l[1]+4).toFixed(1)+'" text-anchor="'+anc+'" class="radar-label">'+esc(RADAR_AXES[i])+'</text>';}
+    items.forEach(function(x,idx){
+      var v=elig[idx];if(v.filter(function(z){return z!==null;}).length<3)return;
+      var c=RADAR_COLORS[idx%RADAR_COLORS.length],pts=[];
+      for(var i=0;i<n;i++){var p=pt(i,(v[i]||0)/100);pts.push(p[0].toFixed(1)+','+p[1].toFixed(1));}
+      s+='<polygon points="'+pts.join(' ')+'" fill="'+c+'" fill-opacity="0.14" stroke="'+c+'" stroke-width="2"/>';
+    });
+    s+='</svg>';
+    var leg=items.map(function(x,idx){var v=elig[idx];if(v.filter(function(z){return z!==null;}).length<3)return '';
+      var c=RADAR_COLORS[idx%RADAR_COLORS.length];
+      return '<span class="radar-leg"><span class="radar-leg-key" style="background:'+c+'"></span>'+esc(x.display_name||x.name)+'</span>';}).join('');
+    return '<section class="cmp-radar"><h2 class="cmp-verdict-title">特性レーダー比較</h2>'+
+      '<div class="radar-wrap radar-wrap--cmp">'+s+'</div><p class="radar-leg-row">'+leg+'</p>'+
+      '<p class="muted radar-note">難易度・学習量・合格率・受験しやすさ・年収期待の5軸。難易度・学習時間・想定年収は編集部の目安（非公式）。3軸以上のデータがある資格のみ表示。</p></section>';
+  }
   var FIELDS=[['区分','type'],['分野','major'],['カテゴリ','category'],
     ['実施団体','authority'],['受験資格','eligibility'],['試験形式','exam_format'],
     ['受験料','fee'],['合格率','pass_rate'],['実施頻度','frequency']];
@@ -35,6 +82,7 @@
     }
     var vhtml=v.length?('<section class="cmp-verdict"><h2 class="cmp-verdict-title">選び方の目安（掲載データに基づく簡易判定）</h2><div class="cmp-verdict-grid">'+v.join('')+'</div></section>'):'';
     var vroot=document.getElementById('cmpVerdict'); if(vroot)vroot.innerHTML=vhtml;
+    var rroot=document.getElementById('cmpRadar'); if(rroot)rroot.innerHTML=buildRadar(items);
     var h='<table class="cmp" style="min-width:'+(130+items.length*150)+'px"><colgroup><col class="cmp-col-label">';
     items.forEach(function(){h+='<col class="cmp-col-cert">';});
     h+='</colgroup><thead><tr><th></th>';
