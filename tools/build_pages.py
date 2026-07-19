@@ -487,7 +487,8 @@ def cert_salary(slug):
     """資格slugが活かせる職業のうち、想定年収（編集部目安）の上限が最も高いものを返す。
     (上限万円, 職業名, 年収レンジ表記) または None。職業ベースの目安で公式値ではない。"""
     best = None
-    for oid in SLUG_OCC_IDS.get(slug, ()):
+    # occ_id 昇順で走査し、同額時は最初（最小 occ_id）を採用してビルドを決定的にする
+    for oid in sorted(SLUG_OCC_IDS.get(slug, ())):
         sal = OCC_SALARY.get(oid)
         if not sal:
             continue
