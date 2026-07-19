@@ -3153,9 +3153,9 @@ def build_stats_page(indexable, popular_slugs=None):
         '<p class="stats-sec-lead">合格率（実効）・学習時間・受験資格などを掲載資格全体で標準化した'
         '「難易度偏差値」（平均50・高いほど難しい）の上位です。編集部の総合スコアで、難易度の絶対指標'
         'ではありません。</p>'
-        '<table class="spec stats-table stats-hensa-table"><thead><tr>'
+        '<div class="stats-hensa-wrap"><table class="stats-hensa-table"><thead><tr>'
         '<th>偏差値</th><th>資格名</th><th>公表合格率</th></tr></thead>'
-        f'<tbody>{hensa_rows}</tbody></table>') if hensa_rows else ""
+        f'<tbody>{hensa_rows}</tbody></table></div>') if hensa_rows else ""
 
     body = f"""<nav class="crumbs"><a href="index.html">トップ</a> › 資格データ統計</nav>
 <h1>資格データ統計・ランキングまとめ</h1>
@@ -5629,9 +5629,14 @@ a.hero-suggest-item{text-decoration:none}a.hero-suggest-item:hover{text-decorati
 .radar-leg-row{display:flex;flex-wrap:wrap;gap:6px 16px;justify-content:center;margin:6px 0 0}
 .radar-leg{display:inline-flex;align-items:center;gap:6px;font-size:var(--text-sm);color:var(--ink)}
 .radar-leg-key{display:inline-block;width:12px;height:12px;border-radius:3px}
-.stats-hensa-table td.stat-hensa{text-align:center;font-weight:700;color:var(--accent);font-variant-numeric:tabular-nums;width:4em}
-.stats-hensa-table th{font-weight:600}.stats-hensa-table td:last-child{text-align:right;color:var(--muted)}
-.stats-hensa-table thead th{text-align:left;background:#edf2f8}
+.stats-hensa-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.stats-hensa-table{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--table-border);border-radius:var(--radius);overflow:hidden;font-size:var(--text-table);table-layout:auto}
+.stats-hensa-table th,.stats-hensa-table td{padding:9px 12px;border-bottom:1px solid var(--table-border);text-align:left;vertical-align:middle;line-height:1.5}
+.stats-hensa-table tr:last-child th,.stats-hensa-table tr:last-child td{border-bottom:none}
+.stats-hensa-table thead th{background:#edf2f8;font-weight:600;white-space:nowrap;color:var(--ink)}
+.stats-hensa-table td.stat-hensa{text-align:center;font-weight:700;color:var(--accent);font-variant-numeric:tabular-nums;width:3.2em;white-space:nowrap}
+.stats-hensa-table tbody th{font-weight:600;word-break:break-word;color:var(--ink)}
+.stats-hensa-table td:last-child{text-align:right;color:var(--muted);white-space:nowrap;width:5.5em}
 .sal-table col.sal-col-salary{width:20%}.sal-table col.sal-col-occ{width:26%}
 .sal-table .sal-cell{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums;font-weight:600}
 .sal-table .sal-occ{color:var(--muted);white-space:normal}
