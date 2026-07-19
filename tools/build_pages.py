@@ -2660,6 +2660,29 @@ INDEXABLE_SLUGS = set()
 CERTS_BY_CATEGORY = {}
 
 
+# 散布図・バブルで既定ラベルを出す代表資格（slug → 短い表示名）
+CHART_LABEL_SLUGS = {
+    "c-1538": "ITパスポート", "c-3207": "宅建", "c-3625": "簿記3級",
+    "c-1505": "基本情報", "c-3701": "行政書士", "c-2510": "社労士",
+    "c-2501": "公認会計士", "c-1803": "看護師", "c-5207": "危険物乙",
+    "c-2511": "中小企業診断士", "c-1701": "医師", "c-2516": "FP2級",
+}
+
+
+def _chart_point(r, x, y, radius, cls, tip, fill=None):
+    """散布図の1点をリンク＋ツールチップ付きで描く。代表資格には名前ラベルも返す。
+    戻り値: (点のSVG, ラベルのSVG)。ラベルは最前面に描くため分離して返す。"""
+    fill_attr = f' fill="{fill}"' if fill else ""
+    dot = (f'<a href="c/{esc(r["slug"])}.html" class="chart-pt" aria-label="{esc(r["name"])}">'
+           f'<circle cx="{x:.1f}" cy="{y:.1f}" r="{radius}" class="{cls}"{fill_attr}/>'
+           f'<title>{esc(r["name"])}{esc(tip)}</title></a>')
+    label = ""
+    short = CHART_LABEL_SLUGS.get(r["slug"])
+    if short:
+        label = (f'<text x="{x+6:.1f}" y="{y-6:.1f}" class="chart-plabel">{esc(short)}</text>')
+    return dot, label
+
+
 def _difficulty_matrix_svg(pub, popular_slugs):
     """学習時間 × 合格率 の散布図（難易度マトリクス）をインラインSVGで描く。
     外部ライブラリなし。X=学習時間(対数)・Y=合格率。データのある公開資格のみ。"""
@@ -2710,14 +2733,18 @@ def _difficulty_matrix_svg(pub, popular_slugs):
             (px1-6, py1-8, 'end', '難関（長時間・低合格率）')]
     for qx, qy, anc, label in quad:
         parts.append(f'<text x="{qx:.0f}" y="{qy:.0f}" text-anchor="{anc}" class="dm-quad">{esc(label)}</text>')
-    # 点（人気資格は強調）
-    normal, pops = [], []
-    for r, hr, pp, is_pop in pts:
-        (pops if is_pop else normal).append((xpos(hr), ypos(pp)))
-    for x, y in normal:
-        parts.append(f'<circle cx="{x:.1f}" cy="{y:.1f}" r="3" class="dm-dot"/>')
-    for x, y in pops:
-        parts.append(f'<circle cx="{x:.1f}" cy="{y:.1f}" r="4.5" class="dm-dot dm-dot--pop"/>')
+    # 点（人気資格は強調）。各点はリンク＋ツールチップ、代表資格は名前ラベル。
+    labels = []
+    for r, hr, pp, is_pop in sorted(pts, key=lambda t: t[3]):
+        x, y = xpos(hr), ypos(pp)
+        cls = "dm-dot dm-dot--pop" if is_pop else "dm-dot"
+        rad = 4.5 if is_pop else 3
+        tip = f'（学習{int(hr)}時間・合格率{pp:.0f}%）'
+        dot, lab = _chart_point(r, x, y, rad, cls, tip)
+        parts.append(dot)
+        if lab:
+            labels.append(lab)
+    parts.extend(labels)
     # 軸タイトル
     parts.append(f'<text x="{(px0+px1)/2:.0f}" y="{H-6}" text-anchor="middle" class="dm-title">学習時間（時間・対数目盛）</text>')
     parts.append(f'<text x="14" y="{(py0+py1)/2:.0f}" text-anchor="middle" class="dm-title" '
@@ -2726,8 +2753,9 @@ def _difficulty_matrix_svg(pub, popular_slugs):
     return (f'<div class="diff-matrix-wrap">{"".join(parts)}</div>'
             f'<p class="dm-legend"><span class="dm-key dm-key--pop"></span>受験者数の多い資格'
             f'　<span class="dm-key"></span>その他　'
-            f'<span class="muted">／ 学習時間は編集部調べの目安（非公式）、合格率は公表値。'
-            f'点は両データのある公開資格 {len(pts):,} 件。</span></p>')
+            f'<span class="muted">／ 点をタップ・クリックすると資格ページへ。学習時間は編集部調べの目安（非公式）、'
+            f'合格率は公表値。点は両データのある公開資格 {len(pts):,} 件。</span>'
+            f'<span class="scroll-hint">← 横スクロールで全体を表示 →</span></p>')
 
 
 def _cospa_scatter_svg(pub, popular_slugs):
@@ -2765,13 +2793,17 @@ def _cospa_scatter_svg(pub, popular_slugs):
         xx = xpos(xv)
         parts.append(f'<line x1="{xx:.0f}" y1="{py0}" x2="{xx:.0f}" y2="{py1}" class="dm-grid"/>')
         parts.append(f'<text x="{xx:.0f}" y="{py1+18}" class="dm-axis dm-axis--x">{xv}</text>')
-    normal, pops = [], []
-    for r, hn, sal, ip in pts:
-        (pops if ip else normal).append((xpos(hn), ypos(sal)))
-    for x, y in normal:
-        parts.append(f'<circle cx="{x:.1f}" cy="{y:.1f}" r="3" class="dm-dot"/>')
-    for x, y in pops:
-        parts.append(f'<circle cx="{x:.1f}" cy="{y:.1f}" r="4.5" class="dm-dot dm-dot--pop"/>')
+    labels = []
+    for r, hn, sal, ip in sorted(pts, key=lambda t: t[3]):
+        x, y = xpos(hn), ypos(sal)
+        cls = "dm-dot dm-dot--pop" if ip else "dm-dot"
+        rad = 4.5 if ip else 3
+        tip = f'（難易度偏差値{hn}・想定年収{sal:,}万円）'
+        dot, lab = _chart_point(r, x, y, rad, cls, tip)
+        parts.append(dot)
+        if lab:
+            labels.append(lab)
+    parts.extend(labels)
     parts.append(f'<text x="{(px0+px1)/2:.0f}" y="{H-6}" text-anchor="middle" class="dm-title">難易度偏差値（右ほど難関）</text>')
     parts.append(f'<text x="16" y="{(py0+py1)/2:.0f}" text-anchor="middle" class="dm-title" '
                  f'transform="rotate(-90 16 {(py0+py1)/2:.0f})">想定年収の上限（万円）</text>')
@@ -2779,8 +2811,9 @@ def _cospa_scatter_svg(pub, popular_slugs):
     return (f'<div class="diff-matrix-wrap">{"".join(parts)}</div>'
             f'<p class="dm-legend"><span class="dm-key dm-key--pop"></span>受験者数の多い資格'
             f'　<span class="dm-key"></span>その他　'
-            f'<span class="muted">／ 想定年収・難易度偏差値はいずれも編集部の目安（非公式）。'
-            f'点は両データのある公開資格 {len(pts):,} 件。</span></p>')
+            f'<span class="muted">／ 点をタップ・クリックで資格ページへ。想定年収・難易度偏差値はいずれも編集部の目安（非公式）。'
+            f'点は両データのある公開資格 {len(pts):,} 件。</span>'
+            f'<span class="scroll-hint">← 横スクロールで全体を表示 →</span></p>')
 
 
 def _field_range_svg(pub, min_n=6):
@@ -2827,7 +2860,8 @@ def _field_range_svg(pub, min_n=6):
     return (f'<div class="diff-matrix-wrap">{"".join(parts)}</div>'
             '<p class="dm-legend"><span class="dm-key dm-key--line"></span>最小〜最大　'
             '<span class="dm-key dm-key--med"></span>中央値　'
-            '<span class="muted">／ 難易度偏差値は編集部の目安。掲載数が一定以上の分野のみ表示。</span></p>')
+            '<span class="muted">／ 難易度偏差値は編集部の目安。掲載数が一定以上の分野のみ表示。</span>'
+            '<span class="scroll-hint">← 横スクロールで全体を表示 →</span></p>')
 
 
 def _bar_chart_svg(cats, title, x_title, aria):
@@ -2895,10 +2929,15 @@ def _bubble_svg(pub):
         xx = xpos(xv)
         parts.append(f'<line x1="{xx:.0f}" y1="{py0}" x2="{xx:.0f}" y2="{py1}" class="dm-grid"/>')
         parts.append(f'<text x="{xx:.0f}" y="{py1+18}" class="dm-axis dm-axis--x">{xv}h</text>')
+    labels = []
     for r, hr, sal, ap in sorted(pts, key=lambda t: -t[3]):
         c = color.get(r["type"], "var(--muted)")
-        parts.append(f'<circle cx="{xpos(hr):.1f}" cy="{ypos(sal):.1f}" r="{rad(ap):.1f}" '
-                     f'fill="{c}" class="bubble-dot"/>')
+        tip = f'（学習{int(hr)}時間・想定年収{sal:,}万円・受験者数{ap:,}）'
+        dot, lab = _chart_point(r, xpos(hr), ypos(sal), f"{rad(ap):.1f}", "bubble-dot", tip, fill=c)
+        parts.append(dot)
+        if lab:
+            labels.append(lab)
+    parts.extend(labels)
     parts.append(f'<text x="{(px0+px1)/2:.0f}" y="{H-6}" text-anchor="middle" class="dm-title">学習時間（時間・対数目盛）</text>')
     parts.append(f'<text x="16" y="{(py0+py1)/2:.0f}" text-anchor="middle" class="dm-title" '
                  f'transform="rotate(-90 16 {(py0+py1)/2:.0f})">想定年収の上限（万円）</text>')
@@ -2907,8 +2946,9 @@ def _bubble_svg(pub):
             '<p class="dm-legend"><span class="dm-key" style="background:var(--accent);opacity:.55"></span>国家'
             '　<span class="dm-key" style="background:#0b7a3b;opacity:.55"></span>公的'
             '　<span class="dm-key" style="background:#b8860b;opacity:.55"></span>民間'
-            f'　<span class="muted">／ 円の大きさ＝受験者数。学習時間・想定年収は編集部の目安。'
-            f'点は3データの揃う公開資格 {len(pts):,} 件。</span></p>')
+            f'　<span class="muted">／ 円をタップ・クリックで資格ページへ。円の大きさ＝受験者数。学習時間・想定年収は編集部の目安。'
+            f'点は3データの揃う公開資格 {len(pts):,} 件。</span>'
+            f'<span class="scroll-hint">← 横スクロールで全体を表示 →</span></p>')
 
 
 def _ease_score(row):
@@ -5537,33 +5577,40 @@ a.hero-suggest-item{text-decoration:none}a.hero-suggest-item:hover{text-decorati
 .stats-table th{text-align:left;font-size:1rem}.stats-table td{text-align:right;white-space:nowrap}
 @media(max-width:640px){.stats-grid{grid-template-columns:repeat(2,1fr)}}
 .stats-sec-lead{color:var(--muted);font-size:var(--text-sm);margin:.2em 0 .8em}
-.diff-matrix-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;border:1px solid var(--gray-200);border-radius:var(--radius);background:#fff;padding:8px}
-.diff-matrix{display:block;width:100%;min-width:520px;height:auto}
-.diff-matrix .dm-grid{stroke:var(--gray-100);stroke-width:1}
-.diff-matrix .dm-guide{stroke:var(--gray-300);stroke-width:1;stroke-dasharray:4 4}
-.diff-matrix .dm-axis{fill:var(--muted);font-size:11px}
-.diff-matrix .dm-axis--y{text-anchor:end}
-.diff-matrix .dm-axis--x{text-anchor:middle}
-.diff-matrix .dm-title{fill:var(--ink-deep);font-size:12px;font-weight:600}
-.diff-matrix .dm-quad{fill:var(--muted);font-size:11px;font-weight:600;opacity:.85}
-.diff-matrix .dm-dot{fill:var(--accent);opacity:.42}
-.diff-matrix .dm-dot--pop{fill:#b8860b;opacity:.9}
+.diff-matrix-wrap{position:relative;overflow-x:auto;-webkit-overflow-scrolling:touch;border:1px solid var(--gray-200);border-radius:var(--radius);background:#fff;padding:8px;background-image:linear-gradient(to right,#fff,#fff),linear-gradient(to right,rgba(0,0,0,.10),rgba(255,255,255,0));background-position:right center;background-repeat:no-repeat;background-size:24px 100%,14px 100%;background-attachment:local,scroll}
+.diff-matrix,.chart-svg{display:block;width:100%;min-width:500px;height:auto}
+.dm-grid{stroke:var(--gray-100);stroke-width:1}
+.dm-guide{stroke:var(--gray-300);stroke-width:1;stroke-dasharray:4 4}
+.dm-axis{fill:var(--muted);font-size:13px}
+.dm-axis--y{text-anchor:end}
+.dm-axis--x{text-anchor:middle}
+.dm-title{fill:var(--ink-deep);font-size:14px;font-weight:600}
+.dm-quad{fill:var(--muted);font-size:13px;font-weight:600;opacity:.85}
+.dm-dot{fill:var(--accent);opacity:.42}
+.dm-dot--pop{fill:#b8860b;opacity:.9}
+.chart-pt{cursor:pointer}
+.chart-pt:hover .dm-dot{opacity:.85}
+.chart-pt:hover .bubble-dot{opacity:.85}
+.chart-pt:focus-visible circle{outline:2px solid var(--accent-ring);outline-offset:1px}
+.chart-plabel{fill:var(--ink-deep);font-size:12px;font-weight:700;paint-order:stroke;stroke:#fff;stroke-width:3px;stroke-linejoin:round;pointer-events:none}
 .dm-legend{font-size:var(--text-sm);color:var(--ink);margin:8px 0 0}
 .dm-key{display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--accent);opacity:.42;vertical-align:middle;margin-right:4px}
 .dm-key--pop{background:#b8860b;opacity:.9}
 .dm-key--line{width:16px;height:0;border-radius:0;border-top:3px solid var(--accent);opacity:.6}
 .dm-key--med{background:var(--accent);opacity:1}
-.chart-svg{display:block;width:100%;min-width:520px;height:auto}
+.scroll-hint{display:none}
 .chart-svg .bar-rect{fill:var(--accent);opacity:.78}
-.chart-svg .bar-val{fill:var(--ink-deep);font-size:11px;font-weight:600}
+.chart-svg .bar-val{fill:var(--ink-deep);font-size:13px;font-weight:600}
 .chart-zone{fill:#0b7a3b;opacity:.08}
-.chart-zone-label{fill:#0b7a3b;font-size:11px;font-weight:600;opacity:.9}
-.chart-range{min-width:520px}
-.chart-range .range-label{fill:var(--ink);font-size:12px;text-anchor:end}
+.chart-zone-label{fill:#0b7a3b;font-size:13px;font-weight:600;opacity:.9}
+.chart-range{min-width:500px}
+.chart-range .range-label{fill:var(--ink);font-size:13px;text-anchor:end}
 .chart-range .range-bar{stroke:var(--accent);stroke-width:4;stroke-linecap:round;opacity:.55}
 .chart-range .range-med{fill:var(--accent)}
-.chart-range .range-n{fill:var(--muted);font-size:11px}
+.chart-range .range-n{fill:var(--muted);font-size:12px}
 .bubble-dot{opacity:.5;stroke:#fff;stroke-width:.5}
+@media(max-width:560px){.scroll-hint{display:block;font-size:var(--text-sm);color:var(--accent);font-weight:600;margin-top:4px}
+.dm-axis{font-size:15px}.dm-title{font-size:16px}.dm-quad{font-size:14px}.chart-zone-label{font-size:14px}.chart-range .range-label{font-size:15px}.chart-plabel{font-size:14px}}
 .stats-sub{font-size:var(--text-md);margin:1.1em 0 .2em;color:var(--ink-deep)}
 .radar-wrap{max-width:340px;margin:0 auto}
 .radar-svg{display:block;width:100%;height:auto}
