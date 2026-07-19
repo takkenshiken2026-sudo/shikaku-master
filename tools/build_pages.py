@@ -444,6 +444,24 @@ def load_occupation_salary():
 OCC_SALARY = load_occupation_salary()
 
 
+def load_cert_diff():
+    """slug → 資格あり/なしの差（区分・独占業務・資格手当の目安など。編集値・非公式）。"""
+    path = ROOT / "data" / "cert_diff.csv"
+    if not path.exists():
+        return {}
+    out = {}
+    with path.open(encoding="utf-8") as f:
+        for r in csv.DictReader(f):
+            s = (r.get("slug") or "").strip()
+            if s:
+                out[s] = {k: (r.get(k) or "").strip()
+                          for k in ("kind", "without", "with_role", "allowance", "note")}
+    return out
+
+
+CERT_DIFF = load_cert_diff()
+
+
 def _salary_quantitative(sal):
     """『約480〜560万円』等のレンジを schema.org の QuantitativeValue(円・年額) に変換。"""
     if not sal:
@@ -1473,6 +1491,7 @@ def build_detail(row, popular_slugs=None) -> str:
           f'{esc(name)}の特性を可視化しました。各軸は掲載資格全体の中での相対的な位置づけで、'
           '難易度・学習時間・想定年収は編集部の目安（非公式）です。</p>'
         '</div></section>') if _radar else ""
+    diff_block = _cert_diff_block(row)
 
     body = f"""<div class="page-detail">
 <nav class="crumbs"><a href="../index.html">トップ</a> ›
@@ -1493,6 +1512,7 @@ def build_detail(row, popular_slugs=None) -> str:
 <h2 class="detail-section-title" id="ds-h">資格情報</h2>
 <div class="spec-sections">{spec_html}</div>{SPEC_TABLE_JS}</section>
 {radar_block}
+{diff_block}
 {partner_detail}
 {guide_html}
 {faq_html}
@@ -3016,6 +3036,38 @@ def _cert_radar_svg(row):
     note = ('' if have == n else
             '<p class="radar-note muted">※データのある指標のみで作図（不足指標は0）。</p>')
     return (f'<div class="radar-wrap">{"".join(parts)}</div>{note}')
+
+
+def _cert_diff_block(row):
+    """資格あり／なしで仕事内容・給与がどう変わるかの比較ブロック（cert_diff.csv 掲載資格のみ）。"""
+    d = CERT_DIFF.get(row["slug"])
+    if not d:
+        return ""
+    without_items = [f'<li class="diff-x">{esc(d["without"])}</li>']
+    with_items = [f'<li class="diff-o">{esc(d["with_role"])}</li>']
+    if d["allowance"]:
+        without_items.append('<li class="diff-x">この資格による資格手当は付かない</li>')
+        with_items.append(f'<li class="diff-o">資格手当の目安：<strong>{esc(d["allowance"])}</strong></li>')
+    cs = cert_salary(row["slug"])
+    if cs:
+        with_items.append('<li class="diff-o">想定年収の目安：<strong>'
+                          f'{esc(cs[2])}</strong>（{esc(cs[1])}）</li>')
+    kind = d["kind"]
+    note = d["note"]
+    return (
+        '<section class="detail-section detail-section--diff" aria-labelledby="diff-h">'
+        '<h2 class="detail-section-title" id="diff-h">資格あり／なしでどう変わる？</h2>'
+        f'<p class="diff-kind"><span class="diff-kind-badge">{esc(kind)}</span></p>'
+        '<div class="diff-cols">'
+        '<div class="diff-col diff-col--without"><div class="diff-col-head">資格なしの場合</div>'
+        f'<ul class="diff-list">{"".join(without_items)}</ul></div>'
+        '<div class="diff-col diff-col--with"><div class="diff-col-head">資格ありの場合</div>'
+        f'<ul class="diff-list">{"".join(with_items)}</ul></div>'
+        '</div>'
+        f'<p class="muted diff-note">{esc(note)} '
+        '資格手当・想定年収は公開情報をもとにした編集部の目安（非公式）で、企業・地域・経験・雇用形態により'
+        '大きく異なります。独占業務・必置などの制度は各根拠法令・公式情報をご確認ください。</p>'
+        '</section>')
 
 
 def build_stats_page(indexable, popular_slugs=None):
@@ -5624,6 +5676,19 @@ a.hero-suggest-item{text-decoration:none}a.hero-suggest-item:hover{text-decorati
 .radar-flex .radar-wrap{flex:0 0 300px;max-width:300px;margin:0}
 .radar-desc{flex:1 1 240px;font-size:var(--text-sm);line-height:1.7}
 @media(max-width:560px){.radar-flex .radar-wrap{flex-basis:100%}}
+.detail-section--diff .diff-kind{margin:0 0 12px}
+.diff-kind-badge{display:inline-block;background:var(--accent-light);color:var(--accent-hover);border:1px solid #cfe0fb;border-radius:999px;padding:3px 12px;font-size:var(--text-sm);font-weight:700}
+.diff-cols{display:flex;flex-wrap:wrap;gap:14px}
+.diff-col{flex:1 1 260px;min-width:0;border:1px solid var(--gray-200);border-radius:var(--radius);overflow:hidden;background:#fff}
+.diff-col-head{padding:8px 14px;font-weight:700;font-size:var(--text-md);color:#fff}
+.diff-col--without .diff-col-head{background:var(--muted)}
+.diff-col--with .diff-col-head{background:var(--accent)}
+.diff-list{list-style:none;margin:0;padding:12px 14px;display:flex;flex-direction:column;gap:9px}
+.diff-list li{position:relative;padding-left:24px;font-size:var(--text-table);line-height:1.65}
+.diff-list li::before{position:absolute;left:0;top:0;font-weight:700}
+.diff-x::before{content:"×";color:#c0392b}
+.diff-o::before{content:"○";color:#0b7a3b}
+.diff-note{font-size:var(--text-sm);margin:12px 0 0}
 .cmp-radar{margin:14px 0 6px}
 .radar-wrap--cmp{max-width:420px}
 .radar-leg-row{display:flex;flex-wrap:wrap;gap:6px 16px;justify-content:center;margin:6px 0 0}
