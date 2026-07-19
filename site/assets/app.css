@@ -325,6 +325,19 @@ a.hero-suggest-item{text-decoration:none}a.hero-suggest-item:hover{text-decorati
 .radar-flex .radar-wrap{flex:0 0 300px;max-width:300px;margin:0}
 .radar-desc{flex:1 1 240px;font-size:var(--text-sm);line-height:1.7}
 @media(max-width:560px){.radar-flex .radar-wrap{flex-basis:100%}}
+.detail-section--diff .diff-kind{margin:0 0 12px}
+.diff-kind-badge{display:inline-block;background:var(--accent-light);color:var(--accent-hover);border:1px solid #cfe0fb;border-radius:999px;padding:3px 12px;font-size:var(--text-sm);font-weight:700}
+.diff-cols{display:flex;flex-wrap:wrap;gap:14px}
+.diff-col{flex:1 1 260px;min-width:0;border:1px solid var(--gray-200);border-radius:var(--radius);overflow:hidden;background:#fff}
+.diff-col-head{padding:8px 14px;font-weight:700;font-size:var(--text-md);color:#fff}
+.diff-col--without .diff-col-head{background:var(--muted)}
+.diff-col--with .diff-col-head{background:var(--accent)}
+.diff-list{list-style:none;margin:0;padding:12px 14px;display:flex;flex-direction:column;gap:9px}
+.diff-list li{position:relative;padding-left:24px;font-size:var(--text-table);line-height:1.65}
+.diff-list li::before{position:absolute;left:0;top:0;font-weight:700}
+.diff-x::before{content:"×";color:#c0392b}
+.diff-o::before{content:"○";color:#0b7a3b}
+.diff-note{font-size:var(--text-sm);margin:12px 0 0}
 .cmp-radar{margin:14px 0 6px}
 .radar-wrap--cmp{max-width:420px}
 .radar-leg-row{display:flex;flex-wrap:wrap;gap:6px 16px;justify-content:center;margin:6px 0 0}
