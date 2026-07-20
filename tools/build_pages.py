@@ -2745,19 +2745,51 @@ CHART_LABEL_SLUGS = {
 
 
 def _chart_point(r, x, y, radius, cls, tip, fill=None):
-    """散布図の1点をリンク＋ツールチップ付きで描く。代表資格には名前ラベルも返す。
-    戻り値: (点のSVG, ラベルのSVG)。ラベルは最前面に描くため分離して返す。"""
+    """散布図の1点をリンク＋ツールチップ付きで描く。代表資格には名前ラベルの座標も返す。
+    戻り値: (点のSVG, ラベル座標 (x, y, 名前) または None)。ラベルは _place_labels で
+    重なりを避けて最前面に配置する。"""
     fill_attr = f' fill="{fill}"' if fill else ""
     tip_txt = f'{r["name"]}{tip}'
     dot = (f'<a href="c/{esc(r["slug"])}.html" class="chart-pt" aria-label="{esc(r["name"])}"'
            f' data-tip="{esc(tip_txt)}">'
            f'<circle cx="{x:.1f}" cy="{y:.1f}" r="{radius}" class="{cls}"{fill_attr}/>'
            f'<title>{esc(tip_txt)}</title></a>')
-    label = ""
     short = CHART_LABEL_SLUGS.get(r["slug"])
-    if short:
-        label = (f'<text x="{x+6:.1f}" y="{y-6:.1f}" class="chart-plabel">{esc(short)}</text>')
-    return dot, label
+    return dot, ((x, y, short) if short else None)
+
+
+def _place_labels(label_pts, px0, px1):
+    """代表資格の名前ラベルを、描画域に収めつつ互いの重なりを避けて配置する。
+    右端に近い点はラベルを点の左側（text-anchor:end）に、左端に寄り過ぎる場合は
+    右へずらしてクリップを防ぐ。重なる場合は後発ラベルを間引く。
+    label_pts: [(x, y, 名前), ...]（描きたい優先度の高い順）。戻り値: SVG文字列のリスト。"""
+    CH = 12.5  # 全角1文字あたりの推定幅(px)
+    LH = 15    # ラベルの推定高さ(px)
+    out, placed = [], []
+    for x, y, text in label_pts:
+        w = len(text) * CH
+        # 右端に収まらなければ点の左側に描く
+        if x + 6 + w > px1:
+            anc, lx = "end", x - 7
+            box_l, box_r = lx - w, lx
+        else:
+            anc, lx = "start", x + 7
+            box_l, box_r = lx, lx + w
+        # 左端クリップ防止
+        if box_l < px0:
+            shift = px0 - box_l
+            lx += shift
+            box_l += shift
+            box_r += shift
+        ly = y - 6
+        box = (box_l, box_r, ly - LH, ly)
+        if any(not (box[1] < b[0] or box[0] > b[1] or box[3] < b[2] or box[2] > b[3])
+               for b in placed):
+            continue
+        placed.append(box)
+        out.append(f'<text x="{lx:.1f}" y="{ly:.1f}" text-anchor="{anc}" '
+                   f'class="chart-plabel">{esc(text)}</text>')
+    return out
 
 
 def _difficulty_matrix_svg(pub, popular_slugs):
@@ -2821,7 +2853,7 @@ def _difficulty_matrix_svg(pub, popular_slugs):
         parts.append(dot)
         if lab:
             labels.append(lab)
-    parts.extend(labels)
+    parts.extend(_place_labels(labels, px0, px1))
     # 軸タイトル
     parts.append(f'<text x="{(px0+px1)/2:.0f}" y="{H-6}" text-anchor="middle" class="dm-title">学習時間（時間・対数目盛）</text>')
     parts.append(f'<text x="14" y="{(py0+py1)/2:.0f}" text-anchor="middle" class="dm-title" '
@@ -2880,7 +2912,7 @@ def _cospa_scatter_svg(pub, popular_slugs):
         parts.append(dot)
         if lab:
             labels.append(lab)
-    parts.extend(labels)
+    parts.extend(_place_labels(labels, px0, px1))
     parts.append(f'<text x="{(px0+px1)/2:.0f}" y="{H-6}" text-anchor="middle" class="dm-title">難易度偏差値（右ほど難関）</text>')
     parts.append(f'<text x="16" y="{(py0+py1)/2:.0f}" text-anchor="middle" class="dm-title" '
                  f'transform="rotate(-90 16 {(py0+py1)/2:.0f})">想定年収の上限（万円）</text>')
@@ -2912,7 +2944,7 @@ def _field_range_svg(pub, min_n=6):
         return ""
     rows.sort(key=lambda t: -t[3])
     W = 760
-    ML, MR, MT = 150, 54, 10
+    ML, MR, MT = 192, 54, 10
     row_h = 26
     H = MT + len(rows) * row_h + 26
     px0, px1 = ML, W - MR
@@ -3014,7 +3046,7 @@ def _bubble_svg(pub):
         parts.append(dot)
         if lab:
             labels.append(lab)
-    parts.extend(labels)
+    parts.extend(_place_labels(labels, px0, px1))
     parts.append(f'<text x="{(px0+px1)/2:.0f}" y="{H-6}" text-anchor="middle" class="dm-title">学習時間（時間・対数目盛）</text>')
     parts.append(f'<text x="16" y="{(py0+py1)/2:.0f}" text-anchor="middle" class="dm-title" '
                  f'transform="rotate(-90 16 {(py0+py1)/2:.0f})">想定年収の上限（万円）</text>')
