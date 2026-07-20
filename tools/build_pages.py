@@ -2804,8 +2804,8 @@ def _difficulty_matrix_svg(pub, popular_slugs):
         pts.append((r, float(hr), float(pp), r["slug"] in (popular_slugs or set())))
     if len(pts) < 10:
         return ""
-    W, H = 760, 460
-    ML, MR, MT, MB = 58, 20, 22, 46
+    W, H = 1000, 580
+    ML, MR, MT, MB = 62, 24, 24, 52
     px0, px1 = ML, W - MR
     py0, py1 = MT, H - MB
     x_ticks = [10, 30, 100, 300, 1000]
@@ -2878,8 +2878,8 @@ def _cospa_scatter_svg(pub, popular_slugs):
         pts.append((r, hn, cs[0], r["slug"] in (popular_slugs or set())))
     if len(pts) < 10:
         return ""
-    W, H = 760, 460
-    ML, MR, MT, MB = 64, 20, 22, 46
+    W, H = 1000, 580
+    ML, MR, MT, MB = 66, 24, 24, 52
     px0, px1, py0, py1 = ML, W - MR, MT, H - MB
     xlo, xhi, ylo, yhi = 25, 75, 300, 2000
 
@@ -2943,9 +2943,9 @@ def _field_range_svg(pub, min_n=6):
     if not rows:
         return ""
     rows.sort(key=lambda t: -t[3])
-    W = 760
-    ML, MR, MT = 192, 54, 10
-    row_h = 26
+    W = 1000
+    ML, MR, MT = 210, 56, 10
+    row_h = 28
     H = MT + len(rows) * row_h + 26
     px0, px1 = ML, W - MR
     lo, hi = 25, 75
@@ -2977,8 +2977,8 @@ def _bar_chart_svg(cats, title, x_title, aria):
     """(ラベル, 件数) の縦棒グラフ。"""
     if not cats:
         return ""
-    W, H = 760, 300
-    ML, MR, MT, MB = 48, 16, 16, 54
+    W, H = 1000, 360
+    ML, MR, MT, MB = 50, 18, 18, 56
     px0, px1, py0, py1 = ML, W - MR, MT, H - MB
     mx = max(c for _, c in cats) or 1
     n = len(cats)
@@ -3012,8 +3012,8 @@ def _bubble_svg(pub):
         pts.append((r, float(hr), cs[0], ap))
     if len(pts) < 8:
         return ""
-    W, H = 760, 460
-    ML, MR, MT, MB = 64, 20, 22, 46
+    W, H = 1000, 580
+    ML, MR, MT, MB = 66, 24, 24, 52
     px0, px1, py0, py1 = ML, W - MR, MT, H - MB
     lo_l, hi_l = math.log10(10), math.log10(1200)
     ylo, yhi = 300, 2000
@@ -5476,7 +5476,7 @@ APP_CSS = """:root{
 --header-bg:#ffffff;
 --on-dark:#c4c4c4;--on-dark-muted:#888888;
 --gray-300:#c4c4c4;--gray-200:#dcdcdc;--gray-100:#f0f0f0;--gray-50:#f7f7f7;
---table-head-bg:#edf2f8;--table-border:#cddbeb;--table-hover-bg:#e9f1fa;
+--table-head-bg:#edf2f8;--table-border:#b3c4da;--table-hover-bg:#e9f1fa;
 --gray-800:#434343;--gray-700:#525252;--gray-400:#7f7f7f;--white:#fff;--page-bg:#eef0f1;
 --accent:#0b57d0;--accent-hover:#0847ad;--accent-light:#e8f1fd;--accent-ring:rgba(11,87,208,.25);
 --radius:6px;
@@ -5705,7 +5705,7 @@ a.hero-suggest-item{text-decoration:none}a.hero-suggest-item:hover{text-decorati
 .all-certs-th-rank{text-align:center}
 .all-certs-rank{text-align:center;color:var(--muted);font-weight:700;font-variant-numeric:tabular-nums}
 .all-certs-rank--top{color:var(--accent)}
-.all-certs-table thead th{text-align:left;padding:11px 14px;background:#edf2f8;color:var(--ink);font-weight:var(--fw-semibold);font-size:1rem;border:1px solid var(--table-border);border-bottom:2px solid #cddbeb;white-space:nowrap}
+.all-certs-table thead th{text-align:left;padding:11px 14px;background:#edf2f8;color:var(--ink);font-weight:var(--fw-semibold);font-size:1rem;border:1px solid var(--table-border);border-bottom:2px solid #9fb4d0;white-space:nowrap}
 .all-certs-table tbody td{padding:11px 14px;border:1px solid var(--table-border);vertical-align:middle;line-height:1.5;font-size:var(--text-table);color:var(--ink);overflow-wrap:break-word;word-break:break-word;overflow:hidden}
 .all-certs-table tbody tr.cert-row{cursor:pointer;transition:background-color .12s ease}
 .all-certs-table tbody tr.cert-row:hover td{background:var(--accent-light)}
@@ -5751,8 +5751,8 @@ a.hero-suggest-item{text-decoration:none}a.hero-suggest-item:hover{text-decorati
 .stats-table th{text-align:left;font-size:1rem}.stats-table td{text-align:right;white-space:nowrap}
 @media(max-width:640px){.stats-grid{grid-template-columns:repeat(2,1fr)}}
 .stats-sec-lead{color:var(--muted);font-size:var(--text-sm);margin:.2em 0 .8em}
-.diff-matrix-wrap{position:relative;max-width:780px;overflow-x:auto;-webkit-overflow-scrolling:touch;border:1px solid var(--gray-200);border-radius:var(--radius);background:#fff;padding:8px;background-image:linear-gradient(to right,#fff,#fff),linear-gradient(to right,rgba(0,0,0,.10),rgba(255,255,255,0));background-position:right center;background-repeat:no-repeat;background-size:24px 100%,14px 100%;background-attachment:local,scroll}
-.diff-matrix,.chart-svg{display:block;width:100%;min-width:500px;height:auto}
+.diff-matrix-wrap{position:relative;overflow-x:auto;-webkit-overflow-scrolling:touch;border:1px solid var(--table-border);border-radius:var(--radius);background:#fff;padding:8px;background-image:linear-gradient(to right,#fff,#fff),linear-gradient(to right,rgba(0,0,0,.10),rgba(255,255,255,0));background-position:right center;background-repeat:no-repeat;background-size:24px 100%,14px 100%;background-attachment:local,scroll}
+.diff-matrix,.chart-svg{display:block;width:100%;min-width:660px;height:auto}
 .dm-grid{stroke:var(--gray-100);stroke-width:1}
 .dm-guide{stroke:var(--gray-300);stroke-width:1;stroke-dasharray:4 4}
 .dm-axis{fill:var(--muted);font-size:12px}
@@ -5778,14 +5778,14 @@ a.hero-suggest-item{text-decoration:none}a.hero-suggest-item:hover{text-decorati
 .chart-svg .bar-val{fill:var(--ink-deep);font-size:12px;font-weight:600}
 .chart-zone{fill:#0b7a3b;opacity:.08}
 .chart-zone-label{fill:#0b7a3b;font-size:11.5px;font-weight:600;opacity:.9}
-.chart-range{min-width:500px}
+.chart-range{min-width:660px}
 .chart-range .range-label{fill:var(--ink);font-size:12px;text-anchor:end}
 .chart-range .range-bar{stroke:var(--accent);stroke-width:4;stroke-linecap:round;opacity:.55}
 .chart-range .range-med{fill:var(--accent)}
 .chart-range .range-n{fill:var(--muted);font-size:11px}
 .bubble-dot{opacity:.5;stroke:#fff;stroke-width:.5}
 @media(max-width:560px){.scroll-hint{display:block;font-size:var(--text-sm);color:var(--accent);font-weight:600;margin-top:4px}
-.dm-axis{font-size:13.5px}.dm-title{font-size:14px}.dm-quad{font-size:13px}.chart-zone-label{font-size:13px}.chart-range .range-label{font-size:13.5px}.chart-plabel{font-size:12.5px}}
+.dm-axis{font-size:16px}.dm-title{font-size:17px}.dm-quad{font-size:15px}.chart-zone-label{font-size:15px}.chart-range .range-label{font-size:16px}.chart-plabel{font-size:15px}}
 .stats-sub{font-size:var(--text-md);margin:1.1em 0 .2em;color:var(--ink-deep)}
 .radar-wrap{max-width:340px;margin:0 auto}
 .radar-svg{display:block;width:100%;height:auto}
@@ -6014,7 +6014,7 @@ table.spec th{width:34%;background:var(--table-head-bg);color:var(--ink);font-we
 .article-table{border-collapse:collapse;width:100%;font-size:var(--text-table);color:var(--ink);background:#fff}
 .article-table th,.article-table td{padding:11px 14px;text-align:left;vertical-align:top;line-height:1.6;border:1px solid var(--table-border)}
 .article-table tbody tr:last-child th,.article-table tbody tr:last-child td{border-bottom:none}
-.article-table thead th{background:#edf2f8;color:var(--ink);font-weight:var(--fw-semibold);white-space:nowrap;font-size:1rem;border-bottom:2px solid #cddbeb}
+.article-table thead th{background:#edf2f8;color:var(--ink);font-weight:var(--fw-semibold);white-space:nowrap;font-size:1rem;border-bottom:2px solid #9fb4d0}
 .article-table tbody td:first-child{font-weight:var(--fw-semibold);color:var(--ink-deep)}
 /* 記事本文をサイト共通のカード/見出し流儀に合わせる（左アクセントバー・カード余白） */
 .page-article .article-section{margin:32px 0}
@@ -6108,8 +6108,8 @@ a.rm-name:hover{text-decoration:underline}
 .hub-grp{font-size:var(--text-lg);font-weight:var(--fw-bold);margin:1.1em 0 .3em;color:var(--ink-deep)}
 .vs-table{width:100%;border-collapse:collapse;margin:14px 0;font-size:var(--text-table);color:var(--ink);table-layout:fixed;--vs-label-w:9rem}
 .vs-table col.vs-col-label{width:var(--vs-label-w)}
-.vs-table th,.vs-table td{border:1px solid var(--gray-200);padding:10px 14px;text-align:left;vertical-align:top;overflow-wrap:break-word;font-size:var(--text-table);line-height:1.5}
-.vs-table thead th{background:#edf2f8;color:var(--ink-deep);text-align:center;font-size:1rem;border-bottom:2px solid #cddbeb}
+.vs-table th,.vs-table td{border:1px solid var(--table-border);padding:10px 14px;text-align:left;vertical-align:top;overflow-wrap:break-word;font-size:var(--text-table);line-height:1.5}
+.vs-table thead th{background:#edf2f8;color:var(--ink-deep);text-align:center;font-size:1rem;border-bottom:2px solid #9fb4d0}
 .vs-table tbody th{background:#f4f7fb;white-space:nowrap;width:var(--vs-label-w);font-size:1rem}
 .vs-cta{margin:14px 0;display:flex;gap:10px;flex-wrap:wrap}
 .feature-nav{margin-top:0;padding-top:0}
@@ -6136,10 +6136,10 @@ body.cmp-open{padding-bottom:76px}
 .cmpbar .btn-ghost{background:transparent;color:var(--on-dark);border:1px solid var(--gray-700);padding:6px 13px;border-radius:var(--radius);cursor:pointer;font:inherit;font-size:var(--text-sm)}
 .cmpbar .btn-ghost:hover{background:rgba(255,255,255,.08)}
 .cmp-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
-table.cmp{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--gray-200);border-radius:8px;table-layout:fixed;--cmp-label-w:9rem;font-size:var(--text-table);color:var(--ink)}
+table.cmp{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--table-border);border-radius:8px;table-layout:fixed;--cmp-label-w:9rem;font-size:var(--text-table);color:var(--ink)}
 table.cmp col.cmp-col-label{width:var(--cmp-label-w)}
-table.cmp th,table.cmp td{text-align:left;padding:10px 14px;border-bottom:1px solid var(--gray-200);border-right:1px solid var(--gray-200);vertical-align:top;font-size:var(--text-table);color:var(--ink);line-height:1.5;overflow-wrap:break-word}
-table.cmp thead th{background:#edf2f8;color:var(--ink-deep);font-weight:700;font-size:1rem;border-bottom:2px solid #cddbeb}
+table.cmp th,table.cmp td{text-align:left;padding:10px 14px;border-bottom:1px solid var(--table-border);border-right:1px solid var(--table-border);vertical-align:top;font-size:var(--text-table);color:var(--ink);line-height:1.5;overflow-wrap:break-word}
+table.cmp thead th{background:#edf2f8;color:var(--ink-deep);font-weight:700;font-size:1rem;border-bottom:2px solid #9fb4d0}
 table.cmp tbody th{background:#f4f7fb;color:var(--ink);white-space:nowrap;width:var(--cmp-label-w);font-size:1rem}
 table.cmp tbody th,table.cmp thead th:first-child{position:sticky;left:0;z-index:1}
 table.cmp thead th:first-child{background:#edf2f8;z-index:2}
