@@ -444,6 +444,60 @@ def load_occupation_salary():
 OCC_SALARY = load_occupation_salary()
 
 
+def load_salary_by_age():
+    """occ_id → [(年代ラベル, 下限万円, 上限万円), ...]。年代別の想定年収（編集値・非公式）。"""
+    path = ROOT / "data" / "occupation_salary_by_age.csv"
+    if not path.exists():
+        return {}
+    out = {}
+    with path.open(encoding="utf-8") as f:
+        for r in csv.DictReader(f):
+            oid = (r.get("occ_id") or "").strip()
+            if not oid:
+                continue
+            try:
+                bands = [("20代", int(r["lo20"]), int(r["hi20"])),
+                         ("30代", int(r["lo30"]), int(r["hi30"])),
+                         ("40代", int(r["lo40"]), int(r["hi40"])),
+                         ("50代", int(r["lo50"]), int(r["hi50"]))]
+            except (ValueError, KeyError):
+                continue
+            out[oid] = bands
+    return out
+
+
+SALARY_BY_AGE = load_salary_by_age()
+
+
+def _salary_age_block(occ_id):
+    """年代別の想定年収（目安）を表＋横棒で表示。データのある職種のみ。"""
+    bands = SALARY_BY_AGE.get(occ_id)
+    if not bands:
+        return ""
+    mn = min(lo for _, lo, _ in bands)
+    mx = max(hi for _, _, hi in bands)
+    span = (mx - mn) or 1
+    rows = []
+    for label, lo, hi in bands:
+        x0 = (lo - mn) / span * 100
+        w = max(4.0, (hi - lo) / span * 100)
+        rows.append(
+            f'<tr><th scope="row">{esc(label)}</th>'
+            f'<td class="sage-range">{lo:,}〜{hi:,}<span class="sage-unit">万円</span></td>'
+            f'<td class="sage-barcell"><span class="sage-bar" style="margin-left:{x0:.1f}%;width:{w:.1f}%"></span></td></tr>')
+    return (
+        '<section class="occ-salary occ-salary-age"><h2>年代別の想定年収（目安）</h2>'
+        '<div class="sage-wrap"><table class="sage-table">'
+        '<thead><tr><th scope="col">年代</th><th scope="col">想定年収</th>'
+        '<th scope="col" class="sage-barhead">水準の目安</th></tr></thead>'
+        f'<tbody>{"".join(rows)}</tbody></table></div>'
+        '<p class="muted occ-salary-note">※年代別の金額は公開の賃金統計・求人情報を参考にした'
+        '<strong>編集部の目安（非公式）</strong>です。実際は地域・経験・勤務先・雇用形態により'
+        '大きく異なります。公的な年齢階級別の賃金データは'
+        f'<a href="{JOBTAG_URL}" rel="nofollow noopener" target="_blank">厚生労働省 job tag</a>'
+        '・賃金構造基本統計調査等でご確認ください。</p></section>')
+
+
 def load_cert_diff():
     """slug → 資格あり/なしの差（区分・独占業務・資格手当の目安など。編集値・非公式）。"""
     path = ROOT / "data" / "cert_diff.csv"
@@ -4131,6 +4185,7 @@ def build_occupation_pages(indexable):
                 '公式の統計値ではありません。公的な賃金データは'
                 f'<a href="{JOBTAG_URL}" rel="nofollow noopener" target="_blank">'
                 '厚生労働省 job tag</a> 等でご確認ください。</p></section>')
+        work_html += _salary_age_block(occ_id)
 
         listing = (_certs_table(certs, depth=1, show_major=True) if certs
                    else '<p class="muted">この職種に直接ひも付く掲載資格は精査中です。</p>')
@@ -5969,6 +6024,19 @@ a.rm-name:hover{text-decoration:underline}
 .occ-salary{margin:14px 0 0}
 .salary-range{font-size:var(--text-lg);font-weight:700;color:var(--accent);margin:.1em 0}
 .occ-salary-note{font-size:var(--text-sm)}
+.occ-salary-age{margin-top:16px}
+.sage-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.sage-table{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--table-border);border-radius:var(--radius);overflow:hidden;font-size:var(--text-table)}
+.sage-table th,.sage-table td{padding:8px 12px;border-bottom:1px solid var(--table-border);text-align:left;vertical-align:middle}
+.sage-table tr:last-child th,.sage-table tr:last-child td{border-bottom:none}
+.sage-table thead th{background:#edf2f8;font-weight:600;white-space:nowrap;color:var(--ink)}
+.sage-table tbody th{font-weight:700;color:var(--accent);white-space:nowrap;width:3.5em}
+.sage-range{white-space:nowrap;font-variant-numeric:tabular-nums;font-weight:600}
+.sage-unit{font-size:var(--text-sm);font-weight:400;color:var(--muted);margin-left:2px}
+.sage-barcell{width:46%;min-width:120px}
+.sage-bar{display:block;height:12px;background:var(--accent);opacity:.5;border-radius:6px}
+.sage-barhead{width:46%}
+@media(max-width:520px){.sage-barcell,.sage-barhead{display:none}}
 .occ-skills{display:flex;flex-wrap:wrap;gap:2px 0}
 .hub-grp{font-size:var(--text-lg);font-weight:var(--fw-bold);margin:1.1em 0 .3em;color:var(--ink-deep)}
 .vs-table{width:100%;border-collapse:collapse;margin:14px 0;font-size:var(--text-table);color:var(--ink);table-layout:fixed;--vs-label-w:9rem}
