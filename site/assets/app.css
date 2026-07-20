@@ -617,6 +617,19 @@ a.rm-name:hover{text-decoration:underline}
 .occ-salary{margin:14px 0 0}
 .salary-range{font-size:var(--text-lg);font-weight:700;color:var(--accent);margin:.1em 0}
 .occ-salary-note{font-size:var(--text-sm)}
+.occ-salary-age{margin-top:16px}
+.sage-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.sage-table{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--table-border);border-radius:var(--radius);overflow:hidden;font-size:var(--text-table)}
+.sage-table th,.sage-table td{padding:8px 12px;border-bottom:1px solid var(--table-border);text-align:left;vertical-align:middle}
+.sage-table tr:last-child th,.sage-table tr:last-child td{border-bottom:none}
+.sage-table thead th{background:#edf2f8;font-weight:600;white-space:nowrap;color:var(--ink)}
+.sage-table tbody th{font-weight:700;color:var(--accent);white-space:nowrap;width:3.5em}
+.sage-range{white-space:nowrap;font-variant-numeric:tabular-nums;font-weight:600}
+.sage-unit{font-size:var(--text-sm);font-weight:400;color:var(--muted);margin-left:2px}
+.sage-barcell{width:46%;min-width:120px}
+.sage-bar{display:block;height:12px;background:var(--accent);opacity:.5;border-radius:6px}
+.sage-barhead{width:46%}
+@media(max-width:520px){.sage-barcell,.sage-barhead{display:none}}
 .occ-skills{display:flex;flex-wrap:wrap;gap:2px 0}
 .hub-grp{font-size:var(--text-lg);font-weight:var(--fw-bold);margin:1.1em 0 .3em;color:var(--ink-deep)}
 .vs-table{width:100%;border-collapse:collapse;margin:14px 0;font-size:var(--text-table);color:var(--ink);table-layout:fixed;--vs-label-w:9rem}
