@@ -866,6 +866,47 @@ def materials_cell_html(slug):
     return f'<ul class="materials">{"".join(items)}</ul>'
 
 
+def render_materials_block(slug):
+    """資格詳細ページの「おすすめ講座・教材」CTAセクション（広告開示つき）。
+    講座（高単価）を先に、市販テキストを続けてカード表示。教材が無ければ空文字。"""
+    mats = sorted(MATERIALS.get(slug) or [], key=_material_sort_key)
+    if not mats:
+        return ""
+    courses = [m for m in mats if m["kind"] == "講座"]
+    books = [m for m in mats if m["kind"] != "講座"]
+
+    def card(m, kind_label, cta):
+        link = m["affiliate"] or m["url"]
+        if not link:
+            return ""
+        rel = "sponsored nofollow noopener" if m["affiliate"] else "nofollow noopener"
+        mod = "course" if kind_label == "講座" else "book"
+        prov = f'<span class="mat-prov">{esc(m["provider"])}</span>' if m.get("provider") else ""
+        note = f'<p class="mat-note">{esc(m["note"])}</p>' if m.get("note") else ""
+        return (f'<li class="mat-card mat-card--{mod}">'
+                f'<div class="mat-head"><span class="mat-badge mat-badge--{mod}">{kind_label}</span>{prov}</div>'
+                f'<a class="mat-title" href="{esc(link)}" rel="{rel}" target="_blank">{esc(m["title"])}</a>'
+                f'{note}'
+                f'<a class="mat-cta mat-cta--{mod}" href="{esc(link)}" rel="{rel}" '
+                f'target="_blank">{cta}<span class="mat-ext" aria-hidden="true"> ↗</span></a></li>')
+
+    cards = [card(m, "講座", "講座の詳細を見る") for m in courses]
+    cards += [card(m, "テキスト", "Amazonで見る") for m in books[:4]]
+    cards = [c for c in cards if c]
+    if not cards:
+        return ""
+    lead = ("独学が不安なら通信講座、まず1冊ならテキストから。編集部が選んだ定番を紹介します。"
+            if courses else
+            "編集部が選んだ定番テキストです。独学の一冊目の目安にどうぞ。")
+    return ('<section class="detail-section detail-section--materials" aria-labelledby="mat-h">'
+            '<h2 class="detail-section-title" id="mat-h">合格を目指す講座・教材</h2>'
+            f'<p class="mat-lead">{lead}</p>'
+            f'<ul class="mat-list">{"".join(cards)}</ul>'
+            '<p class="mat-disclosure muted">※本セクションには広告（Amazonアソシエイト等の'
+            'アフィリエイト）を含みます。価格・内容は各販売ページで最新をご確認ください。'
+            '掲載は編集部の選定で、合格を保証するものではありません。</p></section>')
+
+
 def applicants_num(r):
     """受験者数の文字列から代表数（最初の「N人/N名」）を整数で。なければ None。"""
     ed = EXAM.get(r.get("slug", ""))
@@ -1293,10 +1334,8 @@ def build_detail(row, popular_slugs=None) -> str:
     spec_use.append(("活かせる仕事・キャリア", careers_cell))
 
     spec_ref = []
-    # おすすめ教材
-    _mat_cell = materials_cell_html(row["slug"])
-    if _mat_cell:
-        spec_ref.append(("おすすめテキスト・講座", _mat_cell))
+    # おすすめ教材・講座は独立CTAセクション（render_materials_block）に集約したため、
+    # 参考テーブルには重複掲載しない。
 
     jd = jp_date(src)
     if row["official_url"]:
@@ -1547,6 +1586,13 @@ def build_detail(row, popular_slugs=None) -> str:
           '難易度・学習時間・想定年収は編集部の目安（非公式）です。</p>'
         '</div></section>') if _radar else ""
     diff_block = _cert_diff_block(row)
+    # 収益導線: おすすめ講座・教材（資格情報の直後）と、分野に強い転職・就職CTA
+    # （あり/なし・年収の議論のあと）。データのある資格・分野のみ表示。
+    materials_block = render_materials_block(row["slug"])
+    jobs_block = render_jobchange_block(
+        jobchange_services(major_category=major),
+        f'{esc(name)}を活かして{esc(major)}分野で転職・就職を考えているなら、'
+        f'分野に強いサービスの無料相談・登録から始めるのが近道です。')
 
     body = f"""<div class="page-detail">
 <nav class="crumbs"><a href="../index.html">トップ</a> ›
@@ -1566,8 +1612,10 @@ def build_detail(row, popular_slugs=None) -> str:
 <section class="detail-section detail-section--spec" aria-labelledby="ds-h">
 <h2 class="detail-section-title" id="ds-h">資格情報</h2>
 <div class="spec-sections">{spec_html}</div>{SPEC_TABLE_JS}</section>
+{materials_block}
 {radar_block}
 {diff_block}
+{jobs_block}
 {partner_detail}
 {guide_html}
 {faq_html}
@@ -5856,6 +5904,27 @@ a.hero-suggest-item{text-decoration:none}a.hero-suggest-item:hover{text-decorati
 .btn-jobchange{display:inline-block;background:#127a3e;color:#fff;font-weight:700;padding:9px 18px;border-radius:8px}
 .btn-jobchange:hover{background:#0e6231;text-decoration:none;color:#fff}
 .jc-disclosure{font-size:.78rem;margin:.7em 0 0}
+
+/* 詳細ページ: おすすめ講座・教材CTA */
+.detail-section--materials .mat-lead{margin:.1em 0 .9em;color:var(--ink);font-size:.98rem}
+.mat-list{list-style:none;padding:0;margin:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.mat-card{display:flex;flex-direction:column;background:#fff;border:1px solid var(--table-border);border-radius:10px;padding:13px 15px}
+.mat-card--course{border-color:#bcd3f5;background:#f6faff}
+.mat-head{display:flex;align-items:center;gap:8px;margin-bottom:7px;flex-wrap:wrap}
+.mat-badge{display:inline-block;font-size:.72rem;font-weight:700;padding:2px 9px;border-radius:999px;line-height:1.5}
+.mat-badge--course{background:var(--accent);color:#fff}
+.mat-badge--book{background:#f0ead6;color:#8a6d1a}
+.mat-prov{font-size:.8rem;color:var(--muted)}
+.mat-title{font-weight:var(--fw-semibold);color:var(--ink-deep);text-decoration:none;line-height:1.5}
+.mat-title:hover{color:var(--accent);text-decoration:underline;text-underline-offset:2px}
+.mat-note{color:var(--muted);font-size:.85rem;margin:5px 0 0;line-height:1.55}
+.mat-cta{margin-top:12px;align-self:flex-start;font-weight:700;font-size:.9rem;padding:8px 16px;border-radius:8px;text-decoration:none;transition:background .15s,border-color .15s}
+.mat-cta--course{background:var(--accent);color:#fff}
+.mat-cta--course:hover{background:var(--accent-hover);color:#fff;text-decoration:none}
+.mat-cta--book{background:#fff;color:var(--accent);border:1px solid var(--accent)}
+.mat-cta--book:hover{background:var(--accent-light);color:var(--accent-hover);text-decoration:none}
+.mat-disclosure{font-size:.78rem;margin:1em 0 0}
+@media(max-width:600px){.mat-list{grid-template-columns:1fr}}
 
 /* Courses (おすすめ試験対策講座) */
 .course-controls{align-items:flex-end;margin-top:20px}

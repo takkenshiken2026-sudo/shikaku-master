@@ -384,6 +384,27 @@ a.hero-suggest-item{text-decoration:none}a.hero-suggest-item:hover{text-decorati
 .btn-jobchange:hover{background:#0e6231;text-decoration:none;color:#fff}
 .jc-disclosure{font-size:.78rem;margin:.7em 0 0}
 
+/* 詳細ページ: おすすめ講座・教材CTA */
+.detail-section--materials .mat-lead{margin:.1em 0 .9em;color:var(--ink);font-size:.98rem}
+.mat-list{list-style:none;padding:0;margin:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.mat-card{display:flex;flex-direction:column;background:#fff;border:1px solid var(--table-border);border-radius:10px;padding:13px 15px}
+.mat-card--course{border-color:#bcd3f5;background:#f6faff}
+.mat-head{display:flex;align-items:center;gap:8px;margin-bottom:7px;flex-wrap:wrap}
+.mat-badge{display:inline-block;font-size:.72rem;font-weight:700;padding:2px 9px;border-radius:999px;line-height:1.5}
+.mat-badge--course{background:var(--accent);color:#fff}
+.mat-badge--book{background:#f0ead6;color:#8a6d1a}
+.mat-prov{font-size:.8rem;color:var(--muted)}
+.mat-title{font-weight:var(--fw-semibold);color:var(--ink-deep);text-decoration:none;line-height:1.5}
+.mat-title:hover{color:var(--accent);text-decoration:underline;text-underline-offset:2px}
+.mat-note{color:var(--muted);font-size:.85rem;margin:5px 0 0;line-height:1.55}
+.mat-cta{margin-top:12px;align-self:flex-start;font-weight:700;font-size:.9rem;padding:8px 16px;border-radius:8px;text-decoration:none;transition:background .15s,border-color .15s}
+.mat-cta--course{background:var(--accent);color:#fff}
+.mat-cta--course:hover{background:var(--accent-hover);color:#fff;text-decoration:none}
+.mat-cta--book{background:#fff;color:var(--accent);border:1px solid var(--accent)}
+.mat-cta--book:hover{background:var(--accent-light);color:var(--accent-hover);text-decoration:none}
+.mat-disclosure{font-size:.78rem;margin:1em 0 0}
+@media(max-width:600px){.mat-list{grid-template-columns:1fr}}
+
 /* Courses (おすすめ試験対策講座) */
 .course-controls{align-items:flex-end;margin-top:20px}
 .course-filter-field{display:flex;flex-direction:column;gap:6px;flex:1 1 260px;min-width:0}
