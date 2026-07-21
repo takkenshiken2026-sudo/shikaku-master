@@ -345,7 +345,7 @@ a.hero-suggest-item{text-decoration:none}a.hero-suggest-item:hover{text-decorati
 .radar-leg{display:inline-flex;align-items:center;gap:6px;font-size:var(--text-sm);color:var(--ink)}
 .radar-leg-key{display:inline-block;width:12px;height:12px;border-radius:3px}
 .stats-hensa-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
-.stats-hensa-table{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--table-border);border-radius:var(--radius);overflow:hidden;font-size:var(--text-table);table-layout:auto}
+.stats-hensa-table{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--table-border);font-size:var(--text-table);table-layout:auto}
 .stats-hensa-table th,.stats-hensa-table td{padding:9px 12px;border:1px solid var(--table-border);text-align:left;vertical-align:middle;line-height:1.5}
 .stats-hensa-table tr:last-child th,.stats-hensa-table tr:last-child td{border-bottom:none}
 .stats-hensa-table thead th{background:#edf2f8;font-weight:600;white-space:nowrap;color:var(--ink)}
@@ -489,7 +489,7 @@ h2{color:var(--ink-deep)}
 .badge-overseas{color:#6a4a8a;background:#f3eef8;border-color:#ddd0ea}
 
 /* Spec table (detail) */
-table.spec{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--table-border);border-radius:var(--radius);overflow:hidden;font-size:var(--text-table);font-weight:var(--fw-regular);color:var(--ink)}
+table.spec{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--table-border);font-size:var(--text-table);font-weight:var(--fw-regular);color:var(--ink)}
 .spec-wrap{border:1px solid var(--table-border);border-radius:var(--radius);overflow:hidden;background:#fff}
 .spec-wrap table.spec{border:none;border-radius:0}
 table.spec tr:last-child th,table.spec tr:last-child td{border-bottom:none}
@@ -620,7 +620,7 @@ a.rm-name:hover{text-decoration:underline}
 .occ-salary-note{font-size:var(--text-sm)}
 .occ-salary-age{margin-top:16px}
 .sage-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
-.sage-table{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--table-border);border-radius:var(--radius);overflow:hidden;font-size:var(--text-table)}
+.sage-table{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--table-border);font-size:var(--text-table)}
 .sage-table th,.sage-table td{padding:8px 12px;border:1px solid var(--table-border);text-align:left;vertical-align:middle}
 .sage-table tr:last-child th,.sage-table tr:last-child td{border-bottom:none}
 .sage-table thead th{background:#edf2f8;font-weight:600;white-space:nowrap;color:var(--ink)}
