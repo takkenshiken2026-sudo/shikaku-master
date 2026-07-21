@@ -232,7 +232,7 @@ a.hero-suggest-item{text-decoration:none}a.hero-suggest-item:hover{text-decorati
 .all-certs-th-rank{text-align:center}
 .all-certs-rank{text-align:center;color:var(--muted);font-weight:700;font-variant-numeric:tabular-nums}
 .all-certs-rank--top{color:var(--accent)}
-.all-certs-table thead th{text-align:left;padding:11px 14px;background:#edf2f8;color:var(--ink);font-weight:var(--fw-semibold);font-size:1rem;border:1px solid var(--table-border);border-bottom:2px solid #9fb4d0;white-space:nowrap}
+.all-certs-table thead th{text-align:left;padding:11px 14px;background:#edf2f8;color:var(--ink);font-weight:var(--fw-semibold);font-size:1rem;border:1px solid var(--table-border);border-bottom:1px solid #9fb4d0;white-space:nowrap}
 .all-certs-table tbody td{padding:11px 14px;border:1px solid var(--table-border);vertical-align:middle;line-height:1.5;font-size:var(--text-table);color:var(--ink);overflow-wrap:break-word;word-break:break-word;overflow:hidden}
 .all-certs-table tbody tr.cert-row{cursor:pointer;transition:background-color .12s ease}
 .all-certs-table tbody tr.cert-row:hover td{background:var(--accent-light)}
@@ -541,7 +541,7 @@ table.spec th{width:34%;background:var(--table-head-bg);color:var(--ink);font-we
 .article-table{border-collapse:collapse;width:100%;font-size:var(--text-table);color:var(--ink);background:#fff}
 .article-table th,.article-table td{padding:11px 14px;text-align:left;vertical-align:top;line-height:1.6;border:1px solid var(--table-border)}
 .article-table tbody tr:last-child th,.article-table tbody tr:last-child td{border-bottom:none}
-.article-table thead th{background:#edf2f8;color:var(--ink);font-weight:var(--fw-semibold);white-space:nowrap;font-size:1rem;border-bottom:2px solid #9fb4d0}
+.article-table thead th{background:#edf2f8;color:var(--ink);font-weight:var(--fw-semibold);white-space:nowrap;font-size:1rem;border-bottom:1px solid #9fb4d0}
 .article-table tbody td:first-child{font-weight:var(--fw-semibold);color:var(--ink-deep)}
 /* 記事本文をサイト共通のカード/見出し流儀に合わせる（左アクセントバー・カード余白） */
 .page-article .article-section{margin:32px 0}
@@ -636,7 +636,7 @@ a.rm-name:hover{text-decoration:underline}
 .vs-table{width:100%;border-collapse:collapse;margin:14px 0;font-size:var(--text-table);color:var(--ink);table-layout:fixed;--vs-label-w:9rem}
 .vs-table col.vs-col-label{width:var(--vs-label-w)}
 .vs-table th,.vs-table td{border:1px solid var(--table-border);padding:10px 14px;text-align:left;vertical-align:top;overflow-wrap:break-word;font-size:var(--text-table);line-height:1.5}
-.vs-table thead th{background:#edf2f8;color:var(--ink-deep);text-align:center;font-size:1rem;border-bottom:2px solid #9fb4d0}
+.vs-table thead th{background:#edf2f8;color:var(--ink-deep);text-align:center;font-size:1rem;border-bottom:1px solid #9fb4d0}
 .vs-table tbody th{background:#f4f7fb;white-space:nowrap;width:var(--vs-label-w);font-size:1rem}
 .vs-cta{margin:14px 0;display:flex;gap:10px;flex-wrap:wrap}
 .feature-nav{margin-top:0;padding-top:0}
@@ -666,7 +666,7 @@ body.cmp-open{padding-bottom:76px}
 table.cmp{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--table-border);border-radius:8px;table-layout:fixed;--cmp-label-w:9rem;font-size:var(--text-table);color:var(--ink)}
 table.cmp col.cmp-col-label{width:var(--cmp-label-w)}
 table.cmp th,table.cmp td{text-align:left;padding:10px 14px;border-bottom:1px solid var(--table-border);border-right:1px solid var(--table-border);vertical-align:top;font-size:var(--text-table);color:var(--ink);line-height:1.5;overflow-wrap:break-word}
-table.cmp thead th{background:#edf2f8;color:var(--ink-deep);font-weight:700;font-size:1rem;border-bottom:2px solid #9fb4d0}
+table.cmp thead th{background:#edf2f8;color:var(--ink-deep);font-weight:700;font-size:1rem;border-bottom:1px solid #9fb4d0}
 table.cmp tbody th{background:#f4f7fb;color:var(--ink);white-space:nowrap;width:var(--cmp-label-w);font-size:1rem}
 table.cmp tbody th,table.cmp thead th:first-child{position:sticky;left:0;z-index:1}
 table.cmp thead th:first-child{background:#edf2f8;z-index:2}
