@@ -866,14 +866,27 @@ def materials_cell_html(slug):
     return f'<ul class="materials">{"".join(items)}</ul>'
 
 
-def render_materials_block(slug):
-    """資格詳細ページの「おすすめ講座・教材」CTAセクション（広告開示つき）。
-    講座（高単価）を先に、市販テキストを続けてカード表示。教材が無ければ空文字。"""
+AMAZON_TAG = "ue083093-22"
+
+
+def amazon_search_url(name):
+    """資格名でAmazon（本カテゴリ）を検索する正規のアソシエイトリンクを返す。
+    特定商品を捏造せず、実在の検索結果ページへ誘導する。括弧書きは除いて検索精度を上げる。"""
+    kw = re.sub(r"[（(].*?[）)]", "", name).strip() or name
+    q = quote(f"{kw} テキスト 問題集")
+    return f"https://www.amazon.co.jp/s?k={q}&i=stripbooks&tag={AMAZON_TAG}"
+
+
+def render_materials_block(slug, name):
+    """資格詳細ページの「講座・教材」CTAセクション（広告開示つき）。
+    編集部が個別選定した講座（高単価）・テキストがあればカード表示。
+    無い資格でも、Amazon検索（実在の検索結果への正規アソシエイトリンク）で
+    教材を探せる導線を出し、全資格ページに収益・利便の導線を確保する。"""
     mats = sorted(MATERIALS.get(slug) or [], key=_material_sort_key)
-    if not mats:
-        return ""
     courses = [m for m in mats if m["kind"] == "講座"]
     books = [m for m in mats if m["kind"] != "講座"]
+    search_url = amazon_search_url(name)
+    _nm = re.sub(r"[（(].*?[）)]", "", name).strip() or name
 
     def card(m, kind_label, cta):
         link = m["affiliate"] or m["url"]
@@ -893,18 +906,80 @@ def render_materials_block(slug):
     cards = [card(m, "講座", "講座の詳細を見る") for m in courses]
     cards += [card(m, "テキスト", "Amazonで見る") for m in books[:4]]
     cards = [c for c in cards if c]
+
+    # 個別選定した教材が無い資格: Amazon検索の導線のみ（編集部おすすめとは明確に区別）
     if not cards:
-        return ""
+        return (
+            '<section class="detail-section detail-section--materials" aria-labelledby="mat-h">'
+            '<h2 class="detail-section-title" id="mat-h">教材を探す</h2>'
+            f'<p class="mat-lead">{esc(_nm)}の教材は編集部でまだ個別に選定していません。'
+            'Amazonで市販のテキスト・問題集を探せます。</p>'
+            f'<p class="mat-search"><a class="mat-cta mat-cta--book" href="{esc(search_url)}" '
+            f'rel="sponsored nofollow noopener" target="_blank">Amazonで「{esc(_nm)}」の教材を探す'
+            '<span class="mat-ext" aria-hidden="true"> ↗</span></a></p>'
+            '<p class="mat-disclosure muted">※上記はAmazonアソシエイト（検索結果ページ）への'
+            'リンクで、広告を含みます。特定の教材を推奨するものではありません。</p></section>')
+
     lead = ("独学が不安なら通信講座、まず1冊ならテキストから。編集部が選んだ定番を紹介します。"
             if courses else
             "編集部が選んだ定番テキストです。独学の一冊目の目安にどうぞ。")
+    # フッター導線: この資格をAmazonでさらに探す＋他資格の講座一覧（内部リンク送客）
+    more = ('<p class="mat-more">'
+            f'<a class="mat-more-link" href="{esc(search_url)}" rel="sponsored nofollow noopener" '
+            f'target="_blank">Amazonで「{esc(_nm)}」の教材をもっと探す ↗</a>'
+            '<a class="mat-more-link" href="../courses.html">通信講座の一覧を見る →</a></p>')
     return ('<section class="detail-section detail-section--materials" aria-labelledby="mat-h">'
             '<h2 class="detail-section-title" id="mat-h">合格を目指す講座・教材</h2>'
             f'<p class="mat-lead">{lead}</p>'
             f'<ul class="mat-list">{"".join(cards)}</ul>'
+            f'{more}'
             '<p class="mat-disclosure muted">※本セクションには広告（Amazonアソシエイト等の'
             'アフィリエイト）を含みます。価格・内容は各販売ページで最新をご確認ください。'
             '掲載は編集部の選定で、合格を保証するものではありません。</p></section>')
+
+
+CTA_BAR_JS = (
+    '<script>(function(){var b=document.getElementById("ctaBar");if(!b)return;'
+    'try{if(sessionStorage.getItem("ctaBarClosed")){return;}}catch(e){}'
+    'b.hidden=false;document.body.classList.add("has-cta-bar");'
+    'var c=document.getElementById("ctaBarClose");if(c){c.addEventListener("click",'
+    'function(){b.hidden=true;document.body.classList.remove("has-cta-bar");'
+    'try{sessionStorage.setItem("ctaBarClosed","1");}catch(e){}});}})();</script>')
+
+
+def _sticky_cta(row, name):
+    """スマホ用の固定CTAバー（1件・開閉可）。優先度: 自社対策サイト＞講座＞教材＞Amazon検索。
+    アフィリンク（講座・教材・検索）には rel=sponsored と PR 表示を付す。自社サイトは通常リンク。"""
+    slug = row["slug"]
+    ps = PARTNER_BY_CERT.get(slug)
+    courses = courses_for_slug(slug)
+    books = [m for m in (MATERIALS.get(slug) or [])
+             if m["kind"] != "講座" and (m["affiliate"] or m["url"])]
+    if ps:
+        p = ps[0]
+        url, rel = p["url"], "noopener"
+        label, text = f'{p["name"]}を見る', "対策サイトで効率よく学ぶ"
+    elif courses:
+        m = courses[0]
+        url, rel = (m["affiliate"] or m["url"]), "sponsored nofollow noopener"
+        label, text = "通信講座を見る", "独学が不安なら通信講座"
+    elif books:
+        m = books[0]
+        url, rel = (m["affiliate"] or m["url"]), "sponsored nofollow noopener"
+        label, text = "おすすめ教材を見る", "まずは定番テキストから"
+    else:
+        url, rel = amazon_search_url(name), "sponsored nofollow noopener"
+        label, text = "教材を探す", "Amazonで教材を探す"
+    if not url:
+        return ""
+    pr = '<span class="cta-bar-pr">PR</span>' if "sponsored" in rel else ""
+    return (
+        '<div class="cta-bar" id="ctaBar" hidden><div class="cta-bar-inner">'
+        f'<span class="cta-bar-text">{pr}{esc(text)}</span>'
+        f'<a class="cta-bar-btn" href="{esc(url)}" rel="{rel}" target="_blank">'
+        f'{esc(label)}<span aria-hidden="true"> ↗</span></a>'
+        '<button type="button" class="cta-bar-close" id="ctaBarClose" '
+        'aria-label="CTAを閉じる">×</button></div></div>' + CTA_BAR_JS)
 
 
 def applicants_num(r):
@@ -1036,6 +1111,7 @@ def page_shell(title: str, body: str, depth: int, noindex: bool = True,
       <a href="{base}finder.html">資格の選び方・診断</a>
       <a href="{base}index.html#compare">よく比較される資格</a>
       <a href="{base}feature/index.html">特集・ランキング</a>
+      <a href="{base}courses.html">試験対策講座</a>
       <a href="{base}articles/index.html">記事・コラム</a>
       <a href="{base}toukei.html">資格データ統計</a>
       <a href="{base}calendar.html">試験月カレンダー</a>
@@ -1588,7 +1664,8 @@ def build_detail(row, popular_slugs=None) -> str:
     diff_block = _cert_diff_block(row)
     # 収益導線: おすすめ講座・教材（資格情報の直後）と、分野に強い転職・就職CTA
     # （あり/なし・年収の議論のあと）。データのある資格・分野のみ表示。
-    materials_block = render_materials_block(row["slug"])
+    materials_block = render_materials_block(row["slug"], name)
+    sticky_cta = _sticky_cta(row, name)
     jobs_block = render_jobchange_block(
         jobchange_services(major_category=major),
         f'{esc(name)}を活かして{esc(major)}分野で転職・就職を考えているなら、'
@@ -1621,7 +1698,7 @@ def build_detail(row, popular_slugs=None) -> str:
 {faq_html}
 {detail_nav}
 {recent_js}
-</div>"""
+</div>{sticky_cta}"""
     # meta description は各ページで一意になるよう、必ず固有の資格名で始め、
     # 固有の事実（受験料・合格率・実施団体）を添える（家族で共通の説明文の重複を回避）。
     _short = re.sub(r"[（(].*?[）)]", "", name).strip() or name
@@ -4815,6 +4892,13 @@ def build_courses_page(indexable):
 <h1>おすすめの試験対策講座{pr}</h1>
 <p class="lead">資格別の通信講座・オンライン講座を一覧表で掲載しています。
 キーワードで絞り込み、1つの資格に複数ある講座も横並びで比較できます。</p>
+<section class="courses-partner">
+<h2>運営者の資格別 対策サイト</h2>
+<p class="muted courses-partner-lead">宅建・FP・危険物などは、当サイト運営者が制作する対策サイトで
+体系的に学べます（無料で読めるコンテンツ中心）。</p>
+<div class="partner-grid">{partner_cards_html()}</div>
+</section>
+<h2 class="courses-list-h">資格別の通信講座一覧</h2>
 <div class="controls course-controls">
 <label class="course-filter-field">
 <span class="course-filter-label">キーワード</span>
@@ -5923,14 +6007,35 @@ a.hero-suggest-item{text-decoration:none}a.hero-suggest-item:hover{text-decorati
 .mat-cta--course:hover{background:var(--accent-hover);color:#fff;text-decoration:none}
 .mat-cta--book{background:#fff;color:var(--accent);border:1px solid var(--accent)}
 .mat-cta--book:hover{background:var(--accent-light);color:var(--accent-hover);text-decoration:none}
+.mat-more{display:flex;flex-wrap:wrap;gap:8px 22px;margin:14px 0 0}
+.mat-more-link{font-weight:var(--fw-semibold);font-size:.9rem;color:var(--accent);text-decoration:none}
+.mat-more-link:hover{color:var(--accent-hover);text-decoration:underline;text-underline-offset:2px}
+.mat-search{margin:.2em 0 0}
 .mat-disclosure{font-size:.78rem;margin:1em 0 0}
 @media(max-width:600px){.mat-list{grid-template-columns:1fr}}
+
+/* スマホ用 固定CTAバー（詳細ページ・開閉可） */
+.cta-bar{display:none}
+@media(max-width:600px){
+.cta-bar{display:block;position:fixed;left:0;right:0;bottom:0;z-index:55;background:#fff;border-top:1px solid var(--table-border);box-shadow:0 -4px 14px rgba(0,0,0,.12);padding:8px 12px calc(8px + env(safe-area-inset-bottom,0px))}
+.cta-bar[hidden]{display:none}
+.cta-bar-inner{display:flex;align-items:center;gap:10px;max-width:640px;margin:0 auto}
+.cta-bar-text{flex:1 1 auto;font-size:.8rem;color:var(--ink);line-height:1.35;min-width:0}
+.cta-bar-pr{display:inline-block;font-size:.62rem;font-weight:700;color:var(--muted);border:1px solid var(--gray-300);border-radius:3px;padding:0 4px;margin-right:5px;vertical-align:middle}
+.cta-bar-btn{flex:0 0 auto;background:var(--accent);color:#fff;font-weight:700;font-size:.9rem;padding:10px 15px;border-radius:8px;text-decoration:none;white-space:nowrap}
+.cta-bar-btn:hover{background:var(--accent-hover);color:#fff;text-decoration:none}
+.cta-bar-close{flex:0 0 auto;background:none;border:none;color:var(--muted);font-size:1.35rem;line-height:1;padding:2px 4px;cursor:pointer}
+.has-cta-bar .site-footer{padding-bottom:76px}}
 
 /* Courses (おすすめ試験対策講座) */
 .course-controls{align-items:flex-end;margin-top:20px}
 .course-filter-field{display:flex;flex-direction:column;gap:6px;flex:1 1 260px;min-width:0}
 .course-filter-field input,.course-filter-field select{width:100%;flex:0 0 auto}
 .course-filter-label{font-size:var(--text-sm);font-weight:600;color:var(--muted)}
+.courses-partner{margin:6px 0 26px;padding:16px 18px;background:var(--gray-50);border:1px solid var(--gray-200);border-radius:var(--radius)}
+.courses-partner h2{font-size:1.1rem;margin:0 0 .3em}
+.courses-partner-lead{margin:0 0 12px;font-size:var(--text-sm)}
+.courses-list-h{font-size:1.15rem;margin:0 0 .5em}
 .courses-count{margin:-4px 0 12px}
 .courses-table-wrap{margin-bottom:20px}
 .courses-table{min-width:480px}
