@@ -726,6 +726,8 @@ table.cmp thead th:first-child{background:#edf2f8;z-index:2}
 .site-footer-nav a{font-size:var(--text-sm);color:var(--muted);text-decoration:none}
 .site-footer-nav a:hover{color:var(--ink);text-decoration:underline;text-underline-offset:2px}
 .site-footer-copy{font-size:var(--text-sm);color:var(--muted);line-height:1.5;margin:0}
+.policy-date{margin-top:24px;color:var(--muted);font-size:var(--text-sm)}
+.contact-mail{font-size:var(--text-md);font-weight:700}
 /* Partner sites (おすすめ対策サイト) */
 .partner-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
 @media(max-width:720px){.partner-grid{grid-template-columns:repeat(2,1fr)}}
