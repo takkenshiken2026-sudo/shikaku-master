@@ -46,6 +46,17 @@ BASE_URL = "https://shikaku-master.jp"
 CUSTOM_DOMAIN = "shikaku-master.jp"
 GA4_MEASUREMENT_ID = "G-KERDMXDPSR"
 
+# 問い合わせ先（AdSense審査の必須要件）。独自ドメインのメールを推奨。
+CONTACT_EMAIL = "info@shikaku-master.jp"
+# ポリシー類の制定日・最終改定日（表示用）。
+POLICY_ESTABLISHED = "2026年1月1日"
+POLICY_UPDATED = "2026年7月25日"
+
+# Google AdSense サイト運営者ID（例: "pub-1234567890123456"）。
+# 空の間は ads.txt を生成しない（誤った ads.txt は「不明」判定の原因になるため）。
+# ID発行後にここへ設定するとビルド時に site/ads.txt が自動生成される。
+ADSENSE_PUB_ID = ""
+
 # 運営者が制作する資格別の対策サイト（「おすすめの資格対策サイト」導線）。
 # 通常リンク（dofollow）・別タブ。certs に該当資格 slug を持つものは、その詳細ページにも出し分ける。
 PARTNER_SITES = [
@@ -1116,6 +1127,8 @@ def page_shell(title: str, body: str, depth: int, noindex: bool = True,
       <a href="{base}toukei.html">資格データ統計</a>
       <a href="{base}calendar.html">試験月カレンダー</a>
       <a href="{base}about.html">サイトについて・編集方針</a>
+      <a href="{base}privacy.html">プライバシーポリシー</a>
+      <a href="{base}contact.html">お問い合わせ</a>
     </nav>
     <p class="site-footer-copy">© {esc(SITE_NAME)}／一覧データ出典: 厚生労働省 ハローワーク「免許・資格コード一覧」ほか、各資格の公式の一次情報に基づき整備。</p>
   </div>
@@ -6331,6 +6344,8 @@ table.cmp thead th:first-child{background:#edf2f8;z-index:2}
 .site-footer-nav a{font-size:var(--text-sm);color:var(--muted);text-decoration:none}
 .site-footer-nav a:hover{color:var(--ink);text-decoration:underline;text-underline-offset:2px}
 .site-footer-copy{font-size:var(--text-sm);color:var(--muted);line-height:1.5;margin:0}
+.policy-date{margin-top:24px;color:var(--muted);font-size:var(--text-sm)}
+.contact-mail{font-size:var(--text-md);font-weight:700}
 /* Partner sites (おすすめ対策サイト) */
 .partner-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
 @media(max-width:720px){.partner-grid{grid-template-columns:repeat(2,1fr)}}
@@ -6933,7 +6948,8 @@ def main() -> int:
     entries = [("", today, "1.0"), ("compare.html", today, "0.7"),
                ("courses.html", today, "0.8"),
                ("toukei.html", today, "0.7"), ("calendar.html", today, "0.7"),
-               ("finder.html", today, "0.8"), ("about.html", today, "0.5")]
+               ("finder.html", today, "0.8"), ("about.html", today, "0.5"),
+               ("privacy.html", today, "0.3"), ("contact.html", today, "0.3")]
     entries += [(f"bunya/{s}.html", today, "0.8") for s in cat_pages]
     entries += [(f"feature/{s}.html", today, "0.8") for s in feat_pages]
     entries += [(f"series/{s}.html", today, "0.8") for s in series_pages]
@@ -7011,6 +7027,88 @@ def main() -> int:
                         f"国内の資格{_n_total}件を整理。最終確認日と情報源を明示しています。",
                    path="about.html", jsonld=about_ld),
         encoding="utf-8")
+
+    # プライバシーポリシー（Cookie・広告配信=Google AdSense の開示。AdSense必須要件）
+    _mail = esc(CONTACT_EMAIL)
+    privacy_body = f"""<nav class="crumbs"><a href="index.html">トップ</a> › プライバシーポリシー</nav>
+<h1>プライバシーポリシー</h1>
+<p class="lead">{esc(SITE_NAME)}（{esc(BASE_URL)}、以下「当サイト」）における個人情報および
+Cookie等の取り扱い方針です。</p>
+
+<section class="detail-spec"><h2 class="detail-section-title">1. 個人情報の取得と利用</h2>
+<p>当サイトは、原則として氏名・住所・電話番号などの個人を特定できる情報を取得しません。
+お問い合わせをいただいた場合に限り、返信に必要な範囲でメールアドレス等をご提供いただくことがあります。
+取得した情報はお問い合わせへの対応のみに利用し、ご本人の同意なく第三者へ開示・提供することはありません。</p></section>
+
+<section class="detail-spec"><h2 class="detail-section-title">2. アクセス解析ツールについて</h2>
+<p>当サイトでは、サービス向上のためGoogleアナリティクス（Google LLC提供）を利用しています。
+Googleアナリティクスはトラフィックデータの収集にCookieを使用しますが、このデータは匿名で収集されており、
+個人を特定するものではありません。ブラウザの設定からCookieを無効にすることで収集を拒否できます。
+詳しくは<a href="https://policies.google.com/technologies/partner-sites" target="_blank" rel="noopener nofollow">「Googleのサービスを使用するサイトやアプリから収集した情報のGoogleによる使用」</a>をご確認ください。</p></section>
+
+<section class="detail-spec"><h2 class="detail-section-title">3. 広告配信について（Google AdSense）</h2>
+<p>当サイトでは、第三者配信の広告サービス「Google AdSense」を利用する場合があります。
+Googleなどの第三者配信事業者は、ユーザーの興味に応じた広告を表示するためにCookieを使用することがあります。
+Cookieを使用することで、当サイトや他サイトへの過去のアクセス情報に基づいて広告が配信されます。</p>
+<p>ユーザーは、<a href="https://myadcenter.google.com/" target="_blank" rel="noopener nofollow">Googleの広告設定</a>で
+パーソナライズ広告を無効にできます。また、<a href="https://www.aboutads.info/choices/" target="_blank" rel="noopener nofollow">www.aboutads.info</a>（英語）にアクセスすれば、第三者配信事業者のCookieを無効にできます。</p>
+<p>Googleによる広告Cookieの使用とデータの取り扱いの詳細は、
+<a href="https://policies.google.com/technologies/ads" target="_blank" rel="noopener nofollow">「広告 – ポリシーと規約 – Google」</a>をご確認ください。</p></section>
+
+<section class="detail-spec"><h2 class="detail-section-title">4. 免責事項</h2>
+<p>当サイトの掲載内容の正確性には努めていますが、その完全性・正確性・有用性を保証するものではありません。
+受験料・合格率・制度・日程等は変更される場合があるため、出願前に各資格の公式情報で必ずご確認ください。
+掲載情報の利用により生じたいかなる損害についても責任を負いかねます。
+詳しくは<a href="about.html">サイトについて・編集方針</a>をご覧ください。</p></section>
+
+<section class="detail-spec"><h2 class="detail-section-title">5. プライバシーポリシーの変更</h2>
+<p>当サイトは、法令の変更等に応じて本ポリシーの内容を予告なく変更することがあります。
+変更後のプライバシーポリシーは、本ページに掲載した時点から効力を生じます。</p></section>
+
+<section class="detail-spec"><h2 class="detail-section-title">6. お問い合わせ</h2>
+<p>本ポリシーに関するお問い合わせは、<a href="contact.html">お問い合わせページ</a>よりご連絡ください。</p></section>
+
+<p class="policy-date">制定日: {esc(POLICY_ESTABLISHED)}／最終改定日: {esc(POLICY_UPDATED)}</p>"""
+    (SITE / "privacy.html").write_text(
+        page_shell(f"プライバシーポリシー｜{SITE_NAME}", privacy_body, depth=0,
+                   noindex=False,
+                   desc=f"{SITE_NAME}における個人情報・Cookie・広告配信（Google AdSense）の"
+                        f"取り扱い方針です。",
+                   path="privacy.html"),
+        encoding="utf-8")
+
+    # お問い合わせ
+    contact_body = f"""<nav class="crumbs"><a href="index.html">トップ</a> › お問い合わせ</nav>
+<h1>お問い合わせ</h1>
+<p class="lead">掲載データの誤りのご指摘、掲載内容に関するご依頼、その他のお問い合わせは、
+以下のメールアドレスまでご連絡ください。</p>
+
+<section class="detail-spec"><h2 class="detail-section-title">連絡先</h2>
+<p class="contact-mail"><a href="mailto:{_mail}">{_mail}</a></p>
+<p>いただいたお問い合わせは内容を確認のうえ順次返信いたします。
+返信までにお時間をいただく場合があります。</p></section>
+
+<section class="detail-spec"><h2 class="detail-section-title">ご連絡の際のお願い</h2>
+<ul class="point-list">
+<li>データの誤りのご指摘は、対象の資格名・該当ページのURL・根拠となる公式情報のリンクを
+添えていただけると確認がスムーズです。</li>
+<li>いただいた個人情報は、お問い合わせへの返信以外の目的には利用しません
+（<a href="privacy.html">プライバシーポリシー</a>）。</li>
+</ul></section>
+
+<p class="policy-date">最終改定日: {esc(POLICY_UPDATED)}</p>"""
+    (SITE / "contact.html").write_text(
+        page_shell(f"お問い合わせ｜{SITE_NAME}", contact_body, depth=0,
+                   noindex=False,
+                   desc=f"{SITE_NAME}へのお問い合わせ・データの誤りのご指摘はこちら。",
+                   path="contact.html"),
+        encoding="utf-8")
+
+    # ads.txt（AdSense運営者ID設定時のみ出力）。未設定なら生成しない。
+    if ADSENSE_PUB_ID:
+        _pub = ADSENSE_PUB_ID if ADSENSE_PUB_ID.startswith("pub-") else f"pub-{ADSENSE_PUB_ID}"
+        (SITE / "ads.txt").write_text(
+            f"google.com, {_pub}, DIRECT, f08c47fec0942fa0\n", encoding="utf-8")
 
     # カスタム 404（GitHub Pages が未検出時に配信）
     _nf_pop = "".join(
