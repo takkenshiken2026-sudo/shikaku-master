@@ -53,9 +53,9 @@ POLICY_ESTABLISHED = "2026年1月1日"
 POLICY_UPDATED = "2026年7月25日"
 
 # Google AdSense サイト運営者ID（例: "pub-1234567890123456"）。
-# 空の間は ads.txt を生成しない（誤った ads.txt は「不明」判定の原因になるため）。
-# ID発行後にここへ設定するとビルド時に site/ads.txt が自動生成される。
-ADSENSE_PUB_ID = ""
+# 設定すると ads.txt・広告スクリプト・確認用メタタグをビルド時に出力する。
+# 空にすると一切出力しない（誤った ads.txt は「不明」判定の原因になるため）。
+ADSENSE_PUB_ID = "pub-7927260139193410"
 
 # 運営者が制作する資格別の対策サイト（「おすすめの資格対策サイト」導線）。
 # 通常リンク（dofollow）・別タブ。certs に該当資格 slug を持つものは、その詳細ページにも出し分ける。
@@ -1034,6 +1034,16 @@ gtag('config','{mid}');
 """
 
 
+def adsense_head_snippet() -> str:
+    """AdSense 広告スクリプトと確認用メタタグ。ADSENSE_PUB_ID 未設定なら空。"""
+    if not ADSENSE_PUB_ID:
+        return ""
+    ca = ADSENSE_PUB_ID if ADSENSE_PUB_ID.startswith("ca-") else f"ca-{ADSENSE_PUB_ID}"
+    return (f'<meta name="google-adsense-account" content="{ca}">\n'
+            f'<script async src="https://pagead2.googlesyndication.com/pagead/js/'
+            f'adsbygoogle.js?client={ca}" crossorigin="anonymous"></script>\n')
+
+
 def page_shell(title: str, body: str, depth: int, noindex: bool = True,
                desc: str = "", path: str = "", jsonld=None, og_image: str = "") -> str:
     base = "../" * depth
@@ -1063,7 +1073,7 @@ def page_shell(title: str, body: str, depth: int, noindex: bool = True,
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#ffffff">
-{ga4_head_snippet()}{robots}<title>{esc(title)}</title>
+{ga4_head_snippet()}{adsense_head_snippet()}{robots}<title>{esc(title)}</title>
 <meta name="description" content="{esc(desc)}">
 {og}<link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
