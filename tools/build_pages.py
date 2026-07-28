@@ -1400,7 +1400,7 @@ def detail_media_html(row, name):
             f'<figure class="detail-intro-media detail-intro-media--affiliate">'
             f'<a class="detail-intro-aff" href="{esc(aff)}" rel="{rel}" target="_blank">'
             f'<img class="detail-intro-aff-img" src="{esc(img["url"])}" alt="{esc(alt)}" '
-            f'loading="lazy" decoding="async" width="280" height="280">'
+            f'loading="lazy" decoding="async" width="250" height="250">'
             f'{pixel}</a></figure>')
     credit = ""
     if img.get("credit_name"):
@@ -6536,9 +6536,9 @@ table.cmp thead th:first-child{background:#edf2f8;z-index:2}
 .detail-intro-main{flex:1 1 auto;min-width:0}
 .detail-intro-media{flex:0 0 auto;width:280px;margin:0}
 .detail-intro-media img{display:block;width:280px;height:100%;min-height:188px;object-fit:cover;border-radius:10px;border:1px solid var(--gray-200);background:var(--gray-100)}
-.detail-intro-media--affiliate{position:relative;align-self:stretch;overflow:hidden;border-radius:10px;min-height:188px}
-.detail-intro-media--affiliate .detail-intro-aff{position:absolute;inset:0;display:block;line-height:0}
-.detail-intro-media--affiliate .detail-intro-aff-img{display:block;width:100%;height:100%;min-height:0;object-fit:cover;border:none;border-radius:10px;background:transparent}
+.detail-intro-media--affiliate{position:relative;align-self:flex-start;width:250px;overflow:visible;border-radius:10px;min-height:0}
+.detail-intro-media--affiliate .detail-intro-aff{position:relative;display:block;line-height:0}
+.detail-intro-media--affiliate .detail-intro-aff-img{display:block;width:250px;height:auto;min-height:0;aspect-ratio:1/1;object-fit:contain;border:none;border-radius:10px;background:transparent}
 .detail-intro-media--affiliate .aff-pixel{position:absolute;left:0;top:0;width:1px!important;height:1px!important;min-height:0!important;opacity:0;pointer-events:none;border:none;border-radius:0}
 .cert-cover{position:relative;overflow:hidden;width:280px;height:100%;min-height:188px;border-radius:10px;color:#fff;box-sizing:border-box}
 .cert-cover-deco{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
@@ -6549,7 +6549,7 @@ table.cmp thead th:first-child{background:#edf2f8;z-index:2}
 .cert-cover-label{font-size:11.5px;font-weight:600;color:rgba(255,255,255,.88);line-height:1.3;letter-spacing:.04em;text-shadow:0 1px 2px rgba(0,0,0,.22);margin-top:3px}
 .detail-intro-credit{font-size:11px;color:var(--muted);line-height:1.4;margin-top:6px}
 .detail-intro-credit a{color:var(--muted);text-decoration:underline}
-@media(max-width:720px){.detail-intro-row{flex-direction:column-reverse;gap:16px}.detail-intro-media,.detail-intro-media img,.cert-cover{width:100%}.detail-intro-media img,.cert-cover{height:190px}.detail-intro-media--affiliate{width:100%;height:190px;min-height:190px}.detail-intro-media--affiliate .detail-intro-aff-img{height:100%;min-height:0}}
+@media(max-width:720px){.detail-intro-row{flex-direction:column-reverse;gap:16px}.detail-intro-media,.detail-intro-media img,.cert-cover{width:100%}.detail-intro-media img,.cert-cover{height:190px}.detail-intro-media--affiliate{width:min(250px,100%);height:auto;min-height:0;margin:0 auto}.detail-intro-media--affiliate .detail-intro-aff-img{width:100%;height:auto;aspect-ratio:1/1;object-fit:contain}}
 .page-detail .detail-title{font-size:var(--detail-h1);font-weight:700;color:var(--ink-deep);line-height:1.28;margin:0 0 24px;letter-spacing:-.01em}
 .page-detail .detail-audience{font-size:var(--detail-body);color:var(--ink);line-height:var(--detail-body-lh);margin:0}
 .page-detail .detail-section{padding:var(--detail-section-y) 0 0;border:none}
