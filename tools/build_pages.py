@@ -622,7 +622,7 @@ AFFILIATE_TRACKING_PIXELS = {
 # src: 外部/ローカル画像URL。cover_slug 指定時はサイトの資格カバー見た目を使う。
 AFFILIATE_BANNER_IMAGES = {
     "https://t.afi-b.com/visit.php?a=y7404W-T288086j&p=b984781I": {
-        "cover_slug": "c-3207",
+        "src": "https://www.afi-b.com/upload_image/7404-1488711346-3.jpg",
         "width": 250,
         "height": 250,
         "alt": "宅建",
