@@ -1241,7 +1241,16 @@ MAJOR_HUE = {
 
 # 個別に写真を指定したい資格の上書き（任意）。無料素材や自前ホスティングを想定。
 # 例: "c-1538": {"url": "assets/certs/it-passport.jpg"}
-CERT_IMAGES = {}
+# affiliate を付けると見出し横画像がアフィリンク（計測ピクセル付き）になる。
+CERT_IMAGES = {
+    "c-3207": {
+        "url": "https://www.afi-b.com/upload_image/7404-1488711346-3.jpg",
+        "affiliate": "https://t.afi-b.com/visit.php?a=y7404W-T288086j&p=b984781I",
+        "alt": "宅建",
+        "width": 250,
+        "height": 250,
+    },
+}
 
 
 def _hsl(h, s, l):
@@ -1376,6 +1385,23 @@ def detail_media_html(row, name):
     img = CERT_IMAGES.get(row["slug"])
     if not img:
         return _cert_cover_html(row, name)
+    w = int(img.get("width") or 280)
+    h = int(img.get("height") or 188)
+    alt = img.get("alt") or f"{name}のイメージ写真"
+    aff = (img.get("affiliate") or "").strip()
+    if aff:
+        rel = "sponsored nofollow noopener"
+        pixel = ""
+        pixel_url = AFFILIATE_TRACKING_PIXELS.get(aff)
+        if pixel_url:
+            pixel = (f'<img src="{esc(pixel_url)}" width="1" height="1" '
+                     f'style="border:none;" alt="">')
+        return (
+            f'<figure class="detail-intro-media detail-intro-media--affiliate">'
+            f'<a class="detail-intro-aff" href="{esc(aff)}" rel="{rel}" target="_blank">'
+            f'<img src="{esc(img["url"])}" alt="{esc(alt)}" '
+            f'loading="lazy" decoding="async" width="{w}" height="{h}" '
+            f'style="border:none;"></a>{pixel}</figure>')
     credit = ""
     if img.get("credit_name"):
         credit = (
@@ -1386,8 +1412,8 @@ def detail_media_html(row, name):
     onerr = "this.closest('.detail-intro-media').style.display='none'"
     return (
         f'<figure class="detail-intro-media">'
-        f'<img src="{esc(img["url"])}" alt="{esc(name)}のイメージ写真" '
-        f'loading="lazy" decoding="async" width="280" height="188" '
+        f'<img src="{esc(img["url"])}" alt="{esc(alt)}" '
+        f'loading="lazy" decoding="async" width="{w}" height="{h}" '
         f'onerror="{onerr}">'
         f'{credit}</figure>')
 
@@ -6510,6 +6536,9 @@ table.cmp thead th:first-child{background:#edf2f8;z-index:2}
 .detail-intro-main{flex:1 1 auto;min-width:0}
 .detail-intro-media{flex:0 0 auto;width:280px;margin:0}
 .detail-intro-media img{display:block;width:280px;height:100%;min-height:188px;object-fit:cover;border-radius:10px;border:1px solid var(--gray-200);background:var(--gray-100)}
+.detail-intro-media--affiliate{width:250px}
+.detail-intro-media--affiliate .detail-intro-aff{display:block;line-height:0}
+.detail-intro-media--affiliate img{width:250px;height:250px;min-height:250px;object-fit:contain;border:none;background:transparent;border-radius:8px}
 .cert-cover{position:relative;overflow:hidden;width:280px;height:100%;min-height:188px;border-radius:10px;color:#fff;box-sizing:border-box}
 .cert-cover-deco{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
 .cert-cover-inner{position:absolute;inset:0;z-index:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center;padding:16px}
@@ -6519,7 +6548,7 @@ table.cmp thead th:first-child{background:#edf2f8;z-index:2}
 .cert-cover-label{font-size:11.5px;font-weight:600;color:rgba(255,255,255,.88);line-height:1.3;letter-spacing:.04em;text-shadow:0 1px 2px rgba(0,0,0,.22);margin-top:3px}
 .detail-intro-credit{font-size:11px;color:var(--muted);line-height:1.4;margin-top:6px}
 .detail-intro-credit a{color:var(--muted);text-decoration:underline}
-@media(max-width:720px){.detail-intro-row{flex-direction:column-reverse;gap:16px}.detail-intro-media,.detail-intro-media img,.cert-cover{width:100%}.detail-intro-media img,.cert-cover{height:190px}}
+@media(max-width:720px){.detail-intro-row{flex-direction:column-reverse;gap:16px}.detail-intro-media,.detail-intro-media img,.cert-cover{width:100%}.detail-intro-media img,.cert-cover{height:190px}.detail-intro-media--affiliate,.detail-intro-media--affiliate img{width:min(250px,100%);height:auto;min-height:0;aspect-ratio:1/1}}
 .page-detail .detail-title{font-size:var(--detail-h1);font-weight:700;color:var(--ink-deep);line-height:1.28;margin:0 0 24px;letter-spacing:-.01em}
 .page-detail .detail-audience{font-size:var(--detail-body);color:var(--ink);line-height:var(--detail-body-lh);margin:0}
 .page-detail .detail-section{padding:var(--detail-section-y) 0 0;border:none}
