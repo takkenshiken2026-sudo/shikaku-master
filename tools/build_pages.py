@@ -600,11 +600,14 @@ AFFILIATE_TRACKING_PIXELS = {
         "https://t.afi-b.com/lead/y7404W/b984781I/o7355559_7",
     "https://t.afi-b.com/visit.php?a=y7404W-47355627_b&p=b984781I":
         "https://t.afi-b.com/lead/y7404W/b984781I/47355627_b",
+    "https://t.afi-b.com/visit.php?a=y7404W-G7355628_0&p=b984781I":
+        "https://t.afi-b.com/lead/y7404W/b984781I/G7355628_0",
 }
 
-# 同一講座（同タイトル＋同アフィURL）が複数資格に紐づく場合、一覧では代表資格だけ出す
-COURSE_LIST_PRIMARY_SLUGS = {
-    "c-1317",  # 技術士は建設部門を代表表示
+# 同一アフィ講座を複数資格に紐づける場合、一覧では代表資格だけ出す
+COURSE_LIST_PRIMARY_BY_TITLE = {
+    "スタディング 技術士講座": "c-1317",   # 建設部門
+    "スタディング 販売士講座": "c-4103",   # 3級
 }
 
 
@@ -4898,9 +4901,9 @@ def build_courses_page(indexable):
             continue
         cert = cert_info[slug]
         for m in courses:
-            # 同一アフィ講座を複数部門ページに出している場合、一覧は代表資格のみ
-            if (m.get("title") == "スタディング 技術士講座"
-                    and slug not in COURSE_LIST_PRIMARY_SLUGS):
+            # 同一アフィ講座を複数資格に出している場合、一覧は代表資格のみ
+            primary = COURSE_LIST_PRIMARY_BY_TITLE.get(m.get("title", ""))
+            if primary and slug != primary:
                 continue
             if m["affiliate"]:
                 has_aff = True
