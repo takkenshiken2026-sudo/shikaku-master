@@ -33,6 +33,17 @@ SITE_NAME = "資格カタログ"
 SITE_DESC = "日本の資格を「探せる・絞れる・比べられる」資格データベース。受験料・試験形式・受験資格・合格率・実施団体・公式サイトを公式の一次情報に基づき掲載。"
 BASE_URL = "https://shikaku-master.jp"
 CUSTOM_DOMAIN = "shikaku-master.jp"
+AFFILIATE_BLOCKS = {
+    "c-2511": (
+        '<section class="affiliate-box" aria-label="おすすめ講座">'
+        '<p class="affiliate-label">PR</p>'
+        '<p class="affiliate-copy">中小企業診断士の学習講座を比較したい方向け。</p>'
+        '<p class="affiliate-link"><a href="https://t.afi-b.com/visit.php?a=y7404W-o7355559_7&p=b984781I" '
+        'rel="nofollow sponsored noopener" target="_blank">スタディング 中小企業診断士講座</a></p>'
+        '<img src="https://t.afi-b.com/lead/y7404W/b984781I/o7355559_7" width="1" height="1" '
+        'style="border:none;" alt=""></section>'
+    ),
+}
 TYPE_BADGE = {
     "国家": ("国家資格", "badge-national"),
     "公的": ("公的資格", "badge-public"),
@@ -243,6 +254,7 @@ def build_detail(row) -> str:
                f'rel="nofollow noopener" target="_blank">公式サイトで最新情報を確認 ↗</a></p>')
     else:
         cta = ""
+    affiliate = AFFILIATE_BLOCKS.get(row["slug"], "")
     provenance = (
         '<p class="provenance">受験料・試験形式・受験資格・合格率・実施団体は、'
         '各資格の<strong>公式の一次情報</strong>に基づいて整備しています。'
@@ -362,7 +374,7 @@ def build_detail(row) -> str:
 {updated_html}<p class="lead">{lead}</p>
 {fact_p}
 <table class="spec">{rows_html}</table>
-{cta}{provenance}
+{cta}{affiliate}{provenance}
 {careers_section}
 {rel_links}
 <section class="related"><h2>同じカテゴリの資格</h2><ul id="related"></ul></section>
@@ -1791,6 +1803,11 @@ table.spec th{width:34%;background:#f2f5fa;color:#3a4757;font-weight:600;white-s
 .official-cta{margin:16px 0 6px}
 .btn-official{display:inline-block;background:#0d47a1;color:#fff;font-weight:700;padding:11px 20px;border-radius:8px}
 .btn-official:hover{background:#0b3c8a;text-decoration:none}
+.affiliate-box{margin:12px 0 0;padding:14px 16px;background:#fff8e1;border:1px solid #f3d37a;border-radius:10px}
+.affiliate-label{margin:0 0 4px;font-size:.76rem;font-weight:700;letter-spacing:.04em;color:#8d5a00}
+.affiliate-copy{margin:0 0 8px;color:#5f4b1f}
+.affiliate-link{margin:0}
+.affiliate-link a{font-weight:700}
 .provenance{font-size:.82rem;color:#6b7682;background:#f2f5fa;border:1px solid #e1e8f2;border-radius:8px;padding:11px 14px;margin:10px 0 0}
 .feat-list{margin:.2em 0 .6em;padding-left:1.1em}.feat-list li{margin:2px 0}
 .updated{font-size:.82rem;color:#6b7682;margin:.1em 0 .6em}.updated .muted{margin-left:.4em}
