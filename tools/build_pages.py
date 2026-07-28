@@ -619,9 +619,10 @@ AFFILIATE_TRACKING_PIXELS = {
 }
 
 # afi-b 画像バナー（資格詳細の教材セクション用）
+# src: 外部/ローカル画像URL。cover_slug 指定時はサイトの資格カバー見た目を使う。
 AFFILIATE_BANNER_IMAGES = {
     "https://t.afi-b.com/visit.php?a=y7404W-T288086j&p=b984781I": {
-        "src": "https://www.afi-b.com/upload_image/7404-1488711346-3.jpg",
+        "cover_slug": "c-3207",
         "width": 250,
         "height": 250,
         "alt": "宅建",
@@ -974,11 +975,18 @@ def render_materials_block(slug, name):
         if pixel_url:
             pixel = (f'<img src="{esc(pixel_url)}" width="1" height="1" '
                      f'style="border:none;" alt="">')
+        w, h = int(info.get("width", 250)), int(info.get("height", 250))
+        cover_slug = info.get("cover_slug")
+        if cover_slug:
+            visual = _affiliate_cover_banner_html(cover_slug, alt=alt, width=w, height=h)
+        elif info.get("src"):
+            visual = (f'<img src="{esc(info["src"])}" width="{w}" height="{h}" '
+                      f'style="border:none;" alt="{esc(alt)}">')
+        else:
+            return ""
         return (f'<li class="mat-card mat-card--banner">'
                 f'<a class="mat-banner" href="{esc(link)}" rel="{rel}" target="_blank">'
-                f'<img src="{esc(info["src"])}" width="{int(info["width"])}" '
-                f'height="{int(info["height"])}" style="border:none;" alt="{esc(alt)}"></a>'
-                f'{pixel}</li>')
+                f'{visual}</a>{pixel}</li>')
 
     cards = [banner_card(m) for m in banners]
     cards += [card(m, "講座", "講座の詳細を見る") for m in courses]
@@ -1321,6 +1329,46 @@ def _cert_cover_html(row, name):
         f'{esc(name)}</span>'
         f'<span class="cert-cover-label">{esc(major)}</span>'
         f'</span></div></figure>')
+
+
+_ROW_BY_SLUG_CACHE = None
+
+
+def _row_by_slug(slug):
+    global _ROW_BY_SLUG_CACHE
+    if _ROW_BY_SLUG_CACHE is None:
+        _ROW_BY_SLUG_CACHE = {r["slug"]: r for r in load_rows()}
+    return _ROW_BY_SLUG_CACHE.get(slug)
+
+
+def _affiliate_cover_banner_html(slug, *, alt="", width=250, height=250):
+    """アフィバナー用の正方形資格カバー（詳細ページと同じ配色・アイコン）。"""
+    row = _row_by_slug(slug)
+    if not row:
+        return ""
+    name = (row.get("name") or alt or slug).strip()
+    major = row.get("major_category") or ""
+    base = MAJOR_HUE.get(major, 214)
+    l1 = _readable_l(base, 0.54, 0.45, max_lum=0.16)
+    c1 = _hsl(base, 0.54, l1)
+    c2 = _hsl(base + 22, 0.62, max(0.16, l1 - 0.14))
+    seed = int(hashlib.md5(slug.encode("utf-8")).hexdigest()[:12], 16)
+    icon = FIELD_ICONS.get(major, "")
+    fs = _cover_name_size(name)
+    style = (f"background:linear-gradient(130deg,{c1},{c2});"
+             f"width:{width}px;height:{height}px;min-height:{height}px")
+    return (
+        f'<span class="cert-cover cert-cover--banner" style="{style}" role="img" '
+        f'aria-label="{esc(alt or name)}">'
+        f'<svg class="cert-cover-deco" viewBox="0 0 {width} {height}" '
+        f'preserveAspectRatio="xMidYMid slice" aria-hidden="true">'
+        f'{_cover_deco(seed)}</svg>'
+        f'<span class="cert-cover-inner">'
+        f'<span class="cert-cover-icon">{icon}</span>'
+        f'<span class="cert-cover-name" style="font-size:{fs}px">'
+        f'{esc(name)}</span>'
+        f'<span class="cert-cover-label">{esc(major)}</span>'
+        f'</span></span>')
 
 
 def detail_media_html(row, name):
@@ -6089,8 +6137,10 @@ a.hero-suggest-item{text-decoration:none}a.hero-suggest-item:hover{text-decorati
 .mat-card{display:flex;flex-direction:column;background:#fff;border:1px solid var(--table-border);border-radius:10px;padding:13px 15px}
 .mat-card--course{border-color:#bcd3f5;background:#f6faff}
 .mat-card--banner{align-items:center;justify-content:center;padding:12px}
-.mat-banner{display:block;line-height:0}
-.mat-banner img{display:block;max-width:100%;height:auto}
+.mat-banner{display:block;line-height:0;text-decoration:none}
+.mat-banner:hover{text-decoration:none}
+.mat-banner img,.mat-banner .cert-cover--banner{display:block;max-width:100%;height:auto}
+.mat-banner .cert-cover--banner{width:250px;max-width:100%}
 .mat-head{display:flex;align-items:center;gap:8px;margin-bottom:7px;flex-wrap:wrap}
 .mat-badge{display:inline-block;font-size:.72rem;font-weight:700;padding:2px 9px;border-radius:999px;line-height:1.5}
 .mat-badge--course{background:var(--accent);color:#fff}
