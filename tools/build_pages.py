@@ -612,6 +612,8 @@ AFFILIATE_TRACKING_PIXELS = {
         "https://t.afi-b.com/lead/y7404W/b984781I/z7355633_s",
     "https://t.afi-b.com/visit.php?a=y7404W-D7355634_J&p=b984781I":
         "https://t.afi-b.com/lead/y7404W/b984781I/D7355634_J",
+    "https://t.afi-b.com/visit.php?a=y7404W-t7355635_4&p=b984781I":
+        "https://t.afi-b.com/lead/y7404W/b984781I/t7355635_4",
 }
 
 # 同一アフィ講座を複数資格に紐づける場合、一覧では代表資格だけ出す
