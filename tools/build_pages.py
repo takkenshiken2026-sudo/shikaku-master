@@ -598,6 +598,13 @@ MATERIALS = load_materials()
 AFFILIATE_TRACKING_PIXELS = {
     "https://t.afi-b.com/visit.php?a=y7404W-o7355559_7&p=b984781I":
         "https://t.afi-b.com/lead/y7404W/b984781I/o7355559_7",
+    "https://t.afi-b.com/visit.php?a=y7404W-47355627_b&p=b984781I":
+        "https://t.afi-b.com/lead/y7404W/b984781I/47355627_b",
+}
+
+# 同一講座（同タイトル＋同アフィURL）が複数資格に紐づく場合、一覧では代表資格だけ出す
+COURSE_LIST_PRIMARY_SLUGS = {
+    "c-1317",  # 技術士は建設部門を代表表示
 }
 
 
@@ -4891,6 +4898,10 @@ def build_courses_page(indexable):
             continue
         cert = cert_info[slug]
         for m in courses:
+            # 同一アフィ講座を複数部門ページに出している場合、一覧は代表資格のみ
+            if (m.get("title") == "スタディング 技術士講座"
+                    and slug not in COURSE_LIST_PRIMARY_SLUGS):
+                continue
             if m["affiliate"]:
                 has_aff = True
             link = m["affiliate"] or m["url"]
