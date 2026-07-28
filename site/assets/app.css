@@ -389,6 +389,9 @@ a.hero-suggest-item{text-decoration:none}a.hero-suggest-item:hover{text-decorati
 .mat-list{list-style:none;padding:0;margin:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
 .mat-card{display:flex;flex-direction:column;background:#fff;border:1px solid var(--table-border);border-radius:10px;padding:13px 15px}
 .mat-card--course{border-color:#bcd3f5;background:#f6faff}
+.mat-card--banner{align-items:center;justify-content:center;padding:12px}
+.mat-banner{display:block;line-height:0}
+.mat-banner img{display:block;max-width:100%;height:auto}
 .mat-head{display:flex;align-items:center;gap:8px;margin-bottom:7px;flex-wrap:wrap}
 .mat-badge{display:inline-block;font-size:.72rem;font-weight:700;padding:2px 9px;border-radius:999px;line-height:1.5}
 .mat-badge--course{background:var(--accent);color:#fff}

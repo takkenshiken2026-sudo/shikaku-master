@@ -614,6 +614,18 @@ AFFILIATE_TRACKING_PIXELS = {
         "https://t.afi-b.com/lead/y7404W/b984781I/D7355634_J",
     "https://t.afi-b.com/visit.php?a=y7404W-t7355635_4&p=b984781I":
         "https://t.afi-b.com/lead/y7404W/b984781I/t7355635_4",
+    "https://t.afi-b.com/visit.php?a=y7404W-T288086j&p=b984781I":
+        "https://t.afi-b.com/lead/y7404W/b984781I/T288086j",
+}
+
+# afi-b 画像バナー（資格詳細の教材セクション用）
+AFFILIATE_BANNER_IMAGES = {
+    "https://t.afi-b.com/visit.php?a=y7404W-T288086j&p=b984781I": {
+        "src": "https://www.afi-b.com/upload_image/7404-1488711346-3.jpg",
+        "width": 250,
+        "height": 250,
+        "alt": "宅建",
+    },
 }
 
 # 同一アフィ講座を複数資格に紐づける場合、一覧では代表資格だけ出す
@@ -924,8 +936,9 @@ def render_materials_block(slug, name):
     無い資格でも、Amazon検索（実在の検索結果への正規アソシエイトリンク）で
     教材を探せる導線を出し、全資格ページに収益・利便の導線を確保する。"""
     mats = sorted(MATERIALS.get(slug) or [], key=_material_sort_key)
+    banners = [m for m in mats if m["kind"] == "バナー"]
     courses = [m for m in mats if m["kind"] == "講座"]
-    books = [m for m in mats if m["kind"] != "講座"]
+    books = [m for m in mats if m["kind"] not in ("講座", "バナー")]
     search_url = amazon_search_url(name)
     _nm = re.sub(r"[（(].*?[）)]", "", name).strip() or name
 
@@ -949,7 +962,26 @@ def render_materials_block(slug, name):
                 f'<a class="mat-cta mat-cta--{mod}" href="{esc(link)}" rel="{rel}" '
                 f'target="_blank">{cta}<span class="mat-ext" aria-hidden="true"> ↗</span></a>{pixel}</li>')
 
-    cards = [card(m, "講座", "講座の詳細を見る") for m in courses]
+    def banner_card(m):
+        link = m["affiliate"] or m["url"]
+        info = AFFILIATE_BANNER_IMAGES.get(link)
+        if not link or not info:
+            return ""
+        rel = "sponsored nofollow noopener" if m["affiliate"] else "nofollow noopener"
+        alt = info.get("alt") or m.get("title") or ""
+        pixel = ""
+        pixel_url = AFFILIATE_TRACKING_PIXELS.get(link)
+        if pixel_url:
+            pixel = (f'<img src="{esc(pixel_url)}" width="1" height="1" '
+                     f'style="border:none;" alt="">')
+        return (f'<li class="mat-card mat-card--banner">'
+                f'<a class="mat-banner" href="{esc(link)}" rel="{rel}" target="_blank">'
+                f'<img src="{esc(info["src"])}" width="{int(info["width"])}" '
+                f'height="{int(info["height"])}" style="border:none;" alt="{esc(alt)}"></a>'
+                f'{pixel}</li>')
+
+    cards = [banner_card(m) for m in banners]
+    cards += [card(m, "講座", "講座の詳細を見る") for m in courses]
     cards += [card(m, "テキスト", "Amazonで見る") for m in books[:4]]
     cards = [c for c in cards if c]
 
@@ -1000,7 +1032,7 @@ def _sticky_cta(row, name):
     ps = PARTNER_BY_CERT.get(slug)
     courses = courses_for_slug(slug)
     books = [m for m in (MATERIALS.get(slug) or [])
-             if m["kind"] != "講座" and (m["affiliate"] or m["url"])]
+             if m["kind"] not in ("講座", "バナー") and (m["affiliate"] or m["url"])]
     if ps:
         p = ps[0]
         url, rel = p["url"], "noopener"
@@ -6056,6 +6088,9 @@ a.hero-suggest-item{text-decoration:none}a.hero-suggest-item:hover{text-decorati
 .mat-list{list-style:none;padding:0;margin:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
 .mat-card{display:flex;flex-direction:column;background:#fff;border:1px solid var(--table-border);border-radius:10px;padding:13px 15px}
 .mat-card--course{border-color:#bcd3f5;background:#f6faff}
+.mat-card--banner{align-items:center;justify-content:center;padding:12px}
+.mat-banner{display:block;line-height:0}
+.mat-banner img{display:block;max-width:100%;height:auto}
 .mat-head{display:flex;align-items:center;gap:8px;margin-bottom:7px;flex-wrap:wrap}
 .mat-badge{display:inline-block;font-size:.72rem;font-weight:700;padding:2px 9px;border-radius:999px;line-height:1.5}
 .mat-badge--course{background:var(--accent);color:#fff}
