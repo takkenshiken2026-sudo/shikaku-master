@@ -6536,9 +6536,9 @@ table.cmp thead th:first-child{background:#edf2f8;z-index:2}
 .detail-intro-main{flex:1 1 auto;min-width:0}
 .detail-intro-media{flex:0 0 auto;width:280px;margin:0}
 .detail-intro-media img{display:block;width:280px;height:100%;min-height:188px;object-fit:cover;border-radius:10px;border:1px solid var(--gray-200);background:var(--gray-100)}
-.detail-intro-media--affiliate{width:250px}
-.detail-intro-media--affiliate .detail-intro-aff{display:block;line-height:0}
-.detail-intro-media--affiliate img{width:250px;height:250px;min-height:250px;object-fit:contain;border:none;background:transparent;border-radius:8px}
+.detail-intro-media--affiliate{align-self:stretch;display:flex;flex-direction:column;height:auto}
+.detail-intro-media--affiliate .detail-intro-aff{display:block;flex:1 1 auto;align-self:stretch;height:100%;min-height:188px;line-height:0}
+.detail-intro-media--affiliate img{width:280px;height:100%;min-height:188px;object-fit:cover;border:none;background:transparent;border-radius:10px}
 .cert-cover{position:relative;overflow:hidden;width:280px;height:100%;min-height:188px;border-radius:10px;color:#fff;box-sizing:border-box}
 .cert-cover-deco{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
 .cert-cover-inner{position:absolute;inset:0;z-index:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center;padding:16px}
@@ -6548,7 +6548,7 @@ table.cmp thead th:first-child{background:#edf2f8;z-index:2}
 .cert-cover-label{font-size:11.5px;font-weight:600;color:rgba(255,255,255,.88);line-height:1.3;letter-spacing:.04em;text-shadow:0 1px 2px rgba(0,0,0,.22);margin-top:3px}
 .detail-intro-credit{font-size:11px;color:var(--muted);line-height:1.4;margin-top:6px}
 .detail-intro-credit a{color:var(--muted);text-decoration:underline}
-@media(max-width:720px){.detail-intro-row{flex-direction:column-reverse;gap:16px}.detail-intro-media,.detail-intro-media img,.cert-cover{width:100%}.detail-intro-media img,.cert-cover{height:190px}.detail-intro-media--affiliate,.detail-intro-media--affiliate img{width:min(250px,100%);height:auto;min-height:0;aspect-ratio:1/1}}
+@media(max-width:720px){.detail-intro-row{flex-direction:column-reverse;gap:16px}.detail-intro-media,.detail-intro-media img,.cert-cover,.detail-intro-media--affiliate .detail-intro-aff{width:100%}.detail-intro-media img,.cert-cover,.detail-intro-media--affiliate img{height:190px;min-height:190px}}
 .page-detail .detail-title{font-size:var(--detail-h1);font-weight:700;color:var(--ink-deep);line-height:1.28;margin:0 0 24px;letter-spacing:-.01em}
 .page-detail .detail-audience{font-size:var(--detail-body);color:var(--ink);line-height:var(--detail-body-lh);margin:0}
 .page-detail .detail-section{padding:var(--detail-section-y) 0 0;border:none}
