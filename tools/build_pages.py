@@ -606,6 +606,8 @@ AFFILIATE_TRACKING_PIXELS = {
         "https://t.afi-b.com/lead/y7404W/b984781I/Q7355629_f",
     "https://t.afi-b.com/visit.php?a=y7404W-f7355630_4&p=b984781I":
         "https://t.afi-b.com/lead/y7404W/b984781I/f7355630_4",
+    "https://t.afi-b.com/visit.php?a=y7404W-a7355632_c&p=b984781I":
+        "https://t.afi-b.com/lead/y7404W/b984781I/a7355632_c",
 }
 
 # 同一アフィ講座を複数資格に紐づける場合、一覧では代表資格だけ出す
@@ -613,6 +615,7 @@ COURSE_LIST_PRIMARY_BY_TITLE = {
     "スタディング 技術士講座": "c-1317",   # 建設部門
     "スタディング 販売士講座": "c-4103",   # 3級
     "メンタルヘルス・マネジメント®検定": "c-9022",  # III種
+    "スタディング 建築士講座": "c-1302",   # 二級
 }
 
 
