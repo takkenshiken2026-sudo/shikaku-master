@@ -608,6 +608,8 @@ AFFILIATE_TRACKING_PIXELS = {
         "https://t.afi-b.com/lead/y7404W/b984781I/f7355630_4",
     "https://t.afi-b.com/visit.php?a=y7404W-a7355632_c&p=b984781I":
         "https://t.afi-b.com/lead/y7404W/b984781I/a7355632_c",
+    "https://t.afi-b.com/visit.php?a=y7404W-z7355633_s&p=b984781I":
+        "https://t.afi-b.com/lead/y7404W/b984781I/z7355633_s",
 }
 
 # 同一アフィ講座を複数資格に紐づける場合、一覧では代表資格だけ出す
@@ -616,6 +618,7 @@ COURSE_LIST_PRIMARY_BY_TITLE = {
     "スタディング 販売士講座": "c-4103",   # 3級
     "メンタルヘルス・マネジメント®検定": "c-9022",  # III種
     "スタディング 建築士講座": "c-1302",   # 二級
+    "マンション管理士／管理業務主任者": "c-3209",  # マンション管理士
 }
 
 
