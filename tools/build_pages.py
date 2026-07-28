@@ -595,6 +595,11 @@ def load_materials():
 
 MATERIALS = load_materials()
 
+AFFILIATE_TRACKING_PIXELS = {
+    "https://t.afi-b.com/visit.php?a=y7404W-o7355559_7&p=b984781I":
+        "https://t.afi-b.com/lead/y7404W/b984781I/o7355559_7",
+}
+
 
 # ── 転職・就職サービス（アフィリエイト。職種の分野別/職種別/資格別に出し分け）──
 JOBCHANGE_CSV = ROOT / "data" / "jobchange.csv"
@@ -907,12 +912,17 @@ def render_materials_block(slug, name):
         mod = "course" if kind_label == "講座" else "book"
         prov = f'<span class="mat-prov">{esc(m["provider"])}</span>' if m.get("provider") else ""
         note = f'<p class="mat-note">{esc(m["note"])}</p>' if m.get("note") else ""
+        pixel = ""
+        pixel_url = AFFILIATE_TRACKING_PIXELS.get(link)
+        if pixel_url:
+            pixel = (f'<img src="{esc(pixel_url)}" width="1" height="1" '
+                     f'style="border:none;" alt="">')
         return (f'<li class="mat-card mat-card--{mod}">'
                 f'<div class="mat-head"><span class="mat-badge mat-badge--{mod}">{kind_label}</span>{prov}</div>'
                 f'<a class="mat-title" href="{esc(link)}" rel="{rel}" target="_blank">{esc(m["title"])}</a>'
                 f'{note}'
                 f'<a class="mat-cta mat-cta--{mod}" href="{esc(link)}" rel="{rel}" '
-                f'target="_blank">{cta}<span class="mat-ext" aria-hidden="true"> ↗</span></a></li>')
+                f'target="_blank">{cta}<span class="mat-ext" aria-hidden="true"> ↗</span></a>{pixel}</li>')
 
     cards = [card(m, "講座", "講座の詳細を見る") for m in courses]
     cards += [card(m, "テキスト", "Amazonで見る") for m in books[:4]]
