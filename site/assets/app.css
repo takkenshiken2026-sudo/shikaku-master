@@ -21,6 +21,11 @@ table.spec th{width:34%;background:#f2f5fa;color:#3a4757;font-weight:600;white-s
 .official-cta{margin:16px 0 6px}
 .btn-official{display:inline-block;background:#0d47a1;color:#fff;font-weight:700;padding:11px 20px;border-radius:8px}
 .btn-official:hover{background:#0b3c8a;text-decoration:none}
+.affiliate-box{margin:12px 0 0;padding:14px 16px;background:#fff8e1;border:1px solid #f3d37a;border-radius:10px}
+.affiliate-label{margin:0 0 4px;font-size:.76rem;font-weight:700;letter-spacing:.04em;color:#8d5a00}
+.affiliate-copy{margin:0 0 8px;color:#5f4b1f}
+.affiliate-link{margin:0}
+.affiliate-link a{font-weight:700}
 .provenance{font-size:.82rem;color:#6b7682;background:#f2f5fa;border:1px solid #e1e8f2;border-radius:8px;padding:11px 14px;margin:10px 0 0}
 .feat-list{margin:.2em 0 .6em;padding-left:1.1em}.feat-list li{margin:2px 0}
 .updated{font-size:.82rem;color:#6b7682;margin:.1em 0 .6em}.updated .muted{margin-left:.4em}
